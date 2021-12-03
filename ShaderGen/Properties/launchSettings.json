@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ShaderGen": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\projects\\source\\Engine6\\Shaders\\shadersources C:\\projects\\source\\Engine6\\Shaders"
+    }
+  }
+}

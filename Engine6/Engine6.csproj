@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <ApplicationIcon />
+        <LangVersion>preview</LangVersion>
+        <NoWarn>1701;1702;CS0078</NoWarn>
+        <OutputPath>bin</OutputPath>
+        <OutputType>WinExe</OutputType>
+        <PlatformTarget>x64</PlatformTarget>
+        <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
+        <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+        <StartupObject />
+        <TargetFramework>net6.0</TargetFramework>
+        <UseWindowsForms>false</UseWindowsForms>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <Optimize>false</Optimize>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DefineConstants>TRACE;</DefineConstants>
+        <Optimize>true</Optimize>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="DrawArraysInstancedTest.cs" />
+        <Compile Remove="Ground.cs" />
+        <Compile Remove="ShowTexture.cs" />
+        <Compile Remove="SkyBoxTest.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Gl\Gl.csproj" />
+        <ProjectReference Include="..\Shaders\Shaders.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="data\font.png">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
+        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\font.png $(targetdir)" />
+        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
+        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
+    </Target>
+
+</Project>
