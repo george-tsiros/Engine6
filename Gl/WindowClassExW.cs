@@ -6,7 +6,7 @@ internal delegate IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wparam, In
 
 internal unsafe struct WindowClassExW {
     public uint size;
-    public uint style;
+    public ClassStyle style;
     public WndProc wndProc;
     public int cbClsExtra;
     public int cbWndExtra;

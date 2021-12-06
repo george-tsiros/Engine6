@@ -8,26 +8,26 @@ using System;
 using System.Diagnostics;
 
 class NoiseTest:GlWindow {
-    public NoiseTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) => Assert();
-    private static void Assert () {
-        if (_HEIGHT % _THREADCOUNT != 0)
-            throw new ApplicationException();
+    public NoiseTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) {
+        threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;
+        rowsPerThread = _HEIGHT / threadCount;
     }
+
     private VertexArray quad;
     private Sampler2D tex;
     private const int _WIDTH = 1024 >> 2, _HEIGHT = 576 >> 2;
     private const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     private readonly byte[] bytes = new byte[_WIDTH * _HEIGHT * 4];
-    private const int _THREADCOUNT = 4;
-    private const int _ROWS_PER_THREAD = _HEIGHT / _THREADCOUNT;
+    private readonly int threadCount = 4;
+    private readonly int rowsPerThread ;
     private FastNoiseLite[] noises;
     private CountdownEvent countdown;
     private long ticks;
     private readonly Stats stats = new(60);
     private void ProcArrays (int threadIndex) {
         var ms = FramesRendered;
-        var start = _ROWS_PER_THREAD * threadIndex;
-        var end = start + _ROWS_PER_THREAD;
+        var start = rowsPerThread * threadIndex;
+        var end = start + rowsPerThread;
         var offset = 4 * _WIDTH * start;
         var noise = noises[threadIndex];
         for (var y = start; y < end; ++y) {
@@ -56,26 +56,24 @@ class NoiseTest:GlWindow {
         }
     }
 
-    unsafe protected override void Init () {
+    unsafe protected override void Load () {
         quad = new();
         quad.Assign(new VertexBuffer<Vector4>(Quad.Vertices), PassThrough.VertexPosition);
-        tex = new(new(_WIDTH, _HEIGHT), TextureInternalFormat.Rgba8) { Min = MinFilter.Nearest, Mag = MagFilter.Nearest, Wrap = Wrap.ClampToEdge };
-        noises = new FastNoiseLite[_THREADCOUNT];
+        tex = new(new(_WIDTH, _HEIGHT), TextureFormat.Rgba8) { Min = MinFilter.Nearest, Mag = MagFilter.Nearest, Wrap = Wrap.ClampToEdge };
+        noises = new FastNoiseLite[threadCount];
         for (var i = 3; i < bytes.Length; i += 4)
             bytes[i] = byte.MaxValue;
-        for (var i = 0; i < _THREADCOUNT; ++i)
+        for (var i = 0; i < threadCount; ++i)
             noises[i] = new FastNoiseLite(123);
-        countdown = new(_THREADCOUNT);
+        countdown = new(threadCount);
         StartThreads();
     }
 
     unsafe protected override void Render (float dt) {
         countdown.Wait();
-        countdown.Reset(_THREADCOUNT);
+        countdown.Reset(threadCount);
         fixed (byte* p = bytes)
-            TextureSubImage2D(tex, 0, 0, 0, tex.Width, tex.Height, TextureFormat.Bgra, Const.UNSIGNED_BYTE, p);
-        if (FramesRendered == 100)
-            Debugger.Break();
+            TextureSubImage2D(tex, 0, 0, 0, tex.Width, tex.Height, PixelFormat.Bgra, Const.UNSIGNED_BYTE, p);
         Viewport(0, 0, Width, Height);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.Color | BufferBit.Depth);
@@ -90,7 +88,7 @@ class NoiseTest:GlWindow {
 
     private unsafe void StartThreads () {
         ticks = Stopwatch.GetTimestamp();
-        for (var i = 0; i < _THREADCOUNT; ++i) {
+        for (var i = 0; i < threadCount; ++i) {
             var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, true);
             if (!ok)
                 throw new ApplicationException();

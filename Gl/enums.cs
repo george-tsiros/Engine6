@@ -1,6 +1,66 @@
 namespace Gl;
 
 using System;
+internal enum ContextAttributes {
+    MajorVersion = 0x2091,
+    MinorVersion = 0x2092,
+    LayerPlane = 0x2093,
+    ContextFlags = 0x2094,
+    ProfileMask = 0x9126,
+}
+[Flags]
+internal enum ContextFlags {
+    Debug = 1,
+    ForwardCompatible = 2,
+}
+internal enum ProfileMask {
+    Core = 1,
+    Compatibility = 2,
+}
+public enum OpenglString {
+    Vendor = 0x1F00,
+    Renderer = 0x1F01,
+    Version = 0x1F02,
+    Extensions = 0x1F03,
+}
+[Flags]
+internal enum ClassStyle:uint {
+    VRedraw = 1 << 0,
+    HRedraw = 1 << 1,
+    DoubleClicks = 1 << 3,
+    OwnDc = 1 << 5,
+    ClassDc = 1 << 6,
+    ParentDc = 1 << 7,
+    NoClose = 1 << 9,
+    SaveBits = 1 << 11,
+    ByteAlignClient = 1 << 12,
+    ByteAlignWindow = 1 << 13,
+    GlobalClass = 1 << 14,
+    DropShadow = 1 << 17,
+}
+
+[Flags]
+public enum WindowPosFlags {
+    NoSize = 0x1,
+    NoMove = 0x2,
+    NoZOrder = 0x4,
+    NoRedraw = 0x8,
+    NoActivate = 0x10,
+    DrawFrame = 0x20,
+    ShowWindow = 0x40,
+    HideWindow = 0x80,
+    NoCopyBits = 0x100,
+    NoOwnerZOrder = 0x200,
+    NoSendChanging = 0x400,
+}
+
+public enum SizeMessage {
+    Restored = 0,
+    Minimized,
+    MaxShow,
+    Maximized,
+    MaxHide
+}
 [Flags]
 public enum PixelFlags {
     DoubleBuffer = 0x00000001,
@@ -98,7 +158,7 @@ public enum MinFilter {
     NearestMipMapLinear = Const.NEAREST_MIPMAP_LINEAR,
     LinearMipMapLinear = Const.LINEAR_MIPMAP_LINEAR,
 }
-public enum TextureFormat {
+public enum PixelFormat {
     Red = Const.RED,
     Rg = Const.RG,
     Rgb = Const.RGB,
@@ -106,7 +166,7 @@ public enum TextureFormat {
     Bgr = Const.BGR,
     Bgra = Const.BGRA,
 }
-public enum TextureInternalFormat {
+public enum TextureFormat {
     R8 = Const.R8,
     R16 = Const.R16,
     Rg8 = Const.RG8,

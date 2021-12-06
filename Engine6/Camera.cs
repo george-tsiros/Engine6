@@ -30,9 +30,8 @@ sealed class Camera {
         if (dt > 0f && direction.LengthSquared() > .1f)
             Location += Vector3.Transform(Vector3.Normalize(direction) * dt, Matrix4x4.CreateRotationY(yaw));
     }
-    public void Mouse (Vector2i v) {
-        var scaled = 0.001f * new Vector2(v.X, v.Y);
-        _ = ModuloTwoPi(ref yaw, -scaled.X);
-        _ = Clamp(ref pitch, scaled.Y, (float)(-.4 * Math.PI), (float)(.4 * Math.PI));
+    public void Mouse (Vector2 v) {
+        _ = ModuloTwoPi(ref yaw, -v.X);
+        _ = Clamp(ref pitch, v.Y, (float)(-.4 * Math.PI), (float)(.4 * Math.PI));
     }
 }

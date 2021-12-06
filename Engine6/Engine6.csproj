@@ -46,10 +46,10 @@
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
-        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\font.png $(targetdir)" />
-        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
-        <Exec Command="C:\projects\source\Engine\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
+        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
+        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\font.png $(targetdir)" />
+        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
+        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
     </Target>
 
 </Project>

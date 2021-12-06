@@ -5,6 +5,47 @@ using System.Numerics;
 using Shaders;
 using Gl;
 using static Gl.Opengl;
+using static Gl.Utilities;
+using System.Diagnostics;
+
+class BlitTest:GlWindow {
+    public BlitTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) { }
+    private Camera Camera { get; } = new(new(0,0,-5));
+    private Raster raster;
+    private Sampler2D sampler;
+    private VertexArray quad;
+    private VertexBuffer<Vector4> quadBuffer;
+    protected override void Load () {
+        quad = new();
+        State.Program = SimpleTexture.Id;
+        quadBuffer = new(Quad.Vertices);
+        raster = new(new(Width, Height), 4, 1);
+        MemSet(raster.Pixels, 0xff0000ffu);
+        sampler = new(new(Width,Height), TextureFormat.Rgba8);
+    }
+    protected override void Render (float dt) {
+
+        sampler.Upload(raster);
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.Color | BufferBit.Depth);
+        State.Program = SimpleTexture.Id;
+        State.VertexArray = quad;
+        //State.Blend = false;
+        State.DepthTest = true;
+        State.DepthFunc = DepthFunction.Less;
+        State.CullFace = true;
+        sampler.BindTo(1);
+        SimpleTexture.Tex(1);
+        SimpleTexture.View(Camera.LookAtMatrix);
+        DrawArraysInstanced(Primitive.Triangles, 0, 6, 1);
+    }
+    protected override void Closing () {
+        raster.Dispose();
+        sampler.Dispose();
+        quad.Dispose();
+        quadBuffer.Dispose();
+    }
+}
 
 class TextureTest:GlWindow {
 
@@ -16,7 +57,7 @@ class TextureTest:GlWindow {
     private VertexBuffer<Vector4> skyboxVertices;
     private VertexBuffer<Vector2> skyboxUV;
 
-    protected unsafe override void Init () {
+    protected unsafe override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
         var quadBuffer = new VertexBuffer<Vector4>(Quad.Vertices);
@@ -46,6 +87,7 @@ class TextureTest:GlWindow {
     }
 
     protected override void Render (float dt) {
+        Camera.Mouse(new(dt, 0));
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = SimpleTexture.Id;
@@ -66,6 +108,5 @@ class TextureTest:GlWindow {
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
         DrawArrays(Primitive.Triangles, 0, 36);
-        _ = Gdi.SwapBuffers(DeviceContext);
     }
 }

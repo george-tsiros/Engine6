@@ -11,4 +11,12 @@ internal static class Kernel {
     internal extern static IntPtr GetProcAddress(IntPtr module, [MarshalAs(UnmanagedType.LPWStr)] string name);
     [DllImport(kernel32)]
     internal extern static IntPtr LoadLibraryW ([MarshalAs(UnmanagedType.LPWStr)] string filename);
+
+    public static void Win32Assert (IntPtr p) => Win32Assert(p != IntPtr.Zero);
+    public static void Win32Assert (bool b) {
+        if (!b) {
+            _ = User.MessageBox(IntPtr.Zero, Kernel.GetLastError().ToString("x16"), null, 0x1000);
+            Environment.Exit(-1);
+        }
+    }
 }

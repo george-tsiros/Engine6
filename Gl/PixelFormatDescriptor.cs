@@ -30,7 +30,8 @@ public struct PixelFormatDescriptor {
     public uint LayerMask;
     public uint VisibleMask;
     public uint DamageMask;
-    public static Predicate<PixelFormatDescriptor> Typical = d =>
+
+    public static readonly Predicate<PixelFormatDescriptor> Typical = d =>
 d.RedBits == 8 &&
 d.GreenBits == 8 &&
 d.BlueBits == 8 &&

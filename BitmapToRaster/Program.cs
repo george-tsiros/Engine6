@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 class BitmapToRaster {
 
     private static void Main (string[] args) => Convert(args[0], args[1]);
-
     private static void Convert (string filepath, string outputRoot) {
         using (var image = new Bitmap(filepath)) {
             var l = image.LockBits(new Rectangle(Point.Empty, image.Size), ImageLockMode.ReadOnly, image.PixelFormat);

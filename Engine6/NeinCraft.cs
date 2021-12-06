@@ -16,7 +16,7 @@ class NeinCraft:GlWindow {
     private VertexBuffer<Vector4> skyboxVertices, cubeVertices;
     private VertexBuffer<Vector2> skyboxUV;
 
-    protected override void Init () {
+    protected override void Load () {
         skyboxVao = new();
         State.Program = SkyBox.Id;
         skyboxTexture = Sampler2D.FromFile("data/skybox.raw");

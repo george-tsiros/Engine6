@@ -50,6 +50,8 @@ unsafe public static class Opengl {
     public static extern void DepthFunc (DepthFunction f);
     [DllImport(opengl32, EntryPoint = "glFlush")]
     public static extern void Flush ();
+    [DllImport(opengl32, EntryPoint = "glGetString")]
+    public static extern IntPtr GetString (OpenglString name);
     [DllImport(opengl32, EntryPoint = "glFinish")]
     public static extern void Finish ();
     [DllImport(opengl32, EntryPoint = "glDeleteTextures")]
@@ -99,7 +101,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<int, long, long, void*, void> glNamedBufferSubData;
         public static readonly delegate* unmanaged[Cdecl]<int, int, byte**, int*, void> glShaderSource;
         public static readonly delegate* unmanaged[Cdecl]<int, int, int, void> glTextureParameteri;
-        public static readonly delegate* unmanaged[Cdecl]<int, int, TextureInternalFormat, int, int, void> glTextureStorage2D;
+        public static readonly delegate* unmanaged[Cdecl]<int, int, TextureFormat, int, int, void> glTextureStorage2D;
         public static readonly delegate* unmanaged[Cdecl]<int, int, int, int, int, int, int, int, void*, void> glTextureSubImage2D;
         public static readonly delegate* unmanaged[Cdecl]<int, int, void> glUniform1i;
         public static readonly delegate* unmanaged[Cdecl]<int, float, void> glUniform1f;
@@ -109,6 +111,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<int, void> glUseProgram;
         public static readonly delegate* unmanaged[Cdecl]<int, int, void> glVertexAttribDivisor;
         public static readonly delegate* unmanaged[Cdecl]<int, int, AttribType, bool, int, long, void> glVertexAttribPointer;
+        public static readonly delegate* unmanaged[Cdecl]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB;
         //public static readonly delegate* unmanaged[Cdecl]<int, int, int, int, void> glViewport;
         //public static readonly delegate* unmanaged[Cdecl]<void> glFlush;
         //public static readonly delegate* unmanaged[Cdecl]<void> glFinish;
@@ -161,8 +164,8 @@ unsafe public static class Opengl {
     public static void TextureFilter (int texture, MagFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
     public static void TextureFilter (int texture, MinFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
     public static void TextureMaxLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAX_LEVEL, level);
-    public static void TextureStorage2D (int texture, int levels, TextureInternalFormat sizedFormat, int width, int height) => Extensions.glTextureStorage2D(texture, levels, sizedFormat, width, height);
-    public static void TextureSubImage2D (int texture, int level, int xOffset, int yOffset, int width, int height, TextureFormat format, int type, void* pixels) => Extensions.glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
+    public static void TextureStorage2D (int texture, int levels, TextureFormat sizedFormat, int width, int height) => Extensions.glTextureStorage2D(texture, levels, sizedFormat, width, height);
+    public static void TextureSubImage2D (int texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, int type, void* pixels) => Extensions.glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
     public static void TextureWrap (int texture, WrapCoordinate c, Wrap w) => Extensions.glTextureParameteri(texture, (int)c, (int)w);
     public static void Uniform (int uniform, float f) => Extensions.glUniform1f(uniform, f);
     public static void Uniform (int uniform, int i) => Extensions.glUniform1i(uniform, i);
@@ -173,6 +176,23 @@ unsafe public static class Opengl {
     public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, type, normalized, stride, ptr);
     public static void Viewport (Vector2i position, Vector2i size) => Viewport(position.X, position.Y, size.X, size.Y);
+    internal static IntPtr CreateContextAttribs (IntPtr dc, IntPtr shared, int majorVersion, int minorVersion, ContextFlags contextFlags, ProfileMask mask) {
+        var p = IntPtr.Zero;
+        var attributes = new int[] {
+            (int) ContextAttributes.MajorVersion,
+            majorVersion,
+            (int)ContextAttributes.MinorVersion,
+            minorVersion,
+            (int)ContextAttributes.ContextFlags,
+            (int)contextFlags,
+            (int)ContextAttributes.ProfileMask,
+            (int)mask,
+            0
+        };
+        //fixed (int* ap = attributes)
+            p = (IntPtr)Extensions.wglCreateContextAttribsARB(dc, shared, (int*)0);
+        return p;
+    }
 
     public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
     public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);

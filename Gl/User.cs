@@ -10,26 +10,35 @@ internal static class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     unsafe internal static extern int UnregisterClassW ([MarshalAs(UnmanagedType.LPWStr)] string className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     unsafe internal static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DestroyWindow (IntPtr windowHandle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     internal static extern IntPtr CreateWindowExW (int exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, int style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     internal static extern IntPtr GetDC (IntPtr windowHandle);
-    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(user32)]
     internal static extern IntPtr DefWindowProcW (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     internal static extern void PostQuitMessage (int code);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindow (IntPtr handle, int cmdShow);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool UpdateWindow (IntPtr handle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    internal static extern bool GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
+    internal static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, uint remove);
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool TranslateMessage (ref Message m);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     internal static extern IntPtr DispatchMessageW (ref Message m);
@@ -42,5 +51,9 @@ internal static class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     internal static extern int MessageBox (IntPtr hWnd, string text, string caption, uint type);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Auto)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetWindowText (IntPtr windowHandle, string text);
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Auto)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool PostMessageW (IntPtr handle, uint msg, IntPtr w, IntPtr l);
 }

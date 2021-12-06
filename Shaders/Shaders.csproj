@@ -70,28 +70,28 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="unused\drawArrays.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\drawArrays.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\gRenderColor.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\gRenderColor.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\multipleOutputs.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\multipleOutputs.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\multipleOutputsWithTranslation.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\multipleOutputsWithTranslation.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\rasterStrings.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -118,15 +118,15 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="unused\textureSimpleWithTranslation.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\textureSimpleWithTranslation.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <Exec Command="C:\projects\source\Engine6\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
+        <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
     </Target>
 
 </Project>
