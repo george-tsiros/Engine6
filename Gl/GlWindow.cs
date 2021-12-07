@@ -10,6 +10,18 @@ using System.Runtime.InteropServices;
 class ContextCreationException:Exception {
     public ContextCreationException (string message = null) : base(message ?? Kernel.GetLastError().ToString("x16")) { }
 }
+readonly struct KeyMessage {
+    public short RepeatCount { get; }
+    public Keys Key { get; }
+    public bool WasDown { get; }
+    public KeyMessage (IntPtr w, IntPtr l) {
+        var wi = (uint)(w.ToInt64() & uint.MaxValue);
+        var li = (uint)(l.ToInt64() & uint.MaxValue);
+        RepeatCount = (short)(li & short.MaxValue);
+        Key = (Keys)(byte)(wi & byte.MaxValue);
+        WasDown = (li & 0x40000000) != 0;
+    }
+}
 
 public class GlWindow:IDisposable {
     protected ulong FramesRendered { get; private set; }
@@ -53,7 +65,7 @@ public class GlWindow:IDisposable {
         Opengl.Clear(BufferBit.Color | BufferBit.Depth);
     }
 
-    static string Foo (IntPtr p) => IntPtr.Size == 8 ? Foo(p.ToInt64()) : Foo(p.ToInt32());
+    static string Foo (IntPtr p) => Foo(p.ToInt64());
     static string Foo (int p) => $"{p:x8}, {(p >> 16) & ushort.MaxValue}, {p & ushort.MaxValue}";
     static string Foo (long p) => $"{p:x16}, {(p >> 48) & ushort.MaxValue}, {(p >> 32) & ushort.MaxValue}, {(p >> 16) & ushort.MaxValue}, {p & ushort.MaxValue}";
 
@@ -85,7 +97,7 @@ public class GlWindow:IDisposable {
         }
     }
     private static (short x, short y) Split (IntPtr p) {
-        var i = p.ToInt32();
+        var i = (int)(p.ToInt64() & int.MaxValue);
         return ((short)(i & ushort.MaxValue), (short)((i >> 16) & ushort.MaxValue));
     }
     protected virtual void Load () { }
@@ -186,7 +198,7 @@ public class GlWindow:IDisposable {
                 KillFocus();
                 break;
             case WinMessage.Size: {
-                    var i = w.ToInt32();
+                    var i = (int)(w.ToInt64() & int.MaxValue);
                     if (Enum.IsDefined(typeof(SizeMessage), i)) {
                         var (width, height) = Split(l);
                         Size((SizeMessage)i, width, height);
@@ -194,22 +206,15 @@ public class GlWindow:IDisposable {
                 }
                 break;
             case WinMessage.KeyDown: {
-                    var k = w.ToInt32();
-                    var wasUp = 0 == (l.ToInt32() & (1 << 30));
-                    if (wasUp && Enum.IsDefined(typeof(Keys), k)) {
-                        KeyDown((Keys)k);
-                        return IntPtr.Zero;
-                    }
+                    var m = new KeyMessage(w, l);
+                    KeyDown(m.Key);
+                    return IntPtr.Zero;
                 }
-                break;
             case WinMessage.KeyUp: {
-                    var k = w.ToInt32();
-                    if (Enum.IsDefined(typeof(Keys), k)) {
-                        KeyUp((Keys)k);
-                        return IntPtr.Zero;
-                    }
+                    var m = new KeyMessage(w, l);
+                    KeyUp(m.Key);
+                    return IntPtr.Zero;
                 }
-                break;
             case WinMessage.Close:
                 User.PostQuitMessage(0);
                 break;

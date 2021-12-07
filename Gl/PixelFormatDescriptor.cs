@@ -35,7 +35,7 @@ public struct PixelFormatDescriptor {
 d.RedBits == 8 &&
 d.GreenBits == 8 &&
 d.BlueBits == 8 &&
-d.DepthBits == 24 &&
+//d.DepthBits == 24 &&
 d.Flags.HasFlag(PixelFlags.DrawToWindow | PixelFlags.SupportComposition | PixelFlags.DoubleBuffer | PixelFlags.SupportOpengl);
 
 
