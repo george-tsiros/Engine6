@@ -19,7 +19,9 @@ public static class Kernel {
     public static void Win32Assert (IntPtr p) => Win32Assert(p != IntPtr.Zero);
     public static void Win32Assert (bool b) {
         if (!b) {
-            _ = User.MessageBox(IntPtr.Zero, Kernel.GetLastError().ToString("x16"), null, 0x1000);
+            var message = GetLastError().ToString("x16");
+            Utilities.Trace(message);
+            _ = User.MessageBox(IntPtr.Zero, message, null, 0x1000);
             Environment.Exit(-1);
         }
     }

@@ -5,6 +5,72 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Win32;
 
+class Glfw {
+    const string ClassName = "myclass";
+    private static IntPtr MyProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
+        Debug.WriteLine(msg.ToString());
+        return Gl.User.DefWindowProcW(hWnd, msg, w, l);
+    }
+    public static ushort glfwInit () {
+        var atom = glfwPlatformInit();
+        if (0 == atom)
+            return 0;
+        glfwDefaultWindowHints();
+        return atom;
+    }
+    public static object glfwCreateWindow () {
+        var window = createNativeWindow();
+        if (window == IntPtr.Zero)
+            return null;
+        var wgl = glfwInitWgl();
+        if (wgl is null)
+            return null;
+        var ctx = glfwCreateContextWGL();
+        return ctx;
+    }
+    public static object glfwInitWgl (IntPtr helperWindowHandle) {
+        var pfd = PixelFormatDescriptor.Create();
+        pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer;
+        pfd.ColorBits = 24;
+        Gl.Gdi.ChoosePixelFormat(
+    }
+    public static IntPtr createNativeWindow () { 
+        var nullModuleHandle = Gl.Kernel.GetModuleHandleW(null);
+        return Gl.User.CreateWindowExW(0x300, ClassName, "?", 0x6000000, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
+    }
+
+    public static ushort glfwPlatformInit () {
+        var atom = glfwRegisterWindowClassWin32();
+        if (0 == atom)
+            return 0;
+        if (!createHelperWindow())
+            return 0;
+        return atom;
+    }
+    public static bool createHelperWindow () {
+        var nullModuleHandle = Gl.Kernel.GetModuleHandleW(null);
+        var helperWindow = Gl.User.CreateWindowExW(0x300, ClassName, "?", 0x6000000, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
+        if (helperWindow == IntPtr.Zero)
+            return false;
+        var m = new Message();
+        while (Gl.User.PeekMessageW(ref m, helperWindow, 0, 0, 1)) {
+            _ = Gl.User.TranslateMessage(ref m);
+            _ = Gl.User.DispatchMessageW(ref m);
+        }
+        return true;
+    }
+    public static ushort glfwRegisterWindowClassWin32 () {
+        var wc = WindowClassExW.Create();
+        wc.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
+        wc.wndProc = MyProc;
+        wc.hInstance = Gl.Kernel.GetModuleHandleW(null);
+        wc.hCursor = IntPtr.Zero;
+        wc.classname = "myclass";
+        return Gl.User.RegisterClassExW(ref wc);
+    }
+    public static void glfwDefaultWindowHints () { }
+}
+
 class Engine {
     private static Func<IntPtr, IntPtr> wglCreateContext;
     private static Func<IntPtr, int> wglDeleteContext;
@@ -21,12 +87,13 @@ class Engine {
 
     }
     private static IntPtr MyProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
+        Debug.WriteLine(msg.ToString());
         return Gl.User.DefWindowProcW(hWnd, msg, w, l);
     }
     static IntPtr wglInstance;
     [STAThread]
     static void Main () {
-        WindowClassExW wc = WindowClassExW.Create();
+        var wc = WindowClassExW.Create();
         wc.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
         wc.wndProc = MyProc;
         wc.hInstance = Gl.Kernel.GetModuleHandleW(null);
@@ -44,6 +111,7 @@ class Engine {
             _ = Gl.User.TranslateMessage(ref m);
             _ = Gl.User.DispatchMessageW(ref m);
         }
+        Gl.User.DestroyWindow(helperWindow);
         Gl.Kernel.Win32Assert(Gl.User.UnregisterClassW(new IntPtr(atom), IntPtr.Zero));
 
         //wglInstance = Gl.Kernel.LoadLibraryA("opengl32.dll");
@@ -60,6 +128,3 @@ class Engine {
         //f.Run();
     }
 }
-/*
-
-*/

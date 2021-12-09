@@ -68,10 +68,10 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 ((long*)bp)[i] = 0;
     }
-
-    public static string Method (int skip = 0) => new StackFrame(skip + 1, true).GetMethod().Name;
+    public static string VisualStudioLink (StackFrame sf) => $">{sf.GetFileName()}({sf.GetFileLineNumber()},{sf.GetFileColumnNumber()}):";
+    public static string Method (int skip = 0) => VisualStudioLink(new StackFrame(skip + 1, true));
     public static void Trace (string message) {
-        var formatted = TraceFormat(message);
+        var formatted = TraceFormat(message, 1);
         if (Debugger.IsAttached)
             Debug.WriteLine(formatted);
         else
@@ -95,7 +95,7 @@ public static class Utilities {
         value = values[index];
     }
 
-    private static string TraceFormat (string message) => $"{DateTime.Now:mm:ss.fff}> {Method(2)} {message}";
+    private static string TraceFormat (string message, int skip = 0) => $"{Method(skip + 2)} {message}";
 
     public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) => type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
 

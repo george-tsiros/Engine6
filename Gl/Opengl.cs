@@ -16,14 +16,16 @@ unsafe public static class Opengl {
         Version = 0x1F02,
         Extensions = 0x1F03,
     }
-    [DllImport(opengl32, EntryPoint = "wglDeleteContext", SetLastError = true)]
-    public extern static bool DeleteContext (IntPtr hglrc);
     [DllImport(opengl32, EntryPoint = "wglCreateContext", SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
-    [DllImport(opengl32, EntryPoint = "wglGetCurrentContext", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr GetCurrentContext ();
+    [DllImport(opengl32, EntryPoint = "wglDeleteContext", SetLastError = true)]
+    public extern static bool DeleteContext (IntPtr hglrc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
     public static extern IntPtr GetProcAddress (string name);
+    [DllImport(opengl32, EntryPoint = "wglGetCurentDC", CallingConvention = CallingConvention.Winapi, ExactSpelling = true)]
+    public static extern IntPtr GetCurrentDC ();
+    [DllImport(opengl32, EntryPoint = "wglGetCurrentContext", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr GetCurrentContext ();
     [DllImport(opengl32, SetLastError = true, EntryPoint = "wglMakeCurrent")]
     public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
     [DllImport(opengl32, EntryPoint = "glClear")]

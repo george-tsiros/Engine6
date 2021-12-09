@@ -15,7 +15,7 @@ public static class User {
     unsafe public static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool DestroyWindow (IntPtr windowHandle);
+    public static extern bool DestroyWindow (IntPtr windowHandle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr CreateWindowExW (uint exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, uint style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
