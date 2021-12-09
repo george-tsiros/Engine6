@@ -131,11 +131,7 @@ unsafe public static class Opengl {
                 if (IntPtr.Zero == openglLibrary)
                     openglLibrary = Kernel.LoadLibraryW("opengl32.dll");
                 ptr = Kernel.GetProcAddress(openglLibrary, name);
-                Debug.WriteLineIf(ptr != IntPtr.Zero, $"{name} found in via GetProcAddress");
-            } else
-                Debug.WriteLine($"{name} found via wglGetProcAddress");
-            Debug.WriteLineIf(ptr == IntPtr.Zero, $"{name} found nowhere");
-            //return ptr;
+            } 
             return ptr != IntPtr.Zero ? ptr : throw new ApplicationException($"failed to get proc address of {name}");
         }
 #pragma warning restore CS0649

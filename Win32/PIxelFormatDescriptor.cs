@@ -1,4 +1,4 @@
-﻿namespace Gl;
+﻿namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 

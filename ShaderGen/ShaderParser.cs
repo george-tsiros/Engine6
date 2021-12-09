@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Gl;
 using static Gl.Opengl;
 using static Gl.Utilities;
+using Win32;
 class ShaderGen {
     private static bool CreateFrom (string[] args) {
         const int expectedArgumentCount = 2;

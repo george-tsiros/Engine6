@@ -1,20 +1,6 @@
-﻿namespace Gl;
+﻿namespace Win32;
 
-using System;
-
-internal struct Message {
-    public IntPtr hWnd;
-    public uint msg;
-    public IntPtr wparam;
-    public IntPtr lparam;
-    public IntPtr result;
-    public int time;
-    public int px;
-    public int py;
-    public int lprivate;
-}
-
-internal enum WinMessage:ushort {
+public enum WinMessage:ushort {
     Activate = 0x0006,
     ActivateApp = 0x001C,
     AFXFIRST = 0x0360,

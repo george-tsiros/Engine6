@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-
+using Win32;
 class ContextCreationException:Exception {
     public ContextCreationException (string message = null) : base(message ?? Kernel.GetLastError().ToString("x16")) { }
 }
@@ -48,7 +48,7 @@ public class GlWindow:IDisposable {
         (Width, Height) = (width, height);
         var windowStyle = WindowStyle.Caption | WindowStyle.ClipChildren | WindowStyle.ClipSiblings;
         IsGood = isGood;
-        var maybeMyHandle = User.CreateWindowExW(0, windowClass.classname, "egh", (int)windowStyle, 100, 1000, Width, Height, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+        var maybeMyHandle = User.CreateWindowExW(0, windowClass.classname, "egh", (uint)windowStyle, 100, 1000, Width, Height, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
         Debug.Assert(maybeMyHandle == WindowHandle);
     }
     private void Paint () {
@@ -207,6 +207,8 @@ public class GlWindow:IDisposable {
                 break;
             case WinMessage.KeyDown: {
                     var m = new KeyMessage(w, l);
+                    if (m.WasDown) 
+                        break;
                     KeyDown(m.Key);
                     return IntPtr.Zero;
                 }

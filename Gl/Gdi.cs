@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Win32;
 
 
 public static class Gdi {

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+﻿namespace Win32;
 
 public struct Rect {
     public int left;

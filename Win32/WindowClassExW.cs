@@ -1,10 +1,9 @@
-﻿namespace Gl;
-
+﻿namespace Win32;
 using System;
 using System.Runtime.InteropServices;
-internal delegate IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
+public delegate IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
 
-internal unsafe struct WindowClassExW {
+public unsafe struct WindowClassExW {
     public uint size;
     public ClassStyle style;
     public WndProc wndProc;

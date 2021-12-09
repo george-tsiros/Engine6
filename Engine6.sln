@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf", "Perf\Perf.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitmapToRaster", "BitmapToRaster\BitmapToRaster.csproj", "{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Win32", "Win32\Win32.csproj", "{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,18 @@ Global
 		{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}.Release|x64.Build.0 = Release|Any CPU
 		{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}.Release|x86.ActiveCfg = Release|Any CPU
 		{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}.Release|x86.Build.0 = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|x64.Build.0 = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Debug|x86.Build.0 = Debug|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|x64.ActiveCfg = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|x64.Build.0 = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|x86.ActiveCfg = Release|Any CPU
+		{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

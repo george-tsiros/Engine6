@@ -6,7 +6,7 @@ using Shaders;
 using System.Numerics;
 using System;
 using System.Diagnostics;
-
+using Win32;
 class NoiseTest:GlWindow {
     public NoiseTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) {
         threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;

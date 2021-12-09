@@ -2,25 +2,26 @@
 
 using System.Runtime.InteropServices;
 using System;
-
-internal static class User {
+using Win32;
+public static class User {
     private const string user32 = nameof(user32) + ".dll";
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    unsafe internal static extern ushort RegisterClassExW (ref WindowClassExW windowClass);
+    unsafe public static extern ushort RegisterClassExW (ref WindowClassExW windowClass);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    unsafe internal static extern int UnregisterClassW ([MarshalAs(UnmanagedType.LPWStr)] string className, IntPtr hInstance);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    unsafe public static extern bool UnregisterClassW ([MarshalAs(UnmanagedType.LPWStr)] string className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    unsafe internal static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
+    unsafe public static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DestroyWindow (IntPtr windowHandle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    internal static extern IntPtr CreateWindowExW (int exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, int style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+    public static extern IntPtr CreateWindowExW (uint exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, uint style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     internal static extern IntPtr GetDC (IntPtr windowHandle);
     [DllImport(user32)]
-    internal static extern IntPtr DefWindowProcW (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
+    public static extern IntPtr DefWindowProcW (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
@@ -28,7 +29,7 @@ internal static class User {
     internal static extern void PostQuitMessage (int code);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool ShowWindow (IntPtr handle, int cmdShow);
+    public static extern bool ShowWindow (IntPtr handle, int cmdShow);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool UpdateWindow (IntPtr handle);
@@ -36,12 +37,12 @@ internal static class User {
     internal static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, uint remove);
+    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, uint remove);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool TranslateMessage (ref Message m);
+    public static extern bool TranslateMessage (ref Message m);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    internal static extern IntPtr DispatchMessageW (ref Message m);
+    public static extern IntPtr DispatchMessageW (ref Message m);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr SetCapture (IntPtr windowHandle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]

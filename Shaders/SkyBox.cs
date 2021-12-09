@@ -5,13 +5,13 @@ using System.Numerics;
 public static class SkyBox {
 #pragma warning disable CS0649
 
-    //size 1, type 35664
-    [GlAttrib("vertexUV")]
-    public static int VertexUV { get; }
-
     //size 1, type 35666
     [GlAttrib("vertexPosition")]
     public static int VertexPosition { get; }
+
+    //size 1, type 35664
+    [GlAttrib("vertexUV")]
+    public static int VertexUV { get; }
 
     //size 1, type Matrix4x4
     [GlUniform("projection")]

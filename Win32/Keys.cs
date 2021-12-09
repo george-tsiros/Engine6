@@ -1,4 +1,4 @@
-﻿namespace Gl;
+﻿namespace Win32;
 
 public enum Keys:byte {
     None = 0x00,

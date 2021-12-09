@@ -4,6 +4,7 @@ using System;
 using System.Numerics;
 using Shaders;
 using Gl;
+using Win32;
 using static Gl.Opengl;
 
 class NeinCraft:GlWindow {
