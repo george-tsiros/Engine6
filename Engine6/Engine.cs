@@ -53,13 +53,10 @@ class Glfw {
         glfwPlatformInit();
         glfwDefaultWindowHints();
     }
-    void glfwPlatformCreateWindow () {
+    public void glfwCreateWindow () {
         createNativeWindow();
         glfwInitWgl();
         glfwCreateContextWGL();
-    }
-    public void glfwCreateWindow () {
-        glfwPlatformCreateWindow();
     }
     public IntPtr RenderingContext { get; private set; }
     public IntPtr DeviceContext { get; private set; }
@@ -135,6 +132,8 @@ class Glfw {
         //        var pixelFormat = i + 1;
         //    }
         //} else { 
+        var pfds = new List<PixelFormatDescriptor>();
+        var lastPixelFormatIndex = 0;
         for (var i = 0; i < nativeCount; i++) {
             var pixelFormat = i + 1;
             var pfd = PixelFormatDescriptor.Create();
@@ -155,10 +154,14 @@ class Glfw {
                 continue;
             if (pfd.Flags.HasFlag(PixelFlags.Stereo))
                 continue;
-            if (pfd.RedBits == 8 && pfd.GreenBits == 8 && pfd.BlueBits == 8 && pfd.DepthBits > 16)
-                return pixelFormat;
+            if (pfd.RedBits == 8 && pfd.GreenBits == 8 && pfd.BlueBits == 8 && pfd.DepthBits > 16) {
+                pfds.Add(pfd);
+                lastPixelFormatIndex = pixelFormat;
+            }
         }
-        return 0;
+        foreach (var p in pfds)
+            Debug.WriteLine(p.ToString());
+        return lastPixelFormatIndex;
     }
 
     string[] extensions;
@@ -263,28 +266,28 @@ class Glfw {
             throw new GlException();
     }
     void glfwDefaultWindowHints () { }
-    delegate IntPtr A (IntPtr a);
-    delegate int B (IntPtr a);
-    unsafe delegate IntPtr C (byte* a);
-    delegate IntPtr D ();
-    delegate int E (IntPtr a, IntPtr b);
-    delegate IntPtr F (IntPtr a, IntPtr b, int[] c);
-    delegate IntPtr G (int a);
-    private static A wglCreateContext;
-    private static B wglDeleteContext;
-    private static C wglGetProcAddress;
-    private static D wglGetCurrentDC;
-    private static D wglGetCurrentContext;
-    private static E wglMakeCurrent;
-    private static E wglShareLists;
+    delegate IntPtr IntPtr_IntPtr__IntPtr (IntPtr a);
+    delegate int IntPtr__Int32 (IntPtr a);
+    unsafe delegate IntPtr ByteP__IntPtr (byte* a);
+    delegate IntPtr Void__IntPtr ();
+    delegate int IntPtr_IntPtr__Int32 (IntPtr a, IntPtr b);
+    delegate IntPtr IntPtr_IntPtr_ArrayInt32__IntPtr (IntPtr a, IntPtr b, int[] c);
+    delegate IntPtr Int32__IntPtr (int a);
+    private static IntPtr_IntPtr__IntPtr wglCreateContext;
+    private static IntPtr__Int32 wglDeleteContext;
+    private static ByteP__IntPtr wglGetProcAddress;
+    private static Void__IntPtr wglGetCurrentDC;
+    private static Void__IntPtr wglGetCurrentContext;
+    private static IntPtr_IntPtr__Int32 wglMakeCurrent;
+    private static IntPtr_IntPtr__Int32 wglShareLists;
 
-    private static D wglGetExtensionsStringEXT;
-    private static A wglGetExtensionsStringARB;
-    private static F wglCreateContextAttribsARB;
-    private static G wglSwapIntervalEXT;
+    private static Void__IntPtr wglGetExtensionsStringEXT;
+    private static IntPtr_IntPtr__IntPtr wglGetExtensionsStringARB;
+    private static IntPtr_IntPtr_ArrayInt32__IntPtr wglCreateContextAttribsARB;
+    private static Int32__IntPtr wglSwapIntervalEXT;
     [return: MarshalAs(UnmanagedType.Bool)]
-    unsafe delegate bool wglGetPixelFormatAttribivARB_Type (IntPtr a, int b, int c, uint d, int* e, int* f);
-    private static wglGetPixelFormatAttribivARB_Type wglGetPixelFormatAttribivARB;
+    unsafe delegate bool IntPtr_Int32_Int32_UInt32_Int32P_Int32P__Boolean (IntPtr a, int b, int c, uint d, int* e, int* f);
+    private static IntPtr_Int32_Int32_UInt32_Int32P_Int32P__Boolean wglGetPixelFormatAttribivARB;
     private static void GetProc<T> (ref T t, string name) where T : Delegate {
         var p = Gl.Kernel.GetProcAddress(wglInstance, name);
         Gl.Kernel.Win32Assert(p);
@@ -300,7 +303,7 @@ class Engine {
         var glfw = new Glfw();
         glfw.glfwCreateWindow();
         _ = Gl.User.ShowWindow(glfw.WindowHandle, 10);
-        //Gl.Kernel.Win32Assert(Gl.User.UpdateWindow(glfw.WindowHandle));
+        Gl.Kernel.Win32Assert(Gl.User.UpdateWindow(glfw.WindowHandle));
         Message m = new();
         for (; ; ) {
             if (Gl.User.PeekMessageW(ref m, IntPtr.Zero, 0, 0, 0)) {

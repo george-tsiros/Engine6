@@ -38,7 +38,7 @@ d.BlueBits == 8 &&
 //d.DepthBits == 24 &&
 d.Flags.HasFlag(PixelFlags.DrawToWindow | PixelFlags.SupportComposition | PixelFlags.DoubleBuffer | PixelFlags.SupportOpengl);
     public override string ToString () {
-        return $"{Flags}, {RedBits}/{GreenBits}/{BlueBits}/{DepthBits}";
+        return $"{Flags}, {RedBits}/{GreenBits}/{BlueBits}/{AlphaBits}/{DepthBits}, {AccumRedBits}/{AccumGreenBits}/{AccumBlueBits}/{AccumAlphaBits}, {StencilBits}, {AuxBuffers}";
     }
 
     //Use this function to make a new one with Size and Version already filled in.
