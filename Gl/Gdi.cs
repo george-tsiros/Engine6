@@ -45,7 +45,7 @@ public static class Gdi {
 
    unsafe public static int GetPixelFormat (IntPtr dc, Predicate<PixelFormatDescriptor> isGood, PixelFormatDescriptor* pfd) {
         var pixelFormatIndex = 1;
-        while (0 != Gdi.DescribePixelFormat(dc, pixelFormatIndex, pfd->structSize, pfd)) {
+        while (0 != Gdi.DescribePixelFormat(dc, pixelFormatIndex, pfd->Ss, pfd)) {
             if (isGood(*pfd))
                 return pixelFormatIndex;
             pixelFormatIndex++;

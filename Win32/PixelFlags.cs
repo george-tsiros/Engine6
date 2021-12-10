@@ -20,4 +20,5 @@ public enum PixelFlags {
     DepthDontCare = 0x20000000,
     DoubleBufferDontCare = 0x40000000,
     Stereodontcare = unchecked((int)0x80000000),
+    Typical = DoubleBuffer | DrawToWindow | SupportOpengl | SupportComposition,
 }

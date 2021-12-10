@@ -68,10 +68,9 @@ class Glfw {
         int pixelFormatIndex = choosePixelFormat();
         if (0 == pixelFormatIndex)
             throw new GlException();
-        var described = Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.structSize, &pfd);
+        var described = Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.Ss, &pfd);
         if (0 == described)
             throw new GlException();
-        Debug.WriteLine(pfd.ToString());
         var formatSet = Gl.Gdi.SetPixelFormat(DeviceContext, pixelFormatIndex, ref pfd);
         if (!formatSet)
             throw new GlException();
@@ -132,35 +131,19 @@ class Glfw {
         //        var pixelFormat = i + 1;
         //    }
         //} else { 
-        var pfds = new List<PixelFormatDescriptor>();
         var lastPixelFormatIndex = 0;
         for (var i = 0; i < nativeCount; i++) {
             var pixelFormat = i + 1;
             var pfd = PixelFormatDescriptor.Create();
+
             var eh = Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormat, PixelFormatDescriptor.Size, &pfd);
             if (0 == eh)
                 continue;
-            if (!pfd.Flags.HasFlag(PixelFlags.DrawToWindow))
-                continue;
-            if (!pfd.Flags.HasFlag(PixelFlags.SupportOpengl))
-                continue;
-            if (!pfd.Flags.HasFlag(PixelFlags.GenericAccelerated) && !pfd.Flags.HasFlag(PixelFlags.GenericFormat))
-                continue;
-            if (pfd.PixelType != 0)
-                continue;
-            if (!pfd.Flags.HasFlag(PixelFlags.DoubleBuffer))
-                continue;
-            if (!pfd.Flags.HasFlag(PixelFlags.SupportComposition))
-                continue;
-            if (pfd.Flags.HasFlag(PixelFlags.Stereo))
-                continue;
-            if (pfd.RedBits == 8 && pfd.GreenBits == 8 && pfd.BlueBits == 8 && pfd.DepthBits > 16) {
-                pfds.Add(pfd);
+            if (pfd.Flags.HasFlag(PixelFlags.GenericAccelerated) || pfd.Flags.HasFlag(PixelFlags.GenericFormat) && !pfd.Flags.HasFlag(PixelFlags.Stereo) && PixelFormatDescriptor.Typical(pfd)) { 
+                Debug.WriteLine($"{pixelFormat}: {pfd}");
                 lastPixelFormatIndex = pixelFormat;
             }
         }
-        foreach (var p in pfds)
-            Debug.WriteLine(p.ToString());
         return lastPixelFormatIndex;
     }
 
@@ -195,7 +178,7 @@ class Glfw {
         var dc = Gl.User.GetDC(helperWindow);
         var pfd = PixelFormatDescriptor.Create();
         pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer;
-        pfd.ColorBits = 24;
+        pfd.ClrBts = 24;
         var formatIndex = Gl.Gdi.ChoosePixelFormat(dc, ref pfd);
         var pfSet = Gl.Gdi.SetPixelFormat(dc, formatIndex, ref pfd);
         if (!pfSet)
