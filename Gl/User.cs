@@ -19,22 +19,22 @@ public static class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr CreateWindowExW (uint exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, uint style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    internal static extern IntPtr GetDC (IntPtr windowHandle);
+    public static extern IntPtr GetDC (IntPtr windowHandle);
     [DllImport(user32)]
     public static extern IntPtr DefWindowProcW (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    internal static extern void PostQuitMessage (int code);
+    public static extern void PostQuitMessage (int code);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ShowWindow (IntPtr handle, int cmdShow);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool UpdateWindow (IntPtr handle);
+    public static extern bool UpdateWindow (IntPtr handle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    internal static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
+    public static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, uint remove);

@@ -8,7 +8,7 @@ public static class Kernel {
     [DllImport(kernel32, CallingConvention = CallingConvention.Winapi)]
     public extern static ulong GetLastError ();
     [DllImport(kernel32, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-    public extern static IntPtr GetProcAddress (IntPtr module, [MarshalAs(UnmanagedType.LPWStr)] string name);
+    public extern static IntPtr GetProcAddress (IntPtr module, [MarshalAs(UnmanagedType.LPStr)] string name);
     [DllImport(kernel32, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
     public extern static IntPtr LoadLibraryW (string filename);
     [DllImport(kernel32, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
@@ -21,7 +21,7 @@ public static class Kernel {
         if (!b) {
             var message = GetLastError().ToString("x16");
             Utilities.Trace(message);
-            _ = User.MessageBox(IntPtr.Zero, message, null, 0x1000);
+            //_ = User.MessageBox(IntPtr.Zero, message, null, 0x1000);
             Environment.Exit(-1);
         }
     }

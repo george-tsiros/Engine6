@@ -16,6 +16,8 @@ unsafe public static class Opengl {
         Version = 0x1F02,
         Extensions = 0x1F03,
     }
+    [DllImport(opengl32, EntryPoint = "glGetError", CallingConvention = CallingConvention.Winapi)]
+    public static extern int GetError ();
     [DllImport(opengl32, EntryPoint = "wglCreateContext", SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglDeleteContext", SetLastError = true)]

@@ -16,7 +16,7 @@ public static class Gdi {
     /// <param name="ppfd">the function sets the members of the PIXELFORMATDESCRIPTOR structure pointed to by ppfd according to the specified pixel format.</param>
     /// <returns>If the function succeeds, the return value is the maximum pixel format index of the device context.If the function fails, the return value is zero. To get extended error information, call <see cref="Kernel.GetLastError"/>.</returns>
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, uint bytes, ref PixelFormatDescriptor ppfd);
+    unsafe public static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, uint bytes, PixelFormatDescriptor* ppfd);
     /// <summary>
     /// </summary>
     /// <param name="dc"></param>
@@ -24,27 +24,29 @@ public static class Gdi {
     /// <param name="pfd"></param>
     /// <returns>If the function succeeds, the return value is TRUE.If the function fails, the return value is FALSE. To get extended error information, call <see cref="Kernel.GetLastError"/>.</returns>
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern int ChoosePixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd);
-    [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(gdi32, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SwapBuffers (IntPtr dc);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi)]
     public static extern bool DeleteDC (IntPtr dc);
 
-    public static IntPtr CreateContext (IntPtr dc, Predicate<PixelFormatDescriptor> isGood) {
+    unsafe public static IntPtr CreateContext (IntPtr dc, Predicate<PixelFormatDescriptor> isGood) {
         var pfd = PixelFormatDescriptor.Create();
-        var i = Gdi.GetPixelFormat(dc, isGood, ref pfd);
+        var i = Gdi.GetPixelFormat(dc, isGood, &pfd);
         Kernel.Win32Assert(Gdi.SetPixelFormat(dc, i, ref pfd));
         var rc = Opengl.CreateContext(dc);
         Kernel.Win32Assert(rc);
         return rc;
     }
 
-    public static int GetPixelFormat (IntPtr dc, Predicate<PixelFormatDescriptor> isGood, ref PixelFormatDescriptor pfd) {
+   unsafe public static int GetPixelFormat (IntPtr dc, Predicate<PixelFormatDescriptor> isGood, PixelFormatDescriptor* pfd) {
         var pixelFormatIndex = 1;
-        while (0 != Gdi.DescribePixelFormat(dc, pixelFormatIndex, pfd.Size, ref pfd)) {
-            if (isGood(pfd))
+        while (0 != Gdi.DescribePixelFormat(dc, pixelFormatIndex, pfd->structSize, pfd)) {
+            if (isGood(*pfd))
                 return pixelFormatIndex;
             pixelFormatIndex++;
         }
