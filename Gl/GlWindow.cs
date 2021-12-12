@@ -32,7 +32,7 @@ public class GlWindow:IDisposable {
         var windowClass = WindowClassExW.Create();
         windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
         windowClass.wndProc = MyProc;
-        var nullModuleHandle = Gl.Kernel.GetModuleHandleW(null);
+        var nullModuleHandle = Kernel.GetModuleHandleW(null);
         windowClass.hInstance = nullModuleHandle;
         windowClass.hCursor = IntPtr.Zero;
         windowClass.classname = ClassName;
@@ -53,46 +53,46 @@ public class GlWindow:IDisposable {
     }
 
     private void InitWgl () {
-        var dc = Gl.User.GetDC(helperWindow);
+        var dc = User.GetDC(helperWindow);
         var pfd = PixelFormatDescriptor.Create();
         pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer;
         pfd.ClrBts = 24;
-        var formatIndex = Gl.Gdi.ChoosePixelFormat(dc, ref pfd);
-        Demand(Gl.Gdi.SetPixelFormat(dc, formatIndex, ref pfd));
-        var rc = Gl.Opengl.CreateContext(dc);
+        var formatIndex = Gdi.ChoosePixelFormat(dc, ref pfd);
+        Demand(Gdi.SetPixelFormat(dc, formatIndex, ref pfd));
+        var rc = Opengl.CreateContext(dc);
         Demand(rc);
-        var pdc = Gl.Opengl.GetCurrentDC();
-        var prc = Gl.Opengl.GetCurrentContext();
-        Demand(Gl.Opengl.MakeCurrent(dc, rc));
-        var extensionsString = Marshal.PtrToStringAnsi(Gl.Opengl.GetExtensionsString());
+        var pdc = Opengl.GetCurrentDC();
+        var prc = Opengl.GetCurrentContext();
+        Demand(Opengl.MakeCurrent(dc, rc));
+        var extensionsString = Marshal.PtrToStringAnsi(Opengl.GetExtensionsString());
         if (string.IsNullOrEmpty(extensionsString))
             throw new Exception();
         extensions.UnionWith(extensionsString.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-        var madePCurrent = Gl.Opengl.MakeCurrent(pdc, prc);
-        var deleted = Gl.Opengl.DeleteContext(rc);
-        Demand(Gl.User.DestroyWindow(helperWindow));
+        var madePCurrent = Opengl.MakeCurrent(pdc, prc);
+        var deleted = Opengl.DeleteContext(rc);
+        Demand(User.DestroyWindow(helperWindow));
 
     }
     unsafe private void CreateContextWGL () {
         var pfd = PixelFormatDescriptor.Create();
-        DeviceContext = Gl.User.GetDC(WindowHandle);
+        DeviceContext = User.GetDC(WindowHandle);
         Demand(IntPtr.Zero != DeviceContext);
         int pixelFormatIndex = ChoosePixelFormatWGL();
         Demand(0 != pixelFormatIndex);
-        Demand(0 != Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.Ss, &pfd));
-        Demand(Gl.Gdi.SetPixelFormat(DeviceContext, pixelFormatIndex, ref pfd));
+        Demand(0 != Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.Ss, &pfd));
+        Demand(Gdi.SetPixelFormat(DeviceContext, pixelFormatIndex, ref pfd));
         Demand(ExtensionSupportedWGL(ExtensionString.ARB_create_context));
         Demand(ExtensionSupportedWGL(ExtensionString.ARB_create_context_profile));
-        if (Gl.Opengl.ExtensionsSupported) {
+        if (Opengl.ExtensionsSupported) {
             var attribs = new int[] {
                 (int)PixelFormatAttribute.CONTEXT_MAJOR_VERSION_ARB,
                 4,
                 (int)PixelFormatAttribute.CONTEXT_MINOR_VERSION_ARB,
                 6,
-                (int)Gl.ContextAttributes.ContextFlags,
-                (int)(Gl.ContextFlags.Debug |  Gl.ContextFlags.ForwardCompatible),
-                (int)Gl.ContextAttributes.ProfileMask,
-                (int)Gl.ProfileMask.Core,
+                (int)ContextAttributes.ContextFlags,
+                (int)(ContextFlags.Debug |  ContextFlags.ForwardCompatible),
+                (int)ContextAttributes.ProfileMask,
+                (int)ProfileMask.Core,
                 0,
             };
             RenderingContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attribs);
@@ -100,9 +100,10 @@ public class GlWindow:IDisposable {
             RenderingContext = Opengl.CreateContext(DeviceContext);
         }
         Demand(RenderingContext);
-        Demand(Gl.Opengl.MakeCurrent(DeviceContext, RenderingContext));
-        Demand(Gl.Opengl.GetCurrentContext() == RenderingContext);
-        Gl.State.DebugOutput = true;
+        Demand(Opengl.MakeCurrent(DeviceContext, RenderingContext));
+        Demand(Opengl.GetCurrentContext() == RenderingContext);
+        State.DebugOutput = true;
+        State.SwapInterval = 1;
     }
     unsafe private static bool GetPixelFormatAttribivARB (IntPtr dc, int pixelFormat, int x, int[] attributes, int[] values) {
         if (attributes.Length != values.Length)
@@ -114,10 +115,10 @@ public class GlWindow:IDisposable {
     private bool ExtensionSupportedWGL (ExtensionString extension) => extensions.Contains($"WGL_{extension}");
     unsafe private int ChoosePixelFormatWGL () {
         var lastPixelFormatIndex = 0;
-        if (Gl.Opengl.ExtensionsSupported && ExtensionSupportedWGL(ExtensionString.ARB_pixel_format)) {
+        if (Opengl.ExtensionsSupported && ExtensionSupportedWGL(ExtensionString.ARB_pixel_format)) {
             var formatCount = 0;
             int attrib = (int)PixelFormatAttribute.NUMBER_PIXEL_FORMATS_ARB;
-            Demand(Gl.Opengl.GetPixelFormatAttribivARB(DeviceContext.ToPointer(), 1, 0, 1, &attrib, &formatCount));
+            Demand(Opengl.GetPixelFormatAttribivARB(DeviceContext.ToPointer(), 1, 0, 1, &attrib, &formatCount));
             var attribs = new int[] {
                 (int)PixelFormatAttribute.SUPPORT_OPENGL_ARB,
                 (int)PixelFormatAttribute.DRAW_TO_WINDOW_ARB,
@@ -160,9 +161,9 @@ public class GlWindow:IDisposable {
             }
         } else {
             var pfd = PixelFormatDescriptor.Create();
-            var formatCount = Gl.Gdi.DescribePixelFormat(DeviceContext, 1, pfd.Ss, null);
+            var formatCount = Gdi.DescribePixelFormat(DeviceContext, 1, pfd.Ss, null);
             for (var pixelFormat = 1; pixelFormat <= formatCount; pixelFormat++)
-                if (0 != Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormat, pfd.Ss, &pfd))
+                if (0 != Gdi.DescribePixelFormat(DeviceContext, pixelFormat, pfd.Ss, &pfd))
                     if (pfd.Flags.HasFlag(PixelFlags.GenericAccelerated) || pfd.Flags.HasFlag(PixelFlags.GenericFormat) && !pfd.Flags.HasFlag(PixelFlags.Stereo) && PixelFormatDescriptor.Typical(pfd))
                         return pixelFormat;
         }

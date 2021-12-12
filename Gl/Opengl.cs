@@ -22,7 +22,7 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "wglCreateContext", SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglDeleteContext", SetLastError = true)]
-    [return:MarshalAs(UnmanagedType.Bool)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public extern static bool DeleteContext (IntPtr hglrc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
     public static extern IntPtr GetProcAddress ([MarshalAs(UnmanagedType.LPStr)] string name);
@@ -31,7 +31,7 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "wglGetCurrentContext", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr GetCurrentContext ();
     [DllImport(opengl32, SetLastError = true, EntryPoint = "wglMakeCurrent")]
-    [return:MarshalAs(UnmanagedType.Bool)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
 
     [DllImport(opengl32, EntryPoint = "glClear")]
@@ -122,7 +122,9 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<void*> wglGetExtensionsStringEXT;
         public static readonly delegate* unmanaged[Cdecl]<void*, void*> wglGetExtensionsStringARB;
         public static readonly delegate* unmanaged[Cdecl]<void*, void*, int*, void*> wglCreateContextAttribsARB;
-        public static readonly delegate* unmanaged[Cdecl]<int, void*> wglSwapIntervalEXT;
+        public static readonly delegate* unmanaged[Cdecl]<int, int> wglSwapIntervalEXT;
+        public static readonly delegate* unmanaged[Cdecl]<int> wglGetSwapIntervalEXT;
+
         public static readonly delegate* unmanaged[Cdecl]<void*, int, int, uint, int*, int*, int> wglGetPixelFormatAttribivARB;
 
         static Extensions () {
@@ -137,6 +139,9 @@ unsafe public static class Opengl {
         }
 #pragma warning restore CS0649
     }
+
+    public static int GetSwapIntervalEXT () => Extensions.wglGetSwapIntervalEXT();
+    public static bool SwapIntervalEXT (int frames) => 0 != Extensions.wglSwapIntervalEXT(frames);
     public static IntPtr GetExtensionsString () {
         if (Extensions.wglGetExtensionsStringARB is not null)
             return (IntPtr)Extensions.wglGetExtensionsStringARB(GetCurrentDC().ToPointer());
@@ -211,7 +216,7 @@ unsafe public static class Opengl {
     public static void ShaderSource (int id, string source) {
         var bytes = new byte[source.Length + 1];
         var l = Encoding.ASCII.GetBytes(source, bytes);
-        if(source.Length != l)
+        if (source.Length != l)
             throw new Exception();
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)

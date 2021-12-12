@@ -22,6 +22,17 @@ public sealed class State {
         }
     }
 
+    public static int SwapInterval {
+        get => GetSwapIntervalEXT();
+        set {
+            if (value != SwapInterval)
+                if (!SwapIntervalEXT(value))
+                    throw new Exception();
+            if (value != SwapInterval)
+                throw new Exception();
+        }
+    }
+
     public static int ActiveTexture {
         get => GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0;
         set {
