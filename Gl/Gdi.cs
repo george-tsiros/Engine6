@@ -32,24 +32,6 @@ public static class Gdi {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SwapBuffers (IntPtr dc);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DeleteDC (IntPtr dc);
-
-    unsafe public static IntPtr CreateContext (IntPtr dc, Predicate<PixelFormatDescriptor> isGood) {
-        var pfd = PixelFormatDescriptor.Create();
-        var i = Gdi.GetPixelFormat(dc, isGood, &pfd);
-        Kernel.Win32Assert(Gdi.SetPixelFormat(dc, i, ref pfd));
-        var rc = Opengl.CreateContext(dc);
-        Kernel.Win32Assert(rc);
-        return rc;
-    }
-
-   unsafe public static int GetPixelFormat (IntPtr dc, Predicate<PixelFormatDescriptor> isGood, PixelFormatDescriptor* pfd) {
-        var pixelFormatIndex = 1;
-        while (0 != Gdi.DescribePixelFormat(dc, pixelFormatIndex, pfd->Ss, pfd)) {
-            if (isGood(*pfd))
-                return pixelFormatIndex;
-            pixelFormatIndex++;
-        }
-        throw new ContextCreationException("no pfd");
-    }
 }

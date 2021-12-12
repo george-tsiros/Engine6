@@ -113,18 +113,19 @@ class TextureTest:GlWindow {
         skyboxVao.Assign(skyboxUvBuffer, SkyBox.VertexUV);
         SkyBox.Projection(projection);
     }
+    private DepthFunction[] DepthFunctionValues;
     protected override void KeyDown (Keys k) {
         if (k == Keys.Space) {
-            var values = Enum.GetValues<DepthFunction>();
-            var i = Array.IndexOf(values, f);
+            DepthFunctionValues ??= Enum.GetValues<DepthFunction>();
+            var i = Array.IndexOf(DepthFunctionValues, selectedDepthFunction);
             if (--i < 0)
-                i = values.Length - 1;
-            f = values[i];
-            Console.WriteLine(f);
+                i = DepthFunctionValues.Length - 1;
+            selectedDepthFunction = DepthFunctionValues[i];
+            Console.WriteLine(selectedDepthFunction);
         } else
             base.KeyDown(k);
     }
-    private DepthFunction f = DepthFunction.Equal;
+    private DepthFunction selectedDepthFunction = DepthFunction.Equal;
     protected override void Render (float dt) {
         //Camera.Mouse(new(dt, 0));
         Viewport(0, 0, Width, Height);
@@ -139,9 +140,10 @@ class TextureTest:GlWindow {
         SimpleTexture.Tex(1);
         SimpleTexture.View(Camera.LookAtMatrix);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 1);
+
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;
-        State.DepthFunc = DepthFunction.Never;
+        State.DepthFunc = selectedDepthFunction;
         skyboxTexture.BindTo(0);
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);

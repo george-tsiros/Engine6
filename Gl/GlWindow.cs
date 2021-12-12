@@ -8,92 +8,13 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Win32;
 
-public enum PixelFormatAttribute {
-    NUMBER_PIXEL_FORMATS_ARB = 0x2000,
-    SUPPORT_OPENGL_ARB = 0x2010,
-    DRAW_TO_WINDOW_ARB = 0x2001,
-    PIXEL_TYPE_ARB = 0x2013,
-    TYPE_RGBA_ARB = 0x202b,
-    ACCELERATION_ARB = 0x2003,
-    NO_ACCELERATION_ARB = 0x2025,
-    RED_BITS_ARB = 0x2015,
-    RED_SHIFT_ARB = 0x2016,
-    GREEN_BITS_ARB = 0x2017,
-    GREEN_SHIFT_ARB = 0x2018,
-    BLUE_BITS_ARB = 0x2019,
-    BLUE_SHIFT_ARB = 0x201a,
-    ALPHA_BITS_ARB = 0x201b,
-    ALPHA_SHIFT_ARB = 0x201c,
-    ACCUM_BITS_ARB = 0x201d,
-    ACCUM_RED_BITS_ARB = 0x201e,
-    ACCUM_GREEN_BITS_ARB = 0x201f,
-    ACCUM_BLUE_BITS_ARB = 0x2020,
-    ACCUM_ALPHA_BITS_ARB = 0x2021,
-    DEPTH_BITS_ARB = 0x2022,
-    STENCIL_BITS_ARB = 0x2023,
-    AUX_BUFFERS_ARB = 0x2024,
-    STEREO_ARB = 0x2012,
-    DOUBLE_BUFFER_ARB = 0x2011,
-    SAMPLES_ARB = 0x2042,
-    FRAMEBUFFER_SRGB_CAPABLE_ARB = 0x20a9,
-    CONTEXT_DEBUG_BIT_ARB = 0x00000001,
-    CONTEXT_FORWARD_COMPATIBLE_BIT_ARB = 0x00000002,
-    CONTEXT_PROFILE_MASK_ARB = 0x9126,
-    CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001,
-    CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB = 0x00000002,
-    CONTEXT_MAJOR_VERSION_ARB = 0x2091,
-    CONTEXT_MINOR_VERSION_ARB = 0x2092,
-    CONTEXT_FLAGS_ARB = 0x2094,
-    CONTEXT_ES2_PROFILE_BIT_EXT = 0x00000004,
-    CONTEXT_ROBUST_ACCESS_BIT_ARB = 0x00000004,
-    LOSE_CONTEXT_ON_RESET_ARB = 0x8252,
-    CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB = 0x8256,
-    NO_RESET_NOTIFICATION_ARB = 0x8261,
-    CONTEXT_RELEASE_BEHAVIOR_ARB = 0x2097,
-    CONTEXT_RELEASE_BEHAVIOR_NONE_ARB = 0,
-    CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB = 0x2098,
-    CONTEXT_OPENGL_NO_ERROR_ARB = 0x31b3,
-    COLORSPACE_EXT = 0x309d,
-    COLORSPACE_SRGB_EXT = 0x3089,
-
-}
-
-public enum ExtensionString {
-    ARB_multisample,
-    ARB_framebuffer_sRGB,
-    EXT_framebuffer_sRGB,
-    ARB_create_context,
-    ARB_create_context_profile,
-    EXT_create_context_es2_profile,
-    ARB_create_context_robustness,
-    ARB_create_context_no_error,
-    EXT_swap_control,
-    EXT_colorspace,
-    ARB_pixel_format,
-    ARB_context_flush_control,
-}
-
-class ContextCreationException:Exception {
-    public ContextCreationException (string message = null) : base(message ?? Kernel.GetLastError().ToString("x16")) { }
-}
-readonly struct KeyMessage {
-    public short RepeatCount { get; }
-    public Keys Key { get; }
-    public bool WasDown { get; }
-    public KeyMessage (IntPtr w, IntPtr l) {
-        var wi = (uint)(w.ToInt64() & uint.MaxValue);
-        var li = (uint)(l.ToInt64() & uint.MaxValue);
-        RepeatCount = (short)(li & short.MaxValue);
-        Key = (Keys)(byte)(wi & byte.MaxValue);
-        WasDown = (li & 0x40000000) != 0;
-    }
-}
-
 public class GlWindow:IDisposable {
     protected static void Demand (bool condition) {
         if (!condition)
             throw new Exception();
     }
+
+    protected static void Demand (IntPtr p) => Demand(IntPtr.Zero != p);
     protected const string ClassName = "MYWINDOWCLASS";
     protected ulong FramesRendered { get; private set; }
     public IntPtr DeviceContext { get; private set; }
@@ -104,7 +25,9 @@ public class GlWindow:IDisposable {
     public int Height { get; }
     private long lastTicks;
     private bool disposed;
-    private Predicate<PixelFormatDescriptor> IsGood { get; }
+    private IntPtr helperWindow;
+    private HashSet<string> extensions = new(StringComparer.OrdinalIgnoreCase);
+
     public GlWindow (Vector2i size) {
         var windowClass = WindowClassExW.Create();
         windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
@@ -114,46 +37,40 @@ public class GlWindow:IDisposable {
         windowClass.hCursor = IntPtr.Zero;
         windowClass.classname = ClassName;
         ClassAtom = User.RegisterClassExW(ref windowClass);
-        Kernel.Win32Assert(ClassAtom != 0);
+        Demand(ClassAtom != 0);
         (Width, Height) = size;
         helperWindow = User.CreateWindowExW(0x300, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
-        if (IntPtr.Zero == helperWindow)
-            throw new Exception();
+        Demand(helperWindow);
         var m = new Message();
         while (User.PeekMessageW(ref m, helperWindow, 0, 0, 1)) {
             _ = User.TranslateMessage(ref m);
             _ = User.DispatchMessageW(ref m);
         }
         WindowHandle = User.CreateWindowExW(0x300, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings, 0, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
+        Demand(WindowHandle);
         InitWgl();
         CreateContextWGL();
     }
-    IntPtr helperWindow;
-    HashSet<string> extensions = new(StringComparer.OrdinalIgnoreCase);
+
     private void InitWgl () {
         var dc = Gl.User.GetDC(helperWindow);
         var pfd = PixelFormatDescriptor.Create();
         pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer;
         pfd.ClrBts = 24;
         var formatIndex = Gl.Gdi.ChoosePixelFormat(dc, ref pfd);
-        var pfSet = Gl.Gdi.SetPixelFormat(dc, formatIndex, ref pfd);
-        if (!pfSet)
-            throw new Exception();
+        Demand(Gl.Gdi.SetPixelFormat(dc, formatIndex, ref pfd));
         var rc = Gl.Opengl.CreateContext(dc);
-        if (IntPtr.Zero == rc)
-            throw new Exception();
+        Demand(rc);
         var pdc = Gl.Opengl.GetCurrentDC();
         var prc = Gl.Opengl.GetCurrentContext();
-        var madeCurrent = Gl.Opengl.MakeCurrent(dc, rc);
-        if (!madeCurrent)
-            throw new Exception();
+        Demand(Gl.Opengl.MakeCurrent(dc, rc));
         var extensionsString = Marshal.PtrToStringAnsi(Gl.Opengl.GetExtensionsString());
         if (string.IsNullOrEmpty(extensionsString))
             throw new Exception();
         extensions.UnionWith(extensionsString.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         var madePCurrent = Gl.Opengl.MakeCurrent(pdc, prc);
         var deleted = Gl.Opengl.DeleteContext(rc);
-        Gl.Kernel.Win32Assert(Gl.User.DestroyWindow(helperWindow));
+        Demand(Gl.User.DestroyWindow(helperWindow));
 
     }
     unsafe private void CreateContextWGL () {
@@ -162,14 +79,10 @@ public class GlWindow:IDisposable {
         Demand(IntPtr.Zero != DeviceContext);
         int pixelFormatIndex = ChoosePixelFormatWGL();
         Demand(0 != pixelFormatIndex);
-        var described = Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.Ss, &pfd);
-        Demand(0 != described);
-        var formatSet = Gl.Gdi.SetPixelFormat(DeviceContext, pixelFormatIndex, ref pfd);
-        Demand(formatSet);
-        var es = ExtensionSupportedWGL(ExtensionString.ARB_create_context);
-        Demand(es);
-        es = ExtensionSupportedWGL(ExtensionString.ARB_create_context_profile);
-        Demand(es);
+        Demand(0 != Gl.Gdi.DescribePixelFormat(DeviceContext, pixelFormatIndex, pfd.Ss, &pfd));
+        Demand(Gl.Gdi.SetPixelFormat(DeviceContext, pixelFormatIndex, ref pfd));
+        Demand(ExtensionSupportedWGL(ExtensionString.ARB_create_context));
+        Demand(ExtensionSupportedWGL(ExtensionString.ARB_create_context_profile));
         if (Gl.Opengl.ExtensionsSupported) {
             var attribs = new int[] {
                 (int)PixelFormatAttribute.CONTEXT_MAJOR_VERSION_ARB,
@@ -186,16 +99,8 @@ public class GlWindow:IDisposable {
         } else {
             RenderingContext = Opengl.CreateContext(DeviceContext);
         }
-        if (IntPtr.Zero == RenderingContext) {
-            var kernelError = Gl.Kernel.GetLastError();
-            Debug.WriteLine($"kernel {kernelError:x}");
-            var e = Gl.Opengl.GetError();
-            Debug.WriteLine($"ogl {e:x}");
-            Debugger.Break();
-        }
-        Demand(IntPtr.Zero != RenderingContext);
-        var madeCurrent = Gl.Opengl.MakeCurrent(DeviceContext, RenderingContext);
-        Demand(madeCurrent);
+        Demand(RenderingContext);
+        Demand(Gl.Opengl.MakeCurrent(DeviceContext, RenderingContext));
         Demand(Gl.Opengl.GetCurrentContext() == RenderingContext);
         Gl.State.DebugOutput = true;
     }
@@ -212,8 +117,7 @@ public class GlWindow:IDisposable {
         if (Gl.Opengl.ExtensionsSupported && ExtensionSupportedWGL(ExtensionString.ARB_pixel_format)) {
             var formatCount = 0;
             int attrib = (int)PixelFormatAttribute.NUMBER_PIXEL_FORMATS_ARB;
-            if (!Gl.Opengl.GetPixelFormatAttribivARB(DeviceContext.ToPointer(), 1, 0, 1, &attrib, &formatCount))
-                throw new Exception();
+            Demand(Gl.Opengl.GetPixelFormatAttribivARB(DeviceContext.ToPointer(), 1, 0, 1, &attrib, &formatCount));
             var attribs = new int[] {
                 (int)PixelFormatAttribute.SUPPORT_OPENGL_ARB,
                 (int)PixelFormatAttribute.DRAW_TO_WINDOW_ARB,
@@ -279,7 +183,7 @@ public class GlWindow:IDisposable {
         lastTicks = t0;
         var dt = dticks > 0 ? (float)((double)dticks / Stopwatch.Frequency) : 0f;
         Render(dt);
-        Kernel.Win32Assert(Gdi.SwapBuffers(DeviceContext));
+        Demand(Gdi.SwapBuffers(DeviceContext));
         ++FramesRendered;
     }
     protected virtual void Render (float dt) {
@@ -328,7 +232,7 @@ public class GlWindow:IDisposable {
     public void Run () {
         Load();
         _ = User.ShowWindow(WindowHandle, 10);
-        Kernel.Win32Assert(User.UpdateWindow(WindowHandle));
+        Demand(User.UpdateWindow(WindowHandle));
         Message m = new();
         for (; ; ) {
             if (User.PeekMessageW(ref m, IntPtr.Zero, 0, 0, 0)) {
@@ -341,9 +245,9 @@ public class GlWindow:IDisposable {
             }
             Paint();
         }
-        Kernel.Win32Assert(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
-        Kernel.Win32Assert(Opengl.DeleteContext(RenderingContext));
-        Kernel.Win32Assert(User.ReleaseDC(WindowHandle, DeviceContext));
+        Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
+        Demand(Opengl.DeleteContext(RenderingContext));
+        Demand(User.ReleaseDC(WindowHandle, DeviceContext));
     }
 
     public void Dispose () {
@@ -355,8 +259,8 @@ public class GlWindow:IDisposable {
         if (dispose && !disposed) {
             disposed = true;
             Closing();
-            Kernel.Win32Assert(User.DestroyWindow(WindowHandle));
-            Kernel.Win32Assert(User.UnregisterClassW((IntPtr)ClassAtom, IntPtr.Zero));
+            Demand(User.DestroyWindow(WindowHandle));
+            Demand(User.UnregisterClassW((IntPtr)ClassAtom, IntPtr.Zero));
         }
     }
 
