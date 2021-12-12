@@ -27,26 +27,25 @@ public class GlWindow:IDisposable {
     private bool disposed;
     private IntPtr helperWindow;
     private HashSet<string> extensions = new(StringComparer.OrdinalIgnoreCase);
-
     public GlWindow (Vector2i size) {
         var windowClass = WindowClassExW.Create();
         windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
         windowClass.wndProc = MyProc;
-        var nullModuleHandle = Kernel.GetModuleHandleW(null);
-        windowClass.hInstance = nullModuleHandle;
+        var self = Kernel.GetModuleHandleW(null);
+        windowClass.hInstance = self;
         windowClass.hCursor = IntPtr.Zero;
         windowClass.classname = ClassName;
         ClassAtom = User.RegisterClassExW(ref windowClass);
         Demand(ClassAtom != 0);
         (Width, Height) = size;
-        helperWindow = User.CreateWindowExW(0x300, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
+        helperWindow = User.CreateWindowExW(WindowStyleEx.None, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
         Demand(helperWindow);
         var m = new Message();
         while (User.PeekMessageW(ref m, helperWindow, 0, 0, 1)) {
             _ = User.TranslateMessage(ref m);
             _ = User.DispatchMessageW(ref m);
         }
-        WindowHandle = User.CreateWindowExW(0x300, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings, 0, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, nullModuleHandle, IntPtr.Zero);
+        WindowHandle = User.CreateWindowExW(WindowStyleEx.None, ClassName, "?", WindowStyle.ClipChildren | WindowStyle.ClipSiblings | WindowStyle.Popup, 1280, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
         Demand(WindowHandle);
         InitWgl();
         CreateContextWGL();
@@ -55,7 +54,7 @@ public class GlWindow:IDisposable {
     private void InitWgl () {
         var dc = User.GetDC(helperWindow);
         var pfd = PixelFormatDescriptor.Create();
-        pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer;
+        pfd.Flags = PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.DoubleBuffer | PixelFlags.SwapExchange | PixelFlags.SupportComposition;
         pfd.ClrBts = 24;
         var formatIndex = Gdi.ChoosePixelFormat(dc, ref pfd);
         Demand(Gdi.SetPixelFormat(dc, formatIndex, ref pfd));
@@ -68,10 +67,10 @@ public class GlWindow:IDisposable {
         if (string.IsNullOrEmpty(extensionsString))
             throw new Exception();
         extensions.UnionWith(extensionsString.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-        var madePCurrent = Opengl.MakeCurrent(pdc, prc);
-        var deleted = Opengl.DeleteContext(rc);
+        Demand(Opengl.MakeCurrent(pdc, prc));
+        Demand(Opengl.DeleteContext(rc));
         Demand(User.DestroyWindow(helperWindow));
-
+        helperWindow = IntPtr.Zero;
     }
     unsafe private void CreateContextWGL () {
         var pfd = PixelFormatDescriptor.Create();
@@ -90,7 +89,7 @@ public class GlWindow:IDisposable {
                 (int)PixelFormatAttribute.CONTEXT_MINOR_VERSION_ARB,
                 6,
                 (int)ContextAttributes.ContextFlags,
-                (int)(ContextFlags.Debug |  ContextFlags.ForwardCompatible),
+                (int)ContextFlags.Debug,
                 (int)ContextAttributes.ProfileMask,
                 (int)ProfileMask.Core,
                 0,
@@ -131,8 +130,12 @@ public class GlWindow:IDisposable {
                 (int)PixelFormatAttribute.DEPTH_BITS_ARB,
                 (int)PixelFormatAttribute.STEREO_ARB,
                 (int)PixelFormatAttribute.DOUBLE_BUFFER_ARB,
+                (int)PixelFormatAttribute.SWAP_METHOD,
             };
             var values = new int[attribs.Length];
+
+            var pfd = PixelFormatDescriptor.Create();
+            var highestPixelFormat = 0;
             for (var pixelFormat = 1; pixelFormat < formatCount; pixelFormat++) {
                 if (!GetPixelFormatAttribivARB(DeviceContext, pixelFormat, 0, attribs, values))
                     continue;
@@ -156,9 +159,15 @@ public class GlWindow:IDisposable {
                     continue;
                 if (!TryGetValue(attribs, values, PixelFormatAttribute.DOUBLE_BUFFER_ARB, out var bf) || bf == 0)
                     continue;
-                Console.WriteLine($"rgb {rb}/{gb}/{bb} depth {depth}");
-                return pixelFormat;
+                if (!TryGetValue(attribs, values, PixelFormatAttribute.SWAP_METHOD, out var swap) || swap != 0x2029)
+                    continue;
+                var ok = Gdi.DescribePixelFormat(DeviceContext, pixelFormat, pfd.Ss, &pfd);
+                if (0 == ok)
+                    throw new Exception();
+                Debug.WriteLine(pfd);
+                highestPixelFormat = pixelFormat;
             }
+            return highestPixelFormat;
         } else {
             var pfd = PixelFormatDescriptor.Create();
             var formatCount = Gdi.DescribePixelFormat(DeviceContext, 1, pfd.Ss, null);
@@ -216,7 +225,6 @@ public class GlWindow:IDisposable {
     static void WriteLine (string name, int a, int b) => Debug.WriteLine($"{name}: {a}, {b}");
 
     protected virtual void KeyDown (Keys k) {
-        Debug.WriteLine($"{nameof(KeyDown)}, {k}");
         switch (k) {
             case Keys.Escape:
                 User.PostQuitMessage(0);
@@ -229,7 +237,7 @@ public class GlWindow:IDisposable {
     }
     protected virtual void Load () { }
     protected virtual void Closing () { }
-
+    protected void SetText (string text) => Demand(User.SetWindowText(WindowHandle, text));
     public void Run () {
         Load();
         _ = User.ShowWindow(WindowHandle, 10);

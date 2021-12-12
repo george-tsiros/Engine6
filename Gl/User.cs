@@ -17,7 +17,7 @@ public static class User {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyWindow (IntPtr windowHandle);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr CreateWindowExW (uint exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+    public static extern IntPtr CreateWindowExW (WindowStyleEx exStyle, [MarshalAs(UnmanagedType.LPWStr)] string className, [MarshalAs(UnmanagedType.LPWStr)] string title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr GetDC (IntPtr windowHandle);
     [DllImport(user32)]
