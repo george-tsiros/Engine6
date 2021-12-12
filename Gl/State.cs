@@ -1,9 +1,15 @@
 namespace Gl;
 
+using System;
 using System.Diagnostics;
 using static Opengl;
 
 public sealed class State {
+    private static void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam) {
+        Debugger.Break();
+    }
+    private static readonly DebugProc debugProc;
+    static State () => debugProc = DebugProc;
     private static void MaybeToggle (Capability cap, bool requested) {
         var previous = IsEnabled(cap);
         if (requested != previous) {
@@ -11,14 +17,15 @@ public sealed class State {
                 Opengl.Enable(cap);
             else
                 Opengl.Disable(cap);
-            Debug.Assert(IsEnabled(cap) == requested);
+            if (IsEnabled(cap) != requested)
+                throw new Exception();
         }
     }
 
     public static int ActiveTexture {
         get => GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0;
         set {
-            if (ActiveTexture != value)
+            if (value != ActiveTexture)
                 ActiveTexture(Const.TEXTURE0 + value);
         }
     }
@@ -41,7 +48,10 @@ public sealed class State {
     }
     public static bool DebugOutput {
         get => IsEnabled(Capability.DebugOutput);
-        set => MaybeToggle(Capability.DebugOutput, value);
+        set {
+            MaybeToggle(Capability.DebugOutput, value);
+            Gl.Opengl.DebugMessageCallback(value ? debugProc : null, IntPtr.Zero);
+        }
     }
     public static bool CullFace {
         get => IsEnabled(Capability.CullFace);
@@ -51,29 +61,37 @@ public sealed class State {
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
-            if (DepthFunc != value)
+            if (value != DepthFunc)
                 DepthFunc(value);
+            if (value != DepthFunc)
+                throw new Exception();
         }
     }
     public static int Framebuffer {
         get => GetIntegerv(IntParameter.FramebufferBinding);
         set {
-            if (Framebuffer != value)
+            if (value != Framebuffer)
                 BindFramebuffer(Const.FRAMEBUFFER, value);
+            if (value != Framebuffer)
+                throw new Exception();
         }
     }
     public static int Program {
-        get => GetIntegerv( IntParameter.CurrentProgram);
+        get => GetIntegerv(IntParameter.CurrentProgram);
         set {
             if (value != Program)
                 UseProgram(value);
+            if (value != Program)
+                throw new Exception();
         }
     }
     public static int ArrayBuffer {
-        get => GetIntegerv( IntParameter.ArrayBufferBinding);
+        get => GetIntegerv(IntParameter.ArrayBufferBinding);
         set {
             if (value != ArrayBuffer)
                 BindBuffer(BufferTarget.Array, value);
+            if (value != ArrayBuffer)
+                throw new Exception();
         }
     }
     public static int VertexArray {
@@ -81,6 +99,8 @@ public sealed class State {
         set {
             if (value != VertexArray)
                 BindVertexArray(value);
+            if (value != VertexArray)
+                throw new Exception();
         }
     }
 }

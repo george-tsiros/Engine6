@@ -7,7 +7,8 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-public delegate void DebugProc (int sourceEnum, int typeEnum, int id, int severityEnum, int length, IntPtr message, IntPtr userParam);
+public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
+
 unsafe public static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
     internal enum StringName {
@@ -21,15 +22,18 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "wglCreateContext", SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglDeleteContext", SetLastError = true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
     public extern static bool DeleteContext (IntPtr hglrc);
-    [DllImport(opengl32, EntryPoint = "wglGetProcAddress", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-    public static extern IntPtr GetProcAddress (string name);
-    [DllImport(opengl32, EntryPoint = "wglGetCurentDC", CallingConvention = CallingConvention.Winapi, ExactSpelling = true)]
+    [DllImport(opengl32, EntryPoint = "wglGetProcAddress", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
+    public static extern IntPtr GetProcAddress ([MarshalAs(UnmanagedType.LPStr)] string name);
+    [DllImport(opengl32, EntryPoint = "wglGetCurrentDC", CallingConvention = CallingConvention.Winapi, ExactSpelling = true)]
     public static extern IntPtr GetCurrentDC ();
     [DllImport(opengl32, EntryPoint = "wglGetCurrentContext", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr GetCurrentContext ();
     [DllImport(opengl32, SetLastError = true, EntryPoint = "wglMakeCurrent")]
+    [return:MarshalAs(UnmanagedType.Bool)]
     public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
+
     [DllImport(opengl32, EntryPoint = "glClear")]
     public static extern void Clear (BufferBit mask);
     [DllImport(opengl32, EntryPoint = "glClearColor")]
@@ -115,32 +119,37 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<int, void> glUseProgram;
         public static readonly delegate* unmanaged[Cdecl]<int, int, void> glVertexAttribDivisor;
         public static readonly delegate* unmanaged[Cdecl]<int, int, AttribType, bool, int, long, void> glVertexAttribPointer;
-        public static readonly delegate* unmanaged[Cdecl]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB;
-        //public static readonly delegate* unmanaged[Cdecl]<int, int, int, int, void> glViewport;
-        //public static readonly delegate* unmanaged[Cdecl]<void> glFlush;
-        //public static readonly delegate* unmanaged[Cdecl]<void> glFinish;
-        //public static readonly delegate* unmanaged[Cdecl]<int, int, void> glBlendFunc;
+        public static readonly delegate* unmanaged[Cdecl]<void*> wglGetExtensionsStringEXT;
+        public static readonly delegate* unmanaged[Cdecl]<void*, void*> wglGetExtensionsStringARB;
+        public static readonly delegate* unmanaged[Cdecl]<void*, void*, int*, void*> wglCreateContextAttribsARB;
+        public static readonly delegate* unmanaged[Cdecl]<int, void*> wglSwapIntervalEXT;
+        public static readonly delegate* unmanaged[Cdecl]<void*, int, int, uint, int*, int*, int> wglGetPixelFormatAttribivARB;
+
         static Extensions () {
-            //Debugger.Break();
             foreach (var f in typeof(Extensions).GetFields(BindingFlags.Public | BindingFlags.Static))
-                if (f.Name.StartsWith("gl") && f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
+                if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
                     f.SetValue(null, GetProcAddress(f.Name));
         }
 
-        public static IntPtr openglLibrary;
-
-        public static IntPtr GetProcAddress (string name) {
+        private static IntPtr GetProcAddress (string name) {
             var ptr = Opengl.GetProcAddress(name);
-            if (IntPtr.Zero == ptr) {
-                if (IntPtr.Zero == openglLibrary)
-                    openglLibrary = Kernel.LoadLibraryW("opengl32.dll");
-                ptr = Kernel.GetProcAddress(openglLibrary, name);
-            } 
             return ptr != IntPtr.Zero ? ptr : throw new ApplicationException($"failed to get proc address of {name}");
         }
 #pragma warning restore CS0649
     }
-
+    public static IntPtr GetExtensionsString () {
+        if (Extensions.wglGetExtensionsStringARB is not null)
+            return (IntPtr)Extensions.wglGetExtensionsStringARB(GetCurrentDC().ToPointer());
+        if (Extensions.wglGetExtensionsStringEXT is not null)
+            return (IntPtr)Extensions.wglGetExtensionsStringEXT();
+        return IntPtr.Zero;
+    }
+    public static bool ExtensionsSupported => Extensions.wglGetPixelFormatAttribivARB is not null;
+    public static bool GetPixelFormatAttribivARB (void* dc, int a, int b, uint c, int* d, int* e) => 0 != Extensions.wglGetPixelFormatAttribivARB(dc, a, b, c, d, e);
+    public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
+        fixed (int* p = &attribs[0])
+            return (IntPtr)Extensions.wglCreateContextAttribsARB(dc.ToPointer(), sharedContext.ToPointer(), p);
+    }
     public static void ActiveTexture (int i) => Extensions.glActiveTexture(i);
     public static void AttachShader (int p, int s) => Extensions.glAttachShader(p, s);
     public static void BindBuffer (BufferTarget target, int buffer) => Extensions.glBindBuffer(target, buffer);
@@ -176,23 +185,6 @@ unsafe public static class Opengl {
     public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, type, normalized, stride, ptr);
     public static void Viewport (Vector2i position, Vector2i size) => Viewport(position.X, position.Y, size.X, size.Y);
-    internal static IntPtr CreateContextAttribs (IntPtr dc, IntPtr shared, int majorVersion, int minorVersion, ContextFlags contextFlags, ProfileMask mask) {
-        var p = IntPtr.Zero;
-        var attributes = new int[] {
-            (int) ContextAttributes.MajorVersion,
-            majorVersion,
-            (int)ContextAttributes.MinorVersion,
-            minorVersion,
-            (int)ContextAttributes.ContextFlags,
-            (int)contextFlags,
-            (int)ContextAttributes.ProfileMask,
-            (int)mask,
-            0
-        };
-        //fixed (int* ap = attributes)
-            p = (IntPtr)Extensions.wglCreateContextAttribsARB(dc, shared, (int*)0);
-        return p;
-    }
 
     public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
     public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);
@@ -200,7 +192,8 @@ unsafe public static class Opengl {
     private static int GetLocation (int program, string name, delegate* unmanaged[Cdecl]<int, byte*, int> f) {
         Span<byte> bytes = stackalloc byte[name.Length + 1];
         var l = Encoding.ASCII.GetBytes(name, bytes);
-        Debug.Assert(l == name.Length);
+        if (l != name.Length)
+            throw new Exception();
         bytes[name.Length] = 0;
         fixed (byte* p = bytes)
             return f(program, p);
@@ -218,7 +211,8 @@ unsafe public static class Opengl {
     public static void ShaderSource (int id, string source) {
         var bytes = new byte[source.Length + 1];
         var l = Encoding.ASCII.GetBytes(source, bytes);
-        Debug.Assert(source.Length == l);
+        if(source.Length != l)
+            throw new Exception();
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)
             Extensions.glShaderSource(id, 1, &strPtr, null);

@@ -12,18 +12,21 @@ public class VertexBuffer<T>:IDisposable where T : unmanaged {
     public int Capacity { get; }
     public VertexBuffer (int capacityInElements) => NamedBufferStorage(Id, ElementSize * (Capacity = capacityInElements), IntPtr.Zero, Const.DYNAMIC_STORAGE_BIT);
     public VertexBuffer (T[] data) : this(data.Length) => BufferData(data, data.Length, 0, 0);
-
+    private void Check (int sourceOffset, int targetOffset, int count, int dataLength) {
+        if (disposed)
+            throw new Exception();
+        if (sourceOffset + count > dataLength)
+            throw new Exception();
+        if(targetOffset + count > Capacity)
+            throw new Exception();
+    }
     unsafe public void BufferData (T[] data, int count, int sourceOffset, int targetOffset) {
-        Debug.Assert(!disposed);
-        Debug.Assert(sourceOffset + count <= data.Length);
-        Debug.Assert(targetOffset + count <= Capacity);
+        Check(sourceOffset, targetOffset, count, data.Length);
         fixed (T* ptr = data)
             NamedBufferSubData(Id, ElementSize * targetOffset, ElementSize * count, ptr + sourceOffset);
     }
     unsafe public void BufferData (Span<T> data, int count, int sourceOffset, int targetOffset) {
-        Debug.Assert(!disposed);
-        Debug.Assert(sourceOffset + count <= data.Length);
-        Debug.Assert(targetOffset + count <= Capacity);
+        Check(sourceOffset, targetOffset, count, data.Length);
         fixed (T* ptr = data)
             NamedBufferSubData(Id, ElementSize * targetOffset, ElementSize * count, ptr + sourceOffset);
     }

@@ -16,7 +16,8 @@ class BitmapToRaster {
             var bytes = new byte[l.Stride * l.Height];
             var channels = l.Stride / l.Width;
             const int bytesPerChannel = 1;
-            Debug.Assert(l.Stride % l.Width == 0);
+            if (l.Stride % l.Width != 0)
+                throw new Exception();
             Marshal.Copy(l.Scan0, bytes, 0, bytes.Length);
             image.UnlockBits(l);
             var name = Path.GetFileNameWithoutExtension(filepath);

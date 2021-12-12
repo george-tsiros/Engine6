@@ -9,7 +9,7 @@ using static Gl.Opengl;
 
 class NeinCraft:GlWindow {
 
-    public NeinCraft (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) { }
+    public NeinCraft (Vector2i size) : base(size) { }
 
     private Camera Camera { get; } = new(new(0, 0, -5));
     private VertexArray skyboxVao, cubeVao;

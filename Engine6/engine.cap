@@ -2,10 +2,10 @@
     "rdocCaptureSettings": 1,
     "settings": {
         "autoStart": true,
-        "commandLine": "",
+        "commandLine": "640 480",
         "environment": [
         ],
-        "executable": "C:\\projects\\source\\Engine6\\Engine6\\bin\\Engine6.exe",
+        "executable": "bin\\Engine6.exe",
         "inject": false,
         "numQueuedFrames": 1,
         "options": {

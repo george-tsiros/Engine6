@@ -10,7 +10,7 @@ using System.Diagnostics;
 using Win32;
 
 class BlitTest:GlWindow {
-    public BlitTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) { }
+    public BlitTest (Vector2i size) : base(size) { }
     private Camera Camera { get; } = new(new(0, 0, 5));
     private Raster raster;
     private Sampler2D sampler;
@@ -64,23 +64,36 @@ class BlitTest:GlWindow {
 
 class TextureTest:GlWindow {
 
-    public TextureTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) { }
+    public TextureTest (Vector2i size) : base(size) { }
 
     private Camera Camera { get; } = new(new(0, 0, 5));
     private VertexArray quad, skyboxVao;
     private Sampler2D tex, skyboxTexture;
-    private VertexBuffer<Vector4> skyboxVertices;
-    private VertexBuffer<Vector2> skyboxUV;
+    private VertexBuffer<Vector4> skyboxBuffer, quadBuffer;
+    private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer;
+    private VertexBuffer<Matrix4x4> quadModelBuffer;
+
+    protected override void Closing () {
+        quad.Dispose();
+        skyboxVao.Dispose();
+        skyboxBuffer.Dispose();
+        skyboxUvBuffer.Dispose();
+        quadBuffer.Dispose();
+        quadModelBuffer.Dispose();
+        quadUvBuffer.Dispose();
+    }
 
     protected unsafe override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
-        var quadBuffer = new VertexBuffer<Vector4>(Quad.Vertices);
+        quadBuffer = new VertexBuffer<Vector4>(Quad.Vertices);
         quad.Assign(quadBuffer, SimpleTexture.VertexPosition);
-        quad.Assign(new VertexBuffer<Vector2>(Quad.Uv), SimpleTexture.VertexUV);
+        quadUvBuffer = new VertexBuffer<Vector2>(Quad.Uv);
+        quad.Assign(quadUvBuffer, SimpleTexture.VertexUV);
         var models = new Matrix4x4[] { Matrix4x4.Identity };
-        quad.Assign(new VertexBuffer<Matrix4x4>(models), SimpleTexture.Model, 1);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 1f, 100f);
+        quadModelBuffer = new VertexBuffer<Matrix4x4>(models);
+        quad.Assign(quadModelBuffer, SimpleTexture.Model, 1);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 1f, 10f);
         SimpleTexture.Projection(projection);
 
         tex = Sampler2D.FromFile("data/untitled.raw");
@@ -94,10 +107,10 @@ class TextureTest:GlWindow {
         skyboxTexture.Mag = MagFilter.Linear;
         skyboxTexture.Min = MinFilter.Linear;
         skyboxTexture.Wrap = Wrap.ClampToEdge;
-        skyboxVertices = new(Geometry.Dex(Geometry.Translate(Cube.Vertices, -.5f * Vector3.One), Geometry.FlipWinding(Cube.Indices)));
-        skyboxVao.Assign(skyboxVertices, SkyBox.VertexPosition);
-        skyboxUV = new(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices)));
-        skyboxVao.Assign(skyboxUV, SkyBox.VertexUV);
+        skyboxBuffer = new(Geometry.Dex(Geometry.ScaleInPlace(Geometry.Translate(Cube.Vertices, -.5f * Vector3.One), 10f), Geometry.FlipWinding(Cube.Indices)));
+        skyboxVao.Assign(skyboxBuffer, SkyBox.VertexPosition);
+        skyboxUvBuffer = new(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices)));
+        skyboxVao.Assign(skyboxUvBuffer, SkyBox.VertexUV);
         SkyBox.Projection(projection);
     }
     protected override void KeyDown (Keys k) {
@@ -107,11 +120,11 @@ class TextureTest:GlWindow {
             if (--i < 0)
                 i = values.Length - 1;
             f = values[i];
-            Debug.WriteLine(f);
+            Console.WriteLine(f);
         } else
             base.KeyDown(k);
     }
-    private DepthFunction f = DepthFunction.LessEqual;
+    private DepthFunction f = DepthFunction.Equal;
     protected override void Render (float dt) {
         //Camera.Mouse(new(dt, 0));
         Viewport(0, 0, Width, Height);
@@ -126,10 +139,9 @@ class TextureTest:GlWindow {
         SimpleTexture.Tex(1);
         SimpleTexture.View(Camera.LookAtMatrix);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 1);
-
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;
-        State.DepthFunc = f;
+        State.DepthFunc = DepthFunction.Never;
         skyboxTexture.BindTo(0);
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);

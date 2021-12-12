@@ -89,7 +89,8 @@ static class Geometry {
         return b;
     }
     internal static void Dex<T> (T[] vertices, int[] indices, T[] dex) where T : struct {
-        Debug.Assert(dex.Length == indices.Length);
+        if (dex.Length != indices.Length)
+            throw new Exception();
         for (var i = 0; i < indices.Length; ++i)
             dex[i] = vertices[indices[i]];
     }
@@ -122,7 +123,8 @@ static class Geometry {
     internal static int[] FlipWinding (int[] indices) {
         var flipped = new int[indices.Length];
         var triangleCount = indices.Length / 3;
-        Debug.Assert(indices.Length % 3 == 0);
+        if (indices.Length % 3 != 0)
+            throw new Exception();
         for (var i = 0; i < indices.Length; i += 3) {
             flipped[i] = indices[i];
             flipped[i + 1] = indices[i + 2];
@@ -133,7 +135,8 @@ static class Geometry {
 
     internal static void FlipWindingInPlace (int[] indices) {
         var triangleCount = indices.Length / 3;
-        Debug.Assert(indices.Length % 3 == 0);
+        if (indices.Length % 3 != 0)
+            throw new Exception();
         for (var i = 0; i < indices.Length; i += 3) {
             var x = indices[i + 1];
             indices[i + 1] = indices[i + 2];
@@ -144,7 +147,8 @@ static class Geometry {
     internal static Vector4[] CreateNormals (Vector4[] vertices, int[] indices) {
         var indexCount = indices.Length;
         var faceCount = indexCount / 3;
-        Debug.Assert(indexCount % 3 == 0);
+        if (indexCount % 3 != 0)
+            throw new Exception();
         var faces = new Vector3i[faceCount];
         for (var i = 0; i < faceCount; ++i)
             faces[i] = new Vector3i(indices[3 * i], indices[3 * i + 1], indices[3 * i + 2]);
@@ -175,7 +179,8 @@ static class Geometry {
     }
 
     internal static Vector4[] CreateNormals (Vector4[] vertices) {
-        Debug.Assert(vertices.Length % 3 == 0);
+        if (vertices.Length % 3 != 0)
+            throw new Exception();
         var normals = new Vector4[vertices.Length];
         for (var i = 0; i < vertices.Length; i += 3) {
             var a = vertices[i + 0];
@@ -192,7 +197,7 @@ static class Geometry {
     }
 }
 
-static class Quad { 
+static class Quad {
     internal static Vector4[] Vertices => new Vector4[] {
             new(-1, -1, 0, 1),
             new(+1, -1, 0, 1),

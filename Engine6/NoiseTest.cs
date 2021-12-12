@@ -8,7 +8,7 @@ using System;
 using System.Diagnostics;
 using Win32;
 class NoiseTest:GlWindow {
-    public NoiseTest (Predicate<PixelFormatDescriptor> p, int width, int height) : base(p, width, height) {
+    public NoiseTest (Vector2i size) : base(size) {
         threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;
         rowsPerThread = _HEIGHT / threadCount;
     }

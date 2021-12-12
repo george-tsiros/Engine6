@@ -1,5 +1,6 @@
 namespace Gl;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 [StructLayout(LayoutKind.Sequential)]
@@ -11,6 +12,8 @@ public readonly struct Vector2i {
     public static bool operator == (Vector2i a, Vector2i b) => a.X == b.X && a.Y == b.Y;
     public static bool operator != (Vector2i a, Vector2i b) => a.X != b.X || a.Y != b.Y;
     public void Deconstruct (out int x, out int y) => (x, y) = (X, Y);
+    public override bool Equals ([NotNullWhen(true)] object obj) => obj is Vector2i other && other == this;
+    public override int GetHashCode () => System.HashCode.Combine(X, Y);
 }
 
 

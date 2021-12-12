@@ -15,21 +15,24 @@ public static class Utilities {
             bytes[i] = b;
     }
     unsafe public static void MemSet (byte[] bytes, ushort us) {
-        Debug.Assert((bytes.Length & 1) == 0);
+        if ((bytes.Length & 1) != 0)
+            throw new Exception();
         var l = bytes.Length >> 1;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
                 ((ushort*)bp)[i] = us;
     }
     unsafe public static void MemSet (byte[] bytes, uint ui) {
-        Debug.Assert((bytes.Length & 3) == 0);
+        if ((bytes.Length & 3) != 0)
+            throw new Exception();
         var l = bytes.Length >> 2;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
                 ((uint*)bp)[i] = ui;
     }
     unsafe public static void MemSet (byte[] bytes, ulong ul) {
-        Debug.Assert((bytes.Length & 7) == 0);
+        if ((bytes.Length & 7) != 0)
+            throw new Exception();
         var l = bytes.Length >> 4;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
@@ -48,21 +51,24 @@ public static class Utilities {
                 bytes[i] = 0;
     }
     unsafe public static void WipeShorts (byte[] bytes) {
-        Debug.Assert((bytes.Length & 1) == 0);
+        if ((bytes.Length & 1) != 0)
+            throw new Exception();
         var l = bytes.Length >> 1;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
                 ((short*)bp)[i] = 0;
     }
     unsafe public static void WipeInts (byte[] bytes) {
-        Debug.Assert((bytes.Length & 3) == 0);
+        if ((bytes.Length & 3) != 0)
+            throw new Exception();
         var l = bytes.Length >> 2;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
                 ((int*)bp)[i] = 0;
     }
     unsafe public static void WipeLongs (byte[] bytes) {
-        Debug.Assert((bytes.Length & 7) == 0);
+        if ((bytes.Length & 7) != 0)
+            throw new Exception();
         var l = bytes.Length >> 4;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)

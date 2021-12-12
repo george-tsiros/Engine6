@@ -1,7 +1,7 @@
 namespace Gl;
 
 using System;
-internal enum ContextAttributes {
+public enum ContextAttributes {
     MajorVersion = 0x2091,
     MinorVersion = 0x2092,
     LayerPlane = 0x2093,
@@ -9,11 +9,11 @@ internal enum ContextAttributes {
     ProfileMask = 0x9126,
 }
 [Flags]
-internal enum ContextFlags {
+public enum ContextFlags {
     Debug = 1,
     ForwardCompatible = 2,
 }
-internal enum ProfileMask {
+public enum ProfileMask {
     Core = 1,
     Compatibility = 2,
 }
@@ -32,7 +32,7 @@ public enum SizeMessage {
     MaxHide
 }
 [Flags]
-public enum WindowStyle {
+public enum WindowStyle:uint {
     Overlapped = /*     */ 0x00000000,
     Tabstop = /*        */ 0x00010000,
     MaximizeBox = /*    */ 0x00010000,
@@ -51,7 +51,7 @@ public enum WindowStyle {
     Visible = /*        */ 0x10000000,
     Minimize = /*       */ 0x20000000,
     Child = /*          */ 0x40000000,
-    Popup = unchecked((int)0x80000000),
+    Popup = unchecked(0x80000000),
     Tiled = Overlapped,
     ChildWindow = Child,
     Iconic = Minimize,

@@ -30,7 +30,6 @@ public struct PixelFormatDescriptor {
     public uint Lm;
     public uint Vm;
     public uint Dm;
-    public static ushort Size => (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
     public static readonly Predicate<PixelFormatDescriptor> Typical = d => d.PxTp == 0 && d.RdBts == 8 && d.GnBts == 8 && d.BlBts == 8 && d.DpBts >= 16 && d.Flags.HasFlag(PixelFlags.Typical);
     public override string ToString () {
         return $"{Flags},color bits {ClrBts} (rgba bits,shift) ({RdBts},{RdSft}/{GnBts},{GnSft}/{BlBts},{BlSft}/{AlBts},{AlSft}) depth {DpBts}, accum rgba {AcRd}/{AcGn}/{AcBl}/{AcAl}, stencil {SlBts}, aux {AxBts}, layertype {Lt} layermask {Lm} visible mas {Vm} dmg mask {Dm}";

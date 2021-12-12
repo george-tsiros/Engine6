@@ -16,12 +16,11 @@ public static class Kernel {
     [DllImport(kernel32, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
     public extern static IntPtr GetModuleHandleW (string moduleName);
 
-    public static void Win32Assert (IntPtr p) => Win32Assert(p != IntPtr.Zero);
+    public static void Win32Assert (IntPtr p) => Win32Assert(IntPtr.Zero  != p);
     public static void Win32Assert (bool b) {
         if (!b) {
             var message = GetLastError().ToString("x16");
             Utilities.Trace(message);
-            //_ = User.MessageBox(IntPtr.Zero, message, null, 0x1000);
             Environment.Exit(-1);
         }
     }
