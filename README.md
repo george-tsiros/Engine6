@@ -6,7 +6,7 @@
 
 **Gl**: anything directly or indirectly related to opengl. 
 
-**Perf**: simplistic viewer for performance logs created with Engine5/Perf.
+**Perf**: simplistic viewer for performance logs created with Engine6/Perf.
 
 **ShaderGen**: creates classes in `Shaders` for every vertex/fragment shader pair in `Shaders/shadersources` by compiling and inspecting them. Allows for type-safe use of shaders in c#.
 
