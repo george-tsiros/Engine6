@@ -11,14 +11,15 @@ public sealed class State {
     private static readonly DebugProc debugProc;
     static State () => debugProc = DebugProc;
     private static void MaybeToggle (Capability cap, bool requested) {
-        var previous = IsEnabled(cap);
-        if (requested != previous) {
+        if (requested != IsEnabled(cap)) {
             if (requested)
                 Opengl.Enable(cap);
             else
                 Opengl.Disable(cap);
-            if (IsEnabled(cap) != requested)
-                throw new Exception();
+        }
+        if (requested != IsEnabled(cap)) {
+            var eh = Opengl.GetError();
+            throw new Exception();
         }
     }
 
@@ -26,10 +27,8 @@ public sealed class State {
         get => GetSwapIntervalEXT();
         set {
             if (value != SwapInterval)
-                if (!SwapIntervalEXT(value))
+                if (!SwapIntervalEXT(value) || value != SwapInterval)
                     throw new Exception();
-            if (value != SwapInterval)
-                throw new Exception();
         }
     }
 
@@ -69,6 +68,15 @@ public sealed class State {
         set => MaybeToggle(Capability.CullFace, value);
     }
 
+    public static bool DepthWriteMask {
+        get => 0 != GetIntegerv(IntParameter.DepthMask);
+        set {
+            if (value != DepthWriteMask)
+                DepthMask(value);
+            if (value != DepthWriteMask)
+                throw new Exception();
+        }
+    }
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {

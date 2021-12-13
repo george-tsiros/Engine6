@@ -6,6 +6,7 @@ using Shaders;
 using Gl;
 using static Gl.Opengl;
 using static Gl.Utilities;
+using Win32;
 
 class BlitTest:GlWindow {
     public BlitTest (Vector2i size) : base(size) { }
@@ -34,16 +35,22 @@ class BlitTest:GlWindow {
         SimpleTexture.View(Camera.LookAtMatrix);
         SimpleTexture.Projection(Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 1f, 100f));
     }
-    protected override void Render (float dt) {
+    protected override void KeyDown (Keys k) {
+        base.KeyDown(k);
+    }
 
+    protected override void KeyUp (Keys k) {
+        base.KeyDown(k);
+    }
+
+    protected override void Render (float dt) {
         sampler.Upload(raster);
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
-        //State.Blend = false;
         State.DepthTest = true;
-        State.DepthFunc = DepthFunction.Less;
+        State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;
         sampler.BindTo(1);
         SimpleTexture.Tex(1);

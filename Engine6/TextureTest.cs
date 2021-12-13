@@ -67,29 +67,28 @@ class TextureTest:GlWindow {
                 if (--i < 0)
                     i = DepthFunctionValues.Length - 1;
                 selectedDepthFunction = DepthFunctionValues[i];
-                SetText(selectedDepthFunction.ToString());
+                Console.WriteLine(selectedDepthFunction);
                 return;
             case Keys.Up:
                 State.SwapInterval = Math.Min(1, State.SwapInterval + 1);
-                SetText(State.SwapInterval.ToString());
+                Console.WriteLine(State.SwapInterval);
                 return;
             case Keys.Down:
                 State.SwapInterval = Math.Max(-1, State.SwapInterval - 1);
-                SetText(State.SwapInterval.ToString());
+                Console.WriteLine(State.SwapInterval);
                 return;
         }
         base.KeyDown(k);
     }
     private DepthFunction selectedDepthFunction = DepthFunction.Equal;
     protected override void Render (float dt) {
-        //Camera.Mouse(new(dt, 0));
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
         //State.Blend = false;
         State.DepthTest = true;
-        State.DepthFunc = DepthFunction.Less;
+        State.DepthFunc = DepthFunction.LessEqual;
         State.CullFace = true;
         tex.BindTo(1);
         SimpleTexture.Tex(1);

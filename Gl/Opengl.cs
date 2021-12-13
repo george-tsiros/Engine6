@@ -34,6 +34,9 @@ unsafe public static class Opengl {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
 
+    [DllImport(opengl32, EntryPoint = "glGetFloatv", ExactSpelling = true)]
+    public static extern void GetFloatv (int name, float* v);
+
     [DllImport(opengl32, EntryPoint = "glClear")]
     public static extern void Clear (BufferBit mask);
     [DllImport(opengl32, EntryPoint = "glClearColor")]
@@ -105,6 +108,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<int, int, int, int*, int*, AttribType*, byte*, void> glGetActiveAttrib;
         //public static readonly delegate* unmanaged[Cdecl]<int, int*, void> glGetIntegerv;
         public static readonly delegate* unmanaged[Cdecl]<int, void> glLinkProgram;
+        //public static readonly delegate* unmanaged[Cdecl]<int, float*, void> glGetFloatv;
         public static readonly delegate* unmanaged[Cdecl]<int, long, void*, int, void> glNamedBufferStorage;
         public static readonly delegate* unmanaged[Cdecl]<int, long, long, void*, void> glNamedBufferSubData;
         public static readonly delegate* unmanaged[Cdecl]<int, int, byte**, int*, void> glShaderSource;
@@ -124,7 +128,6 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Cdecl]<void*, void*, int*, void*> wglCreateContextAttribsARB;
         public static readonly delegate* unmanaged[Cdecl]<int, int> wglSwapIntervalEXT;
         public static readonly delegate* unmanaged[Cdecl]<int> wglGetSwapIntervalEXT;
-
         public static readonly delegate* unmanaged[Cdecl]<void*, int, int, uint, int*, int*, int> wglGetPixelFormatAttribivARB;
 
         static Extensions () {
@@ -154,6 +157,13 @@ unsafe public static class Opengl {
     public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
         fixed (int* p = &attribs[0])
             return (IntPtr)Extensions.wglCreateContextAttribsARB(dc.ToPointer(), sharedContext.ToPointer(), p);
+    }
+    public static void GetDepthRange (out float near, out float far) {
+        float* floats = stackalloc float[2];
+
+        GetFloatv(0x0B70, floats);
+        near = floats[0];
+        far = floats[1];
     }
     public static void ActiveTexture (int i) => Extensions.glActiveTexture(i);
     public static void AttachShader (int p, int s) => Extensions.glAttachShader(p, s);
