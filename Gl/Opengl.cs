@@ -33,10 +33,8 @@ unsafe public static class Opengl {
     [DllImport(opengl32, SetLastError = true, EntryPoint = "wglMakeCurrent")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
-
     [DllImport(opengl32, EntryPoint = "glGetFloatv", ExactSpelling = true)]
     public static extern void GetFloatv (int name, float* v);
-
     [DllImport(opengl32, EntryPoint = "glClear")]
     public static extern void Clear (BufferBit mask);
     [DllImport(opengl32, EntryPoint = "glClearColor")]

@@ -80,7 +80,7 @@ public sealed class State {
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
-            if (value != DepthFunc)
+            if (value != DepthFunc) 
                 DepthFunc(value);
             if (value != DepthFunc)
                 throw new Exception();

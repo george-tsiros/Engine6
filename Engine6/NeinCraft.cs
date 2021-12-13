@@ -58,7 +58,7 @@ class NeinCraft:GlWindow {
         skyboxTexture.BindTo(0);
         SkyBox.View(Camera.RotationOnly);
         DrawArrays(Primitive.Triangles, 0, 36);
-        _ = Gdi.SwapBuffers(DeviceContext);
+        //_ = Gdi.SwapBuffers(DeviceContext);
     }
 
     protected override void Closing () {

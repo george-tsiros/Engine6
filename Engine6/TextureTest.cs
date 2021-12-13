@@ -35,7 +35,7 @@ class TextureTest:GlWindow {
         quad.Assign(quadBuffer, SimpleTexture.VertexPosition);
         quadUvBuffer = new VertexBuffer<Vector2>(Quad.Uv);
         quad.Assign(quadUvBuffer, SimpleTexture.VertexUV);
-        var models = new Matrix4x4[] { Matrix4x4.Identity };
+        var models = new Matrix4x4[] { Matrix4x4.CreateTranslation(.5f, 0, -5), Matrix4x4.CreateTranslation(-.5f, 0, -6), };
         quadModelBuffer = new VertexBuffer<Matrix4x4>(models);
         quad.Assign(quadModelBuffer, SimpleTexture.Model, 1);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 1f, 10f);
@@ -58,49 +58,44 @@ class TextureTest:GlWindow {
         skyboxVao.Assign(skyboxUvBuffer, SkyBox.VertexUV);
         SkyBox.Projection(projection);
     }
-    private DepthFunction[] DepthFunctionValues;
     protected override void KeyDown (Keys k) {
         switch (k) {
-            case Keys.Space:
-                DepthFunctionValues ??= Enum.GetValues<DepthFunction>();
-                var i = Array.IndexOf(DepthFunctionValues, selectedDepthFunction);
-                if (--i < 0)
-                    i = DepthFunctionValues.Length - 1;
-                selectedDepthFunction = DepthFunctionValues[i];
-                Console.WriteLine(selectedDepthFunction);
-                return;
-            case Keys.Up:
-                State.SwapInterval = Math.Min(1, State.SwapInterval + 1);
-                Console.WriteLine(State.SwapInterval);
-                return;
-            case Keys.Down:
-                State.SwapInterval = Math.Max(-1, State.SwapInterval - 1);
-                Console.WriteLine(State.SwapInterval);
+            case Keys.F1:
+                Cycle(ref selectedDepthFunction);
                 return;
         }
         base.KeyDown(k);
     }
-    private DepthFunction selectedDepthFunction = DepthFunction.Equal;
+    public static void Cycle<T> (ref T t) where T : struct,Enum {
+        var values = Enum.GetValues<T>();
+        var last = t;
+        var i = Array.IndexOf(values, t);
+        if (--i < 0)
+            i = values.Length - 1;
+        t = values[i];
+        Console.WriteLine($"{last} -> {t}");
+    }
+    private DepthFunction selectedDepthFunction = DepthFunction.LessEqual;
     protected override void Render (float dt) {
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.Color | BufferBit.Depth);
+        State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
-        //State.Blend = false;
         State.DepthTest = true;
-        State.DepthFunc = DepthFunction.LessEqual;
+        State.DepthFunc = selectedDepthFunction;
         State.CullFace = true;
         tex.BindTo(1);
         SimpleTexture.Tex(1);
-        SimpleTexture.View(Camera.LookAtMatrix);
-        DrawArraysInstanced(Primitive.Triangles, 0, 6, 1);
+        SimpleTexture.View(Matrix4x4.Identity);
+        DrawArraysInstanced(Primitive.Triangles, 0, 6, 2);
 
-        State.Program = SkyBox.Id;
-        State.VertexArray = skyboxVao;
-        State.DepthFunc = selectedDepthFunction;
-        skyboxTexture.BindTo(0);
-        SkyBox.Tex(0);
-        SkyBox.View(Camera.RotationOnly);
-        DrawArrays(Primitive.Triangles, 0, 36);
+        //State.Program = SkyBox.Id;
+        //State.VertexArray = skyboxVao;
+        //State.DepthFunc = selectedDepthFunction;
+        //skyboxTexture.BindTo(0);
+        //SkyBox.Tex(0);
+        //SkyBox.View(Matrix4x4.Identity);
+        //DrawArrays(Primitive.Triangles, 0, 36);
     }
 }

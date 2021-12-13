@@ -86,7 +86,7 @@ public class GlWindow:IDisposable {
         var temporaryPixelFormatIndex = 0;
         for (var i = 1; i <= formatCount && temporaryPixelFormatIndex == 0; i++) {
             Demand(Gdi.DescribePixelFormat(temporaryDc, i, pfd.size, &pfd));
-            if (pfd.depthBits > 16 && pfd.rBits == 8 && pfd.gBits == 8 && pfd.bBits == 8 && pfd.flags == (PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition))
+            if (pfd.depthBits == 24 && pfd.colorBits == 32 && pfd.flags == (PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition))
                 temporaryPixelFormatIndex = i;
         }
         Demand(temporaryPixelFormatIndex);
@@ -198,7 +198,7 @@ public class GlWindow:IDisposable {
     protected virtual void SetFocus () => Debug.WriteLine(nameof(SetFocus));
     protected virtual void KillFocus () => Debug.WriteLine(nameof(KillFocus));
     protected virtual void Size (SizeMessage m, int width, int height) => Debug.WriteLine($"{nameof(Size)}, {m}, {width} x {height}");
-    protected virtual void KeyUp (Keys k) => Debug.WriteLine($"{nameof(KeyUp)}, {k}");
+    protected virtual void KeyUp (Keys k) { }// => Debug.WriteLine($"{nameof(KeyUp)}, {k}");
 
     static void WriteLine (string name, IntPtr w, IntPtr l) => Debug.WriteLine($"{name}: w {Foo(w)}, l {Foo(l)}");
     static void WriteLine (string name, int a, int b) => Debug.WriteLine($"{name}: {a}, {b}");
