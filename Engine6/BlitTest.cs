@@ -45,8 +45,8 @@ class BlitTest:GlWindow {
 
     protected override void Render (float dt) {
         sampler.Upload(raster);
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        glViewport(0, 0, Width, Height);
+        glClear(BufferBit.Color | BufferBit.Depth);
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
         State.DepthTest = true;

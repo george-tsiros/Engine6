@@ -14,7 +14,7 @@ public class Sampler2D:IDisposable {
         if (disposed)
             throw new Exception();
         State.ActiveTexture = t;
-        BindTexture(Const.TEXTURE_2D, Id);
+        glBindTexture(Const.TEXTURE_2D, Id);
     }
 
     private Wrap wrap;

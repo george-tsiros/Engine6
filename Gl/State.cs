@@ -13,12 +13,12 @@ public sealed class State {
     private static void MaybeToggle (Capability cap, bool requested) {
         if (requested != IsEnabled(cap)) {
             if (requested)
-                Opengl.Enable(cap);
+                Opengl.glEnable(cap);
             else
-                Opengl.Disable(cap);
+                Opengl.glDisable(cap);
         }
         if (requested != IsEnabled(cap)) {
-            var eh = Opengl.GetError();
+            var eh = Opengl.glGetError();
             throw new Exception();
         }
     }
@@ -72,7 +72,7 @@ public sealed class State {
         get => 0 != GetIntegerv(IntParameter.DepthMask);
         set {
             if (value != DepthWriteMask)
-                DepthMask(value);
+                glDepthMask(value);
             if (value != DepthWriteMask)
                 throw new Exception();
         }
@@ -81,7 +81,7 @@ public sealed class State {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
             if (value != DepthFunc) 
-                DepthFunc(value);
+                glDepthFunc(value);
             if (value != DepthFunc)
                 throw new Exception();
         }

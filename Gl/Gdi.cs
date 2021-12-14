@@ -28,7 +28,7 @@ public static class Gdi {
     public static extern bool SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern int ChoosePixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd);
-    [DllImport(gdi32, SetLastError = true)]
+    [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SwapBuffers (IntPtr dc);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi)]

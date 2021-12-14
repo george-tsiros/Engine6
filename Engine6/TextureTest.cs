@@ -77,8 +77,8 @@ class TextureTest:GlWindow {
     }
     private DepthFunction selectedDepthFunction = DepthFunction.LessEqual;
     protected override void Render (float dt) {
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        glViewport(0, 0, Width, Height);
+        glClear(BufferBit.Color | BufferBit.Depth);
         State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;

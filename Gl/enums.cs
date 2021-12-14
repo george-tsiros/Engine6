@@ -309,7 +309,7 @@ public enum BlendDestinationFactor {
     SrcAlphaSaturate = 0x0308,
 }
 
-public enum Capability {
+public enum Capability:uint {
     Blend = Const.BLEND,
     CullFace = Const.CULL_FACE,
     DebugOutput = Const.DEBUG_OUTPUT,

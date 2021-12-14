@@ -43,10 +43,12 @@ class DepthFuncTest:GlWindow {
     }
 
     protected override void Render (float dt) {
-        Viewport(0, 0, Width, Height);
+        if (FramesRendered % 20 == 0)
+            TextureTest.Cycle(ref selectedDepthFunction);
+        glViewport(0, 0, Width, Height);
         State.DepthTest = true;
-        Opengl.DepthMask(true);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        Opengl.glDepthMask(true);
+        glClear(BufferBit.Color | BufferBit.Depth);
         State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;

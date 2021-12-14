@@ -40,8 +40,8 @@ class NeinCraft:GlWindow {
 
     double theta = 0.0;
     protected override void Render (float dt) {
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        glViewport(0, 0, Width, Height);
+        glClear(BufferBit.Color | BufferBit.Depth);
         theta += 1.8 * dt;
         if (theta > 2.0 * Math.PI)
             theta -= 2.0 * Math.PI;
@@ -51,13 +51,13 @@ class NeinCraft:GlWindow {
         State.VertexArray = cubeVao;
         SolidColor.View(Camera.LookAtMatrix);
         SolidColor.Model(Matrix4x4.CreateTranslation(new(2f * (float)Math.Sin(theta), 2f * (float)Math.Cos(theta), -3f)));
-        DrawArrays(Primitive.Triangles, 0, 36);
+        glDrawArrays(Primitive.Triangles, 0, 36);
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;
         State.DepthFunc = DepthFunction.LessEqual;
         skyboxTexture.BindTo(0);
         SkyBox.View(Camera.RotationOnly);
-        DrawArrays(Primitive.Triangles, 0, 36);
+        glDrawArrays(Primitive.Triangles, 0, 36);
         //_ = Gdi.SwapBuffers(DeviceContext);
     }
 
