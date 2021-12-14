@@ -58,7 +58,6 @@ unsafe public static class Opengl {
     public static extern void glBlendFunc (BlendSourceFactor sfactor, BlendDestinationFactor dfactor);
     [DllImport(opengl32, ExactSpelling = true)]
     public static extern void glDepthFunc (DepthFunction f);
-    //public static void DepthFunc (DepthFunction f) => Extensions.glDepthFunc((int)f);
     [DllImport(opengl32, ExactSpelling = true)]
     public static extern void glFlush ();
     [DllImport(opengl32, ExactSpelling = true)]

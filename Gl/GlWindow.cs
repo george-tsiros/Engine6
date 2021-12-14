@@ -21,18 +21,18 @@ public class GlWindow:IDisposable {
                 Console.WriteLine(m);
         }
     }
-    private static GlWindow Instance;
+
     protected static void Demand (IntPtr p) => Demand(IntPtr.Zero != p);
     protected static void Demand (int p) => Demand(0 != p);
     protected const string ClassName = "MYWINDOWCLASS";
     protected ulong FramesRendered { get; private set; }
     public  IntPtr DeviceContext { get; private set; }
-    public static IntPtr RenderingContext { get; private set; }
+    public  IntPtr RenderingContext { get; private set; }
     public IntPtr WindowHandle { get; private set; }
     protected ushort ClassAtom { get; }
     public int Width { get; }
     public int Height { get; }
-    private long lastTicks;
+    private long lastTicks = long.MaxValue;
     private bool disposed;
     private HashSet<string> extensions = new(StringComparer.OrdinalIgnoreCase);
     const WindowStyle ClipPopup = WindowStyle.ClipChildren | WindowStyle.ClipSiblings | WindowStyle.Popup;
@@ -69,9 +69,6 @@ public class GlWindow:IDisposable {
     static readonly PixelFormatAttribute[] Attributes = new PixelFormatAttribute[] { PixelFormatAttribute.PIXEL_TYPE_ARB, PixelFormatAttribute.ACCELERATION_ARB, PixelFormatAttribute.COLOR_BITS_ARB, PixelFormatAttribute.DEPTH_BITS_ARB, PixelFormatAttribute.DOUBLE_BUFFER_ARB, PixelFormatAttribute.SWAP_METHOD, };
     const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
     unsafe public GlWindow (Vector2i size) {
-        if (Instance is not null)
-            throw new Exception();
-        Instance = this;
         var self = Kernel.GetModuleHandleW(null);
 
         ClassAtom = RegisterWindowClass(self);
@@ -137,7 +134,7 @@ public class GlWindow:IDisposable {
                 (int)PixelFormatAttribute.COLOR_BITS_ARB, selectedFormat.ColorBits,
                 (int)PixelFormatAttribute.DEPTH_BITS_ARB, selectedFormat.DepthBits,
                 (int)PixelFormatAttribute.SWAP_METHOD, (int)selectedFormat.SwapMethod,
-                (int)PixelFormatAttribute.DOUBLE_BUFFER_ARB, 0,
+                (int)PixelFormatAttribute.DOUBLE_BUFFER_ARB, 1,
                 (int)PixelFormatAttribute.DRAW_TO_WINDOW_ARB, 1,
                 (int)PixelFormatAttribute.STEREO_ARB, 0,
                 (int)PixelFormatAttribute.SAMPLES_ARB, 1,
@@ -150,8 +147,8 @@ public class GlWindow:IDisposable {
         Demand(RenderingContext);
 
         State.DebugOutput = true;
-        State.SwapInterval = -1;
-        State.DepthWriteMask = true;
+        State.SwapInterval = 1;
+        //State.DepthWriteMask = true;
     }
 
     private unsafe ushort RegisterWindowClass (IntPtr self) {
@@ -177,7 +174,6 @@ public class GlWindow:IDisposable {
         var dt = dticks > 0 ? (float)((double)dticks / Stopwatch.Frequency) : 0f;
         Render(dt);
         Demand(Gdi.SwapBuffers(DeviceContext));
-        //Demand(Gdi.SwapBuffers(DeviceContext));
         ++FramesRendered;
     }
     protected virtual void Render (float dt) {
@@ -238,8 +234,6 @@ public class GlWindow:IDisposable {
             }
             Paint();
         }
-        Opengl.GetDepthRange(out var near, out var far);
-        Console.WriteLine($"{near}, {far}");
         Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
         Demand(Opengl.wglDeleteContext(RenderingContext));
         Demand(User.ReleaseDC(WindowHandle, DeviceContext));
@@ -256,75 +250,74 @@ public class GlWindow:IDisposable {
             Closing();
             Demand(User.DestroyWindow(WindowHandle));
             Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
-            Instance = null;
         }
     }
 
-    private static IntPtr SelectorProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) => IntPtr.Zero != RenderingContext ? WndProcActual(hWnd, msg, w, l) : User.DefWindowProcW(hWnd, msg, w, l);
-    private static IntPtr WndProcActual (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
+    private IntPtr SelectorProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) => IntPtr.Zero != RenderingContext ? WndProcActual(hWnd, msg, w, l) : User.DefWindowProcW(hWnd, msg, w, l);
+    private IntPtr WndProcActual (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
         switch (msg) {
             case WinMessage.Moving:
-                //Moving(Marshal.PtrToStructure<Rect>(l));
+                Moving(Marshal.PtrToStructure<Rect>(l));
                 break;
             case WinMessage.WindowPosChanged:
-                //WindowPosChanged(Marshal.PtrToStructure<WindowPos>(l));
+                WindowPosChanged(Marshal.PtrToStructure<WindowPos>(l));
                 break;
             case WinMessage.EraseBkgnd:
-                //EraseBkgnd();
+                EraseBkgnd();
                 return (IntPtr)1;
             case WinMessage.Move: {
-                    //var (x, y) = Split(l);
-                    //Move(x, y);
+                    var (x, y) = Split(l);
+                    Move(x, y);
                 }
                 break;
             case WinMessage.MouseLeave:
-                //MouseLeave();
+                MouseLeave();
                 break;
             case WinMessage.MouseMove: {
-                    //var (x, y) = Split(l);
-                    //MouseMove(x, y);
+                    var (x, y) = Split(l);
+                    MouseMove(x, y);
                 }
                 break;
             case WinMessage.CaptureChanged:
-                //CaptureChanged();
+                CaptureChanged();
                 break;
             case WinMessage.EnterSizeMove:
-                //EnterSizeMove();
+                EnterSizeMove();
                 break;
             case WinMessage.ExitSizeMove:
-                //ExitSizeMove();
+                ExitSizeMove();
                 break;
             case WinMessage.SetFocus:
-                //SetFocus();
+                SetFocus();
                 break;
             case WinMessage.KillFocus:
-                //KillFocus();
+                KillFocus();
                 break;
             case WinMessage.Size: {
-                    //var i = (int)(w.ToInt64() & int.MaxValue);
-                    //if (Enum.IsDefined(typeof(SizeMessage), i)) {
-                    //    var (width, height) = Split(l);
-                    //    Size((SizeMessage)i, width, height);
-                    //}
+                    var i = (int)(w.ToInt64() & int.MaxValue);
+                    if (Enum.IsDefined(typeof(SizeMessage), i)) {
+                        var (width, height) = Split(l);
+                        Size((SizeMessage)i, width, height);
+                    }
                 }
                 break;
             case WinMessage.KeyDown: {
                     var m = new KeyMessage(w, l);
                     if (m.WasDown)
                         break;
-                    Instance.KeyDown(m.Key);
+                    KeyDown(m.Key);
                     return IntPtr.Zero;
                 }
             case WinMessage.KeyUp: {
                     var m = new KeyMessage(w, l);
-                    Instance.KeyUp(m.Key);
+                    KeyUp(m.Key);
                     return IntPtr.Zero;
                 }
             case WinMessage.Close:
                 User.PostQuitMessage(0);
                 break;
             case WinMessage.Paint:
-                Instance.Paint();
+                Paint();
                 return IntPtr.Zero;
         }
         return User.DefWindowProcW(hWnd, msg, w, l);

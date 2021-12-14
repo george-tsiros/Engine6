@@ -7,7 +7,7 @@
         ],
         "executable": "bin\\Engine6.exe",
         "inject": false,
-        "numQueuedFrames": 1,
+        "numQueuedFrames": 5,
         "options": {
             "allowFullscreen": true,
             "allowVSync": true,

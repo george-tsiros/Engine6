@@ -33,18 +33,7 @@ class DepthFuncTest:GlWindow {
         tex.Min = MinFilter.LinearMipMapLinear;
         tex.Wrap = Wrap.ClampToEdge;
     }
-    protected override void KeyDown (Keys k) {
-        switch (k) {
-            case Keys.F1:
-                TextureTest.Cycle(ref selectedDepthFunction);
-                return;
-        }
-        base.KeyDown(k);
-    }
-
     protected override void Render (float dt) {
-        if (FramesRendered % 20 == 0)
-            TextureTest.Cycle(ref selectedDepthFunction);
         glViewport(0, 0, Width, Height);
         State.DepthTest = true;
         Opengl.glDepthMask(true);
@@ -52,12 +41,11 @@ class DepthFuncTest:GlWindow {
         State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
-        State.DepthFunc = selectedDepthFunction;
+        State.DepthFunc = DepthFunction.Less;
         State.CullFace = true;
         tex.BindTo(1);
         SimpleTexture.Tex(1);
         SimpleTexture.View(Matrix4x4.Identity);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 2);
     }
-    private DepthFunction selectedDepthFunction = DepthFunction.LessEqual;
 }
