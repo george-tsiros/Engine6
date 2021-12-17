@@ -11,7 +11,6 @@ using Win32;
 public class GlWindow:IDisposable {
     protected static void Demand (bool condition, string message = null) {
         if (!condition) {
-            var windowsError = Kernel.GetLastError();
             var stackFrame = new StackFrame(1, true);
             var m = $">{stackFrame.GetFileName()}({stackFrame.GetFileLineNumber()},{stackFrame.GetFileColumnNumber()}): {message ?? "?"}";
             if (Debugger.IsAttached)
@@ -50,42 +49,42 @@ public class GlWindow:IDisposable {
             _ = User.DispatchMessageW(ref m);
         }
     }
-    enum PixelType { Rgba = 0x202b, RgbaFloat = 0x21a0, Indexed = 0x202c, RgbaUnsignedFloat = 0x20a8 }
-    enum SwapMethod { Exchange = 0x2028, Copy = 0x2029, Undefined = 0x202a, }
-    enum Acceleration { None = 0x2025, Full = 0x2027, }
-    readonly struct ExtendedPixelFormat {
-        public int Index { get; init; }
-        public PixelType PixelType { get; init; }
-        public Acceleration Acceleration { get; init; }
-        public int ColorBits { get; init; }
-        public int DepthBits { get; init; }
-        public bool DoubleBuffer { get; init; }
-        public SwapMethod SwapMethod { get; init; }
-        public static ExtendedPixelFormat Create (int index, int[] values) => new() {
-            Index = index,
-            PixelType = (PixelType)values[0],
-            Acceleration = (Acceleration)values[1],
-            ColorBits = values[2],
-            DepthBits = values[3],
-            DoubleBuffer = values[4] != 0,
-            SwapMethod = (SwapMethod)values[5],
-        };
-        public override string ToString () => $"{Index}:{PixelType},{Acceleration},{ColorBits}:{DepthBits}{(DoubleBuffer ? ",DoubleBuffer" : "")},{SwapMethod}";
-    }
-    private static bool IsGood (ExtendedPixelFormat f) => f.DepthBits == 24 && f.ColorBits == 32 && f.Acceleration == Acceleration.Full && f.DoubleBuffer && f.PixelType == PixelType.Rgba && f.SwapMethod == SwapMethod.Undefined;
-    static readonly PixelFormatAttribute[] Attributes = new PixelFormatAttribute[] { PixelFormatAttribute.PIXEL_TYPE_ARB, PixelFormatAttribute.ACCELERATION_ARB, PixelFormatAttribute.COLOR_BITS_ARB, PixelFormatAttribute.DEPTH_BITS_ARB, PixelFormatAttribute.DOUBLE_BUFFER_ARB, PixelFormatAttribute.SWAP_METHOD, };
+    //enum PixelType { Rgba = 0x202b, RgbaFloat = 0x21a0, Indexed = 0x202c, RgbaUnsignedFloat = 0x20a8 }
+    //enum SwapMethod { Exchange = 0x2028, Copy = 0x2029, Undefined = 0x202a, }
+    //enum Acceleration { None = 0x2025, Full = 0x2027, }
+    //readonly struct ExtendedPixelFormat {
+    //    public int Index { get; init; }
+    //    public PixelType PixelType { get; init; }
+    //    public Acceleration Acceleration { get; init; }
+    //    public int ColorBits { get; init; }
+    //    public int DepthBits { get; init; }
+    //    public bool DoubleBuffer { get; init; }
+    //    public SwapMethod SwapMethod { get; init; }
+    //    public static ExtendedPixelFormat Create (int index, int[] values) => new() {
+    //        Index = index,
+    //        PixelType = (PixelType)values[0],
+    //        Acceleration = (Acceleration)values[1],
+    //        ColorBits = values[2],
+    //        DepthBits = values[3],
+    //        DoubleBuffer = values[4] != 0,
+    //        SwapMethod = (SwapMethod)values[5],
+    //    };
+    //    public override string ToString () => $"{Index}:{PixelType},{Acceleration},{ColorBits}:{DepthBits}{(DoubleBuffer ? ",DoubleBuffer" : "")},{SwapMethod}";
+    //}
+    //private static bool IsGood (ExtendedPixelFormat f) => f.DepthBits == 24 && f.ColorBits == 32 && f.Acceleration == Acceleration.Full && f.DoubleBuffer && f.PixelType == PixelType.Rgba && f.SwapMethod == SwapMethod.Undefined;
+    //static readonly PixelFormatAttribute[] Attributes = new PixelFormatAttribute[] { PixelFormatAttribute.PixelType, PixelFormatAttribute.Acceleration, PixelFormatAttribute.ColorBits, PixelFormatAttribute.DepthBits, PixelFormatAttribute.DoubleBuffer, PixelFormatAttribute.SwapMethod, };
 
     static IntPtr CreateWindow (ushort atom, Vector2i size) {
-        var w = Demand(User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, SelfHandle, IntPtr.Zero));
+        var w = Demand(User.CreateWindowExW(WindowStyleEx.TopMost, new(atom), IntPtr.Zero, ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, SelfHandle, IntPtr.Zero));
         HandleFirstWindowMessages(w);
         return w;
     }
     private static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
-    unsafe public GlWindow (Vector2i size) {
+
+    public GlWindow (Vector2i size) {
         selectorProc = new(SelectorProc);
         wndProcActual = new(WndProcActual);
         ClassAtom = RegisterWindowClass();
-
         WindowHandle = CreateWindow(ClassAtom, size);
 
         (Width, Height) = size;
@@ -149,12 +148,12 @@ public class GlWindow:IDisposable {
         return atom != 0 ? atom : throw new Exception("failed to register class");
     }
 
-    unsafe private static bool GetPixelFormatAttribivARB (IntPtr dc, int pixelFormat, int x, int[] attributes, int[] values) {
-        Demand(attributes.Length == values.Length);
-        fixed (int* a = &attributes[0])
-        fixed (int* v = &values[0])
-            return Opengl.GetPixelFormatAttribivARB(dc, pixelFormat, 0, (uint)values.Length, a, v);
-    }
+    //unsafe private static bool GetPixelFormatAttribivARB (IntPtr dc, int pixelFormat, int x, int[] attributes, int[] values) {
+    //    Demand(attributes.Length == values.Length);
+    //    fixed (int* a = &attributes[0])
+    //    fixed (int* v = &values[0])
+    //        return Opengl.GetPixelFormatAttribivARB(dc, pixelFormat, 0, (uint)values.Length, a, v);
+    //}
 
     private void Paint () {
         long t0 = Stopwatch.GetTimestamp();
@@ -174,20 +173,20 @@ public class GlWindow:IDisposable {
     static string Foo (int p) => $"{p:x8}, {(p >> 16) & ushort.MaxValue}, {p & ushort.MaxValue}";
     static string Foo (long p) => $"{p:x16}, {(p >> 48) & ushort.MaxValue}, {(p >> 32) & ushort.MaxValue}, {(p >> 16) & ushort.MaxValue}, {p & ushort.MaxValue}";
 
-    protected virtual void WindowPosChanging (IntPtr w, IntPtr l) => WriteLine(nameof(WindowPosChanging), w, l);
-    protected virtual void Moving (Rect r) => Debug.WriteLine($"{nameof(Moving)} {r.left}, {r.top}, {r.right}, {r.bottom}");
-    protected virtual void WindowPosChanged (WindowPos p) => Debug.WriteLine($"{nameof(WindowPosChanged)}: {p.x}, {p.y}, {p.cx}, {p.cy}");
-    protected virtual void EraseBkgnd () => Debug.WriteLine(nameof(EraseBkgnd));
-    protected virtual void Move (short x, short y) => WriteLine(nameof(Move), x, y);
-    protected virtual void MouseMove (short x, short y) => WriteLine(nameof(MouseMove), x, y);
-    protected virtual void MouseLeave () => Debug.WriteLine(nameof(MouseLeave));
-    protected virtual void NCMouseLeave (IntPtr w, IntPtr l) => WriteLine(nameof(NCMouseLeave), w, l);
-    protected virtual void CaptureChanged () => Debug.WriteLine(nameof(CaptureChanged));
-    protected virtual void ExitSizeMove () => Debug.WriteLine(nameof(ExitSizeMove));
-    protected virtual void EnterSizeMove () => Debug.WriteLine(nameof(EnterSizeMove));
-    protected virtual void SetFocus () => Debug.WriteLine(nameof(SetFocus));
-    protected virtual void KillFocus () => Debug.WriteLine(nameof(KillFocus));
-    protected virtual void Size (SizeMessage m, int width, int height) => Debug.WriteLine($"{nameof(Size)}, {m}, {width} x {height}");
+    protected virtual void WindowPosChanging (IntPtr w, IntPtr l) { }// => WriteLine(nameof(WindowPosChanging), w, l);
+    protected virtual void Moving (Rect r) { }// => Debug.WriteLine($"{nameof(Moving)} {r.left}, {r.top}, {r.right}, {r.bottom}");
+    protected virtual void WindowPosChanged (WindowPos p) { }// => Debug.WriteLine($"{nameof(WindowPosChanged)}: {p.x}, {p.y}, {p.cx}, {p.cy}");
+    protected virtual void EraseBkgnd () { }// => Debug.WriteLine(nameof(EraseBkgnd));
+    protected virtual void Move (short x, short y) { }// => WriteLine(nameof(Move), x, y);
+    protected virtual void MouseMove (short x, short y) { }// => WriteLine(nameof(MouseMove), x, y);
+    protected virtual void MouseLeave () { }// => Debug.WriteLine(nameof(MouseLeave));
+    protected virtual void NCMouseLeave (IntPtr w, IntPtr l) { }// => WriteLine(nameof(NCMouseLeave), w, l);
+    protected virtual void CaptureChanged () { }// => Debug.WriteLine(nameof(CaptureChanged));
+    protected virtual void ExitSizeMove () { }// => Debug.WriteLine(nameof(ExitSizeMove));
+    protected virtual void EnterSizeMove () { }// => Debug.WriteLine(nameof(EnterSizeMove));
+    protected virtual void SetFocus () { }// => Debug.WriteLine(nameof(SetFocus));
+    protected virtual void KillFocus () { }// => Debug.WriteLine(nameof(KillFocus));
+    protected virtual void Size (SizeMessage m, int width, int height) { }// => Debug.WriteLine($"{nameof(Size)}, {m}, {width} x {height}");
     protected virtual void KeyUp (Keys k) { }// => Debug.WriteLine($"{nameof(KeyUp)}, {k}");
 
     static void WriteLine (string name, IntPtr w, IntPtr l) => Debug.WriteLine($"{name}: w {Foo(w)}, l {Foo(l)}");
