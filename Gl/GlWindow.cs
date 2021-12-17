@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using Win32;
 
 public class GlWindow:IDisposable {
-    //[DebuggerStepThrough]
     protected static void Demand (bool condition, string message = null) {
         if (!condition) {
             var windowsError = Kernel.GetLastError();
@@ -22,12 +21,20 @@ public class GlWindow:IDisposable {
         }
     }
 
-    protected static void Demand (IntPtr p) => Demand(IntPtr.Zero != p);
-    protected static void Demand (int p) => Demand(0 != p);
+    protected static IntPtr Demand (IntPtr p) {
+        Demand(IntPtr.Zero != p);
+        return p;
+    }
+
+    protected static int Demand (int p) {
+        Demand(0 != p);
+        return p;
+    }
+
     protected const string ClassName = "MYWINDOWCLASS";
     protected ulong FramesRendered { get; private set; }
-    public  IntPtr DeviceContext { get; private set; }
-    public  IntPtr RenderingContext { get; private set; }
+    public IntPtr DeviceContext { get; private set; }
+    public IntPtr RenderingContext { get; private set; }
     public IntPtr WindowHandle { get; private set; }
     protected ushort ClassAtom { get; }
     public int Width { get; }
@@ -44,22 +51,22 @@ public class GlWindow:IDisposable {
         }
     }
     enum PixelType { Rgba = 0x202b, RgbaFloat = 0x21a0, Indexed = 0x202c, RgbaUnsignedFloat = 0x20a8 }
-    enum SwapMethod { Copy = 0x2029, Undefined = 0x202a, }
+    enum SwapMethod { Exchange = 0x2028, Copy = 0x2029, Undefined = 0x202a, }
     enum Acceleration { None = 0x2025, Full = 0x2027, }
     readonly struct ExtendedPixelFormat {
         public int Index { get; init; }
         public PixelType PixelType { get; init; }
         public Acceleration Acceleration { get; init; }
-        public byte ColorBits { get; init; }
-        public byte DepthBits { get; init; }
+        public int ColorBits { get; init; }
+        public int DepthBits { get; init; }
         public bool DoubleBuffer { get; init; }
         public SwapMethod SwapMethod { get; init; }
         public static ExtendedPixelFormat Create (int index, int[] values) => new() {
             Index = index,
             PixelType = (PixelType)values[0],
             Acceleration = (Acceleration)values[1],
-            ColorBits = (byte)values[2],
-            DepthBits = (byte)values[3],
+            ColorBits = values[2],
+            DepthBits = values[3],
             DoubleBuffer = values[4] != 0,
             SwapMethod = (SwapMethod)values[5],
         };
@@ -68,40 +75,36 @@ public class GlWindow:IDisposable {
     private static bool IsGood (ExtendedPixelFormat f) => f.DepthBits == 24 && f.ColorBits == 32 && f.Acceleration == Acceleration.Full && f.DoubleBuffer && f.PixelType == PixelType.Rgba && f.SwapMethod == SwapMethod.Undefined;
     static readonly PixelFormatAttribute[] Attributes = new PixelFormatAttribute[] { PixelFormatAttribute.PIXEL_TYPE_ARB, PixelFormatAttribute.ACCELERATION_ARB, PixelFormatAttribute.COLOR_BITS_ARB, PixelFormatAttribute.DEPTH_BITS_ARB, PixelFormatAttribute.DOUBLE_BUFFER_ARB, PixelFormatAttribute.SWAP_METHOD, };
     const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
+
+    static IntPtr CreateWindow (ushort atom, Vector2i size) {
+        var w = Demand(User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, Kernel.GetModuleHandleW(null), IntPtr.Zero));
+        HandleFirstWindowMessages(w);
+        return w;
+    }
+    unsafe static int FindPixelFormat (IntPtr dc, PixelFormatDescriptor* pfd, Predicate<PixelFormatDescriptor> condition) {
+        var formatCount = Demand(Gdi.DescribePixelFormat(dc, 0, (*pfd).size, null));
+        for (var i = 1; i <= formatCount; i++) {
+            _ = Demand(Gdi.DescribePixelFormat(dc, i, (*pfd).size, pfd));
+            if (condition(*pfd))
+                return i;
+        }
+        return 0;
+    }
+
     unsafe public GlWindow (Vector2i size) {
         var self = Kernel.GetModuleHandleW(null);
-
         ClassAtom = RegisterWindowClass(self);
-        Demand(ClassAtom != 0);
 
-        var helperWindow = User.CreateWindowExW(WindowStyleEx.None, ClassName, "?", ClipPopup, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
-        Demand(helperWindow);
-        HandleFirstWindowMessages(helperWindow);
+        var helperWindow = CreateWindow(ClassAtom, size);
 
         (Width, Height) = size;
         var temporaryDc = User.GetDC(helperWindow);
-        Console.WriteLine($"temp dc {temporaryDc:x}");
         var pfd = PixelFormatDescriptor.Create();
-        var formatCount = Gdi.DescribePixelFormat(temporaryDc, 0, pfd.size, null);
-        Demand(formatCount);
-        var temporaryPixelFormatIndex = 0;
-        for (var i = 1; i <= formatCount && temporaryPixelFormatIndex == 0; i++) {
-            Demand(Gdi.DescribePixelFormat(temporaryDc, i, pfd.size, &pfd));
-            if (pfd.depthBits == 24 && pfd.colorBits == 32 && pfd.flags == PfdFlags)
-                temporaryPixelFormatIndex = i;
-        }
-        Demand(temporaryPixelFormatIndex);
+        var temporaryPixelFormatIndex = Demand(FindPixelFormat(temporaryDc, &pfd, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags));
         Demand(Gdi.SetPixelFormat(temporaryDc, temporaryPixelFormatIndex, ref pfd));
-        var temporaryRenderingContext = Opengl.wglCreateContext(temporaryDc);
-        Demand(temporaryRenderingContext);
-        var lastDeviceContext = Opengl.wglGetCurrentDC();
-        var lastRenderingContext = Opengl.wglGetCurrentContext();
+        var temporaryRenderingContext = Demand(Opengl.wglCreateContext(temporaryDc));
         Demand(Opengl.wglMakeCurrent(temporaryDc, temporaryRenderingContext));
         Demand(Opengl.ExtensionsSupported);
-        var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var extensionsString = Marshal.PtrToStringAnsi(Opengl.GetExtensionsString());
-        Demand(!string.IsNullOrEmpty(extensionsString));
-        extensions.UnionWith(extensionsString.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         var extendedFormatCount = 0;
         int attrib = (int)PixelFormatAttribute.NUMBER_PIXEL_FORMATS_ARB;
         Demand(Opengl.GetPixelFormatAttribivARB(temporaryDc, 1, 0, 1, &attrib, &extendedFormatCount));
@@ -115,15 +118,11 @@ public class GlWindow:IDisposable {
                 selectedFormat = epf;
         }
         Demand(selectedFormat.Index > 0);
-        Demand(Opengl.wglMakeCurrent(lastDeviceContext, lastRenderingContext));
         Demand(Opengl.wglDeleteContext(temporaryRenderingContext));
         Demand(User.DestroyWindow(helperWindow));
 
-        WindowHandle = User.CreateWindowExW(WindowStyleEx.None, ClassName, "?", ClipPopup, 1280, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
-        Demand(WindowHandle);
-        DeviceContext = User.GetDC(WindowHandle);
-        Demand(DeviceContext);
-        HandleFirstWindowMessages(WindowHandle);
+        WindowHandle = CreateWindow(ClassAtom, size);// User.CreateWindowExW(WindowStyleEx.None, new(ClassAtom), IntPtr.Zero, ClipPopup, 1280, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
+        DeviceContext = Demand(User.GetDC(WindowHandle));
         Demand(Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, pfd.size, &pfd));
         Demand(Gdi.SetPixelFormat(DeviceContext, selectedFormat.Index, ref pfd));
         var attribs = new int[] {
@@ -157,7 +156,8 @@ public class GlWindow:IDisposable {
         windowClass.wndProc = SelectorProc;
         windowClass.hInstance = self;
         windowClass.classname = ClassName;
-        return User.RegisterClassExW(ref windowClass);
+        var atom = User.RegisterClassExW(ref windowClass);
+        return atom != 0 ? atom : throw new Exception("failed to register class");
     }
 
     unsafe private static bool GetPixelFormatAttribivARB (IntPtr dc, int pixelFormat, int x, int[] attributes, int[] values) {

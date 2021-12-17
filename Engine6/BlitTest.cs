@@ -8,6 +8,10 @@ using static Gl.Opengl;
 using static Gl.Utilities;
 using Win32;
 
+class DesktopTest:GlWindow {
+    public DesktopTest (Vector2i size) : base(size) { }
+}
+
 class BlitTest:GlWindow {
     public BlitTest (Vector2i size) : base(size) { }
     private Camera Camera { get; } = new(new(0, 0, 5));
