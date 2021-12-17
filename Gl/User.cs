@@ -3,16 +3,20 @@
 using System.Runtime.InteropServices;
 using System;
 using Win32;
+
+[Flags]
+public enum PeekRemove:uint {
+    NoRemove,
+    Remove,
+    NoYield,
+}
 public static class User {
     private const string user32 = nameof(user32) + ".dll";
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     unsafe public static extern ushort RegisterClassExW (ref WindowClassExW windowClass);
-    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    unsafe public static extern bool UnregisterClassW ([MarshalAs(UnmanagedType.LPWStr)] string className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    unsafe public static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
+    public static extern bool UnregisterClassW (IntPtr className, IntPtr hInstance);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyWindow (IntPtr windowHandle);
@@ -37,7 +41,7 @@ public static class User {
     public static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, uint remove);
+    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool TranslateMessage (ref Message m);

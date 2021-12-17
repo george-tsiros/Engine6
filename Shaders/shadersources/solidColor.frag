@@ -1,4 +1,3 @@
-#version 450 core
 #pragma debug(on)
 
 uniform vec4 color;

@@ -27,11 +27,8 @@ class TextureTest:GlWindow {
         quadBuffer.Dispose();
         quadModelBuffer.Dispose();
         quadUvBuffer.Dispose();
-        w.Dispose();
     }
-    StreamWriter w;
     protected unsafe override void Load () {
-        w = new("log.txt", false) { NewLine = "\n" };
         quad = new();
         State.Program = SimpleTexture.Id;
         quadBuffer = new VertexBuffer<Vector4>(Quad.Vertices);
@@ -77,7 +74,6 @@ class TextureTest:GlWindow {
     private double acc = 0.0;
     private float th = 0;
     protected override void Render (float dt) {
-        w.WriteLine($"{FramesRendered}: {dt}");
         fc++;
         acc += dt;
         if (acc > 1.0) {
@@ -87,7 +83,7 @@ class TextureTest:GlWindow {
         }
         _ = Extra.ModuloTwoPi(ref th, dt);
         Camera.Location.X = (float)Math.Sin(th);
-        Camera.Location.Z = (float)Math.Cos(th);
+        Camera.Location.Y = (float)Math.Cos(th);
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);

@@ -2,11 +2,12 @@ namespace Gl;
 
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Numerics;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-
+using Win32;
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
 
 unsafe public static class Opengl {
@@ -136,8 +137,7 @@ unsafe public static class Opengl {
                 foreach (var f in typeof(Extensions).GetFields(BindingFlags.Public | BindingFlags.Static))
                     if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
                         f.SetValue(null, GetProcAddress(f.Name));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Console.WriteLine(e);
                 throw;
             }
@@ -306,4 +306,40 @@ unsafe public static class Opengl {
         Extensions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
         return i;
     }
+    public unsafe static IntPtr CreateSimpleContext (IntPtr dc) {
+        if (wglGetCurrentContext() != IntPtr.Zero)
+            throw new Exception("context already exists");
+        var descriptor = PixelFormatDescriptor.Create();
+        var pfIndex = FindPixelFormat(dc, &descriptor, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags);
+        if (!Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
+            throw new Exception("failed SetPixelFormat");
+        var rc = wglCreateContext(dc);
+        if (rc == IntPtr.Zero)
+            throw new Exception("failed wglCreateContext");
+        if (!wglMakeCurrent(dc, rc))
+            throw new Exception("failed wglMakeCurrent");
+        var versionString = Marshal.PtrToStringAnsi(glGetString(OpenglString.Version));
+        var m = Regex.Match(versionString, @"^(\d\.\d\.\d) ");
+        if (!m.Success)
+            throw new Exception($"'{versionString}' not a version string");
+        var version = System.Version.Parse(m.Groups[1].Value);
+        Version = $"{version.Major}{version.Minor}{version.Build}";
+        return rc;
+    }
+    public static string Version { get; private set; }
+    const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
+
+    unsafe static int FindPixelFormat (IntPtr dc, PixelFormatDescriptor* pfd, Predicate<PixelFormatDescriptor> condition) {
+        var formatCount = Gdi.DescribePixelFormat(dc, 0, (*pfd).size, null);
+        if (formatCount == 0)
+            throw new Exception("formatCount == 0)");
+        for (var i = 1; i <= formatCount; i++) {
+            _ = Gdi.DescribePixelFormat(dc, i, (*pfd).size, pfd);
+            if (condition(*pfd))
+                return i;
+        }
+        return 0;
+    }
+
+
 }

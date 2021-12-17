@@ -1,4 +1,3 @@
-#version 450 core
 #pragma debug(on)
 
 in vec2 not_FragPos;

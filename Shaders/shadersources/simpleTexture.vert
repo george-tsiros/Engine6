@@ -1,4 +1,3 @@
-#version 460 core
 #pragma debug(on)
 
 in vec4 vertexPosition;

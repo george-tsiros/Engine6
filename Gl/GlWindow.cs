@@ -45,7 +45,7 @@ public class GlWindow:IDisposable {
     const WindowStyle ClipPopup = WindowStyle.ClipChildren | WindowStyle.ClipSiblings | WindowStyle.Popup;
     static void HandleFirstWindowMessages (IntPtr window) {
         var m = new Message();
-        while (User.PeekMessageW(ref m, window, 0, 0, 1)) {
+        while (User.PeekMessageW(ref m, window, 0, 0, PeekRemove.Remove)) {
             _ = User.TranslateMessage(ref m);
             _ = User.DispatchMessageW(ref m);
         }
@@ -74,87 +74,76 @@ public class GlWindow:IDisposable {
     }
     private static bool IsGood (ExtendedPixelFormat f) => f.DepthBits == 24 && f.ColorBits == 32 && f.Acceleration == Acceleration.Full && f.DoubleBuffer && f.PixelType == PixelType.Rgba && f.SwapMethod == SwapMethod.Undefined;
     static readonly PixelFormatAttribute[] Attributes = new PixelFormatAttribute[] { PixelFormatAttribute.PIXEL_TYPE_ARB, PixelFormatAttribute.ACCELERATION_ARB, PixelFormatAttribute.COLOR_BITS_ARB, PixelFormatAttribute.DEPTH_BITS_ARB, PixelFormatAttribute.DOUBLE_BUFFER_ARB, PixelFormatAttribute.SWAP_METHOD, };
-    const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
 
     static IntPtr CreateWindow (ushort atom, Vector2i size) {
-        var w = Demand(User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, Kernel.GetModuleHandleW(null), IntPtr.Zero));
+        var w = Demand(User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, SelfHandle, IntPtr.Zero));
         HandleFirstWindowMessages(w);
         return w;
     }
-    unsafe static int FindPixelFormat (IntPtr dc, PixelFormatDescriptor* pfd, Predicate<PixelFormatDescriptor> condition) {
-        var formatCount = Demand(Gdi.DescribePixelFormat(dc, 0, (*pfd).size, null));
-        for (var i = 1; i <= formatCount; i++) {
-            _ = Demand(Gdi.DescribePixelFormat(dc, i, (*pfd).size, pfd));
-            if (condition(*pfd))
-                return i;
-        }
-        return 0;
-    }
-
+    private static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
     unsafe public GlWindow (Vector2i size) {
-        var self = Kernel.GetModuleHandleW(null);
-        ClassAtom = RegisterWindowClass(self);
+        selectorProc = new(SelectorProc);
+        wndProcActual = new(WndProcActual);
+        ClassAtom = RegisterWindowClass();
 
-        var helperWindow = CreateWindow(ClassAtom, size);
+        WindowHandle = CreateWindow(ClassAtom, size);
 
         (Width, Height) = size;
-        var temporaryDc = User.GetDC(helperWindow);
-        var pfd = PixelFormatDescriptor.Create();
-        var temporaryPixelFormatIndex = Demand(FindPixelFormat(temporaryDc, &pfd, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags));
-        Demand(Gdi.SetPixelFormat(temporaryDc, temporaryPixelFormatIndex, ref pfd));
-        var temporaryRenderingContext = Demand(Opengl.wglCreateContext(temporaryDc));
-        Demand(Opengl.wglMakeCurrent(temporaryDc, temporaryRenderingContext));
-        Demand(Opengl.ExtensionsSupported);
-        var extendedFormatCount = 0;
-        int attrib = (int)PixelFormatAttribute.NUMBER_PIXEL_FORMATS_ARB;
-        Demand(Opengl.GetPixelFormatAttribivARB(temporaryDc, 1, 0, 1, &attrib, &extendedFormatCount));
-        var queriedAttributes = Array.ConvertAll(Attributes, a => (int)a);
-        var values = new int[queriedAttributes.Length];
-        var selectedFormat = default(ExtendedPixelFormat);
-        for (var i = 1; i <= extendedFormatCount && selectedFormat.Index == 0; i++) {
-            Demand(GetPixelFormatAttribivARB(temporaryDc, i, 0, queriedAttributes, values));
-            var epf = ExtendedPixelFormat.Create(i, values);
-            if (IsGood(epf))
-                selectedFormat = epf;
-        }
-        Demand(selectedFormat.Index > 0);
-        Demand(Opengl.wglDeleteContext(temporaryRenderingContext));
-        Demand(User.DestroyWindow(helperWindow));
+        DeviceContext = User.GetDC(WindowHandle);
+        RenderingContext = Opengl.CreateSimpleContext(DeviceContext);
+        //Demand(Opengl.wglMakeCurrent(DeviceContext, RenderingContext));
 
-        WindowHandle = CreateWindow(ClassAtom, size);// User.CreateWindowExW(WindowStyleEx.None, new(ClassAtom), IntPtr.Zero, ClipPopup, 1280, 0, Width, Height, IntPtr.Zero, IntPtr.Zero, self, IntPtr.Zero);
-        DeviceContext = Demand(User.GetDC(WindowHandle));
-        Demand(Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, pfd.size, &pfd));
-        Demand(Gdi.SetPixelFormat(DeviceContext, selectedFormat.Index, ref pfd));
-        var attribs = new int[] {
-                (int)PixelFormatAttribute.CONTEXT_MAJOR_VERSION_ARB, 4,
-                (int)PixelFormatAttribute.CONTEXT_MINOR_VERSION_ARB, 6,
-                (int)PixelFormatAttribute.ACCELERATION_ARB, (int)selectedFormat.Acceleration,
-                (int)PixelFormatAttribute.PIXEL_TYPE_ARB, (int)selectedFormat.PixelType,
-                (int)PixelFormatAttribute.COLOR_BITS_ARB, selectedFormat.ColorBits,
-                (int)PixelFormatAttribute.DEPTH_BITS_ARB, selectedFormat.DepthBits,
-                (int)PixelFormatAttribute.SWAP_METHOD, (int)selectedFormat.SwapMethod,
-                (int)PixelFormatAttribute.DOUBLE_BUFFER_ARB, 1,
-                (int)PixelFormatAttribute.DRAW_TO_WINDOW_ARB, 1,
-                (int)PixelFormatAttribute.STEREO_ARB, 0,
-                (int)PixelFormatAttribute.SAMPLES_ARB, 1,
-                (int)ContextAttributes.ContextFlags, (int)ContextFlags.Debug,
-                (int)ContextAttributes.ProfileMask, (int)ProfileMask.Core,
-                0,0,
-            };
-        RenderingContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attribs);
-        Demand(Opengl.wglMakeCurrent(DeviceContext, RenderingContext));
-        Demand(RenderingContext);
+        //Demand(Opengl.ExtensionsSupported);
+        //var extendedFormatCount = 0;
+        //int attrib = (int)PixelFormatAttribute.NUMBER_PIXEL_FORMATS_ARB;
+        //Demand(Opengl.GetPixelFormatAttribivARB(temporaryDc, 1, 0, 1, &attrib, &extendedFormatCount));
+        //var queriedAttributes = Array.ConvertAll(Attributes, a => (int)a);
+        //var values = new int[queriedAttributes.Length];
+        //var selectedFormat = default(ExtendedPixelFormat);
+        //for (var i = 1; i <= extendedFormatCount && selectedFormat.Index == 0; i++) {
+        //    Demand(GetPixelFormatAttribivARB(temporaryDc, i, 0, queriedAttributes, values));
+        //    var epf = ExtendedPixelFormat.Create(i, values);
+        //    if (IsGood(epf))
+        //        selectedFormat = epf;
+        //}
+        //Demand(selectedFormat.Index > 0);
+        //Demand(Opengl.wglDeleteContext(temporaryRenderingContext));
+        //Demand(User.DestroyWindow(helperWindow));
+
+        //WindowHandle = CreateWindow(ClassAtom, size);
+        //DeviceContext = Demand(User.GetDC(WindowHandle));
+        //Demand(Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, pfd.size, &pfd));
+        //Demand(Gdi.SetPixelFormat(DeviceContext, selectedFormat.Index, ref pfd));
+        //var attribs = new int[] {
+        //        (int)PixelFormatAttribute.CONTEXT_MAJOR_VERSION_ARB, 4,
+        //        (int)PixelFormatAttribute.CONTEXT_MINOR_VERSION_ARB, 6,
+        //        (int)PixelFormatAttribute.ACCELERATION_ARB, (int)selectedFormat.Acceleration,
+        //        (int)PixelFormatAttribute.PIXEL_TYPE_ARB, (int)selectedFormat.PixelType,
+        //        (int)PixelFormatAttribute.COLOR_BITS_ARB, selectedFormat.ColorBits,
+        //        (int)PixelFormatAttribute.DEPTH_BITS_ARB, selectedFormat.DepthBits,
+        //        (int)PixelFormatAttribute.SWAP_METHOD, (int)selectedFormat.SwapMethod,
+        //        (int)PixelFormatAttribute.DOUBLE_BUFFER_ARB, 1,
+        //        (int)PixelFormatAttribute.DRAW_TO_WINDOW_ARB, 1,
+        //        (int)PixelFormatAttribute.STEREO_ARB, 0,
+        //        (int)PixelFormatAttribute.SAMPLES_ARB, 1,
+        //        (int)ContextAttributes.ContextFlags, (int)ContextFlags.Debug,
+        //        (int)ContextAttributes.ProfileMask, (int)ProfileMask.Core,
+        //        0,0,
+        //    };
+        //RenderingContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attribs);
+        //Demand(Opengl.wglMakeCurrent(DeviceContext, RenderingContext));
+        //Demand(RenderingContext);
 
         State.DebugOutput = true;
-        State.SwapInterval = 1;
+        State.SwapInterval = -1;
         //State.DepthWriteMask = true;
     }
 
-    private unsafe ushort RegisterWindowClass (IntPtr self) {
+    private unsafe ushort RegisterWindowClass () {
         var windowClass = WindowClassExW.Create();
         windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
-        windowClass.wndProc = SelectorProc;
-        windowClass.hInstance = self;
+        windowClass.wndProc = selectorProc;
+        windowClass.hInstance = SelfHandle;
         windowClass.classname = ClassName;
         var atom = User.RegisterClassExW(ref windowClass);
         return atom != 0 ? atom : throw new Exception("failed to register class");
@@ -218,13 +207,13 @@ public class GlWindow:IDisposable {
     protected virtual void Load () { }
     protected virtual void Closing () { }
     protected void SetText (string text) => Demand(User.SetWindowText(WindowHandle, text));
-    public void Run () {
+     public void Run () {
         Load();
         _ = User.ShowWindow(WindowHandle, 10);
         Demand(User.UpdateWindow(WindowHandle));
         Message m = new();
         for (; ; ) {
-            if (User.PeekMessageW(ref m, IntPtr.Zero, 0, 0, 0)) {
+            if (User.PeekMessageW(ref m, IntPtr.Zero, 0, 0, PeekRemove.NoRemove)) {
                 var eh = User.GetMessageW(ref m, IntPtr.Zero, 0, 0);
                 if (eh == new IntPtr(-1))
                     Environment.FailFast(eh.ToString());
@@ -232,7 +221,7 @@ public class GlWindow:IDisposable {
                     break;
                 _ = User.DispatchMessageW(ref m);
             }
-            Paint();
+            //Paint();
         }
         Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
         Demand(Opengl.wglDeleteContext(RenderingContext));
@@ -252,9 +241,11 @@ public class GlWindow:IDisposable {
             Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
         }
     }
-
-    private IntPtr SelectorProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) => IntPtr.Zero != RenderingContext ? WndProcActual(hWnd, msg, w, l) : User.DefWindowProcW(hWnd, msg, w, l);
+    private readonly WndProc selectorProc;
+    private IntPtr SelectorProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) => IntPtr.Zero != RenderingContext ? wndProcActual(hWnd, msg, w, l) : User.DefWindowProcW(hWnd, msg, w, l);
+    private readonly WndProc wndProcActual;
     private IntPtr WndProcActual (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
+        //Debug.WriteLine(msg);
         switch (msg) {
             case WinMessage.Moving:
                 Moving(Marshal.PtrToStructure<Rect>(l));
