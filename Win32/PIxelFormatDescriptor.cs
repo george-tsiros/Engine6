@@ -1,4 +1,4 @@
-﻿namespace Win32;
+namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 
@@ -35,14 +35,5 @@ public struct PixelFormatDescriptor {
 
         //return $"{flags},color bits {colorBits} (rgba bits,shift) ({rBits},{rShift}/{gBits},{gShift}/{bBits},{bShift}/{aBits},{aShift}) depth {depthBits}, accum rgba {accRBits}/{accGBits}/{accBBits}/{accABits}, stencil {stencilBits}, aux {auxBuffers}, layertype {layerType} layermask {layerMask} visible mas {visibleMask} dmg mask {damageMask}";
     }
-
-    //Use this function to make a new one with Size and Version already filled in.
-    public static PixelFormatDescriptor Create () {
-        var pfd = new PixelFormatDescriptor {
-            size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>(),
-            version = 1,
-        };
-
-        return pfd;
-    }
+    public static int Size => Marshal.SizeOf<PixelFormatDescriptor>();
 }

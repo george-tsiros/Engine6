@@ -309,7 +309,7 @@ unsafe public static class Opengl {
     public unsafe static IntPtr CreateSimpleContext (IntPtr dc) {
         if (wglGetCurrentContext() != IntPtr.Zero)
             throw new Exception("context already exists");
-        var descriptor = PixelFormatDescriptor.Create();
+        var descriptor = new PixelFormatDescriptor { size = (ushort)PixelFormatDescriptor.Size, version = 1 };
         var pfIndex = FindPixelFormat(dc, &descriptor, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags);
         if (!Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
             throw new Exception("failed SetPixelFormat");
@@ -319,11 +319,11 @@ unsafe public static class Opengl {
         if (!wglMakeCurrent(dc, rc))
             throw new Exception("failed wglMakeCurrent");
         var versionString = Marshal.PtrToStringAnsi(glGetString(OpenglString.Version));
-        var m = Regex.Match(versionString, @"^(\d\.\d\.\d) ");
+        var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
         if (!m.Success)
             throw new Exception($"'{versionString}' not a version string");
         var version = System.Version.Parse(m.Groups[1].Value);
-        Version = $"{version.Major}{version.Minor}{version.Build}";
+        Version = $"{version.Major}{version.Minor}0";
         return rc;
     }
     public static string Version { get; private set; }

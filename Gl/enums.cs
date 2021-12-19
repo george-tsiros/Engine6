@@ -93,6 +93,7 @@ public enum WindowStyle:uint {
     OverlappedWindow = Caption | Sysmenu | Thickframe | MinimizeBox | MaximizeBox,
     TiledWindow = OverlappedWindow,
     PopupWindow = Popup | Border | Sysmenu,
+    ClipPopup = ClipChildren | ClipSiblings | Popup,
 }
 
 public enum TextureParameter {

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum ExtensionString {
     ARB_multisample,

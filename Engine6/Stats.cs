@@ -1,4 +1,4 @@
-﻿namespace Engine;
+namespace Engine;
 using System;
 
 class Stats {

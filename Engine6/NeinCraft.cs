@@ -27,7 +27,7 @@ class NeinCraft:GlWindow {
         skyboxUV = new(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices)));
         skyboxVao.Assign(skyboxUV, SkyBox.VertexUV);
 
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 2f, 2000f);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 0.1f, 100f);
         SkyBox.Projection(projection);
 
         State.Program = SolidColor.Id;
@@ -58,7 +58,6 @@ class NeinCraft:GlWindow {
         skyboxTexture.BindTo(0);
         SkyBox.View(Camera.RotationOnly);
         glDrawArrays(Primitive.Triangles, 0, 36);
-        //_ = Gdi.SwapBuffers(DeviceContext);
     }
 
     protected override void Closing () {

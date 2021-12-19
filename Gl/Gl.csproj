@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -26,5 +26,9 @@
     <ItemGroup>
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="..\fixeol\bin\fixeol.exe" />
+    </Target>
+
 
 </Project>

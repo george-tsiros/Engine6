@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -128,5 +128,9 @@
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
     </Target>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="..\fixeol\bin\fixeol.exe" />
+    </Target>
+
 
 </Project>

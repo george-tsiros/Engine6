@@ -1,4 +1,4 @@
-﻿namespace BitmapToRaster;
+namespace BitmapToRaster;
 
 using System;
 using System.Diagnostics;

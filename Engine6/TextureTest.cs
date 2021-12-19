@@ -7,19 +7,51 @@ using Shaders;
 using Gl;
 using static Gl.Opengl;
 using Win32;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 class TextureTest:GlWindow {
-
+    [Flags]
+    enum Dir {
+        None = 0,
+        Up = 1,
+        Right = 2,
+        Down = 4,
+        Left = 8,
+    }                                               // L D R U
+    static readonly Dir[] dirs = {                  // 8 4 2 1
+        Dir.None,                                   // 0 0 0 0
+        Dir.Up,                                     // 0 0 0 1
+        Dir.Right,                                  // 0 0 1 0
+        Dir.Up | Dir.Right,                         // 0 0 1 1
+        Dir.Down,                                   // 0 1 0 0
+        Dir.None,                                   // 0 1 0 1
+        Dir.Down | Dir.Right,                       // 0 1 1 0
+        Dir.Right,                                  // 0 1 1 1
+        Dir.Left,                                   // 1 0 0 0
+        Dir.Up | Dir.Left,                          // 1 0 0 1
+        Dir.None,                                   // 1 0 1 0
+        Dir.Up,                                     // 1 0 1 1
+        Dir.Down | Dir.Left,                        // 1 1 0 0
+        Dir.Left,                                   // 1 1 0 1
+        Dir.Down,                                   // 1 1 1 0
+        Dir.None,                                   // 1 1 1 1
+    };
     public TextureTest (Vector2i size) : base(size) { }
 
     private Camera Camera { get; } = new(new(0, 0, 0));
     private VertexArray quad, skyboxVao;
     private Sampler2D tex, skyboxTexture;
-    private VertexBuffer<Vector4> skyboxBuffer, quadBuffer;
-    private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer;
-    private VertexBuffer<Matrix4x4> quadModelBuffer;
+    private VertexBuffer<Vector4> skyboxBuffer, quadBuffer, cubeBuffer;
+    private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer, cubeUvBuffer;
+    private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
+    private VertexArray cube;
 
     protected override void Closing () {
+        cube.Dispose();
+        cubeBuffer.Dispose();
+        cubeUvBuffer.Dispose();
+        cubeModelBuffer.Dispose();
         quad.Dispose();
         skyboxVao.Dispose();
         skyboxBuffer.Dispose();
@@ -31,14 +63,14 @@ class TextureTest:GlWindow {
     protected unsafe override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
-        quadBuffer = new VertexBuffer<Vector4>(Quad.Vertices);
+        quadBuffer = new(Quad.Vertices);
         quad.Assign(quadBuffer, SimpleTexture.VertexPosition);
-        quadUvBuffer = new VertexBuffer<Vector2>(Quad.Uv);
+        quadUvBuffer = new(Quad.Uv);
         quad.Assign(quadUvBuffer, SimpleTexture.VertexUV);
         var models = new Matrix4x4[] { Matrix4x4.CreateTranslation(.5f, 0, -5), Matrix4x4.CreateTranslation(-.5f, 0, -6), };
-        quadModelBuffer = new VertexBuffer<Matrix4x4>(models);
+        quadModelBuffer = new(models);
         quad.Assign(quadModelBuffer, SimpleTexture.Model, 1);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 0.1f, 10f);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 0.1f, 1000f);
         SimpleTexture.Projection(projection);
 
         tex = Sampler2D.FromFile("data/untitled.raw");
@@ -57,17 +89,58 @@ class TextureTest:GlWindow {
         skyboxUvBuffer = new(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices)));
         skyboxVao.Assign(skyboxUvBuffer, SkyBox.VertexUV);
         SkyBox.Projection(projection);
+
+        cube = new();
+        State.Program = SimpleTexture.Id;
+        cubeBuffer = new(Geometry.Dex(Geometry.Translate(Cube.Vertices, -.5f * Vector3.One), Cube.Indices));
+        cube.Assign(cubeBuffer, SimpleTexture.VertexPosition);
+        cubeUvBuffer = new(Geometry.Dex(Cube.UvVectors, Cube.UvIndices));
+        cube.Assign(cubeUvBuffer, SimpleTexture.VertexUV);
+
+        var positions = new List<Vector3>(CubeCount);
+        for (var i = 0; i < CubeCount; i++)
+            EmptyRandomPosition(positions);
+        var cubes = new Matrix4x4[CubeCount];
+        for (var i = 0; i < CubeCount; i++)
+            cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
+        cubeModelBuffer = new(cubes);
+        cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
+    }
+    const int CubeCount = 10000;
+    private static readonly Random rand = new();
+    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d),(float)((2 * rand.NextDouble() - 1) * d),(float)((2 * rand.NextDouble() - 1) * d));
+    private static void EmptyRandomPosition (List<Vector3> positions) {
+        for (; ; ) {
+            var v = RandVector(100);
+            if (positions.TrueForAll(e => Far(e, v))) {
+                positions.Add(v);
+                return;
+            }
+        }
+    }
+    private static bool Far (Vector3 a, Vector3 b) => Math.Abs(a.X - b.X) > 1 || Math.Abs(a.Y - b.Y) > 1 || Math.Abs(a.Z - b.Z) > 1;
+
+    private static readonly Keys[] keys = { Keys.D, Keys.C, Keys.X, Keys.Z };
+    private Dir keyState = Dir.None;
+    protected override void KeyUp (Keys k) {
+        if (!KeyAction(k, false))
+            base.KeyUp(k);
+    }
+    private bool KeyAction (Keys k, bool down) {
+        var i = Array.IndexOf(keys, k);
+        if (i < 0)
+            return false;
+        var d = (Dir)(1 << i);
+        Debug.WriteLine(keyState);
+        keyState = down ? keyState | d : keyState & ~d;
+        return true;
     }
     protected override void KeyDown (Keys k) {
-        switch (k) {
-            case Keys.Left:
-                Camera.Mouse(new(0.1f, 0));
-                return;
-            case Keys.Right:
-                Camera.Mouse(new(-0.1f, 0));
-                return;
-        }
-        base.KeyDown(k);
+        if (!KeyAction(k, true))
+            base.KeyDown(k);
+    }
+    protected override void MouseMove (int x, int y) {
+        Camera.Rotate(new(x * 0.001f, y * 0.001f));
     }
 
     private int fc = 0;
@@ -82,8 +155,6 @@ class TextureTest:GlWindow {
             acc -= (int)acc;
         }
         _ = Extra.ModuloTwoPi(ref th, dt);
-        Camera.Location.X = (float)Math.Sin(th);
-        Camera.Location.Y = (float)Math.Cos(th);
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);
@@ -97,6 +168,9 @@ class TextureTest:GlWindow {
         SimpleTexture.Tex(1);
         SimpleTexture.View(Camera.LookAtMatrix);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 2);
+
+        State.VertexArray = cube;
+        DrawArraysInstanced(Primitive.Triangles, 0, 36, CubeCount);
 
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;

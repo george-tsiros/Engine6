@@ -1,4 +1,4 @@
-﻿namespace Win32;
+namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 public delegate IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wparam, IntPtr lparam);

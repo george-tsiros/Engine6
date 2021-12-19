@@ -1,4 +1,4 @@
-﻿namespace Shaders;
+namespace Shaders;
 
 using System;
 

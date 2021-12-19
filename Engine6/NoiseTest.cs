@@ -1,4 +1,4 @@
-﻿namespace Engine;
+namespace Engine;
 using System.Threading;
 using Gl;
 using static Gl.Opengl;

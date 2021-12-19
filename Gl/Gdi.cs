@@ -1,9 +1,8 @@
-﻿namespace Gl;
+namespace Gl;
 
 using System;
 using System.Runtime.InteropServices;
 using Win32;
-
 
 public static class Gdi {
     private const string gdi32 = nameof(gdi32) + ".dll";

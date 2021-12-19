@@ -1,4 +1,4 @@
-﻿namespace Win32;
+namespace Win32;
 
 public enum Keys:byte {
     None = 0x00,

@@ -1,4 +1,4 @@
-﻿#define __BINARY__
+#define __BINARY__
 
 namespace Engine;
 using System;
