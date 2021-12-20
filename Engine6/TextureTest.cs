@@ -145,7 +145,6 @@ class TextureTest:GlWindow {
 
     private int fc = 0;
     private double acc = 0.0;
-    private float th = 0;
     protected override void Render (float dt) {
         fc++;
         acc += dt;
@@ -154,7 +153,7 @@ class TextureTest:GlWindow {
             fc = 0;
             acc -= (int)acc;
         }
-        _ = Extra.ModuloTwoPi(ref th, dt);
+        Camera.Rotate(new(dt, 0));
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);

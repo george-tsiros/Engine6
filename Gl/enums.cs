@@ -31,13 +31,10 @@ public enum SizeMessage {
     Maximized,
     MaxHide
 }
+
 [Flags]
 public enum WindowStyleEx:uint {
     None = /*               */0x0,
-    Left = /*               */0x00000000,
-    RightScrollbar = /*     */0x00000000,
-    LtrReading = /*         */0x00000000,
-
     DlgModalFrame = /*      */0x00000001,
     NoParentNotify = /*     */0x00000004,
     TopMost = /*            */0x00000008,
@@ -480,7 +477,6 @@ public enum RenderbufferFormat {
 public enum ShaderType {
     Fragment = Const.FRAGMENT_SHADER,
     Vertex = Const.VERTEX_SHADER,
-
 }
 
 public enum IntParameter {

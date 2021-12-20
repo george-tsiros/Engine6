@@ -104,7 +104,7 @@ public class GlWindow:IDisposable {
     protected virtual void Load () { }
     protected virtual void Closing () { }
     protected void SetText (string text) => Demand(User.SetWindowText(WindowHandle, text));
-     public void Run () {
+    unsafe public void Run () {
         Load();
         _ = User.ShowWindow(WindowHandle, 10);
         Demand(User.UpdateWindow(WindowHandle));
@@ -118,7 +118,7 @@ public class GlWindow:IDisposable {
                     break;
                 _ = User.DispatchMessageW(ref m);
             }
-            //Paint();
+            Demand(User.InvalidateRect(WindowHandle, null, IntPtr.Zero));
         }
         Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
         Demand(Opengl.wglDeleteContext(RenderingContext));
@@ -163,7 +163,7 @@ public class GlWindow:IDisposable {
                 MouseLeave();
                 break;
             case WinMessage.MouseMove: {
-                    
+
                     var (x, y) = Split(l);
                     var dx = x - lastx;
                     var dy = y - lasty;
@@ -182,9 +182,11 @@ public class GlWindow:IDisposable {
                 ExitSizeMove();
                 break;
             case WinMessage.SetFocus:
+                // grab mouse
                 SetFocus();
                 break;
             case WinMessage.KillFocus:
+                // release mouse
                 KillFocus();
                 break;
             case WinMessage.Size: {
@@ -211,7 +213,13 @@ public class GlWindow:IDisposable {
                 User.PostQuitMessage(0);
                 break;
             case WinMessage.Paint:
+                var ps = new PaintStruct();
+                var someDc = User.BeginPaint(WindowHandle, ref ps);
+                if (someDc == IntPtr.Zero)
+                    throw new Exception();
                 Paint();
+                var wut = User.EndPaint(WindowHandle, ref ps);
+                Debug.Assert(wut);
                 return IntPtr.Zero;
         }
         return User.DefWindowProcW(hWnd, msg, w, l);

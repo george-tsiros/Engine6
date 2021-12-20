@@ -145,7 +145,6 @@ unsafe public static class Opengl {
 
         private static IntPtr GetProcAddress (string name) {
             var ptr = Opengl.wglGetProcAddress(name);
-            Debug.WriteLine($"{name} {ptr.ToInt64():x16}");
             return ptr != IntPtr.Zero ? ptr : throw new ApplicationException($"failed to get proc address of {name}");
         }
 #pragma warning restore CS0649
