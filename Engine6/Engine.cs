@@ -98,7 +98,7 @@ class Engine {
         //TestRawDevices();
         //Quaternions();
         var size = args.Length == 2 && Array.TrueForAll(args, x => int.TryParse(x, out _)) ? new Vector2i(int.Parse(args[0]), int.Parse(args[1])) : new Vector2i(320, 240);
-        using var gl = new TextureTest(size);
+        using var gl = new BlitTest(size);
         gl.Run();
     }
 }

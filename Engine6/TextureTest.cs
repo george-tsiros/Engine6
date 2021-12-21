@@ -153,7 +153,7 @@ class TextureTest:GlWindow {
             fc = 0;
             acc -= (int)acc;
         }
-        Camera.Rotate(new(dt, 0));
+        Camera.Rotate(new(dt/10, 0));
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);
