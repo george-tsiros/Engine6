@@ -3,6 +3,14 @@ namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 
+public struct RawInputDevice {
+    public ushort usagePage;
+    public ushort usage;
+    public uint flags;
+    public IntPtr windowHandle;
+    public const uint RemoveDevice = 1;
+}
+
 [StructLayout(LayoutKind.Explicit)]
 public struct RawInputDeviceInfo {
     [FieldOffset(0)]
@@ -16,14 +24,17 @@ public struct RawInputDeviceInfo {
     [FieldOffset(2 * sizeof(uint))]
     public HidInfo hid;
 }
+
 public struct MouseInfo {
     public uint id, buttonCount, samplerate;
     public IntPtr hasHorWheel;
 }
+
 public struct KeyboardInfo {
     public uint type, subtype, mode, fnKeyCount, ledCount, keyCount;
 
 }
+
 public struct HidInfo {
     public uint vendor, product, version;
     public ushort usagePage, usage;

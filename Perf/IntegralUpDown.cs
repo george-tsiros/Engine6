@@ -1,4 +1,4 @@
-﻿namespace Perf {
+namespace Perf {
     using System.Windows.Forms;
 
     class IntegralUpDown:NumericUpDown {

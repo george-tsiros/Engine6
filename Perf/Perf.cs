@@ -1,4 +1,4 @@
-﻿namespace Perf {
+namespace Perf {
     using System;
     using System.Collections.Generic;
     using System.Drawing;
@@ -91,7 +91,8 @@
         private long FrameTicks => Entries[FrameIndex + 1 == FrameInfo.Count ? FrameInfo[FrameInfo.Count - 1].eventIndex : FrameInfo[FrameIndex + 1].eventIndex - 1].Ticks - Entries[FrameInfo[FrameIndex].eventIndex].Ticks;
 
         private void ValueChanged_frameNum (object sender, EventArgs args) {
-            Demand(0 <= FrameIndex && FrameIndex < Entries.Count);
+            if (!(0 <= FrameIndex && FrameIndex < Entries.Count))
+                throw new Exception();
             var (eventIndex, maxDepth) = FrameInfo[FrameIndex];
 
             pixelsPerTick = (double)_IMAGE_WIDTH_ / FrameTicks;

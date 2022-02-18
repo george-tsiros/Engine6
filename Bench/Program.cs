@@ -64,14 +64,15 @@ class Program {
         Console.WriteLine("press any key to stop");
         TestOneUseStringMemoryPressure(TextWriter.Null);
         File.Delete("test.bin");
+        Console.WriteLine("done");
         _ = Console.ReadLine();
     }
 
     private static void TestOneUseStringMemoryPressure (TextWriter writer) {
         var r = new Random();
         while (!Console.KeyAvailable)
-        for (var i = 0; i < 1000; ++i)
-            writer.Write(RandomString(r));
+            for (var i = 0; i < 1000; ++i)
+                writer.Write(RandomString(r));
     }
 
     private static void Trace () => Console.WriteLine(new StackFrame(1).GetMethod().Name);

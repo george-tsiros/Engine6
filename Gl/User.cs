@@ -13,6 +13,21 @@ public enum PeekRemove:uint {
 public static partial class User {
     private const string user32 = nameof(user32) + ".dll";
 
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern int GetWindowRect (IntPtr windowHandle, ref Rect rect);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern int ClipCursor (ref Rect rect);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern int SetCursorPos (int x, int y);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern int TrackMouseEvent (ref TrackMouseEvent tme);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    unsafe public static extern int RegisterRawInputDevices (RawInputDevice* raw, uint deviceCount, uint structSize);
+
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     unsafe public static extern ushort RegisterClassExW ([In] ref WindowClassExW windowClass);
 

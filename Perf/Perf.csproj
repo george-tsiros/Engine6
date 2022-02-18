@@ -6,6 +6,7 @@
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProjectGuid>{F940E229-A574-4D69-A432-88DF15C5CA48}</ProjectGuid>
         <OutputType>Exe</OutputType>
+        <LangVersion>preview</LangVersion>
         <RootNamespace>Perf</RootNamespace>
         <AssemblyName>Perf</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -17,19 +18,18 @@
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
         <PlatformTarget>x64</PlatformTarget>
+        <OutputPath>bin\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
         <Optimize>false</Optimize>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <OutputPath>bin\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
         <DefineConstants>TRACE</DefineConstants>
-        <OutputPath>bin\</OutputPath>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />

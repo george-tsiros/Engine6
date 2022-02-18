@@ -1,4 +1,4 @@
-﻿namespace Perf {
+namespace Perf {
     using System;
     using System.IO;
     using System.Text;

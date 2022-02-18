@@ -62,9 +62,19 @@ public class GlWindow:IDisposable {
         Demand(Gdi.SwapBuffers(DeviceContext));
         ++FramesRendered;
     }
+
     protected virtual void Render (float dt) {
         Opengl.glClearColor(0.5f, 0.5f, 0.5f, 1f);
         Opengl.glClear(BufferBit.Color | BufferBit.Depth);
+    }
+
+    private int CaptureMouse (bool capture) {
+        return capture ? CaptureMouse(0, WindowHandle) : CaptureMouse(RawInputDevice.RemoveDevice, IntPtr.Zero);
+    }
+    private static unsafe int CaptureMouse (uint flags, IntPtr ptr) {
+        RawInputDevice rid = new() { usagePage = 1, usage = 2, flags = flags, windowHandle = ptr };
+        var structSize = System.Runtime.InteropServices.Marshal.SizeOf<RawInputDevice>();
+        return User.RegisterRawInputDevices(&rid, 1, (uint)structSize);
     }
 
     static string Foo (IntPtr p) => Foo(p.ToInt64());
@@ -77,7 +87,7 @@ public class GlWindow:IDisposable {
     protected virtual void EraseBkgnd () { }// => Debug.WriteLine(nameof(EraseBkgnd));
     protected virtual void Move (short x, short y) { }// => WriteLine(nameof(Move), x, y);
     protected virtual void MouseMove (int x, int y) { }// => WriteLine(nameof(MouseMove), x, y);
-    protected virtual void MouseLeave () { }// => Debug.WriteLine(nameof(MouseLeave));
+    protected virtual void MouseEnter (bool entered) { }
     protected virtual void NCMouseLeave (IntPtr w, IntPtr l) { }// => WriteLine(nameof(NCMouseLeave), w, l);
     protected virtual void CaptureChanged () { }// => Debug.WriteLine(nameof(CaptureChanged));
     protected virtual void ExitSizeMove () { }// => Debug.WriteLine(nameof(ExitSizeMove));
@@ -101,6 +111,7 @@ public class GlWindow:IDisposable {
         var i = (int)(p.ToInt64() & int.MaxValue);
         return ((short)(i & ushort.MaxValue), (short)((i >> 16) & ushort.MaxValue));
     }
+    protected bool IsForeground { get; private set; }
     protected virtual void Load () { }
     protected virtual void Closing () { }
     protected void SetText (string text) => Demand(User.SetWindowText(WindowHandle, text));
@@ -133,6 +144,7 @@ public class GlWindow:IDisposable {
     public void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
+            _ = Demand(CaptureMouse(false));
             Closing();
             Demand(User.DestroyWindow(WindowHandle));
             Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
@@ -142,9 +154,43 @@ public class GlWindow:IDisposable {
     private IntPtr SelectorProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) => IntPtr.Zero != RenderingContext ? wndProcActual(hWnd, msg, w, l) : User.DefWindowProcW(hWnd, msg, w, l);
     private readonly WndProc wndProcActual;
     int lastx, lasty;
+
+    private int virtualCursorX;
+    private int virtualCursorY;
+    private void MouseMoveInternal (int x, int y) {
+        if (x == virtualCursorX && y == virtualCursorY)
+            return;
+        virtualCursorX = x;
+        virtualCursorY = y;
+        Debug.WriteLine($"{FramesRendered}: {x}, {y}");
+        MouseMove(x, y);
+    }
+    private Rect windowRect;
+    private bool cursorTracked;
     private IntPtr WndProcActual (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
         //Debug.WriteLine(msg);
         switch (msg) {
+            case WinMessage.MouseMove: {
+                    if (!IsForeground)
+                        break;
+                    var (x, y) = Split(l);
+                    if (!cursorTracked) {
+                        var tme = TrackMouseEvent.Create();
+                        tme.flags = 2;
+                        tme.track = WindowHandle;
+                        _ = Demand(User.TrackMouseEvent(ref tme));
+                        cursorTracked = true;
+                        MouseEnter(true);
+                    }
+                    var dx = x - lastx;
+                    var dy = y - lasty;
+                    _ = User.GetWindowRect(WindowHandle, ref windowRect);
+                    MouseMoveInternal( dx, dy);
+                    _ = User.SetCursorPos(windowRect.left + windowRect.Width / 2, windowRect.top + windowRect.Height / 2);
+                    lastx = x;
+                    lasty = y;
+                }
+                return IntPtr.Zero;
             case WinMessage.Moving:
                 Moving(Marshal.PtrToStructure<Rect>(l));
                 break;
@@ -156,21 +202,13 @@ public class GlWindow:IDisposable {
                 return (IntPtr)1;
             case WinMessage.Move: {
                     var (x, y) = Split(l);
+                    _ = User.GetWindowRect(WindowHandle, ref windowRect);
                     Move(x, y);
                 }
                 break;
             case WinMessage.MouseLeave:
-                MouseLeave();
-                break;
-            case WinMessage.MouseMove: {
-
-                    var (x, y) = Split(l);
-                    var dx = x - lastx;
-                    var dy = y - lasty;
-                    lastx = x;
-                    lasty = y;
-                    MouseMove(dx, dy);
-                }
+                cursorTracked = false;
+                MouseEnter(false);
                 break;
             case WinMessage.CaptureChanged:
                 CaptureChanged();
@@ -182,11 +220,11 @@ public class GlWindow:IDisposable {
                 ExitSizeMove();
                 break;
             case WinMessage.SetFocus:
-                // grab mouse
+                _ = CaptureMouse(IsForeground =true);
                 SetFocus();
                 break;
             case WinMessage.KillFocus:
-                // release mouse
+                _ = CaptureMouse(IsForeground= false);
                 KillFocus();
                 break;
             case WinMessage.Size: {

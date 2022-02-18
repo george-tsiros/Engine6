@@ -108,7 +108,7 @@ class TextureTest:GlWindow {
     }
     const int CubeCount = 10000;
     private static readonly Random rand = new();
-    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d),(float)((2 * rand.NextDouble() - 1) * d),(float)((2 * rand.NextDouble() - 1) * d));
+    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d));
     private static void EmptyRandomPosition (List<Vector3> positions) {
         for (; ; ) {
             var v = RandVector(100);
@@ -139,21 +139,12 @@ class TextureTest:GlWindow {
         if (!KeyAction(k, true))
             base.KeyDown(k);
     }
+    private int previousX, previousY;
     protected override void MouseMove (int x, int y) {
-        Camera.Rotate(new(x * 0.001f, y * 0.001f));
+        Camera.Rotate(new(x * 0.01f, y * 0.01f));
     }
 
-    private int fc = 0;
-    private double acc = 0.0;
     protected override void Render (float dt) {
-        fc++;
-        acc += dt;
-        if (acc > 1.0) {
-            System.Diagnostics.Debug.WriteLine(fc / acc);
-            fc = 0;
-            acc -= (int)acc;
-        }
-        Camera.Rotate(new(dt/10, 0));
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);

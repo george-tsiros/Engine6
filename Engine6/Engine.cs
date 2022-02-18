@@ -91,14 +91,15 @@ class Engine {
     static void Quaternions () {
         var x = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 0);
         var y = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)(Math.PI / 2));
-
     }
+
+    static int? ParseInt32 (string str) => int.TryParse(str, out var i) ? i : null;
+
     [STAThread]
     static void Main (string[] args) {
-        //TestRawDevices();
-        //Quaternions();
-        var size = args.Length == 2 && Array.TrueForAll(args, x => int.TryParse(x, out _)) ? new Vector2i(int.Parse(args[0]), int.Parse(args[1])) : new Vector2i(320, 240);
-        using var gl = new BlitTest(size);
+
+        var size = args.Length == 2 && ParseInt32(args[0]) is int w && ParseInt32(args[1]) is int h ? new(w, h) : new Vector2i(320, 240);
+        using var gl = new TextureTest(size);
         gl.Run();
     }
 }

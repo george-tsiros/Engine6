@@ -36,21 +36,16 @@ class NeinCraft:GlWindow {
         cubeVao.Assign(cubeVertices, SolidColor.VertexPosition);
         SolidColor.Color(new(1f, 1f, 1f, 1f));
         SolidColor.Projection(projection);
+        SolidColor.Model(Matrix4x4.CreateTranslation(0,0,0));
     }
-
-    double theta = 0.0;
     protected override void Render (float dt) {
         glViewport(0, 0, Width, Height);
         glClear(BufferBit.Color | BufferBit.Depth);
-        theta += 1.8 * dt;
-        if (theta > 2.0 * Math.PI)
-            theta -= 2.0 * Math.PI;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Less;
         State.Program = SolidColor.Id;
         State.VertexArray = cubeVao;
         SolidColor.View(Camera.LookAtMatrix);
-        SolidColor.Model(Matrix4x4.CreateTranslation(new(2f * (float)Math.Sin(theta), 2f * (float)Math.Cos(theta), -3f)));
         glDrawArrays(Primitive.Triangles, 0, 36);
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;

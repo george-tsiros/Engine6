@@ -7,6 +7,7 @@ using Gl;
 using static Gl.Opengl;
 using static Gl.Utilities;
 using Win32;
+using System.Diagnostics;
 
 class BlitTest:GlWindow {
     public BlitTest (Vector2i size) : base(size) { }
@@ -21,6 +22,8 @@ class BlitTest:GlWindow {
         quadBuffer = new(Quad.Vertices);
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
         raster = new(new(Width >> 2, Height >> 2), 4, 1);
+        Debug.Assert(raster.Width == 320);
+        Debug.Assert(raster.Height == 200);
         MemSet(raster.Pixels, 0xff00000fu);
         for (var i = 0; i < raster.Height; i++) {
             var p = i * raster.Stride + i * raster.Channels * raster.BytesPerChannel;
@@ -55,6 +58,7 @@ class BlitTest:GlWindow {
         PassThrough.Tex(1);
         glDrawArrays(Primitive.Triangles, 0, 6);
     }
+
     protected override void Closing () {
         raster.Dispose();
         sampler.Dispose();
