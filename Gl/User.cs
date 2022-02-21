@@ -26,10 +26,10 @@ public static partial class User {
     public static extern int TrackMouseEvent (ref TrackMouseEvent tme);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    unsafe public static extern int RegisterRawInputDevices (RawInputDevice* raw, uint deviceCount, uint structSize);
+    public static extern int RegisterRawInputDevices (ref RawInputDevice raw, uint deviceCount, uint structSize);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    unsafe public static extern ushort RegisterClassExW ([In] ref WindowClassExW windowClass);
+    public static extern ushort RegisterClassExW ([In] ref WindowClassExW windowClass);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -131,7 +131,7 @@ public static partial class User {
     /// <remarks>The devices returned from this function are the mouse, the keyboard, and other Human Interface Device (HID) devices.To get more detailed information about the attached devices, call GetRawInputDeviceInfo using the <see cref="RawInputDeviceList.device"/> from <see cref="RawInputDeviceList"/>.</remarks>
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    unsafe public static extern uint GetRawInputDeviceList (RawInputDeviceList* devices, uint* count, uint size);
+    public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
     public static ushort RegisterWindowClass (WndProc wndProc, IntPtr moduleHandle, string className) {
         var windowClass = WindowClassExW.Create();

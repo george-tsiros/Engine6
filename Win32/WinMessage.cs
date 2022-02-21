@@ -243,3 +243,25 @@ public enum WinMessage:ushort {
     XButtonDown = 0x020B,
     XButtonUp = 0x020C,
 }
+
+public enum SysCommand {
+    Close = 0xf060,
+    ContextHelp = 0xf180,
+    Default = 0xf160,
+    Hotkey = 0xf150,
+    Hscroll = 0xf080,
+    IsSecure = 1,
+    KeyMenu = 0xf100,
+    Maximize = 0xf030,
+    Minimize = 0xf020,
+    MonitorPower = 0xf170,
+    MouseMenu = 0xf090,
+    Move = 0xf010,
+    NextWindow = 0xf040,
+    PrevWindow = 0xf050,
+    Restore = 0xf120,
+    Screensave = 0xf140,
+    Size = 0xf000,
+    Tasklist = 0xf130,
+    Vscroll = 0xf070,
+}

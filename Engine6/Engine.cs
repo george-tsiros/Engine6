@@ -10,54 +10,54 @@ using System.Text;
 using System.Numerics;
 
 class Engine {
-    unsafe private static void TestRawDevices () {
-        uint deviceCount = 0;
-        _ = User.GetRawInputDeviceList(null, &deviceCount, (uint)RawInputDeviceList.Size);
-        var devices = new RawInputDeviceList[deviceCount];
-        fixed (RawInputDeviceList* p = devices) {
-            var eh = User.GetRawInputDeviceList(p, &deviceCount, (uint)RawInputDeviceList.Size);
-            if (eh != devices.Length)
-                throw new Exception();
-        }
+    //unsafe private static void TestRawDevices () {
+    //    uint deviceCount = 0;
+    //    _ = User.GetRawInputDeviceList(null, &deviceCount, (uint)RawInputDeviceList.Size);
+    //    var devices = new RawInputDeviceList[deviceCount];
+    //    fixed (RawInputDeviceList* p = devices) {
+    //        var eh = User.GetRawInputDeviceList(p, &deviceCount, (uint)RawInputDeviceList.Size);
+    //        if (eh != devices.Length)
+    //            throw new Exception();
+    //    }
 
-        var devInfo = new RawInputDeviceInfo() { size = (uint)Marshal.SizeOf<RawInputDeviceInfo>() };
-        var infoSize = devInfo.size;
-        var charCount = 0u;
-        var array = new ushort[1024];
-        for (var i = 0; i < devices.Length; i++) {
+    //    var devInfo = new RawInputDeviceInfo() { size = (uint)Marshal.SizeOf<RawInputDeviceInfo>() };
+    //    var infoSize = devInfo.size;
+    //    var charCount = 0u;
+    //    var array = new ushort[1024];
+    //    for (var i = 0; i < devices.Length; i++) {
 
-            var ptr = devices[i].device;
-            var x = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceInfo, &devInfo, &infoSize);
-            Debug.Assert(x > 0, $"{Kernel.GetLastError():x}");
-            var type = devInfo.type;
-            Console.WriteLine($"{i}: {type}, ");
-            switch (type) {
-                case RawInputDeviceType.Hid: {
-                        DebugDump(devInfo.hid, MemberTypes.Field);
-                    }
-                    break;
-                case RawInputDeviceType.Keyboard: {
-                        DebugDump(devInfo.keyboard, MemberTypes.Field);
-                    }
-                    break;
-                case RawInputDeviceType.Mouse: {
-                        DebugDump(devInfo.mouse, MemberTypes.Field);
-                    }
-                    break;
-            }
+    //        var ptr = devices[i].device;
+    //        var x = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceInfo, &devInfo, &infoSize);
+    //        Debug.Assert(x > 0, $"{Kernel.GetLastError():x}");
+    //        var type = devInfo.type;
+    //        Console.WriteLine($"{i}: {type}, ");
+    //        switch (type) {
+    //            case RawInputDeviceType.Hid: {
+    //                    DebugDump(devInfo.hid, MemberTypes.Field);
+    //                }
+    //                break;
+    //            case RawInputDeviceType.Keyboard: {
+    //                    DebugDump(devInfo.keyboard, MemberTypes.Field);
+    //                }
+    //                break;
+    //            case RawInputDeviceType.Mouse: {
+    //                    DebugDump(devInfo.mouse, MemberTypes.Field);
+    //                }
+    //                break;
+    //        }
 
-            var y = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceName, null, &charCount);
-            if (4l * charCount < 1024l) {
+    //        var y = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceName, null, &charCount);
+    //        if (4l * charCount < 1024l) {
 
-                fixed (ushort* ushorts = array)
-                    _ = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceName, ushorts, &charCount);
-                string name = TryGetString(array, (int)charCount);
+    //            fixed (ushort* ushorts = array)
+    //                _ = User.GetRawInputDeviceInfoW(ptr, User.RawInputDeviceCommand.DeviceName, ushorts, &charCount);
+    //            string name = TryGetString(array, (int)charCount);
 
-                Console.WriteLine($"charCount: {charCount}, len: '{name}'");
-            } else
-                Console.WriteLine($"{charCount} ?!");
-        }
-    }
+    //            Console.WriteLine($"charCount: {charCount}, len: '{name}'");
+    //        } else
+    //            Console.WriteLine($"{charCount} ?!");
+    //    }
+    //}
 
     private static void DebugDump (object ob, MemberTypes types) {
         if (ob is null)
@@ -99,7 +99,7 @@ class Engine {
     static void Main (string[] args) {
 
         var size = args.Length == 2 && ParseInt32(args[0]) is int w && ParseInt32(args[1]) is int h ? new(w, h) : new Vector2i(320, 240);
-        using var gl = new TextureTest(size);
+        using var gl = new BlitTest(size);
         gl.Run();
     }
 }

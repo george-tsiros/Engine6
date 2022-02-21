@@ -9,9 +9,16 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 static class Extra {
 
+    public static IEnumerable<string> EnumLines (string filepath, bool skipBlank = false) {
+        using var f = new StreamReader(filepath);
+        while (f.ReadLine() is string line)
+            if (!skipBlank || !string.IsNullOrWhiteSpace(line))
+                yield return line;
+    }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
