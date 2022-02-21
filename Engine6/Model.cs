@@ -4,39 +4,30 @@ using System;
 using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Globalization;
 
 public class Model {
     public List<(int i, int j, int k)> Faces { get; } = new();
     public List<Vector3> Vertices { get; } = new();
     public Vector3 Min { get; }
     public Vector3 Max { get; }
+    static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
     public Model (string filepath) {
-        var minx = float.MaxValue;
-        var miny = float.MaxValue;
-        var minz = float.MaxValue;
-        var maxx = float.MinValue;
-        var maxy = float.MinValue;
-        var maxz = float.MinValue;
+        var (minx, miny, minz) = (float.MaxValue, float.MaxValue, float.MaxValue);
+        var (maxx, maxy, maxz) = (float.MinValue, float.MinValue, float.MinValue);
         foreach (var line in Extra.EnumLines(filepath)) {
             var parts = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
                 continue;
+            Debug.Assert(parts.Length == 4);
             switch (parts[0]) {
                 case "f":
-                    Debug.Assert(parts.Length == 4);
                     Faces.Add((int.Parse(parts[1]) - 1, int.Parse(parts[2]) - 1, int.Parse(parts[3]) - 1));
                     break;
                 case "v":
-                    Debug.Assert(parts.Length == 4);
-                    var x = float.Parse(parts[1]);
-                    var y = float.Parse(parts[2]);
-                    var z = float.Parse(parts[3]);
-                    minx = Math.Min(x, minx);
-                    miny = Math.Min(y, miny);
-                    minz = Math.Min(z, minz);
-                    maxx = Math.Max(x, maxx);
-                    maxy = Math.Max(y, maxy);
-                    maxz = Math.Max(z, maxz);
+                    var (x, y, z) = (float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
+                    (minx, miny, minz) = (Math.Min(x, minx), Math.Min(y, miny), Math.Min(z, minz));
+                    (maxx, maxy, maxz) = (Math.Max(x, maxx), Math.Max(y, maxy), Math.Max(z, maxz));
                     Vertices.Add(new Vector3(x, y, z));
                     break;
             }

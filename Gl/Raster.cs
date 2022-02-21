@@ -31,7 +31,7 @@ public class Raster:IDisposable {
     
     public static Raster FromFile (string filepath) {
         using var f = File.OpenRead(filepath);
-        var raster = Raster.FromStream(f);
+        var raster = FromStream(f);
         using var unzip = new DeflateStream(f, CompressionMode.Decompress);
         var read = unzip.Read(raster.Pixels, 0, raster.Pixels.Length);
         return read == raster.Pixels.Length ? raster : throw new ApplicationException($"{filepath}: expected to read {raster.Pixels.Length} bytes, read {read} instead");
