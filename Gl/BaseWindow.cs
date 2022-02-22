@@ -92,6 +92,8 @@ public class BaseWindow:IDisposable {
         }
     }
     public BaseWindow (Vector2i size) {
+        if (size.X < 1 || size.Y < 1)
+            throw new ArgumentOutOfRangeException(nameof(size));
         wndProc = new(WndProc);
         ClassAtom = User.RegisterWindowClass(wndProc, SelfHandle, ClassName);
         WindowHandle = User.CreateWindow(ClassAtom, size, SelfHandle);

@@ -82,6 +82,30 @@ static class Cube {
 }
 
 static class Geometry {
+    public static float Distance (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
+        var nearest = float.MaxValue;
+
+        for (var i = 0; i < faces.Length; i++) {
+            var (A, B, C) = faces[i];
+            var m = new Matrix3x3(A - C, B - C, -ray.Direction);
+            var p = ray.Origin - C;
+            var possible = m.TrySolve(p, out var x);
+            if (possible)
+                if (0 < x.X && x.X < 1 && 0 < x.Y && x.Y < 1 && 0 < x.Z && x.X + x.Y <= 1f)
+                    nearest = Math.Min(nearest, x.Z);
+        }
+        return nearest;
+    }
+
+    public static void Transform (Vector3[] array, Matrix4x4 m) {
+        for (int i = 0; i < array.Length; i++)
+            array[i] = Vector3.Transform(array[i], m);
+    }
+
+    public static void Transform (Vector4[] array, Matrix4x4 m) {
+        for (int i = 0; i < array.Length; i++)
+            array[i] = Vector4.Transform(array[i], m);
+    }
 
     internal static T[] Dex<T> (T[] array, int[] indices) where T : struct {
         T[] b = new T[indices.Length];

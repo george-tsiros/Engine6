@@ -6,8 +6,8 @@ using Win32;
 
 public class GlWindow:BaseWindow {
     protected ulong FramesRendered { get; private set; }
-    public IntPtr DeviceContext { get; private set; }
-    public IntPtr RenderingContext { get; private set; }
+    protected IntPtr DeviceContext { get; private set; }
+    protected IntPtr RenderingContext { get; private set; }
     private long lastTicks = long.MaxValue;
 
 
