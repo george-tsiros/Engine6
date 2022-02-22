@@ -111,7 +111,7 @@ class Engine {
     //        depth = Math.Min(Tri.Distance(faces[i], ray), depth);
     //    return depth;
     //}
-    static void TryRayTrace (List<(int i, int j, int k)> faces, List<Vector4> vertices) {
+    static void TryRayTrace (List<(int i, int j, int k)> faces, List<Vector3> vertices) {
         const float zNear = 1f;
         const float zFar = 100f;
 
@@ -128,18 +128,15 @@ class Engine {
         var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), imageSize.X / imageSize.Y, zNear, zFar);
 
         var triangles = new Tri[faceCount];
-        var vectors = new Vector4[vertexCount];
+        var vectors = new Vector3[vertexCount];
         var mvp = modelMatrix * viewMatrix * projectionMatrix;
 
         for (int i = 0; i < vertexCount; i++)
-            vectors[i] = Vector4.Transform(vertices[i], mvp);
+            vectors[i] = Vector3.Transform(vertices[i], mvp);
 
         for (int i = 0; i < faceCount; i++) {
             var f = faces[i];
-            var va = vectors[f.i];
-            var vb = vectors[f.j];
-            var vc = vectors[f.k];
-            triangles[i] = Tri.FromPoints(new(va.X, va.Y, va.Z), new(vb.X, vb.Y, vb.Z), new(vc.X, vc.Y, vc.Z));
+            triangles[i] = Tri.FromPoints(vectors[f.i], vectors[f.j], vectors[f.k]);
         }
 
         var pixelCount = imageSize.X * imageSize.Y;
@@ -252,7 +249,7 @@ class Engine {
             v.Add(new(0, 3, i, 1));
         }
         //TryRayTrace(faces, vertices);
-        TryRayTrace(teapot.Faces, teapot.Vertices.ConvertAll(x => new Vector4(x, 1)));
+        TryRayTrace(teapot.Faces, teapot.Vertices);
         //var size = args.Length == 2 && ParseInt32(args[0]) is int w && ParseInt32(args[1]) is int h ? new(w, h) : new Vector2i(320, 240);
         //using var gl = new BlitTest(size);
         //gl.Run();
