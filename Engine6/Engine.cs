@@ -1,4 +1,4 @@
-//#define __PARALLEL
+#define __PARALLEL
 namespace Engine;
 
 using System;
@@ -102,15 +102,15 @@ class Engine {
     static float Depth (in Ray ray, in Tri[] faces, int taskId, int taskCount) {
         var depth = float.MaxValue;
         for (var i = taskId; i < faces.Length; i += taskCount)
-            depth = Math.Min(faces[i].Distance(ray), depth);
+            depth = Math.Min(Tri.Distance(faces[i], ray), depth);
         return depth;
     }
-    static float Depth (in Vector3 ray, in Tri[] faces, int taskId, int taskCount) {
-        var depth = float.MaxValue;
-        for (var i = taskId; i < faces.Length; i += taskCount)
-            depth = Math.Min(faces[i].Distance(ray), depth);
-        return depth;
-    }
+    //static float Depth (in Vector3 ray, in Tri[] faces, int taskId, int taskCount) {
+    //    var depth = float.MaxValue;
+    //    for (var i = taskId; i < faces.Length; i += taskCount)
+    //        depth = Math.Min(Tri.Distance(faces[i], ray), depth);
+    //    return depth;
+    //}
     static void TryRayTrace (List<(int i, int j, int k)> faces, List<Vector4> vertices) {
         const float zNear = 1f;
         const float zFar = 100f;
@@ -118,12 +118,12 @@ class Engine {
         var faceCount = faces.Count;
         int vertexCount = vertices.Count;
 
-        var imageSize = new Vector2i(640, 480);
+        var imageSize = new Vector2i(320, 240);
         var yFov = Math.PI / 4;
         var aspectRatio = (double)imageSize.X / imageSize.Y;
         var xFov = yFov * aspectRatio;
 
-        var modelMatrix = /*Matrix4x4.CreateRotationY((float)Math.PI / 4f) * Matrix4x4.CreateRotationX((float)Math.PI / 3f) **/ Matrix4x4.CreateTranslation(0, 0, -50);
+        var modelMatrix = Matrix4x4.CreateRotationY((float)Math.PI / 6f) * /*Matrix4x4.CreateRotationX((float)Math.PI / 6f) **/ Matrix4x4.CreateTranslation(0, -1, -15);
         var viewMatrix = Matrix4x4.CreateLookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
         var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), imageSize.X / imageSize.Y, zNear, zFar);
 
@@ -147,20 +147,22 @@ class Engine {
         var dphi = yFov / imageSize.Y;
         var dtheta = xFov / imageSize.X;
 #if __PARALLEL
-        const int Parallelism = 4;
-        var tasks = new Task<float>[Parallelism];
+        const int Parallelism = 32;
+        var tasks = new Task<float>[Parallelism]; 
 #else
 #endif
         var t0 = Stopwatch.GetTimestamp();
 
-        for (var (yPixel, phi) = (0, -0.5f * yFov); yPixel < imageSize.Y; ++yPixel, phi += dphi) {
+        for (var (yPixel, phi) = (0, 0.5f * yFov); yPixel < imageSize.Y; ++yPixel, phi -= dphi) {
+            Console.WriteLine($"{yPixel}/{imageSize.Y}");
             for (var (xPixel, theta) = (0, -0.5f * xFov); xPixel < imageSize.X; ++xPixel, theta += dtheta) {
                 var cosPhi = Math.Cos(phi);
                 var yRay = (float)Math.Sin(phi);
                 var xRay = (float)(Math.Sin(theta) * cosPhi);
                 var zRay = (float)(Math.Cos(theta) * cosPhi);
-                var ray = new Ray(Vector3.Zero, new(xRay, yRay, zRay));
-                Debug.Assert(Math.Abs(ray.Direction.Length() - 1f) < 1e-7f);
+                var r = new Vector3(xRay, yRay, zRay);
+                Debug.Assert(Math.Abs(r.Length() - 1f) < 1e-7f);
+                var ray = new Ray(Vector3.Zero, r);
                 var depth = float.MaxValue;
 #if __PARALLEL
                 for (var i = 0; i < Parallelism; i++)
@@ -169,8 +171,7 @@ class Engine {
                 for (var i = 0; i < Parallelism; i++)
                     depth = Math.Min(depth, tasks[i].Result);
 #else
-                for (var i = 0; i < faceCount; i++)
-                    depth = Math.Min(triangles[i].Distance(ray), depth);
+                depth = Depth(ray, triangles, 0, 1);
 #endif
                 depthBuffer[yPixel * imageSize.X + xPixel] = depth;
             }
@@ -211,34 +212,34 @@ class Engine {
     [STAThread]
     static void Main (string[] args) {
         var faces = new List<(int i, int j, int k)>() {
-            (1, 5, 6),
-            (6, 2, 1), // right
-            (0, 3, 7),
-            (7, 4, 0), // left
-            (4, 7, 6),
-            (6, 5, 4), // top
-            (0, 1, 2),
-            (2, 3, 0), // bottom
-            (2, 6, 7),
-            (7, 3, 2), // near
-            (0, 4, 5),
-            (5, 1, 0), // far
+            (5, 6, 1),
+            (2, 1, 6), // right
+            (3, 7, 0),
+            (4, 0, 7), // left
+            (7, 6, 4),
+            (5, 4, 6), // top
+            (1, 2, 0),
+            (3, 0, 2), // bottom
+            (6, 7, 2),
+            (3, 2, 7), // near
+            (4, 5, 0),
+            (1, 0, 5), // far
         };
         var vertices = new List<Vector4>() {
-            new(0, 0, 0, 1),
-            new(1, 0, 0, 1),
-            new(1, 0, 1, 1),
-            new(0, 0, 1, 1),
-            new(0, 1, 0, 1),
-            new(1, 1, 0, 1),
-            new(1, 1, 1, 1),
-            new(0, 1, 1, 1),
+            new(-.5f, -.5f, -.5f, 1),
+            new(+.5f, -.5f, -.5f, 1),
+            new(+.5f, -.5f, +.5f, 1),
+            new(-.5f, -.5f, +.5f, 1),
+            new(-.5f, +.5f, -.5f, 1),
+            new(+.5f, +.5f, -.5f, 1),
+            new(+.5f, +.5f, +.5f, 1),
+            new(-.5f, +.5f, +.5f, 1),
         };
         //for (int i = 0; i < vertices.Count; i++)
         //    vertices[i] -= new Vector3(0.5f, 0.5f, 0.5f);
 
-        //const string TeapotFilepath = @"data\teapot.obj";
-        //var teapot = new Model(TeapotFilepath);
+        const string TeapotFilepath = @"data\teapot.obj";
+        var teapot = new Model(TeapotFilepath);
         var f = new List<(int, int, int)>() {
 
         };
@@ -250,7 +251,8 @@ class Engine {
             v.Add(new(0, 0, i, 1));
             v.Add(new(0, 3, i, 1));
         }
-        TryRayTrace(f, v);
+        //TryRayTrace(faces, vertices);
+        TryRayTrace(teapot.Faces, teapot.Vertices.ConvertAll(x => new Vector4(x, 1)));
         //var size = args.Length == 2 && ParseInt32(args[0]) is int w && ParseInt32(args[1]) is int h ? new(w, h) : new Vector2i(320, 240);
         //using var gl = new BlitTest(size);
         //gl.Run();
