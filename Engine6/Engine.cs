@@ -1,4 +1,4 @@
-#define __PARALLEL
+//#define __PARALLEL
 namespace Engine;
 
 using System;
@@ -81,6 +81,7 @@ class Engine {
                         break;
                 }
     }
+
     private static string TryGetString (ushort[] span, int maxLength) {
         Debug.Assert(maxLength < 1024);
         var l = 0;
@@ -93,32 +94,28 @@ class Engine {
             bytes[i] = (byte)span[i];
         return Encoding.ASCII.GetString(bytes);
     }
+
     static void Quaternions () {
         var x = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 0);
         var y = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)(Math.PI / 2));
     }
 
     static int? ParseInt32 (string str) => int.TryParse(str, out var i) ? i : null;
-    static float Depth (in Ray ray, in Tri[] faces, int taskId, int taskCount) {
-        var depth = float.MaxValue;
-        for (var i = taskId; i < faces.Length; i += taskCount)
-            depth = Math.Min(Tri.Distance(faces[i], ray), depth);
-        return depth;
-    }
+
     //static float Depth (in Vector3 ray, in Tri[] faces, int taskId, int taskCount) {
     //    var depth = float.MaxValue;
     //    for (var i = taskId; i < faces.Length; i += taskCount)
     //        depth = Math.Min(Tri.Distance(faces[i], ray), depth);
     //    return depth;
     //}
-    static void TryRayTrace (List<(int i, int j, int k)> faces, List<Vector3> vertices) {
+
+    static Raster Render (List<(int i, int j, int k)> faces, List<Vector3> vertices, Vector2i imageSize) {
         const float zNear = 1f;
         const float zFar = 100f;
 
         var faceCount = faces.Count;
         int vertexCount = vertices.Count;
 
-        var imageSize = new Vector2i(320, 240);
         var yFov = Math.PI / 4;
         var aspectRatio = (double)imageSize.X / imageSize.Y;
         var xFov = yFov * aspectRatio;
@@ -144,8 +141,8 @@ class Engine {
         var dphi = yFov / imageSize.Y;
         var dtheta = xFov / imageSize.X;
 #if __PARALLEL
-        const int Parallelism = 32;
-        var tasks = new Task<float>[Parallelism]; 
+        const int Parallelism = 2;
+        var tasks = new Task<float>[Parallelism];
 #else
 #endif
         var t0 = Stopwatch.GetTimestamp();
@@ -202,56 +199,72 @@ class Engine {
         var raster = new Raster(imageSize, 1, 1);
         Debug.Assert(pixelCount == raster.Pixels.Length);
         Array.Copy(bytes, raster.Pixels, pixelCount);
-        using var gl = new ImageWindow(raster);
-        gl.Run();
+        return raster;
     }
+    /*
+    _    _    _   _    _
+    T + aA + bB = R + dD
+     _    _    _   _ _
+    aA + bB - dD = R-T
+
+    a * X + b * X - d * X = X - X
+         A       B       D   R   T
+
+    a * Y + b * Y - d * Y = Y - Y
+         A       B       D   R   T
+
+    a * Z + b * Z - d * Z = Z - Z
+         A       B       D   R   T
+
+    [ X  X  -X  ]
+    [  A  B   D ]
+    [           ] [a]
+    [ Y  Y  -Y  ] [b] = R-T
+    [  A  B   D ] [d] 
+    [           ]
+    [ Z  Z  -Z  ]
+    [  A  B   D ]
+
+*/
+    static float Depth (in Ray ray, in Tri[] faces, int taskId, int taskCount) {
+        var depth = float.MaxValue;
+        for (var i = taskId; i < faces.Length; i += taskCount) {
+            var face = faces[i];
+            var m = new Matrix3x3(face.Va, face.Vb, -ray.Direction);
+            var p = ray.Origin - face.Origin;
+            var possible = m.TrySolve(p, out var x);
+            if (possible && 0 < x.X && x.X < 1 && 0 < x.Y && x.Y < 1 && 0 < x.Z && x.X + x.Y <= 0.5f) {
+                depth = Math.Min(depth, x.Z);
+            }
+        }
+        return depth;
+    }
+    static Raster Render (Model m, Vector2i size) => Render(m.Faces, m.Vertices, size);
 
     [STAThread]
     static void Main (string[] args) {
-        var faces = new List<(int i, int j, int k)>() {
-            (5, 6, 1),
-            (2, 1, 6), // right
-            (3, 7, 0),
-            (4, 0, 7), // left
-            (7, 6, 4),
-            (5, 4, 6), // top
-            (1, 2, 0),
-            (3, 0, 2), // bottom
-            (6, 7, 2),
-            (3, 2, 7), // near
-            (4, 5, 0),
-            (1, 0, 5), // far
-        };
-        var vertices = new List<Vector4>() {
-            new(-.5f, -.5f, -.5f, 1),
-            new(+.5f, -.5f, -.5f, 1),
-            new(+.5f, -.5f, +.5f, 1),
-            new(-.5f, -.5f, +.5f, 1),
-            new(-.5f, +.5f, -.5f, 1),
-            new(+.5f, +.5f, -.5f, 1),
-            new(+.5f, +.5f, +.5f, 1),
-            new(-.5f, +.5f, +.5f, 1),
-        };
-        //for (int i = 0; i < vertices.Count; i++)
-        //    vertices[i] -= new Vector3(0.5f, 0.5f, 0.5f);
-
-        const string TeapotFilepath = @"data\teapot.obj";
-        var teapot = new Model(TeapotFilepath);
-        var f = new List<(int, int, int)>() {
+        var faces = new List<(int, int, int)> {
+            (1, 5, 6), (6, 2, 1), // right
+            (0, 3, 7), (7, 4, 0), // left
+            (4, 7, 6), (6, 5, 4), // top
+            (0, 1, 2), (2, 3, 0), // bottom
+            (2, 6, 7), (7, 3, 2), // near
+            (0, 4, 5), (5, 1, 0), // far
 
         };
-        var v = new List<Vector4>() {
+        var vertices = new List<Vector3> {
+            new(-0.5f, -0.5f, -0.5f),
+            new(+0.5f, -0.5f, -0.5f),
+            new(+0.5f, -0.5f, +0.5f),
+            new(-0.5f, -0.5f, +0.5f),
+            new(-0.5f, +0.5f, -0.5f),
+            new(+0.5f, +0.5f, -0.5f),
+            new(+0.5f, +0.5f, +0.5f),
+            new(-0.5f, +0.5f, +0.5f),
         };
-        for (var i = 0; i < 10; i++) {
-            f.Add((i * 3, i * 3 + 1, i * 3 + 2));
-            v.Add(new(3, 0, i, 1));
-            v.Add(new(0, 0, i, 1));
-            v.Add(new(0, 3, i, 1));
-        }
-        //TryRayTrace(faces, vertices);
-        TryRayTrace(teapot.Faces, teapot.Vertices);
-        //var size = args.Length == 2 && ParseInt32(args[0]) is int w && ParseInt32(args[1]) is int h ? new(w, h) : new Vector2i(320, 240);
-        //using var gl = new BlitTest(size);
-        //gl.Run();
+
+        using var raster = Render(/*new Model(@"data\teapot.obj")*/faces,vertices, new(320, 240));
+        using var gl = new ImageWindow(raster);
+        gl.Run();
     }
 }
