@@ -80,7 +80,7 @@ public sealed class State {
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
-            if (value != DepthFunc) 
+            if (value != DepthFunc)
                 glDepthFunc(value);
             if (value != DepthFunc)
                 throw new Exception();
@@ -90,7 +90,7 @@ public sealed class State {
         get => GetIntegerv(IntParameter.FramebufferBinding);
         set {
             if (value != Framebuffer)
-                BindFramebuffer(Const.FRAMEBUFFER, value);
+                BindFramebuffer(FramebufferTarget.Framebuffer, value);
             if (value != Framebuffer)
                 throw new Exception();
         }

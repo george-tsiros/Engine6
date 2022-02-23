@@ -6,9 +6,9 @@ using Shaders;
 using System.Numerics;
 using System;
 
-public class ImageWindow:GlWindow {
-    private Raster Image { get; }
-    private Sampler2D sampler;
+public class ImageWindow:OffScreenWindowBase {
+    private readonly Raster Image;
+    private Sampler2D Sampler;
     private VertexArray quad;
     private VertexBuffer<Vector4> quadBuffer;
     public ImageWindow (Vector2i size) : base(size) { }
@@ -20,10 +20,11 @@ public class ImageWindow:GlWindow {
         State.Program = PassThrough.Id;
         quadBuffer = new(Quad.Vertices);
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
-        sampler = new(Image.Size, ImageTextureFormat(Image.Channels));
-        sampler.Mag = MagFilter.Nearest;
-        sampler.Min = MinFilter.Nearest;
-        sampler.Wrap = Wrap.ClampToEdge;
+        Sampler = new(Image.Size, ImageTextureFormat(Image.Channels));
+        Sampler.Mag = MagFilter.Nearest;
+        Sampler.Min = MinFilter.Nearest;
+        Sampler.Wrap = Wrap.ClampToEdge;
+        Sampler.Upload(Image);
     }
 
     private static TextureFormat ImageTextureFormat (int channels) => channels switch {
@@ -33,8 +34,7 @@ public class ImageWindow:GlWindow {
         _ => throw new Exception($"{channels} invalid channel count")
     };
 
-    protected override void Render (float dt) {
-        sampler.Upload(Image);
+    protected override void Render () {
         glViewport(0, 0, Width, Height);
         glClear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
@@ -42,14 +42,14 @@ public class ImageWindow:GlWindow {
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;
-        sampler.BindTo(1);
+        Sampler.BindTo(1);
         PassThrough.Tex(1);
         glDrawArrays(Primitive.Triangles, 0, 6);
     }
 
     protected override void Closing () {
         Image.Dispose();
-        sampler.Dispose();
+        Sampler.Dispose();
         quad.Dispose();
         quadBuffer.Dispose();
     }

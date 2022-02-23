@@ -106,7 +106,13 @@ public static partial class User {
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    unsafe public static extern bool InvalidateRect ([In] IntPtr handle, [In] Rect* rect, [In] IntPtr erase);
+    public static extern bool InvalidateRect ([In] IntPtr handle, [In] ref Rect rect, [In] IntPtr erase);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private unsafe static extern bool InvalidateRect ([In] IntPtr handle, [In] object ob, [In] IntPtr erase);
+
+    public static bool InvalidateRect ([In] IntPtr handle, [In] IntPtr erase) => InvalidateRect(handle, null, erase);
 
     /// <summary>
     /// 

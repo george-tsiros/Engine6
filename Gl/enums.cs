@@ -148,14 +148,14 @@ public enum PixelFormat {
     Bgra = Const.BGRA,
 }
 public enum TextureFormat {
-    R8 = Const.R8,
     R16 = Const.R16,
-    Rg8 = Const.RG8,
+    R8 = Const.R8,
     Rg16 = Const.RG16,
-    Rgb8 = Const.RGB8,
+    Rg8 = Const.RG8,
     Rgb16 = Const.RGB16,
-    Rgba8 = Const.RGBA8,
+    Rgb8 = Const.RGB8,
     Rgba16 = Const.RGBA16,
+    Rgba8 = Const.RGBA8,
 }
 
 public enum Primitive {
@@ -395,6 +395,7 @@ public enum FramebufferTarget {
 }
 
 public enum FramebufferStatus:int {
+    Error = 0,
     Undefined = Const.FRAMEBUFFER_UNDEFINED,
     Complete = Const.FRAMEBUFFER_COMPLETE,
     IncompleteAttachment = Const.FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
@@ -408,7 +409,11 @@ public enum FramebufferStatus:int {
     IncompleteLayerTargets = Const.FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS,
     IncompleteLayerCount = Const.FRAMEBUFFER_INCOMPLETE_LAYER_COUNT,
 }
-
+public enum FramebufferAttachment {
+    Depth = Const.DEPTH_ATTACHMENT,
+    Stencil = Const.STENCIL_ATTACHMENT,
+    Color0 = Const.COLOR_ATTACHMENT0,
+}
 public enum Attachment {
     Depth = Const.DEPTH_ATTACHMENT,
     Stencil = Const.STENCIL_ATTACHMENT,
@@ -463,15 +468,19 @@ public enum InterfaceParameter {
 }
 
 public enum RenderbufferFormat {
-    DepthComponent = Const.DEPTH_COMPONENT,
-    R8 = Const.R8,
-    Rg8 = Const.RG8,
-    Rgb8 = Const.RGB8,
-    Rgba8 = Const.RGBA8,
+    Depth16 = Const.DEPTH_COMPONENT16,
+    Depth24 = Const.DEPTH_COMPONENT24,
+    Depth24Stencil8 = Const.DEPTH24_STENCIL8,
+    Depth32 = Const.DEPTH_COMPONENT32,
+    Depth32f = Const.DEPTH_COMPONENT32F,
     R16 = Const.R16,
+    R8 = Const.R8,
     Rg16 = Const.RG16,
+    Rg8 = Const.RG8,
     Rgb16 = Const.RGB16,
+    Rgb8 = Const.RGB8,
     Rgba16 = Const.RGBA16,
+    Rgba8 = Const.RGBA8,
 }
 
 public enum ShaderType {

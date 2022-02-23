@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using static Opengl;
 public class Sampler2D:IDisposable {
-    public int Id { get; }
+    public int Id { get; } = CreateTexture2D();
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
@@ -49,8 +49,7 @@ public class Sampler2D:IDisposable {
         }
     }
 
-    private Sampler2D () => Id = CreateTexture2D();
-    public Sampler2D (Vector2i size, TextureFormat sizedFormat) : this() {
+    public Sampler2D (Vector2i size, TextureFormat sizedFormat) {
         (Size, SizedFormat) = (size, sizedFormat);
         TextureStorage2D(this, 1, SizedFormat, Width, Height);
         TextureBaseLevel(this, 0);

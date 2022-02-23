@@ -139,7 +139,7 @@ class TextureTest:GlWindow {
         if (!KeyAction(k, true))
             base.KeyDown(k);
     }
-    private int previousX, previousY;
+    //private int previousX, previousY;
     protected override void MouseMove (int x, int y) {
         Camera.Rotate(new(x * 0.01f, y * 0.01f));
     }

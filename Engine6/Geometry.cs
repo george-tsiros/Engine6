@@ -83,7 +83,14 @@ static class Cube {
 }
 
 static class Geometry {
-
+    public static int Hit (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
+        var currentBest = -1;
+        var currentNearest = float.MaxValue;
+        for (var i = 0; i < faces.Length; i++)
+            if (IsHit(faces[i], ray, out var x) && x.Z < currentNearest)
+                (currentBest, currentNearest) = (i, x.Z);
+        return currentBest;
+    }
     public static int Hit (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces, out Vector3 hit) {
         var faceIndex = -1;
         hit = new(0, 0, float.MaxValue);

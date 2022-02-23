@@ -5,6 +5,24 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static Opengl;
 
+public class Renderbuffer {
+    public int Id { get; } = GenRenderbuffer();
+    public Renderbuffer (RenderbufferFormat format, Vector2i size) {
+        NamedRenderbufferStorage(Id, format, size.X, size.Y);
+    }
+}
+public class Framebuffer {
+    public int Id { get; } = GenFramebuffer();
+    public FramebufferStatus CheckStatus (FramebufferTarget target = FramebufferTarget.Framebuffer) => CheckNamedFramebufferStatus(Id, target);
+
+    public void Attach (Sampler2D texture, Attachment attachment) {
+        NamedFramebufferTexture(Id, attachment, texture);
+    }
+    public void Attach (Renderbuffer renderbuffer, Attachment attachment) {
+        NamedFramebufferRenderbuffer(Id, attachment, renderbuffer.Id);
+    }
+}
+
 public class VertexBuffer<T>:IDisposable where T : unmanaged {
     public static implicit operator int (VertexBuffer<T> b) => b.Id;
     public int Id { get; } = CreateBuffer();
@@ -17,7 +35,7 @@ public class VertexBuffer<T>:IDisposable where T : unmanaged {
             throw new Exception();
         if (sourceOffset + count > dataLength)
             throw new Exception();
-        if(targetOffset + count > Capacity)
+        if (targetOffset + count > Capacity)
             throw new Exception();
     }
     unsafe public void BufferData (T[] data, int count, int sourceOffset, int targetOffset) {
