@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Threading.Tasks;
 using Gl;
 
 static class Cube {
@@ -82,23 +83,60 @@ static class Cube {
 }
 
 static class Geometry {
-    public static float Distance (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
-        var nearest = float.MaxValue;
 
-        for (var i = 0; i < faces.Length; i++) {
-            var (A, B, C) = faces[i];
-            var m = new Matrix3x3(A - C, B - C, -ray.Direction);
-            var p = ray.Origin - C;
-            var possible = m.TrySolve(p, out var x);
-            if (possible)
-                if (0 < x.X && x.X < 1 && 0 < x.Y && x.Y < 1 && 0 < x.Z && x.X + x.Y <= 1f)
-                    nearest = Math.Min(nearest, x.Z);
-        }
+    public static int Hit (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces, out Vector3 hit) {
+        var faceIndex = -1;
+        hit = new(0, 0, float.MaxValue);
+        for (var i = 0; i < faces.Length; i++)
+            if (IsHit(faces[i], ray, out var x) && x.Z < hit.Z) {
+                hit = x;
+                faceIndex = i;
+            }
+        return faceIndex;
+    }
+
+    public static bool IsHit (in (Vector3 a, Vector3 b) face, in Vector3 dir, out Vector3 x) {
+        var (a, b) = face;
+        return new Matrix3x3(a, b, -dir)
+           .TrySolve(Vector3.Zero, out x) &&
+           0 <= x.X && x.X <= 1 &&
+           0 <= x.Y && x.Y <= 1 &&
+           0 < x.Z && x.X + x.Y <= 1f;
+    }
+
+    public static bool IsHit (in (Vector3 a, Vector3 b, Vector3 c) face, in Ray r, out Vector3 x) {
+        var (a, b, c) = face;
+        return new Matrix3x3(a - c, b - c, -r.Direction)
+           .TrySolve(r.Origin - c, out x) &&
+           0 <= x.X && x.X <= 1 &&
+           0 <= x.Y && x.Y <= 1 &&
+           0 < x.Z && x.X + x.Y <= 1f;
+    }
+    public static float ParallelDistance (Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
+        var nearest = float.MaxValue;
+        _ = Parallel.ForEach(faces, () => nearest, (f, state, n) => IsHit(f, ray, out var x) && x.Z < n ? x.Z : n, n => nearest = n);
         return nearest;
     }
 
-    public static void Transform (Vector3[] array, Matrix4x4 m) {
-        for (int i = 0; i < array.Length; i++)
+    public static float Distance (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
+        var nearest = float.MaxValue;
+        for (var i = 0; i < faces.Length; i++)
+            if (IsHit(faces[i], ray, out var x) && x.Z < nearest)
+                nearest = x.Z;
+        return nearest;
+    }
+
+    public static float Distance (in Vector3 dir, in (Vector3 A, Vector3 B)[] faces) {
+        var nearest = float.MaxValue;
+        for (var i = 0; i < faces.Length; i++)
+            if (IsHit(faces[i], dir, out var x) && x.Z < nearest)
+                nearest = x.Z;
+        return nearest;
+    }
+
+    public static void Transform (IList<Vector3> array, Matrix4x4 m) {
+        var count = array.Count;
+        for (int i = 0; i < count; i++)
             array[i] = Vector3.Transform(array[i], m);
     }
 

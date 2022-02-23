@@ -33,6 +33,23 @@ public readonly struct Matrix3x3 {
     13 23 33
 */
     public bool TrySolve (Vector3 p, out Vector3 x) {
+        var V = new Vector3(M22 * M33 - M32 * M23, M32 * M13 - M12 * M33, M12 * M23 - M22 * M13);
+        var det = Vector3.Dot(new Vector3(M11, M21, M31), V);
+        if (Math.Abs(det) < float.Epsilon) {
+            x = Vector3.Zero;
+            return false;
+        }
+        var d = (M31 * M23 - M21 * M33) / det;
+        var e = (M11 * M33 - M31 * M13) / det;
+        var f = (M21 * M13 - M11 * M23) / det;
+        var g = (M21 * M32 - M31 * M22) / det;
+        var h = (M31 * M12 - M11 * M32) / det;
+        var i = (M11 * M22 - M21 * M12) / det;
+        x = new Matrix3x3(V / det, new(d, e, f), new(g, h, i)) * p;
+
+        return true;
+    }
+    public bool TrySolveDouble (Vector3 p, out Vector3 x) {
         var A = (double)M22 * M33 - (double)M32 * M23;
         var B = (double)M32 * M13 - (double)M12 * M33;
         var C = (double)M12 * M23 - (double)M22 * M13;

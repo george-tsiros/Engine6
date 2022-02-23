@@ -1,4 +1,5 @@
 namespace Engine;
+
 using System.Numerics;
 
 readonly struct Ray {
