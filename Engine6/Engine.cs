@@ -77,9 +77,14 @@ class Engine {
 
     [STAThread]
     static void Main (string[] args) {
-        var size = new Vector2i(640, 480);
         const string renderPath = "teapot.bin";
         const string modelPath = @"data\teapot.obj";
+
+
+        var size = new Vector2i(640, 480);
+        using (var o = new OffScreenWindow(size)) {
+            o.Run();
+        }
 
         Model model = new(modelPath);
 

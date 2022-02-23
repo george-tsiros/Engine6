@@ -13,12 +13,12 @@ public sealed class State {
     private static void MaybeToggle (Capability cap, bool requested) {
         if (requested != IsEnabled(cap)) {
             if (requested)
-                Opengl.glEnable(cap);
+                glEnable(cap);
             else
-                Opengl.glDisable(cap);
+                glDisable(cap);
         }
         if (requested != IsEnabled(cap)) {
-            var eh = Opengl.glGetError();
+            var eh = glGetError();
             throw new Exception();
         }
     }

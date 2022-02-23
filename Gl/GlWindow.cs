@@ -4,14 +4,6 @@ using System;
 using System.Diagnostics;
 using Win32;
 
-public class OffScreenWindow:OffScreenWindowBase {
-    public OffScreenWindow (Vector2i size) : base(size) { }
-    protected override void Render () {
-        Opengl.glClearColor(0, 0, 0, 1);
-        Opengl.glClear(BufferBit.Color | BufferBit.Depth);
-    }
-}
-
 abstract public class OffScreenWindowBase:WindowBase {
     protected IntPtr DeviceContext { get; private set; }
     protected IntPtr RenderingContext { get; private set; }

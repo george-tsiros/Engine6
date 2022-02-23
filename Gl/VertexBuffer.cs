@@ -7,12 +7,14 @@ using static Opengl;
 
 public class Renderbuffer {
     public int Id { get; } = GenRenderbuffer();
+    public static implicit operator int (Renderbuffer rb) => rb.Id;
     public Renderbuffer (RenderbufferFormat format, Vector2i size) {
         NamedRenderbufferStorage(Id, format, size.X, size.Y);
     }
 }
 public class Framebuffer {
     public int Id { get; } = GenFramebuffer();
+    public static implicit operator int (Framebuffer fb) => fb.Id;
     public FramebufferStatus CheckStatus (FramebufferTarget target = FramebufferTarget.Framebuffer) => CheckNamedFramebufferStatus(Id, target);
 
     public void Attach (Sampler2D texture, Attachment attachment) {

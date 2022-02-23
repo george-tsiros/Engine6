@@ -5,6 +5,52 @@ using static Gl.Opengl;
 using Shaders;
 using System.Numerics;
 using System;
+using System.Diagnostics;
+
+public class OffScreenWindow:OffScreenWindowBase {
+    private Framebuffer fb;
+    private Renderbuffer rb;
+    private Sampler2D tex;
+    private VertexArray cube, quad;
+    private VertexBuffer<Vector4> quadBuffer, cubeBuffer;
+
+    public OffScreenWindow (Vector2i size) : base(size) { }
+
+    protected override void Load () {
+        fb = new Framebuffer();
+        Debug.WriteLine(fb.CheckStatus());
+        rb = new(RenderbufferFormat.Depth32, new(Width, Height));
+        fb.Attach(rb, Attachment.Depth);
+        tex = new(new(Width, Height), TextureFormat.Rgb8);
+        tex.Mag = MagFilter.Nearest;
+        tex.Min = MinFilter.Nearest;
+        tex.Wrap = Wrap.ClampToEdge;
+
+        fb.Attach(tex, Attachment.Color0);
+        Debug.WriteLine(fb.CheckStatus());
+
+        State.Program = PassThrough.Id;
+        PassThrough.Tex(tex);
+        
+        State.Program = SimpleTexture.Id;
+        glViewport(0, 0, Width, Height);
+    }
+
+    protected override void Render () {
+        State.Framebuffer = fb;
+        State.Program = SimpleTexture.Id;
+
+        glClearColor(0, 0, 0, 1);
+        glClear(BufferBit.Color | BufferBit.Depth);
+
+        State.Framebuffer = 0;
+        State.Program = PassThrough.Id;
+
+        glClearColor(0, 0, 0, 1);
+        glClear(BufferBit.Color | BufferBit.Depth);
+    }
+}
+
 
 public class ImageWindow:OffScreenWindowBase {
     private readonly Raster Image;
