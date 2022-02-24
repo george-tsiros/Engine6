@@ -1,66 +1,40 @@
 namespace Engine;
 
-using System;
-using System.IO;
-using System.Numerics;
-using Shaders;
 using Gl;
 using static Gl.Opengl;
-using Win32;
+using Shaders;
+using System.Numerics;
+using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-class TextureTest:GlWindow {
-    [Flags]
-    enum Dir {
-        None = 0,
-        Up = 1,
-        Right = 2,
-        Down = 4,
-        Left = 8,
-    }                                               // L D R U
-    static readonly Dir[] dirs = {                  // 8 4 2 1
-        Dir.None,                                   // 0 0 0 0
-        Dir.Up,                                     // 0 0 0 1
-        Dir.Right,                                  // 0 0 1 0
-        Dir.Up | Dir.Right,                         // 0 0 1 1
-        Dir.Down,                                   // 0 1 0 0
-        Dir.None,                                   // 0 1 0 1
-        Dir.Down | Dir.Right,                       // 0 1 1 0
-        Dir.Right,                                  // 0 1 1 1
-        Dir.Left,                                   // 1 0 0 0
-        Dir.Up | Dir.Left,                          // 1 0 0 1
-        Dir.None,                                   // 1 0 1 0
-        Dir.Up,                                     // 1 0 1 1
-        Dir.Down | Dir.Left,                        // 1 1 0 0
-        Dir.Left,                                   // 1 1 0 1
-        Dir.Down,                                   // 1 1 1 0
-        Dir.None,                                   // 1 1 1 1
-    };
-    public TextureTest (Vector2i size) : base(size) { }
-
+public class OffScreenWindow:OffScreenWindowBase {
     private Camera Camera { get; } = new(new(0, 0, 0));
+    private Framebuffer fb;
+    private Renderbuffer rb;
     private VertexArray quad, skyboxVao;
-    private Sampler2D tex, skyboxTexture;
+    private Sampler2D tex, skyboxTexture, renderTexture;
     private VertexBuffer<Vector4> skyboxBuffer, quadBuffer, cubeBuffer;
     private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer, cubeUvBuffer;
     private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
     private VertexArray cube;
 
-    protected override void Closing () {
-        cube.Dispose();
-        cubeBuffer.Dispose();
-        cubeUvBuffer.Dispose();
-        cubeModelBuffer.Dispose();
-        quad.Dispose();
-        skyboxVao.Dispose();
-        skyboxBuffer.Dispose();
-        skyboxUvBuffer.Dispose();
-        quadBuffer.Dispose();
-        quadModelBuffer.Dispose();
-        quadUvBuffer.Dispose();
+    public OffScreenWindow (Vector2i size) : base(size) { }
+    const int CubeCount = 10000;
+    private static void EmptyRandomPosition (List<Vector3> positions) {
+        for (; ; ) {
+            var v = RandVector(100);
+            if (positions.TrueForAll(e => Far(e, v))) {
+                positions.Add(v);
+                return;
+            }
+        }
     }
-    protected unsafe override void Load () {
+    private static bool Far (Vector3 a, Vector3 b) => Math.Abs(a.X - b.X) > 1 || Math.Abs(a.Y - b.Y) > 1 || Math.Abs(a.Z - b.Z) > 1;
+    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d));
+    private static readonly Random rand = new();
+
+    protected override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
         quadBuffer = new(Quad.Vertices);
@@ -106,50 +80,27 @@ class TextureTest:GlWindow {
             cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
         cubeModelBuffer = new(cubes);
         cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
-    }
-    const int CubeCount = 10000;
-    private static readonly Random rand = new();
-    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d));
-    private static void EmptyRandomPosition (List<Vector3> positions) {
-        for (; ; ) {
-            var v = RandVector(100);
-            if (positions.TrueForAll(e => Far(e, v))) {
-                positions.Add(v);
-                return;
-            }
-        }
-    }
-    private static bool Far (Vector3 a, Vector3 b) => Math.Abs(a.X - b.X) > 1 || Math.Abs(a.Y - b.Y) > 1 || Math.Abs(a.Z - b.Z) > 1;
 
-    private static readonly Keys[] keys = { Keys.D, Keys.C, Keys.X, Keys.Z };
-    private Dir keyState = Dir.None;
-    protected override void KeyUp (Keys k) {
-        if (!KeyAction(k, false))
-            base.KeyUp(k);
-    }
-    private bool KeyAction (Keys k, bool down) {
-        var i = Array.IndexOf(keys, k);
-        if (i < 0)
-            return false;
-        var d = (Dir)(1 << i);
-        Debug.WriteLine(keyState);
-        keyState = down ? keyState | d : keyState & ~d;
-        return true;
-    }
-    protected override void KeyDown (Keys k) {
-        if (!KeyAction(k, true))
-            base.KeyDown(k);
-    }
-    //private int previousX, previousY;
-    protected override void MouseMove (int x, int y) {
-        Camera.Rotate(new(x * 0.01f, y * 0.01f));
+        fb = new Framebuffer();
+        Debug.WriteLine(fb.CheckStatus());
+        rb = new(RenderbufferFormat.Depth32, new(Width, Height));
+        fb.Attach(rb, Attachment.Depth);
+        renderTexture = new(new(Width, Height), TextureFormat.Rgba8);
+        renderTexture.Mag = MagFilter.Nearest;
+        renderTexture.Min = MinFilter.Nearest;
+        renderTexture.Wrap = Wrap.ClampToEdge;
+
+        fb.Attach(renderTexture, Attachment.Color0);
+        Debug.WriteLine(fb.CheckStatus());
+
     }
 
-    protected override void Render (float dt) {
+    protected override void Render () {
+        State.Framebuffer = fb;
+
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);
-        State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
         State.DepthTest = true;
@@ -170,5 +121,12 @@ class TextureTest:GlWindow {
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
         glDrawArrays(Primitive.Triangles, 0, 36);
+
+        State.Program = PassThrough.Id;
+        State.VertexArray = quad;
+        State.DepthTest =false;
+        renderTexture.BindTo(0);
+        PassThrough.Tex(0);
+        glDrawArrays(Primitive.Triangles, 0, 6);
     }
 }

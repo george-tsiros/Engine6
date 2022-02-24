@@ -23,7 +23,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>TRACE;</DefineConstants>
+        <DefineConstants>TRACE</DefineConstants>
         <Optimize>true</Optimize>
     </PropertyGroup>
 
@@ -42,6 +42,9 @@
     <ItemGroup>
         <None Update="data\font.png">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+        <None Update="data\teapot.hits">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="data\teapot.obj">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

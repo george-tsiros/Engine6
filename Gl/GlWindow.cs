@@ -35,12 +35,12 @@ abstract public class OffScreenWindowBase:WindowBase {
                     break;
                 _ = User.DispatchMessageW(ref m);
             }
+            Invalidate();
         }
         Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
         Demand(Opengl.wglDeleteContext(RenderingContext));
         Demand(User.ReleaseDC(WindowHandle, DeviceContext));
     }
-
 }
 
 public class GlWindow:WindowBase {
