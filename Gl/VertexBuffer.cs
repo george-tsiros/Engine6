@@ -8,7 +8,7 @@ using static Opengl;
 public class Renderbuffer {
     public int Id { get; } = GenRenderbuffer();
     public static implicit operator int (Renderbuffer rb) => rb.Id;
-    public Renderbuffer (RenderbufferFormat format, Vector2i size) {
+    public Renderbuffer (Vector2i size, RenderbufferFormat format) {
         NamedRenderbufferStorage(Id, format, size.X, size.Y);
     }
 }
@@ -17,10 +17,10 @@ public class Framebuffer {
     public static implicit operator int (Framebuffer fb) => fb.Id;
     public FramebufferStatus CheckStatus (FramebufferTarget target = FramebufferTarget.Framebuffer) => CheckNamedFramebufferStatus(Id, target);
 
-    public void Attach (Sampler2D texture, Attachment attachment) {
+    public void Attach (Sampler2D texture, FramebufferAttachment attachment) {
         NamedFramebufferTexture(Id, attachment, texture);
     }
-    public void Attach (Renderbuffer renderbuffer, Attachment attachment) {
+    public void Attach (Renderbuffer renderbuffer, FramebufferAttachment attachment) {
         NamedFramebufferRenderbuffer(Id, attachment, renderbuffer.Id);
     }
 }

@@ -86,41 +86,41 @@ class Engine {
             o.Run();
         }
 
-        Model model = new(modelPath);
+        //Model model = new(modelPath);
 
-        Geometry.Transform(model.Vertices, Matrix4x4.CreateRotationX((float)Math.PI / 6));
-        Geometry.Transform(model.Vertices, Matrix4x4.CreateTranslation(0, -1, -10));
+        //Geometry.Transform(model.Vertices, Matrix4x4.CreateRotationX((float)Math.PI / 6));
+        //Geometry.Transform(model.Vertices, Matrix4x4.CreateTranslation(0, -1, -10));
 
-        if (!File.Exists(renderPath))
-            Render(model, size, renderPath);
+        //if (!File.Exists(renderPath))
+        //    Render(model, size, renderPath);
 
-        var hitData = ReadArray<HitData>(renderPath);
-        var pixelCount = hitData.Length;
-        var image = new Raster(size, 1, 1);
+        //var hitData = ReadArray<HitData>(renderPath);
+        //var pixelCount = hitData.Length;
+        //var image = new Raster(size, 1, 1);
 
-        var (dmin, dmax) = (float.MaxValue, float.MinValue);
-        var floats = new float[pixelCount];
+        //var (dmin, dmax) = (float.MaxValue, float.MinValue);
+        //var floats = new float[pixelCount];
 
-        for (var i = 0; i < hitData.Length; i++) {
-            var h = hitData[i];
-            if (h.FaceIndex >= 0) {
-                var (fi, fj, fk) = model.Faces[h.FaceIndex];
-                var f = (model.Vertices[fi], model.Vertices[fj], model.Vertices[fk]);
-                _ = Geometry.IsHit(f, h.Ray, out var x);
-                (dmin, dmax) = (Math.Min(dmin, x.Z), Math.Max(dmax, x.Z));
-                floats[i] = x.Z;
-            }
-        }
+        //for (var i = 0; i < hitData.Length; i++) {
+        //    var h = hitData[i];
+        //    if (h.FaceIndex >= 0) {
+        //        var (fi, fj, fk) = model.Faces[h.FaceIndex];
+        //        var f = (model.Vertices[fi], model.Vertices[fj], model.Vertices[fk]);
+        //        _ = Geometry.IsHit(f, h.Ray, out var x);
+        //        (dmin, dmax) = (Math.Min(dmin, x.Z), Math.Max(dmax, x.Z));
+        //        floats[i] = x.Z;
+        //    }
+        //}
 
-        var a = 255f / (dmin - dmax);
-        var b = 255f * dmax / (dmax - dmin);
+        //var a = 255f / (dmin - dmax);
+        //var b = 255f * dmax / (dmax - dmin);
 
-        for (var i = 0; i < pixelCount; i++)
-            if (hitData[i].FaceIndex >= 0)
-                image.Pixels[i] = (byte)(a * floats[i] + b);
+        //for (var i = 0; i < pixelCount; i++)
+        //    if (hitData[i].FaceIndex >= 0)
+        //        image.Pixels[i] = (byte)(a * floats[i] + b);
 
-        using var w = new ImageWindow(image);
-        w.Run();
+        //using var w = new ImageWindow(image);
+        //w.Run();
     }
     unsafe public static T[] ReadArray<T> (string filepath) where T : struct {
         var longFileSize = new FileInfo(filepath).Length;

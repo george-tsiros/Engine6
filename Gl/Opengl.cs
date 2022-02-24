@@ -79,6 +79,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferTexture;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedRenderbufferStorage;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferRenderbuffer;
+        public static readonly delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferDrawbuffer;
         //public static readonly delegate* unmanaged[Stdcall]<int, void> glDepthFunc;
         public static readonly delegate* unmanaged[Stdcall]<int, void> glActiveTexture;
         //public static readonly delegate* unmanaged[Stdcall]<Capability, bool> glIsEnabled;
@@ -181,8 +182,9 @@ unsafe public static class Opengl {
         near = floats[0];
         far = floats[1];
     }
-    public static void NamedFramebufferRenderbuffer (int framebuffer, Attachment attachment, int renderbuffer) => Extensions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
-    public static void NamedFramebufferTexture (int framebuffer, Attachment attachment, int texture) => Extensions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
+    public static void NamedFramebufferDrawbuffer (int framebuffer, ColorAttachment attachment) => Extensions.glNamedFramebufferDrawbuffer(framebuffer, (int)attachment);
+    public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => Extensions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
+    public static void NamedFramebufferTexture (int framebuffer, FramebufferAttachment attachment, int texture) => Extensions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
     public static FramebufferStatus CheckNamedFramebufferStatus (int framebuffer, FramebufferTarget target) => (FramebufferStatus)Extensions.glCheckNamedFramebufferStatus(framebuffer, (int)target);
     public static int CheckFramebufferStatus (FramebufferTarget target) => Extensions.glCheckFramebufferStatus((int)target);
     public static bool IsEnabled (Capability cap) => 0 != glIsEnabled(cap);
