@@ -11,9 +11,9 @@ using System.Collections.Generic;
 public class OffScreenWindow:OffScreenWindowBase {
     private Camera Camera { get; } = new(new(0, 0, 0));
     private Framebuffer fb;
-    private Renderbuffer depthBuffer, colorBuffer;
+    private Renderbuffer depthBuffer;//, colorBuffer;
     private VertexArray quad, skyboxVao;
-    private Sampler2D tex, skyboxTexture;//, renderTexture;
+    private Sampler2D tex, skyboxTexture, renderTexture;
     private VertexBuffer<Vector4> skyboxBuffer, quadBuffer, cubeBuffer;
     private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer, cubeUvBuffer;
     private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
@@ -83,16 +83,24 @@ public class OffScreenWindow:OffScreenWindowBase {
         cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
 
         fb = new Framebuffer();
-        depthBuffer = new(new(Width, Height), RenderbufferFormat.Depth32);
+        depthBuffer = new(new(Width, Height), RenderbufferFormat.Depth24);
         fb.Attach(depthBuffer, FramebufferAttachment.Depth);
-        colorBuffer = new(new(Width, Height), RenderbufferFormat.Rgba8);
-        fb.Attach(colorBuffer, FramebufferAttachment.Color0);
-        Debug.Assert(FramebufferStatus.Complete == fb.CheckStatus(), $"{nameof(fb)} status is {fb.CheckStatus()}");
+
+        renderTexture = new(new(Width, Height), TextureFormat.Rgba8);
+        renderTexture.Mag = MagFilter.Nearest;
+        renderTexture.Min = MinFilter.Nearest;
+        renderTexture.Wrap = Wrap.ClampToEdge;
+        renderTexture.BindTo(0);
+        fb.Attach(renderTexture, FramebufferAttachment.Color0);
+        //colorBuffer = new(new(Width, Height), RenderbufferFormat.Rgba8);
+        //fb.Attach(colorBuffer, FramebufferAttachment.Color0);
+        NamedFramebufferDrawBuffer(fb, DrawBuffer.Color0);
+        var fbStatus = fb.CheckStatus();
+        Debug.Assert(FramebufferStatus.Complete == fbStatus, $"{nameof(fb)} status is {fbStatus} (0x{fbStatus:x})");
     }
 
     protected override void Render () {
         State.Framebuffer = fb;
-
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);
@@ -101,8 +109,9 @@ public class OffScreenWindow:OffScreenWindowBase {
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Less;
         State.CullFace = true;
-        tex.BindTo(0);
-        SimpleTexture.Tex(0);
+        tex.BindTo(1);
+        renderTexture.BindTo(0);
+        SimpleTexture.Tex(1);
         SimpleTexture.View(Camera.LookAtMatrix);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 2);
 
@@ -116,14 +125,18 @@ public class OffScreenWindow:OffScreenWindowBase {
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
         glDrawArrays(Primitive.Triangles, 0, 36);
-        State.Framebuffer = 0;
 
-        //State.Program = PassThrough.Id;
-        //State.VertexArray = quad;
-        //State.DepthTest = false;
-        //State.CullFace = false;
-        //renderTexture.BindTo(1);
-        //PassThrough.Tex(1);
-        //glDrawArrays(Primitive.Triangles, 0, 6);
+        State.Framebuffer = 0;
+        glViewport(0, 0, Width, Height);
+        glClearColor(0, 0, 0, 1);
+        glClear(BufferBit.Color | BufferBit.Depth);
+
+        State.Program = PassThrough.Id;
+        State.VertexArray = quad;
+        State.DepthTest = false;
+        State.CullFace = false;
+        PassThrough.Tex(0);
+        renderTexture.BindTo(0);
+        glDrawArrays(Primitive.Triangles, 0, 6);
     }
 }
