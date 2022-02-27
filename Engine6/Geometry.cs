@@ -206,11 +206,8 @@ static class Geometry {
         var triangleCount = indices.Length / 3;
         if (indices.Length % 3 != 0)
             throw new Exception();
-        for (var i = 0; i < indices.Length; i += 3) {
-            var x = indices[i + 1];
-            indices[i + 1] = indices[i + 2];
-            indices[i + 2] = x;
-        }
+        for (var i = 0; i < indices.Length; i += 3) 
+            (indices[i + 2], indices[i + 1]) = (indices[i + 1], indices[i + 2]);
     }
 
     internal static Vector4[] CreateNormals (Vector4[] vertices, int[] indices) {
@@ -242,9 +239,7 @@ static class Geometry {
         var a = vertices[face.X].Xyz();
         var b = vertices[face.Y].Xyz();
         var c = vertices[face.Z].Xyz();
-        var ab = b - a;
-        var bc = c - b;
-        return Vector3.Normalize(Vector3.Cross(ab, bc));
+        return Vector3.Normalize(Vector3.Cross(b - a, c - b));
     }
 
     internal static Vector4[] CreateNormals (Vector4[] vertices) {
@@ -252,12 +247,10 @@ static class Geometry {
             throw new Exception();
         var normals = new Vector4[vertices.Length];
         for (var i = 0; i < vertices.Length; i += 3) {
-            var a = vertices[i + 0];
-            var b = vertices[i + 1];
-            var c = vertices[i + 2];
-            var ab = b - a;
-            var bc = c - b;
-            var n = Vector4.Normalize(new(Vector3.Cross(ab.Xyz(), bc.Xyz()), 0));
+            var a = vertices[i + 0].Xyz();
+            var b = vertices[i + 1].Xyz();
+            var c = vertices[i + 2].Xyz();
+            var n = Vector4.Normalize(new(Vector3.Cross(b - a, c - b), 0));
             normals[i + 0] = n;
             normals[i + 1] = n;
             normals[i + 2] = n;

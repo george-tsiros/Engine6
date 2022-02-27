@@ -16,6 +16,7 @@ public static class Gdi {
     /// <returns>If the function succeeds, the return value is the maximum pixel format index of the device context.If the function fails, the return value is zero. To get extended error information, call <see cref="Kernel.GetLastError"/>.</returns>
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     unsafe public static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, uint bytes, PixelFormatDescriptor* ppfd);
+
     /// <summary>
     /// </summary>
     /// <param name="dc"></param>
@@ -23,8 +24,7 @@ public static class Gdi {
     /// <param name="pfd"></param>
     /// <returns>If the function succeeds, the return value is TRUE.If the function fails, the return value is FALSE. To get extended error information, call <see cref="Kernel.GetLastError"/>.</returns>
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
+    public static extern int SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern int ChoosePixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd);
     [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]

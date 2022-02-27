@@ -1,9 +1,13 @@
 namespace Engine;
 
+using System;
 using System.Text.RegularExpressions;
 using System.Reflection;
 
 static class Extensions {
+    internal static double NextDouble (this Random self, double min, double max) => (max - min) * self.NextDouble() + min;
+    internal static float NextFloat (this Random self, double min, double max) => (float)NextDouble(self, min, max);
+
     internal static FieldInfo GetEnumFieldInfo (this Assembly self, string s) {
         var parts = s.Split('.');
         if (parts.Length != 2)

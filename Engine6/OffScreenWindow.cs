@@ -7,17 +7,12 @@ using System.Numerics;
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Win32;
 
 public class OffScreenWindow:OffScreenWindowBase {
     private Camera Camera { get; } = new(new(0, 0, 0));
-    private Framebuffer fb;
-    private Renderbuffer depthBuffer;//, colorBuffer;
-    private VertexArray quad, skyboxVao;
-    private Sampler2D tex, skyboxTexture, renderTexture;
-    private VertexBuffer<Vector4> skyboxBuffer, quadBuffer, cubeBuffer;
-    private VertexBuffer<Vector2> skyboxUvBuffer, quadUvBuffer, cubeUvBuffer;
-    private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
-    private VertexArray cube;
+    private VertexArray cube, quad, skyboxVao;
+    private Sampler2D tex, skyboxTexture;
 
     public OffScreenWindow (Vector2i size) : base(size) { }
     const int CubeCount = 1000;
@@ -30,22 +25,24 @@ public class OffScreenWindow:OffScreenWindowBase {
             }
         }
     }
+    bool useFB;
+    protected override void KeyUp (Keys k) {
+        if (k == Keys.Space)
+            useFB = !useFB;
+    }
 
     private static bool Far (Vector3 a, Vector3 b) => Math.Abs(a.X - b.X) > 1 || Math.Abs(a.Y - b.Y) > 1 || Math.Abs(a.Z - b.Z) > 1;
-    private static Vector3 RandVector (double d = 100) => new((float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d), (float)((2 * rand.NextDouble() - 1) * d));
+    private static Vector3 RandVector (double d = 100) => new(rand.NextFloat(-d, d), rand.NextFloat(-d, d), rand.NextFloat(-d, d));
     private static readonly Random rand = new();
 
     protected override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
-        quadBuffer = new(Quad.Vertices);
-        quad.Assign(quadBuffer, SimpleTexture.VertexPosition);
-        quadUvBuffer = new(Quad.Uv);
-        quad.Assign(quadUvBuffer, SimpleTexture.VertexUV);
+        quad.Assign(new VertexBuffer<Vector4>(Quad.Vertices), SimpleTexture.VertexPosition);
+        quad.Assign(new VertexBuffer<Vector2>(Quad.Uv), SimpleTexture.VertexUV);
 
         var models = new Matrix4x4[] { Matrix4x4.CreateTranslation(.5f, 0, -5), Matrix4x4.CreateTranslation(-.5f, 0, -6), };
-        quadModelBuffer = new(models);
-        quad.Assign(quadModelBuffer, SimpleTexture.Model, 1);
+        quad.Assign(new VertexBuffer<Matrix4x4>(models), SimpleTexture.Model, 1);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 0.1f, 1000f);
         SimpleTexture.Projection(projection);
 
@@ -60,18 +57,15 @@ public class OffScreenWindow:OffScreenWindowBase {
         skyboxTexture.Mag = MagFilter.Linear;
         skyboxTexture.Min = MinFilter.Linear;
         skyboxTexture.Wrap = Wrap.ClampToEdge;
-        skyboxBuffer = new(Geometry.Dex(Geometry.Translate(Cube.Vertices, -.5f * Vector3.One), Geometry.FlipWinding(Cube.Indices)));
-        skyboxVao.Assign(skyboxBuffer, SkyBox.VertexPosition);
-        skyboxUvBuffer = new(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices)));
-        skyboxVao.Assign(skyboxUvBuffer, SkyBox.VertexUV);
+        var centeredCube = Geometry.Translate(Cube.Vertices, -.5f * Vector3.One);
+        skyboxVao.Assign(new VertexBuffer<Vector4>(Geometry.Dex(centeredCube, Geometry.FlipWinding(Cube.Indices))), SkyBox.VertexPosition);
+        skyboxVao.Assign(new VertexBuffer<Vector2>(Geometry.Dex(Cube.UvVectors, Geometry.FlipWinding(Cube.UvIndices))), SkyBox.VertexUV);
         SkyBox.Projection(projection);
 
         cube = new();
         State.Program = SimpleTexture.Id;
-        cubeBuffer = new(Geometry.Dex(Geometry.Translate(Cube.Vertices, -.5f * Vector3.One), Cube.Indices));
-        cube.Assign(cubeBuffer, SimpleTexture.VertexPosition);
-        cubeUvBuffer = new(Geometry.Dex(Cube.UvVectors, Cube.UvIndices));
-        cube.Assign(cubeUvBuffer, SimpleTexture.VertexUV);
+        cube.Assign(new VertexBuffer<Vector4>(Geometry.Dex(centeredCube, Cube.Indices)), SimpleTexture.VertexPosition);
+        cube.Assign(new VertexBuffer<Vector2>(Geometry.Dex(Cube.UvVectors, Cube.UvIndices)), SimpleTexture.VertexUV);
 
         var positions = new List<Vector3>(CubeCount);
         for (var i = 0; i < CubeCount; i++)
@@ -79,28 +73,11 @@ public class OffScreenWindow:OffScreenWindowBase {
         var cubes = new Matrix4x4[CubeCount];
         for (var i = 0; i < CubeCount; i++)
             cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
-        cubeModelBuffer = new(cubes);
-        cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
+        cube.Assign(new VertexBuffer<Matrix4x4>(cubes), SimpleTexture.Model, 1);
 
-        fb = new Framebuffer();
-        depthBuffer = new(new(Width, Height), RenderbufferFormat.Depth24);
-        fb.Attach(depthBuffer, FramebufferAttachment.Depth);
-
-        renderTexture = new(new(Width, Height), TextureFormat.Rgba8);
-        renderTexture.Mag = MagFilter.Nearest;
-        renderTexture.Min = MinFilter.Nearest;
-        renderTexture.Wrap = Wrap.ClampToEdge;
-        renderTexture.BindTo(0);
-        fb.Attach(renderTexture, FramebufferAttachment.Color0);
-        //colorBuffer = new(new(Width, Height), RenderbufferFormat.Rgba8);
-        //fb.Attach(colorBuffer, FramebufferAttachment.Color0);
-        NamedFramebufferDrawBuffer(fb, DrawBuffer.Color0);
-        var fbStatus = fb.CheckStatus();
-        Debug.Assert(FramebufferStatus.Complete == fbStatus, $"{nameof(fb)} status is {fbStatus} (0x{fbStatus:x})");
     }
 
     protected override void Render () {
-        State.Framebuffer = fb;
         glViewport(0, 0, Width, Height);
         glClearColor(0, 0, 0, 1);
         glClear(BufferBit.Color | BufferBit.Depth);
@@ -110,7 +87,6 @@ public class OffScreenWindow:OffScreenWindowBase {
         State.DepthFunc = DepthFunction.Less;
         State.CullFace = true;
         tex.BindTo(1);
-        renderTexture.BindTo(0);
         SimpleTexture.Tex(1);
         SimpleTexture.View(Camera.LookAtMatrix);
         DrawArraysInstanced(Primitive.Triangles, 0, 6, 2);
@@ -125,18 +101,5 @@ public class OffScreenWindow:OffScreenWindowBase {
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
         glDrawArrays(Primitive.Triangles, 0, 36);
-
-        State.Framebuffer = 0;
-        glViewport(0, 0, Width, Height);
-        glClearColor(0, 0, 0, 1);
-        glClear(BufferBit.Color | BufferBit.Depth);
-
-        State.Program = PassThrough.Id;
-        State.VertexArray = quad;
-        State.DepthTest = false;
-        State.CullFace = false;
-        PassThrough.Tex(0);
-        renderTexture.BindTo(0);
-        glDrawArrays(Primitive.Triangles, 0, 6);
     }
 }

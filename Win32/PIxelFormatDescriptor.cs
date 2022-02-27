@@ -35,5 +35,5 @@ public struct PixelFormatDescriptor {
 
         //return $"{flags},color bits {colorBits} (rgba bits,shift) ({rBits},{rShift}/{gBits},{gShift}/{bBits},{bShift}/{aBits},{aShift}) depth {depthBits}, accum rgba {accRBits}/{accGBits}/{accBBits}/{accABits}, stencil {stencilBits}, aux {auxBuffers}, layertype {layerType} layermask {layerMask} visible mas {visibleMask} dmg mask {damageMask}";
     }
-    public static int Size => Marshal.SizeOf<PixelFormatDescriptor>();
+    public static ushort Size => (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
 }

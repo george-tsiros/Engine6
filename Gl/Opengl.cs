@@ -9,7 +9,12 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Win32;
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
-
+public class WinApiException:Exception {
+    public ulong LastError { get; }
+    public WinApiException (string message) : base(message) {
+        LastError = Kernel.GetLastError();
+    }
+}
 unsafe public static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
     internal enum StringName {
@@ -170,6 +175,13 @@ unsafe public static class Opengl {
         return IntPtr.Zero;
     }
     public static bool ExtensionsSupported => Extensions.wglGetPixelFormatAttribivARB is not null;
+    unsafe public static int GetPixelFormatCount (IntPtr dc, int a, int b, uint c) {
+        int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
+        var count = 0;
+        _ = GetPixelFormatAttribivARB(dc, a, b, c, &WGL_NUMBER_PIXEL_FORMATS_ARB, &count);
+        return count;
+    }
+
     public static bool GetPixelFormatAttribivARB (IntPtr dc, int a, int b, uint c, int* d, int* e) => 0 != Extensions.wglGetPixelFormatAttribivARB(dc, a, b, c, d, e);
     public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
         fixed (int* p = &attribs[0])
@@ -324,33 +336,33 @@ unsafe public static class Opengl {
         Extensions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
         return i;
     }
-    public unsafe static IntPtr CreateSimpleContext (IntPtr dc) {
+    public unsafe static IntPtr CreateSimpleContext (IntPtr dc, Predicate<PixelFormatDescriptor> condition) {
         if (wglGetCurrentContext() != IntPtr.Zero)
-            throw new Exception("context already exists");
-        var descriptor = new PixelFormatDescriptor { size = (ushort)PixelFormatDescriptor.Size, version = 1 };
-        var pfIndex = FindPixelFormat(dc, &descriptor, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags);
-        if (!Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
-            throw new Exception("failed SetPixelFormat");
+            throw new WinApiException("context already exists");
+        var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
+        var pfIndex = FindPixelFormat(dc, &descriptor, condition);
+        if (0 == Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
+            throw new WinApiException("failed SetPixelFormat");
         var rc = wglCreateContext(dc);
         if (rc == IntPtr.Zero)
-            throw new Exception("failed wglCreateContext");
+            throw new WinApiException("failed wglCreateContext");
         if (!wglMakeCurrent(dc, rc))
-            throw new Exception("failed wglMakeCurrent");
+            throw new WinApiException("failed wglMakeCurrent");
         var versionString = Marshal.PtrToStringAnsi(glGetString(OpenglString.Version));
         var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
         if (!m.Success)
             throw new Exception($"'{versionString}' not a version string");
-        var version = System.Version.Parse(m.Groups[1].Value);
-        Version = $"{version.Major}{version.Minor}0";
+        ShaderVersion = Version.Parse(m.Groups[1].Value);
+        VersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
         return rc;
     }
-    public static string Version { get; private set; }
-    const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
+    public static Version ShaderVersion { get; private set; }
+    public static string VersionString { get; private set; }
 
     unsafe static int FindPixelFormat (IntPtr dc, PixelFormatDescriptor* pfd, Predicate<PixelFormatDescriptor> condition) {
         var formatCount = Gdi.DescribePixelFormat(dc, 0, (*pfd).size, null);
         if (formatCount == 0)
-            throw new Exception("formatCount == 0)");
+            throw new WinApiException("formatCount == 0");
         for (var i = 1; i <= formatCount; i++) {
             _ = Gdi.DescribePixelFormat(dc, i, (*pfd).size, pfd);
             if (condition(*pfd))
@@ -358,6 +370,4 @@ unsafe public static class Opengl {
         }
         return 0;
     }
-
-
 }

@@ -139,11 +139,10 @@ public static partial class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
-    public static ushort RegisterWindowClass (WndProc wndProc, IntPtr moduleHandle, string className) {
+    public static ushort RegisterWindowClass (WndProc wndProc, string className) {
         var windowClass = WindowClassExW.Create();
         windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
         windowClass.wndProc = wndProc;
-        windowClass.hInstance = moduleHandle;
         windowClass.classname = className;
         var atom = User.RegisterClassExW(ref windowClass);
         return atom != 0 ? atom : throw new Exception("failed to register class");

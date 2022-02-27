@@ -82,7 +82,7 @@ class Engine {
 
 
         var size = new Vector2i(640, 480);
-        using (var o = new OffScreenWindow(size)) {
+        using (var o = new BlitTest(size)) {
             o.Run();
         }
 
