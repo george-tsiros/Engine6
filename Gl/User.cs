@@ -97,6 +97,10 @@ public static partial class User {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool PostMessageW (IntPtr handle, uint msg, IntPtr w, IntPtr l);
 
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Auto)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetClientRect (IntPtr handle, ref Rect clientRect);
+
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     public static extern IntPtr BeginPaint ([In] IntPtr hWnd, [In, Out] ref PaintStruct paint);
 
@@ -107,12 +111,6 @@ public static partial class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool InvalidateRect ([In] IntPtr handle, [In] ref Rect rect, [In] IntPtr erase);
-
-    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private unsafe static extern bool InvalidateRect ([In] IntPtr handle, [In] object ob, [In] IntPtr erase);
-
-    public static bool InvalidateRect ([In] IntPtr handle, [In] IntPtr erase) => InvalidateRect(handle, null, erase);
 
     /// <summary>
     /// 

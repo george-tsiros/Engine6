@@ -79,7 +79,7 @@ class BlitTest:GlWindow {
             points2Di[i] = new((int)(Width * (n.X + 0.5f)), (int)(Height * (0.5f - n.Y)));
         }
         PutPixels(raster, points2Di);
-        Debug.WriteLine(1000.0 * (Stopwatch.GetTimestamp() - t0) / Stopwatch.Frequency);
+        //Debug.WriteLine(1000.0 * (Stopwatch.GetTimestamp() - t0) / Stopwatch.Frequency);
         sampler.Upload(raster);
         glViewport(0, 0, Width, Height);
         glClear(BufferBit.Color | BufferBit.Depth);

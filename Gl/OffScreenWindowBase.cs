@@ -30,7 +30,7 @@ enum PixelFormatAttributes {
     CONTEXT_FLAGS_ARB = 0x2094,
     CONTEXT_PROFILE_MASK_ARB = 0x9126,
 }
-abstract public class OffScreenWindowBase:WindowBase {
+abstract public class OffScreenWindowBase:SimpleWindow {
     protected IntPtr DeviceContext { get; private set; }
     protected IntPtr RenderingContext { get; private set; }
     const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;

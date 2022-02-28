@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using Win32;
 
-public class GlWindow:WindowBase {
+public class GlWindow:SimpleWindow {
     protected ulong FramesRendered { get; private set; }
     protected IntPtr DeviceContext { get; private init; }
     protected IntPtr RenderingContext { get; private init; }
@@ -65,7 +65,7 @@ public class GlWindow:WindowBase {
             (int)PixelFormatAttributes.COLOR_BITS_ARB, selectedFormat.ColorBits,
             (int)PixelFormatAttributes.DEPTH_BITS_ARB, selectedFormat.DepthBits,
             (int)PixelFormatAttributes.SWAP_METHOD_ARB, (int)selectedFormat.SwapMethod,
-            (int)PixelFormatAttributes.DOUBLE_BUFFER_ARB, 0,
+            (int)PixelFormatAttributes.DOUBLE_BUFFER_ARB, 1,
             (int)PixelFormatAttributes.DRAW_TO_WINDOW_ARB, 1,
             (int)PixelFormatAttributes.STEREO_ARB, 0,
             (int)PixelFormatAttributes.SAMPLES_ARB, 1,
@@ -77,12 +77,14 @@ public class GlWindow:WindowBase {
         Opengl.wglMakeCurrent(DeviceContext, RenderingContext);
 #endif
         State.DebugOutput = true;
-        State.SwapInterval = -1;
+        State.SwapInterval = 0;
     }
 
     protected override void Paint () {
         long t0 = Stopwatch.GetTimestamp();
         var dticks = t0 - lastTicks;
+        //if (dticks < Stopwatch.Frequency / 100)
+        //    return;
         lastTicks = t0;
         var dt = dticks > 0 ? (float)((double)dticks / Stopwatch.Frequency) : 0f;
         Render(dt);

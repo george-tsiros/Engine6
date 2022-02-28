@@ -132,7 +132,6 @@ class TextureTest:GlWindow {
         if (i < 0)
             return false;
         var d = (Dir)(1 << i);
-        Debug.WriteLine(keyState);
         keyState = down ? keyState | d : keyState & ~d;
         return true;
     }

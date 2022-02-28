@@ -4,7 +4,23 @@ using System;
 using System.Diagnostics;
 using Win32;
 
-public abstract class Window {
+public abstract class WindowBase:IDisposable {
+    private bool disposed;
+    public void Dispose () {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose (bool dispose) {
+        if (dispose && !disposed) {
+            disposed = true;
+            //_ = Demand(CaptureMouse(false));
+            Closing();
+            Demand(User.DestroyWindow(WindowHandle));
+            Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
+        }
+    }
+
     protected readonly WndProc wndProc;
     protected int Width { get; init; }
     protected int Height { get; init; }
@@ -13,7 +29,7 @@ public abstract class Window {
     protected static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
     protected virtual string ClassName => "MYWINDOWCLASS";
 
-    public Window (Vector2i size) {
+    public WindowBase (Vector2i size) {
         if (size.X < 1 || size.Y < 1)
             throw new ArgumentOutOfRangeException(nameof(size));
         wndProc = new(WndProc);
@@ -23,6 +39,7 @@ public abstract class Window {
     }
 
     abstract protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l);
+    protected abstract void Closing ();
 
     public static IntPtr Demand (IntPtr p) {
         Demand(IntPtr.Zero != p);
@@ -43,130 +60,6 @@ public abstract class Window {
             else
                 Console.WriteLine(m);
         }
-    }
-}
-
-public class WindowBase:Window, IDisposable {
-    private bool disposed;
-    protected bool IsForeground { get; private set; }
-
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void MouseMove (int x, int y) { }
-    protected virtual void MouseLeave () { }
-    protected virtual void CaptureChanged () { }
-    protected virtual void FocusChanged (bool focused) { }
-    protected virtual void Closing () { }
-    protected virtual void Paint () { }
-    protected virtual void Load () { }
-    protected virtual void KeyUp (Keys k) { }
-
-    protected virtual void KeyDown (Keys k) {
-        switch (k) {
-            case Keys.Escape:
-                User.PostQuitMessage(0);
-                break;
-        }
-    }
-
-    public WindowBase (Vector2i size) : base(size) {    }
-
-    public virtual void Run () {
-        Load();
-        _ = User.ShowWindow(WindowHandle, 10);
-        Demand(User.UpdateWindow(WindowHandle));
-        Message m = new();
-        var invalidPtr = new IntPtr(-1);
-        for (; ; ) {
-            while (User.PeekMessageW(ref m, IntPtr.Zero, 0, 0, PeekRemove.NoRemove)) {
-                var eh = User.GetMessageW(ref m, IntPtr.Zero, 0, 0);
-                if (eh == invalidPtr)
-                    Environment.FailFast(null);
-                if (eh == IntPtr.Zero)
-                    break;
-                _ = User.DispatchMessageW(ref m);
-            }
-            Invalidate();
-        }
-    }
-    protected void Invalidate () => Demand(User.InvalidateRect(WindowHandle, IntPtr.Zero));
-
-    //private int CaptureMouse (bool capture) {
-    //    return capture ? CaptureMouse(0, WindowHandle) : CaptureMouse(RawInputDevice.RemoveDevice, IntPtr.Zero);
-    //}
-
-    //private static unsafe int CaptureMouse (uint flags, IntPtr ptr) {
-    //    RawInputDevice rid = new() { usagePage = 1, usage = 2, flags = flags, windowHandle = ptr };
-    //    var structSize = System.Runtime.InteropServices.Marshal.SizeOf<RawInputDevice>();
-    //    return User.RegisterRawInputDevices(ref rid, 1, (uint)structSize);
-    //}
-
-    public void Dispose (bool dispose) {
-        if (dispose && !disposed) {
-            disposed = true;
-            //_ = Demand(CaptureMouse(false));
-            Closing();
-            Demand(User.DestroyWindow(WindowHandle));
-            Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
-        }
-    }
-
-    override protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
-        Debug.WriteLine(msg);
-        switch (msg) {
-            case WinMessage.MouseMove: {
-                    if (!IsForeground)
-                        break;
-                    var (x, y) = l.Split();
-                    MouseMove(x, y);
-                }
-                return IntPtr.Zero;
-            case WinMessage.SysCommand: {
-                    var i = (SysCommand)(IntPtr.Size > 8 ? (int)(w.ToInt64() & int.MaxValue) : w.ToInt32());
-                    if (i == SysCommand.Close) {
-                        User.PostQuitMessage(0);
-                        return IntPtr.Zero;
-                    }
-                }
-                break;
-            case WinMessage.MouseLeave:
-                MouseLeave();
-                break;
-            case WinMessage.CaptureChanged:
-                CaptureChanged();
-                break;
-            case WinMessage.SetFocus:
-                FocusChanged(IsForeground = true);
-                break;
-            case WinMessage.KillFocus:
-                FocusChanged(IsForeground = false);
-                break;
-            case WinMessage.KeyDown: {
-                    var m = new KeyMessage(w, l);
-                    if (m.WasDown)
-                        break;
-                    KeyDown(m.Key);
-                    return IntPtr.Zero;
-                }
-            case WinMessage.KeyUp: {
-                    var m = new KeyMessage(w, l);
-                    KeyUp(m.Key);
-                    return IntPtr.Zero;
-                }
-            case WinMessage.Close:
-                User.PostQuitMessage(0);
-                return IntPtr.Zero;
-            case WinMessage.Paint:
-                var ps = new PaintStruct();
-                _ = Demand(User.BeginPaint(WindowHandle, ref ps));
-                Paint();
-                _ = User.EndPaint(WindowHandle, ref ps);
-                return IntPtr.Zero;
-        }
-        return User.DefWindowProcW(hWnd, msg, w, l);
     }
 }
 //class PipeClient {
