@@ -156,6 +156,8 @@ public enum TextureFormat {
     Rgb8 = Const.RGB8,
     Rgba16 = Const.RGBA16,
     Rgba8 = Const.RGBA8,
+    R32ui = Const.R32UI,
+    R32i = Const.R32I,
 }
 
 public enum Primitive {
@@ -405,6 +407,7 @@ public enum FramebufferStatus:int {
     IncompleteDrawBuffer = Const.FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER,
     IncompleteReadBuffer = Const.FRAMEBUFFER_INCOMPLETE_READ_BUFFER,
     Unsupported = Const.FRAMEBUFFER_UNSUPPORTED,
+    UnknownError = 0x8cde,
     IncompleteMultisample = Const.FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
     IncompleteLayerTargets = Const.FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS,
     IncompleteLayerCount = Const.FRAMEBUFFER_INCOMPLETE_LAYER_COUNT,

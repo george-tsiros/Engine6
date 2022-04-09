@@ -26,7 +26,7 @@ class BitmapToRaster {
             var outputDir = Path.Combine(outputRoot, root);
             _ = Directory.CreateDirectory(outputDir);
             var outputFilepath = Path.Combine(outputDir, outputFilename);
-            Console.WriteLine($"{filepath}: {image.Width}x{image.Height}, {channels} channels, {bytes.Length} bytes");
+            Console.Write($"{filepath}: {image.Width}x{image.Height}, {channels} channels, {bytes.Length} bytes");
             using (var f = new BinaryWriter(File.Create(outputFilepath))) {
                 f.Write(image.Width);
                 f.Write(image.Height);
@@ -36,6 +36,8 @@ class BitmapToRaster {
                 using (var zip = new DeflateStream(f.BaseStream, CompressionLevel.Optimal))
                     zip.Write(bytes, 0, bytes.Length);
             }
+            var compressedSize = new FileInfo(outputFilepath).Length;
+            Console.WriteLine($" -> {compressedSize} compressed ({Math.Round(100.0 * compressedSize / bytes.Length, 2)} % of original)");
         }
     }
 }

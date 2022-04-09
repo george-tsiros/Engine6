@@ -63,6 +63,31 @@ static class Extra {
     }
     internal static float Clamp (ref float angle, float delta, float min, float max) => angle = (float)Math.Max(min, Math.Min(angle + delta, max));
     internal static double Clamp (ref double angle, double delta, double min, double max) => angle = Math.Max(min, Math.Min(angle + delta, max));
+    internal static (int min, float max) Extrema (int[] ints) {
+        var (min, max) = (int.MaxValue, int.MinValue);
+        for (var i = 0; i < ints.Length; ++i)
+            Extrema(ints[i], ref min, ref max);
+        return (min, max);
+    }
+    internal static void Extrema (int i, ref int min, ref int max) {
+        if (i < min)
+            min = i;
+        if (max < i)
+            max = i;
+    }
+
+    internal static (double a, double b) Lin (double min, double max, double from, double to) {
+        /*
+        a * min + b = from
+        a * max + b = to
+        a (max-min) = to-from
+        a = to-from/(max-min)
+        b = to - a * max
+*/
+        var a = (to - from) / (max - min);
+        return (a, to - a * max);
+
+    }
 
     internal static (float min, float max) Extrema (float[] ycoords) {
 #if !true

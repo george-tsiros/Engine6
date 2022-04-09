@@ -79,21 +79,28 @@ class Engine {
 
     [STAThread]
     static void Main (string[] args) {
-        using var x = new BlitTest(new(640, 480));
-        x.Run();
-        //var vertices = new List<Vector3> { 
-        //    new(-1, -1, 0), 
-        //    new(+1, -1, 0), 
-        //    new(-1, +1, 0), 
-        //    new(+1, +1, 0), 
-        //};
-        //var faces = new List<(int, int, int)> {
-        //    (1, 0, 2),
-        //    (1, 3, 2),
-        //};
-        //using var r = Render(faces, vertices, new(320, 240));
-        ////using var r = Render(new(@"data\teapot.obj"), new(320, 240));
-        //using var w = new ImageWindow(r);
-        //w.Run();
+        using var teapot = new Teapot(new(640, 480), new("data/teapot.obj"));
+        teapot.Run();
+        //var cases = new List<(string name, ConstructorInfo ci)>();
+
+        //var constructorTypeArray = new Type[] { typeof(Vector2i) };
+        //foreach (var t in Assembly.GetExecutingAssembly().GetTypes())
+        //    if (t.BaseType == typeof(GlWindow) && t.GetConstructor(constructorTypeArray) is ConstructorInfo ci)
+        //        cases.Add((t.Name, ci));
+
+        //for (var i = 0; i < cases.Count; ++i)
+        //    Console.WriteLine($"{i + 1}: {cases[i].name}");
+
+        //var choice = -1;
+        //while (choice < 0 || cases.Count < choice)
+        //    choice = int.TryParse(Console.ReadLine(), out var i) && 0 <= i && i <= cases.Count ? i : -1;
+
+        //Debug.Assert(0 <= choice && choice <= cases.Count);
+
+        //if (choice == 0)
+        //    return;
+
+        //using var eh = cases[choice - 1].ci.Invoke(new object[] { new Vector2i(640, 480) }) as GlWindow;
+        //eh.Run();
     }
 }

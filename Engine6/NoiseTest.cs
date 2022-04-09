@@ -1,4 +1,5 @@
 namespace Engine;
+
 using System.Threading;
 using Gl;
 using static Gl.Opengl;
@@ -6,7 +7,7 @@ using Shaders;
 using System.Numerics;
 using System;
 using System.Diagnostics;
-using Win32;
+
 class NoiseTest:GlWindow {
     public NoiseTest (Vector2i size) : base(size) {
         threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;

@@ -25,6 +25,10 @@ public class ImageWindow:OffScreenWindowBase {
         Sampler.Min = MinFilter.Nearest;
         Sampler.Wrap = Wrap.ClampToEdge;
         Sampler.Upload(Image);
+        Disposables.Add(Image);
+        Disposables.Add(Sampler);
+        Disposables.Add(quad);
+        Disposables.Add(quadBuffer);
     }
 
     private static TextureFormat ImageTextureFormat (int channels) => channels switch {
@@ -45,12 +49,5 @@ public class ImageWindow:OffScreenWindowBase {
         Sampler.BindTo(1);
         PassThrough.Tex(1);
         glDrawArrays(Primitive.Triangles, 0, 6);
-    }
-
-    protected override void Closing () {
-        Image.Dispose();
-        Sampler.Dispose();
-        quad.Dispose();
-        quadBuffer.Dispose();
     }
 }

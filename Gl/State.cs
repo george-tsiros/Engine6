@@ -5,11 +5,19 @@ using System.Diagnostics;
 using static Opengl;
 
 public sealed class State {
+
     private static void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam) {
-        Debugger.Break();
+        Debug.WriteLine($"{nameof(DebugSource)}: {sourceEnum}");
+        Debug.WriteLine($"{nameof(DebugType)}: {typeEnum}");
+        Debug.WriteLine($"Id: {id}");
+        Debug.WriteLine($"{nameof(DebugSeverity)}: {severityEnum}");
+        Debug.WriteLine(System.Runtime.InteropServices.Marshal.PtrToStringAnsi(message));
     }
+
     private static readonly DebugProc debugProc;
+    
     static State () => debugProc = DebugProc;
+
     private static void MaybeToggle (Capability cap, bool requested) {
         if (requested != IsEnabled(cap)) {
             if (requested)

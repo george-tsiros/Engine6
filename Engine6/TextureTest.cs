@@ -47,19 +47,6 @@ class TextureTest:GlWindow {
     private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
     private VertexArray cube;
 
-    protected override void Closing () {
-        cube.Dispose();
-        cubeBuffer.Dispose();
-        cubeUvBuffer.Dispose();
-        cubeModelBuffer.Dispose();
-        quad.Dispose();
-        skyboxVao.Dispose();
-        skyboxBuffer.Dispose();
-        skyboxUvBuffer.Dispose();
-        quadBuffer.Dispose();
-        quadModelBuffer.Dispose();
-        quadUvBuffer.Dispose();
-    }
     protected unsafe override void Load () {
         quad = new();
         State.Program = SimpleTexture.Id;
@@ -106,6 +93,17 @@ class TextureTest:GlWindow {
             cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
         cubeModelBuffer = new(cubes);
         cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
+        Disposables.Add(cube);
+        Disposables.Add(cubeBuffer);
+        Disposables.Add(cubeUvBuffer);
+        Disposables.Add(cubeModelBuffer);
+        Disposables.Add(quad);
+        Disposables.Add(skyboxVao);
+        Disposables.Add(skyboxBuffer);
+        Disposables.Add(skyboxUvBuffer);
+        Disposables.Add(quadBuffer);
+        Disposables.Add(quadModelBuffer);
+        Disposables.Add(quadUvBuffer);
     }
     const int CubeCount = 10000;
     private static readonly Random rand = new();

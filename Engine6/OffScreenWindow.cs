@@ -74,7 +74,11 @@ public class OffScreenWindow:OffScreenWindowBase {
         for (var i = 0; i < CubeCount; i++)
             cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
         cube.Assign(new VertexBuffer<Matrix4x4>(cubes), SimpleTexture.Model, 1);
-
+        Disposables.Add(cube);
+        Disposables.Add(quad);
+        Disposables.Add(skyboxVao);
+        Disposables.Add(tex);
+        Disposables.Add(skyboxTexture);
     }
 
     protected override void Render () {

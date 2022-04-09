@@ -1,17 +1,21 @@
 namespace Gl;
 
 using System;
-using System.Diagnostics;
 using static Opengl;
-public class Sampler2D:IDisposable {
-    public int Id { get; } = CreateTexture2D();
+
+public class Sampler2D:OpenglObject {
+    protected override Action<int> Delete { get; } = DeleteTexture;
+    public override int Id { get; } = CreateTexture2D();
+    
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
     public TextureFormat SizedFormat { get; }
+
     public static implicit operator int (Sampler2D sampler) => sampler.Id;
+
     public void BindTo (int t) {
-        if (disposed)
+        if (Disposed)
             throw new Exception();
         State.ActiveTexture = t;
         glBindTexture(Const.TEXTURE_2D, Id);
@@ -19,32 +23,31 @@ public class Sampler2D:IDisposable {
 
     private Wrap wrap;
     public Wrap Wrap {
-        get => wrap;
+        get => Disposed ? throw new ObjectDisposedException(null) : wrap;
         set {
-            if (disposed)
-                throw new Exception();
-            wrap = value;
-            TextureWrap(this, WrapCoordinate.WrapS, value);
+            if (Disposed)
+                throw new ObjectDisposedException(null);
+            TextureWrap(this, WrapCoordinate.WrapS, wrap = value);
             TextureWrap(this, WrapCoordinate.WrapT, value);
         }
     }
 
     private MinFilter min;
     public MinFilter Min {
-        get => min;
+        get => Disposed ? throw new ObjectDisposedException(null) : min;
         set {
-            if (disposed)
-                throw new Exception();
+            if (Disposed)
+                throw new ObjectDisposedException(null);
             TextureFilter(this, min = value);
         }
     }
 
     private MagFilter mag;
     public MagFilter Mag {
-        get => mag;
+        get => Disposed ? throw new ObjectDisposedException(null) : mag;
         set {
-            if (disposed)
-                throw new Exception();
+            if (Disposed)
+                throw new ObjectDisposedException(null);
             TextureFilter(this, mag = value);
         }
     }
@@ -56,6 +59,7 @@ public class Sampler2D:IDisposable {
         TextureMaxLevel(this, 0);
         Wrap = Wrap.ClampToEdge;
     }
+
     unsafe public static Sampler2D FromFile (string filepath) {
         using var raster = Raster.FromFile(filepath);
         if (raster.BytesPerChannel != 1)
@@ -65,11 +69,14 @@ public class Sampler2D:IDisposable {
         texture.Upload(raster);
         return texture;
     }
+
     unsafe public void Upload (Raster raster) {
+        if (Disposed)
+            throw new ObjectDisposedException(null);
+
         if (raster.Size != Size || raster.BytesPerChannel != 1)
             throw new Exception();
 
-        //Demand(FormatWith
         fixed (byte* ptr = raster.Pixels)
             TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormatWith(raster.Channels), Const.UNSIGNED_BYTE, ptr);
     }
@@ -79,17 +86,4 @@ public class Sampler2D:IDisposable {
 
     private static readonly PixelFormat[] pixelFormats = { PixelFormat.Red, PixelFormat.Rg, PixelFormat.Bgr, PixelFormat.Bgra };
     private static PixelFormat PixelFormatWith (int channels) => 1 <= channels && channels <= 4 ? pixelFormats[channels - 1] : throw new ApplicationException();
-
-    private bool disposed;
-    private void Dispose (bool disposing) {
-        if (!disposed) {
-            if (disposing)
-                DeleteTexture(this);
-            disposed = true;
-        }
-    }
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
 }

@@ -5,10 +5,12 @@ using System.Numerics;
 using System.Collections.Generic;
 using static Opengl;
 
-public class VertexArray:IDisposable {
-    public static implicit operator int (VertexArray b) => b.Id;
-    public int Id { get; } = CreateVertexArray();
+public class VertexArray:OpenglObject {
     
+    public override int Id { get; } = CreateVertexArray();
+
+    protected override Action<int> Delete { get; } = DeleteVertexArray;
+
     public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged => Assign(this, buffer, location, divisor);
 
     private static void Assign<T> (int vao, VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
@@ -33,6 +35,7 @@ public class VertexArray:IDisposable {
     }
 
     private static (int size, AttribType type) SizeAndTypeOf (Type type) => _TYPES.TryGetValue(type, out var i) ? i : throw new ArgumentException($"unsupported type {type.Name}", nameof(type));
+
     private static readonly Dictionary<Type, (int, AttribType)> _TYPES = new() {
         { typeof(float), (1, AttribType.Float) },
         { typeof(double), (1, AttribType.Double) },
@@ -46,16 +49,5 @@ public class VertexArray:IDisposable {
         { typeof(Matrix4x4), (16, AttribType.Float) },
     };
 
-    private bool disposed;
-    private void Dispose (bool disposing) {
-        if (!disposed) {
-            if (disposing)
-                DeleteVertexArray(this);
-            disposed = true;
-        }
-    }
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    public static implicit operator int (VertexArray b) => b.Id;
 }

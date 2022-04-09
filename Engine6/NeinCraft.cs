@@ -37,6 +37,11 @@ class NeinCraft:GlWindow {
         SolidColor.Color(new(1f, 1f, 1f, 1f));
         SolidColor.Projection(projection);
         SolidColor.Model(Matrix4x4.CreateTranslation(0,0,0));
+
+        Disposables.Add(skyboxTexture);
+        Disposables.Add(skyboxVao);
+        Disposables.Add(skyboxVertices);
+        Disposables.Add(skyboxUV);
     }
     protected override void Render (float dt) {
         glViewport(0, 0, Width, Height);
@@ -53,12 +58,5 @@ class NeinCraft:GlWindow {
         skyboxTexture.BindTo(0);
         SkyBox.View(Camera.RotationOnly);
         glDrawArrays(Primitive.Triangles, 0, 36);
-    }
-
-    protected override void Closing () {
-        skyboxTexture.Dispose();
-        skyboxVao.Dispose();
-        skyboxVertices.Dispose();
-        skyboxUV.Dispose();
     }
 }

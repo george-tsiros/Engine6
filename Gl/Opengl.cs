@@ -5,16 +5,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Numerics;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Win32;
+
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
-public class WinApiException:Exception {
-    public ulong LastError { get; }
-    public WinApiException (string message) : base(message) {
-        LastError = Kernel.GetLastError();
-    }
-}
+
 unsafe public static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
     internal enum StringName {
@@ -23,6 +18,7 @@ unsafe public static class Opengl {
         Version = 0x1F02,
         Extensions = 0x1F03,
     }
+
     [DllImport(opengl32, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
     public static extern uint glGetError ();
     [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
@@ -47,7 +43,6 @@ unsafe public static class Opengl {
     public static extern void glClearColor (float r, float g, float b, float a);
     [DllImport(opengl32, ExactSpelling = true)]
     private static extern byte glIsEnabled (Capability cap);
-
     [DllImport(opengl32, ExactSpelling = true)]
     public static extern void glEnable (Capability cap);
     [DllImport(opengl32, ExactSpelling = true)]
@@ -77,14 +72,17 @@ unsafe public static class Opengl {
 
     private static class Extensions {
 #pragma warning disable CS0649
-        public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glGenFramebuffers;
-        public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glGenRenderbuffers;
+        public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateFramebuffers;
+        public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, void*, void> glReadnPixels;
+        public static readonly delegate* unmanaged[Stdcall]<int, DrawBuffer, void> glNamedFramebufferReadBuffer;
+        public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateRenderbuffers;
         public static readonly delegate* unmanaged[Stdcall]<int, int> glCheckFramebufferStatus;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int> glCheckNamedFramebufferStatus;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferTexture;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedRenderbufferStorage;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferRenderbuffer;
-        public static readonly delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferDrawBuffer;
+        public static readonly delegate* unmanaged[Stdcall]<int, DrawBuffer, void> glNamedFramebufferDrawBuffer;
+        public static readonly delegate* unmanaged[Stdcall]<int, int, DrawBuffer[], void> glNamedFramebufferDrawBuffers;
         //public static readonly delegate* unmanaged[Stdcall]<int, void> glDepthFunc;
         public static readonly delegate* unmanaged[Stdcall]<int, void> glActiveTexture;
         //public static readonly delegate* unmanaged[Stdcall]<Capability, bool> glIsEnabled;
@@ -104,6 +102,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateBuffers;
         public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateVertexArrays;
         public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteBuffers;
+        public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteRenderbuffers;
         public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteVertexArrays;
         public static readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteFramebuffers;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int*, void> glCreateTextures;
@@ -194,7 +193,10 @@ unsafe public static class Opengl {
         near = floats[0];
         far = floats[1];
     }
-    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, (int)attachment);
+    public static void ReadnPixels (int x, int y, int width, int height, int format, int type, int bufSize, void* data) => Extensions.glReadnPixels(x, y, width, height, format, type, bufSize, data);
+    public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => Extensions.glNamedFramebufferReadBuffer(framebuffer, mode);
+    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, attachment);
+    public static void NamedFramebufferDrawBuffers (int framebuffer, params DrawBuffer[] attachments) => Extensions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, attachments);
     public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => Extensions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
     public static void NamedFramebufferTexture (int framebuffer, FramebufferAttachment attachment, int texture) => Extensions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
     public static FramebufferStatus CheckNamedFramebufferStatus (int framebuffer, FramebufferTarget target) => (FramebufferStatus)Extensions.glCheckNamedFramebufferStatus(framebuffer, (int)target);
@@ -210,11 +212,12 @@ unsafe public static class Opengl {
     public static int CreateProgram () => Extensions.glCreateProgram();
     public static int CreateShader (ShaderType shaderType) => Extensions.glCreateShader(shaderType);
     public static void DebugMessageCallback (DebugProc proc, IntPtr userParam) => Extensions.glDebugMessageCallback(proc, userParam);
-    public static void DeleteBuffer (int i) => Extensions.glDeleteBuffers(1, &i);
-    public static void DeleteFramebuffer (int i) => Extensions.glDeleteFramebuffers(1, &i);
     public static void DeleteProgram (int program) => Extensions.glDeleteProgram(program);
     public static void DeleteShader (int shader) => Extensions.glDeleteShader(shader);
     public static void DeleteTexture (int texture) => glDeleteTextures(1, &texture);
+    public static void DeleteBuffer (int i) => Extensions.glDeleteBuffers(1, &i);
+    public static void DeleteRenderbuffer (int i) => Extensions.glDeleteRenderbuffers(1, &i);
+    public static void DeleteFramebuffer (int i) => Extensions.glDeleteFramebuffers(1, &i);
     public static void DeleteVertexArray (int vao) => Extensions.glDeleteVertexArrays(1, &vao);
     public static void DrawArraysInstanced (Primitive mode, int firstIndex, int indicesPerInstance, int instancesCount) => Extensions.glDrawArraysInstanced(mode, firstIndex, indicesPerInstance, instancesCount);
     public static void EnableVertexArrayAttrib (int id, int i) => Extensions.glEnableVertexArrayAttrib(id, i);
@@ -254,8 +257,8 @@ unsafe public static class Opengl {
 
     public static int CreateBuffer () => Create(Extensions.glCreateBuffers);
     public static int CreateVertexArray () => Create(Extensions.glCreateVertexArrays);
-    public static int GenFramebuffer () => Create(Extensions.glGenFramebuffers);
-    public static int GenRenderbuffer () => Create(Extensions.glGenRenderbuffers);
+    public static int CreateFramebuffer () => Create(Extensions.glCreateFramebuffers);
+    public static int CreateRenderbuffer () => Create(Extensions.glCreateRenderbuffers);
 
     private static int Create (delegate* unmanaged[Stdcall]<int, int*, void> f) {
         int i;

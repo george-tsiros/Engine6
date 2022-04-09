@@ -69,6 +69,12 @@
         <None Update="shadersources\rasterFont.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="shadersources\VertexIndex.frag">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="shadersources\VertexIndex.vert">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="unused\drawArrays.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>

@@ -68,7 +68,7 @@ public static class {className} {{
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {
             var x = GetActiveAttrib(program, i);
-            if (x.name.StartsWith(" gl_"))
+            if (x.name.StartsWith("gl_"))
                 continue;
             f.Write($@"
     //size {x.size}, type {x.type}

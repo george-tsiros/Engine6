@@ -8,6 +8,7 @@ public class GlWindow:SimpleWindow {
     protected ulong FramesRendered { get; private set; }
     protected IntPtr DeviceContext { get; private init; }
     protected IntPtr RenderingContext { get; private init; }
+
     private long lastTicks = long.MaxValue;
     const PixelFlags PfdFlags = PixelFlags.DoubleBuffer | PixelFlags.DrawToWindow | PixelFlags.SupportOpengl | PixelFlags.SwapCopy | PixelFlags.SupportComposition;
 
