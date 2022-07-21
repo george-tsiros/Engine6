@@ -57,7 +57,6 @@ public class SimpleWindow:WindowBase {
         }
     }
     private int lastMouseButtonState = 0;
-
     override protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wPtr, IntPtr lPtr) {
         switch (msg) {
             case WinMessage.MouseMove: {
@@ -107,9 +106,9 @@ public class SimpleWindow:WindowBase {
             case WinMessage.KillFocus:
                 FocusChanged(IsForeground = false);
                 break;
-            case WinMessage.Destroy:
-                User.PostQuitMessage(0);
-                break;
+            //case WinMessage.Destroy:
+            //    User.PostQuitMessage(0);
+            //    break;
             case WinMessage.KeyDown: {
                     var m = new KeyMessage(wPtr, lPtr);
                     if (m.WasDown)

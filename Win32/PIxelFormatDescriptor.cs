@@ -30,10 +30,12 @@ public struct PixelFormatDescriptor {
     public uint layerMask;
     public uint visibleMask;
     public uint damageMask;
-    public override string ToString () {
-        return $"{flags},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
+    public override string ToString () =>
+        $"{flags},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
 
-        //return $"{flags},color bits {colorBits} (rgba bits,shift) ({rBits},{rShift}/{gBits},{gShift}/{bBits},{bShift}/{aBits},{aShift}) depth {depthBits}, accum rgba {accRBits}/{accGBits}/{accBBits}/{accABits}, stencil {stencilBits}, aux {auxBuffers}, layertype {layerType} layermask {layerMask} visible mas {visibleMask} dmg mask {damageMask}";
+    static readonly ushort _size;
+    static PixelFormatDescriptor () {
+        _size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
     }
-    public static ushort Size => (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
+    public static ushort Size => _size;
 }

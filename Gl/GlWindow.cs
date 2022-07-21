@@ -16,9 +16,9 @@ public class GlWindow:SimpleWindow {
         DeviceContext = User.GetDC(WindowHandle);
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits == 24 && x.flags == PfdFlags);
 #if true
-        var lastDeviceContext = Opengl.wglGetCurrentDC();
-        var lastRenderingContext = Opengl.wglGetCurrentContext();
-        Demand(Opengl.wglMakeCurrent(DeviceContext, RenderingContext), "failed to make context current");
+        var lastDeviceContext = Opengl.GetCurrentDC();
+        var lastRenderingContext = Opengl.GetCurrentContext();
+        Demand(Opengl.MakeCurrent(DeviceContext, RenderingContext), "failed to make context current");
 
         var extendedFormatCount = Opengl.GetPixelFormatCount(DeviceContext, 1, 0, 1);
         var attributes = new int[] {
@@ -46,14 +46,15 @@ public class GlWindow:SimpleWindow {
             if (selectedFormat.DepthBits == 24 && selectedFormat.ColorBits == 32 && selectedFormat.Acceleration == Acceleration.Full && selectedFormat.DoubleBuffer && selectedFormat.PixelType == PixelType.Rgba && selectedFormat.SwapMethod == SwapMethod.Copy)
                 selectedFormat.Index = i;
         }
-        _ = Opengl.wglMakeCurrent(lastDeviceContext, lastRenderingContext);
-        _ = Opengl.wglDeleteContext(RenderingContext);
+        _ = Opengl.MakeCurrent(lastDeviceContext, lastRenderingContext);
+        _ = Opengl.DeleteContext(RenderingContext);
         User.DestroyWindow(WindowHandle);
-        WindowHandle = User.CreateWindow(ClassAtom, size, SelfHandle);
+        Instance = this;
+        User.CreateWindow(ClassAtom, size, SelfHandle);
         DeviceContext = User.GetDC(WindowHandle);
         var pfd = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        var described = Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, pfd.size, &pfd);
-        if (described == 0)
+        var described = Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, ref pfd);
+        if (!described)
             throw new WinApiException("DescribePixelFormat");
         var formatSet = Gdi.SetPixelFormat(DeviceContext, selectedFormat.Index, ref pfd);
         if (formatSet == 0)
@@ -75,7 +76,7 @@ public class GlWindow:SimpleWindow {
             0,0
         };
         RenderingContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attribs);
-        Opengl.wglMakeCurrent(DeviceContext, RenderingContext);
+        Opengl.MakeCurrent(DeviceContext, RenderingContext);
 #endif
         State.DebugOutput = true;
         State.SwapInterval = 0;
@@ -94,14 +95,14 @@ public class GlWindow:SimpleWindow {
     }
 
     protected virtual void Render (float dt) {
-        Opengl.glClearColor(0.5f, 0.5f, 0.5f, 1f);
-        Opengl.glClear(BufferBit.Color | BufferBit.Depth);
+        Opengl.ClearColor(0.5f, 0.5f, 0.5f, 1f);
+        Opengl.Clear(BufferBit.Color | BufferBit.Depth);
     }
 
     public override void Run () {
         base.Run();
-        Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
-        Demand(Opengl.wglDeleteContext(RenderingContext));
+        Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
+        Demand(Opengl.DeleteContext(RenderingContext));
         Demand(User.ReleaseDC(WindowHandle, DeviceContext));
     }
 

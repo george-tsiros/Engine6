@@ -3,6 +3,7 @@ namespace Gl;
 using System;
 using System.IO;
 using System.IO.Compression;
+using Win32;
 
 public class Raster:IDisposable {
     public readonly Vector2i Size;

@@ -63,8 +63,8 @@ abstract public class OffScreenWindowBase:SimpleWindow {
             }
             Invalidate();
         }
-        Demand(Opengl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero));
-        Demand(Opengl.wglDeleteContext(RenderingContext));
+        Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
+        Demand(Opengl.DeleteContext(RenderingContext));
         Demand(User.ReleaseDC(WindowHandle, DeviceContext));
     }
 }

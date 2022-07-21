@@ -13,7 +13,7 @@
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject />
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0-windows</TargetFramework>
         <UseWindowsForms>false</UseWindowsForms>
     </PropertyGroup>
 
@@ -32,6 +32,10 @@
         <Compile Remove="Ground.cs" />
         <Compile Remove="ShowTexture.cs" />
         <Compile Remove="SkyBoxTest.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BepuPhysics" Version="2.4.0" />
     </ItemGroup>
 
     <ItemGroup>

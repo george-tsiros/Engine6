@@ -1,8 +1,7 @@
-namespace Gl;
+namespace Win32;
 
 using System.Runtime.InteropServices;
 using System;
-using Win32;
 
 [Flags]
 public enum PeekRemove:uint {
@@ -50,7 +49,7 @@ public static partial class User {
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
+    public static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     public static extern void PostQuitMessage (int code);
@@ -145,15 +144,81 @@ public static partial class User {
         var atom = User.RegisterClassExW(ref windowClass);
         return atom != 0 ? atom : throw new Exception("failed to register class");
     }
-    public static IntPtr CreateWindow (ushort atom, Vector2i size, IntPtr? moduleHandle = null) {
-        var window = User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel.GetModuleHandleW(null), IntPtr.Zero);
-        if (window == IntPtr.Zero)
-            throw new Exception("CreateWindowExW failed");
-        var m = new Message();
-        while (User.PeekMessageW(ref m, window, 0, 0, PeekRemove.Remove)) {
-            _ = User.TranslateMessage(ref m);
-            _ = User.DispatchMessageW(ref m);
-        }
-        return window;
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr SetWindowLongPtrA (IntPtr hWnd, int nIndex, IntPtr newLong);
+
+    public static void CreateWindow (ushort atom, Vector2i size, IntPtr? moduleHandle = null) {
+        _ = User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel.GetModuleHandleW(null), IntPtr.Zero);
     }
+
+}
+public enum RawInputDeviceCommand:uint {
+    PreparsedData = 0x20000005,
+    DeviceName = 0x20000007,
+    DeviceInfo = 0x2000000b,
+}
+
+[Flags]
+public enum WindowStyleEx:uint {
+    None = /*               */0x0,
+    DlgModalFrame = /*      */0x00000001,
+    NoParentNotify = /*     */0x00000004,
+    TopMost = /*            */0x00000008,
+    AcceptFiles = /*        */0x00000010,
+    Transparent = /*        */0x00000020,
+    MdiChild = /*           */0x00000040,
+    ToolWindow = /*         */0x00000080,
+    WindowEdge = /*         */0x00000100,
+    ClientEdge = /*         */0x00000200,
+    ContextHelp = /*        */0x00000400,
+    Right = /*              */0x00001000,
+    RtlReading = /*         */0x00002000,
+    LeftScrollBar = /*      */0x00004000,
+    ControlParent = /*      */0x00010000,
+    StaticEdge = /*         */0x00020000,
+    AppWindow = /*          */0x00040000,
+    Layered = /*            */0x00080000,
+    NoInheritLayout = /*    */0x00100000,
+    NoRedirectionBitmap = /**/0x00200000,
+    LayoutRtl = /*          */0x00400000,
+    Composited = /*         */0x02000000,
+    NoActivate = /*         */0x08000000,
+    OverlappedWindow = /*   */WindowEdge | ClientEdge,
+    PaletteWindow = /*      */WindowEdge | ToolWindow | TopMost,
+}
+
+[Flags]
+public enum WindowStyle:uint {
+    Overlapped = /*     */ 0x00000000,
+    Tabstop = /*        */ 0x00010000,
+    MaximizeBox = /*    */ 0x00010000,
+    MinimizeBox = /*    */ 0x00020000,
+    Group = /*          */ 0x00020000,
+    Thickframe = /*     */ 0x00040000,
+    Sysmenu = /*        */ 0x00080000,
+    Hscroll = /*        */ 0x00100000,
+    Vscroll = /*        */ 0x00200000,
+    Dlgframe = /*       */ 0x00400000,
+    Border = /*         */ 0x00800000,
+    Maximize = /*       */ 0x01000000,
+    ClipChildren = /*   */ 0x02000000,
+    ClipSiblings = /*   */ 0x04000000,
+    Disabled = /*       */ 0x08000000,
+    Visible = /*        */ 0x10000000,
+    Minimize = /*       */ 0x20000000,
+    Child = /*          */ 0x40000000,
+    Popup = unchecked(0x80000000),
+    Tiled = Overlapped,
+    ChildWindow = Child,
+    Iconic = Minimize,
+    Sizebox = Thickframe,
+    Caption = Border | Dlgframe,
+    OverlappedWindow = Caption | Sysmenu | Thickframe | MinimizeBox | MaximizeBox,
+    TiledWindow = OverlappedWindow,
+    PopupWindow = Popup | Border | Sysmenu,
+    ClipPopup = ClipChildren | ClipSiblings | Popup,
 }

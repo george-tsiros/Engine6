@@ -82,9 +82,9 @@ public class OffScreenWindow:OffScreenWindowBase {
     }
 
     protected override void Render () {
-        glViewport(0, 0, Width, Height);
-        glClearColor(0, 0, 0, 1);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        ClearColor(0, 0, 0, 1);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
         State.DepthTest = true;
@@ -104,6 +104,6 @@ public class OffScreenWindow:OffScreenWindowBase {
         skyboxTexture.BindTo(0);
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
-        glDrawArrays(Primitive.Triangles, 0, 36);
+        DrawArrays(Primitive.Triangles, 0, 36);
     }
 }

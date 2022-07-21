@@ -15,18 +15,20 @@ public sealed class State {
     }
 
     private static readonly DebugProc debugProc;
-    
-    static State () => debugProc = DebugProc;
+
+    static State () {
+        debugProc = DebugProc;
+    }
 
     private static void MaybeToggle (Capability cap, bool requested) {
         if (requested != IsEnabled(cap)) {
             if (requested)
-                glEnable(cap);
+                Enable(cap);
             else
-                glDisable(cap);
+                Disable(cap);
         }
         if (requested != IsEnabled(cap)) {
-            var eh = glGetError();
+            var eh = GetError();
             throw new Exception();
         }
     }
@@ -80,7 +82,7 @@ public sealed class State {
         get => 0 != GetIntegerv(IntParameter.DepthMask);
         set {
             if (value != DepthWriteMask)
-                glDepthMask(value);
+                DepthMask(value);
             if (value != DepthWriteMask)
                 throw new Exception();
         }
@@ -89,7 +91,7 @@ public sealed class State {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
             if (value != DepthFunc)
-                glDepthFunc(value);
+                DepthFunc(value);
             if (value != DepthFunc)
                 throw new Exception();
         }

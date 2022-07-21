@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 using Gl;
+using Win32;
 
 static class Cube {
     /*
@@ -125,10 +126,10 @@ static class Geometry {
         return nearest;
     }
 
-    public static float Distance (in Ray ray, in (Vector3 A, Vector3 B, Vector3 C)[] faces) {
+    public static float Distance (in Ray ray, in IEnumerable<(Vector3 A, Vector3 B, Vector3 C)> faces) {
         var nearest = float.MaxValue;
-        for (var i = 0; i < faces.Length; i++)
-            if (IsHit(faces[i], ray, out var x) && x.Z < nearest)
+        foreach (var f in faces)
+            if (IsHit(f, ray, out var x) && x.Z < nearest)
                 nearest = x.Z;
         return nearest;
     }
@@ -168,6 +169,19 @@ static class Geometry {
             v[i] *= s;
         return v;
     }
+
+    internal static void ScaleInPlace (List<Vector4> v, float f) {
+        var c = v.Count;
+        for (var i = 0; i < c; i++)
+            v[i] *= f;
+    }
+
+    internal static void ScaleInPlace (List<Vector3> v, float f) {
+        var c = v.Count;
+        for (var i = 0; i < c; i++)
+            v[i] *= f;
+    }
+
     internal static Vector4[] Scale (Vector4[] v, Vector3 f) {
         var scaled = new Vector4[v.Length];
         Array.Copy(v, scaled, v.Length);
@@ -206,7 +220,7 @@ static class Geometry {
         var triangleCount = indices.Length / 3;
         if (indices.Length % 3 != 0)
             throw new Exception();
-        for (var i = 0; i < indices.Length; i += 3) 
+        for (var i = 0; i < indices.Length; i += 3)
             (indices[i + 2], indices[i + 1]) = (indices[i + 1], indices[i + 2]);
     }
 

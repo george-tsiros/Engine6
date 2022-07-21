@@ -5,10 +5,11 @@ using static Gl.Opengl;
 using Shaders;
 using System.Numerics;
 using System;
+using Win32;
 
 public class ImageWindow:OffScreenWindowBase {
     private readonly Raster Image;
-    private Sampler2D Sampler;
+    private Sampler2D sampler;
     private VertexArray quad;
     private VertexBuffer<Vector4> quadBuffer;
     public ImageWindow (Vector2i size) : base(size) { }
@@ -20,13 +21,13 @@ public class ImageWindow:OffScreenWindowBase {
         State.Program = PassThrough.Id;
         quadBuffer = new(Quad.Vertices);
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
-        Sampler = new(Image.Size, ImageTextureFormat(Image.Channels));
-        Sampler.Mag = MagFilter.Nearest;
-        Sampler.Min = MinFilter.Nearest;
-        Sampler.Wrap = Wrap.ClampToEdge;
-        Sampler.Upload(Image);
+        sampler = new(Image.Size, ImageTextureFormat(Image.Channels));
+        sampler.Mag = MagFilter.Nearest;
+        sampler.Min = MinFilter.Nearest;
+        sampler.Wrap = Wrap.ClampToEdge;
+        sampler.Upload(Image);
         Disposables.Add(Image);
-        Disposables.Add(Sampler);
+        Disposables.Add(sampler);
         Disposables.Add(quad);
         Disposables.Add(quadBuffer);
     }
@@ -39,15 +40,15 @@ public class ImageWindow:OffScreenWindowBase {
     };
 
     protected override void Render () {
-        glViewport(0, 0, Width, Height);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;
-        Sampler.BindTo(1);
+        sampler.BindTo(1);
         PassThrough.Tex(1);
-        glDrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(Primitive.Triangles, 0, 6);
     }
 }

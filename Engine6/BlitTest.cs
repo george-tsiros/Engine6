@@ -120,8 +120,8 @@ class BlitTest:GlWindow {
         sampler.Upload(raster);
 
         State.Framebuffer = fb;
-        glViewport(0, 0, Width, Height);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         State.DepthTest = true;
@@ -129,15 +129,15 @@ class BlitTest:GlWindow {
         State.CullFace = true;
         sampler.BindTo(1);
         PassThrough.Tex(1);
-        glDrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(Primitive.Triangles, 0, 6);
 
         State.Framebuffer = 0;
-        glViewport(0, 0, Width, Height);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.Color | BufferBit.Depth);
 
         fbsampler.BindTo(1);
         PassThrough.Tex(1);
-        glDrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(Primitive.Triangles, 0, 6);
     }
 
     unsafe public static void PutPixels (Raster b, IEnumerable<Vector2i> points, byte[] color = null) {

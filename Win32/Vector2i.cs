@@ -1,7 +1,7 @@
-namespace Gl;
+namespace Win32;
 
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Vector2i {
@@ -14,23 +14,4 @@ public readonly struct Vector2i {
     public void Deconstruct (out int x, out int y) => (x, y) = (X, Y);
     public override bool Equals ([NotNullWhen(true)] object obj) => obj is Vector2i other && other == this;
     public override int GetHashCode () => System.HashCode.Combine(X, Y);
-}
-
-
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct Vector3i {
-    public readonly int X, Y, Z;
-    public Vector3i (in int x, in int y, in int z) => (X, Y, Z) = (x, y, z);
-    public static Vector3i operator + (Vector3i a, Vector3i b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-    public static Vector3i operator - (Vector3i a, Vector3i b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ArraysCommand {
-    public int VerticesCount, InstancesCount, FirstVertexIndex, BaseInstanceIndex;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ElementsCommand {
-    public int VerticesCount, InstancesCount, FirstVertexIndex, BaseVertexIndex, BaseInstanceIndex;
 }

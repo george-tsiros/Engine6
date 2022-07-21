@@ -7,6 +7,7 @@ using Shaders;
 using System.Numerics;
 using System;
 using System.Diagnostics;
+using Win32;
 
 class NoiseTest:GlWindow {
     public NoiseTest (Vector2i size) : base(size) {
@@ -75,14 +76,14 @@ class NoiseTest:GlWindow {
         countdown.Reset(threadCount);
         fixed (byte* p = bytes)
             TextureSubImage2D(tex, 0, 0, 0, tex.Width, tex.Height, PixelFormat.Bgra, Const.UNSIGNED_BYTE, p);
-        glViewport(0, 0, Width, Height);
-        glClearColor(0f, 0f, 0f, 1f);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        ClearColor(0f, 0f, 0f, 1f);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         tex.BindTo(1);
         PassThrough.Tex(1);
-        glDrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(Primitive.Triangles, 0, 6);
         StartThreads();
         _ = Gdi.SwapBuffers(DeviceContext);
     }

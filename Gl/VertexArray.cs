@@ -4,6 +4,7 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using static Opengl;
+using Win32;
 
 public class VertexArray:OpenglObject {
     

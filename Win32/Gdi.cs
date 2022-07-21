@@ -1,8 +1,7 @@
-namespace Gl;
+namespace Win32;
 
 using System;
 using System.Runtime.InteropServices;
-using Win32;
 
 public static class Gdi {
     private const string gdi32 = nameof(gdi32) + ".dll";
@@ -14,9 +13,16 @@ public static class Gdi {
     /// <param name="bytes">The size, in bytes, of the structure pointed to by ppfd. The DescribePixelFormat function stores no more than nBytes bytes of data to that structure. Set this value to sizeof(PIXELFORMATDESCRIPTOR).</param>
     /// <param name="ppfd">the function sets the members of the PIXELFORMATDESCRIPTOR structure pointed to by ppfd according to the specified pixel format.</param>
     /// <returns>If the function succeeds, the return value is the maximum pixel format index of the device context.If the function fails, the return value is zero. To get extended error information, call <see cref="Kernel.GetLastError"/>.</returns>
-    [DllImport(gdi32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    unsafe public static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, uint bytes, PixelFormatDescriptor* ppfd);
+    [DllImport(gdi32, EntryPoint = "DescribePixelFormat", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private unsafe static extern int DescribePixelFormatInternal (IntPtr hdc, int pixelFormat, int bytes, PixelFormatDescriptor* ppfd);
 
+    public unsafe static int GetPixelFormatCount (IntPtr hdc) {
+        return DescribePixelFormatInternal(hdc, 0, PixelFormatDescriptor.Size, null);
+    }
+    public unsafe static bool DescribePixelFormat (IntPtr hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
+        fixed (PixelFormatDescriptor* p = &ppfd)
+            return 0 != DescribePixelFormatInternal(hdc, pixelFormat, PixelFormatDescriptor.Size, p);
+    }
     /// <summary>
     /// </summary>
     /// <param name="dc"></param>

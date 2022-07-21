@@ -58,7 +58,7 @@ class TextureTest:GlWindow {
         var models = new Matrix4x4[] { Matrix4x4.CreateTranslation(.5f, 0, -5), Matrix4x4.CreateTranslation(-.5f, 0, -6), };
         quadModelBuffer = new(models);
         quad.Assign(quadModelBuffer, SimpleTexture.Model, 1);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 0.1f, 1000f);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)Width / Height, 0.1f, 1000f);
         SimpleTexture.Projection(projection);
 
         tex = Sampler2D.FromFile("data/untitled.raw");
@@ -93,17 +93,6 @@ class TextureTest:GlWindow {
             cubes[i] = Matrix4x4.CreateTranslation(positions[i]);
         cubeModelBuffer = new(cubes);
         cube.Assign(cubeModelBuffer, SimpleTexture.Model, 1);
-        Disposables.Add(cube);
-        Disposables.Add(cubeBuffer);
-        Disposables.Add(cubeUvBuffer);
-        Disposables.Add(cubeModelBuffer);
-        Disposables.Add(quad);
-        Disposables.Add(skyboxVao);
-        Disposables.Add(skyboxBuffer);
-        Disposables.Add(skyboxUvBuffer);
-        Disposables.Add(quadBuffer);
-        Disposables.Add(quadModelBuffer);
-        Disposables.Add(quadUvBuffer);
     }
     const int CubeCount = 10000;
     private static readonly Random rand = new();
@@ -117,7 +106,7 @@ class TextureTest:GlWindow {
             }
         }
     }
-    private static bool Far (Vector3 a, Vector3 b) => Math.Abs(a.X - b.X) > 1 || Math.Abs(a.Y - b.Y) > 1 || Math.Abs(a.Z - b.Z) > 1;
+    private static bool Far (Vector3 a, Vector3 b) => float.Abs(a.X - b.X) > 1 || float.Abs(a.Y - b.Y) > 1 || float.Abs(a.Z - b.Z) > 1;
 
     private static readonly Keys[] keys = { Keys.D, Keys.C, Keys.X, Keys.Z };
     private Dir keyState = Dir.None;
@@ -143,9 +132,9 @@ class TextureTest:GlWindow {
     }
 
     protected override void Render (float dt) {
-        glViewport(0, 0, Width, Height);
-        glClearColor(0, 0, 0, 1);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        ClearColor(0, 0, 0, 1);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.Framebuffer = 0;
         State.Program = SimpleTexture.Id;
         State.VertexArray = quad;
@@ -166,6 +155,6 @@ class TextureTest:GlWindow {
         skyboxTexture.BindTo(0);
         SkyBox.Tex(0);
         SkyBox.View(Camera.RotationOnly);
-        glDrawArrays(Primitive.Triangles, 0, 36);
+        DrawArrays(Primitive.Triangles, 0, 36);
     }
 }

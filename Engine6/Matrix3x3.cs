@@ -1,7 +1,49 @@
 namespace Engine;
+
+using BepuUtilities;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+
+
+public readonly struct Vector3d {
+
+    public readonly double X, Y, Z;
+
+    public static readonly Vector3d
+        Zero = new(),
+        One = new(1, 1, 1),
+        UnitX = new(1, 0, 0),
+        UnitY = new(0, 1, 0),
+        UnitZ = new(0, 0, 1);
+
+
+    public Vector3d (double x, double y, double z) => (X, Y, Z) = (x, y, z);
+    public Vector3d (Vector3 v) => (X, Y, Z) = (v.X, v.Y, 0);
+
+    public static explicit operator Vector3 (Vector3d v) => new((float)v.X, (float)v.Y, (float)v.Z);
+
+    public static double Dot (Vector3d a, Vector3d b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+    public double MagnitudeSquared () => X * X + Y * Y + Z * Z;
+    public double Magnitude () => Math.Sqrt(MagnitudeSquared());
+    public static Vector3d Cross (Vector3d a, Vector3d b) => new(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+    public static Vector3d Normalize (Vector3d v) {
+        var magnitude = v.Magnitude();
+        return 1e-6 < magnitude ? 1 / magnitude * v : throw new ArgumentOutOfRangeException(nameof(v));
+    }
+
+    public static bool operator == (Vector3d a, Vector3d b) => a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+    public static bool operator != (Vector3d a, Vector3d b) => a.X != b.X || a.Y != b.Y || a.Z != b.Z;
+    public static Vector3d operator - (Vector3d v) => new(-v.X, -v.Y, -v.Z);
+    public static Vector3d operator * (double d, Vector3d v) => new(d * v.X, d * v.Y, d * v.Z);
+    public static Vector3d operator + (Vector3d a, Vector3d b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+    public static Vector3d operator - (Vector3d a, Vector3d b) => a + -b;
+
+    public override bool Equals (object obj) => obj is Vector3d d && d == this;
+    public override int GetHashCode () => HashCode.Combine(X, Y, Z);
+    public override string ToString () => $"({X}, {Y}, {Z})";
+
+}
 
 //[StructLayout(LayoutKind.Explicit)]
 public readonly struct Matrix3x3 {
@@ -33,19 +75,20 @@ public readonly struct Matrix3x3 {
     13 23 33
 */
     public bool TrySolve (Vector3 p, out Vector3 x) {
-        var V = new Vector3(M22 * M33 - M32 * M23, M32 * M13 - M12 * M33, M12 * M23 - M22 * M13);
-        var det = Vector3.Dot(new Vector3(M11, M21, M31), V);
-        if (Math.Abs(det) < float.Epsilon) {
+        var V = new Vector3d((double)M22 * M33 - (double)M32 * M23, (double)M32 * M13 - (double)M12 * M33, (double)M12 * M23 - (double)M22 * M13);
+        var ddet = M11 * V.X + M21 * V.Y + M31 * V.Z;
+        if (double.Abs(ddet) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }
+        var det = (float)ddet;
         var d = (M31 * M23 - M21 * M33) / det;
         var e = (M11 * M33 - M31 * M13) / det;
         var f = (M21 * M13 - M11 * M23) / det;
         var g = (M21 * M32 - M31 * M22) / det;
         var h = (M31 * M12 - M11 * M32) / det;
         var i = (M11 * M22 - M21 * M12) / det;
-        x = new Matrix3x3(V / det, new(d, e, f), new(g, h, i)) * p;
+        x = new Matrix3x3((Vector3)V / det, new(d, e, f), new(g, h, i)) * p;
 
         return true;
     }

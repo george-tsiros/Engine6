@@ -12,9 +12,67 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 static class Extra {
+    
+
+    //static void WriteBmpHeader (System.IO.Stream stream, int width, int height) {
+    //    stream.WriteByte((byte)'B');
+    //    stream.WriteByte((byte)'M'); // 1
+    //    var length = 0x36 + 4 * width * height;
+    //    var zero = BitConverter.GetBytes(0);
+    //    stream.Write(BitConverter.GetBytes(length), 0, sizeof(int)); // 5
+    //    stream.Write(zero, 0, sizeof(int)); // 9
+    //    stream.Write(BitConverter.GetBytes(0x36), 0, sizeof(int)); // 13
+    //    stream.Write(BitConverter.GetBytes(0x28), 0, sizeof(int)); // 17
+    //    stream.Write(BitConverter.GetBytes(width), 0, sizeof(int)); // 21
+    //    stream.Write(BitConverter.GetBytes(height), 0, sizeof(int)); // 25
+    //    stream.Write(BitConverter.GetBytes(0x200001), 0, sizeof(int)); // 29
+    //    stream.Write(zero, 0, sizeof(int)); // 33
+    //    stream.Write(zero, 0, sizeof(int)); // 37
+    //    var ec4 = BitConverter.GetBytes(0xec4);
+    //    stream.Write(ec4, 0, sizeof(int)); // 
+    //    stream.Write(ec4, 0, sizeof(int)); // 
+    //    stream.Write(zero, 0, sizeof(int));
+    //    stream.Write(zero, 0, sizeof(int));
+    //    //stream.Write(zero, 0, 3);
+    //}
+
+    //static void WriteBmp ((byte r, byte g, byte b, byte a)[] colors, int width, int height, byte[] pixels) {
+    //    using var f = System.IO.File.Create("bmp.bmp");
+    //    using var w = new System.IO.BinaryWriter(f);
+    //    w.Write((byte)0x42);
+    //    w.Write((byte)0x4d);
+    //    var filesize = 0x36 + 256 * 4 + width * height;
+    //    w.Write(filesize);
+    //    w.Write(0);
+    //    w.Write(0x436);
+    //    w.Write(0x28);
+    //    w.Write(width);
+    //    w.Write(height);
+    //    w.Write((byte)1);
+    //    w.Write((byte)0);
+    //    w.Write((byte)8);
+    //    w.Write((byte)0);
+    //    w.Write(0);
+    //    w.Write(0);
+    //    w.Write(0xec4);
+    //    w.Write(0xec4);
+    //    w.Write(0x100);
+    //    w.Write(0x100);
+    //    foreach (var (r, g, b, a) in colors) {
+    //        w.Write(r);
+    //        w.Write(g);
+    //        w.Write(b);
+    //        w.Write(a);
+    //    }
+    //    w.Write(pixels);
+    //}
 
     public static IEnumerable<string> EnumLines (string filepath, bool skipBlank = false) {
         using var f = new StreamReader(filepath);
+        return EnumLines(f, skipBlank);
+    }
+
+    public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) { 
         while (f.ReadLine() is string line)
             if (!skipBlank || !string.IsNullOrWhiteSpace(line))
                 yield return line;

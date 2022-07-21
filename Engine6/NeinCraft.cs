@@ -44,19 +44,19 @@ class NeinCraft:GlWindow {
         Disposables.Add(skyboxUV);
     }
     protected override void Render (float dt) {
-        glViewport(0, 0, Width, Height);
-        glClear(BufferBit.Color | BufferBit.Depth);
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.Color | BufferBit.Depth);
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Less;
         State.Program = SolidColor.Id;
         State.VertexArray = cubeVao;
         SolidColor.View(Camera.LookAtMatrix);
-        glDrawArrays(Primitive.Triangles, 0, 36);
+        DrawArrays(Primitive.Triangles, 0, 36);
         State.Program = SkyBox.Id;
         State.VertexArray = skyboxVao;
         State.DepthFunc = DepthFunction.LessEqual;
         skyboxTexture.BindTo(0);
         SkyBox.View(Camera.RotationOnly);
-        glDrawArrays(Primitive.Triangles, 0, 36);
+        DrawArrays(Primitive.Triangles, 0, 36);
     }
 }

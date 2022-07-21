@@ -2,6 +2,7 @@ namespace Gl;
 
 using System;
 using static Opengl;
+using Win32;
 
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteTexture;
@@ -18,7 +19,7 @@ public class Sampler2D:OpenglObject {
         if (Disposed)
             throw new Exception();
         State.ActiveTexture = t;
-        glBindTexture(Const.TEXTURE_2D, Id);
+        BindTexture(Const.TEXTURE_2D, Id);
     }
 
     private Wrap wrap;
