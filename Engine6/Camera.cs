@@ -21,10 +21,10 @@ sealed class Camera {
     }
     private float yaw = 0f, pitch = 0f;
     public Camera (Vector3 location) => Location = location;
-    
+
     public Matrix4x4 RotationOnly => WasInvalid(ref rotationOnlyIsValid) ? (rotationOnly = CreateLookAt(Vector3.Zero, yaw, pitch)) : rotationOnly;
     public Matrix4x4 LookAtMatrix => WasInvalid(ref lookAtIsValid) ? (lookAt = CreateLookAt(location, yaw, pitch)) : lookAt;
-    
+
     private bool rotationOnlyIsValid = false;
     private bool lookAtIsValid = false;
     private Matrix4x4 rotationOnly, lookAt;
@@ -44,7 +44,7 @@ sealed class Camera {
             lookAtIsValid = false;
             rotationOnlyIsValid = false;
             _ = ModuloTwoPi(ref yaw, -v.X);
-            _ = Clamp(ref pitch, v.Y, (float)(-.4 * Math.PI), (float)(.4 * Math.PI));
+            pitch = float.Clamp(v.Y, -.4f * float.Pi, .4f * float.Pi);
         }
     }
 }

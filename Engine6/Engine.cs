@@ -19,16 +19,15 @@ class Engine {
     static Raster Render (List<Vector3i> faces, List<Vector3> vertices, Vector2i imageSize) {
 
         var faceCount = faces.Count;
-        const double yFov = Math.PI / 4;
+        const double yFov = double.Pi / 4;
         var aspectRatio = (double)imageSize.X / imageSize.Y;
-        var yTop = Math.Tan(yFov / 2);
+        var yTop = double.Tan(yFov / 2);
         var xRight = yTop * aspectRatio;
         var dy = 2 * yTop / imageSize.Y;
         var dx = 2 * xRight / imageSize.X;
 
         //var vectors = vertices.ToArray();
 
-        //Geometry.Transform(vectors, Matrix4x4.CreateRotationX((float)Math.PI / 4));
         Geometry.Transform(vertices, Matrix4x4.CreateTranslation(0, 0, -5));
 
         var triangles = new List<(Vector3, Vector3, Vector3)>();// [faceCount];
@@ -55,7 +54,7 @@ class Engine {
         var (dmin, dmax) = (float.MaxValue, float.MinValue);
         foreach (var d in depthBuffer)
             if (d < float.MaxValue)
-                (dmin, dmax) = (Math.Min(dmin, d), Math.Max(dmax, d));
+                (dmin, dmax) = (float.Min(dmin, d), float.Max(dmax, d));
 
         var a = 255f / (dmin - dmax);
         var b = 255f * dmax / (dmax - dmin);
@@ -108,7 +107,7 @@ class Engine {
         //foreach (var f in Directory.EnumerateFiles(ModelDir, "*.zip", SearchOption.TopDirectoryOnly))
         //    TryUnzip(f);
         //_ = Parallel.ForEach(Directory.EnumerateFiles(ModelDir, "*.zip", SearchOption.TopDirectoryOnly), TryUnzip);
-        const string modelFilepath = ModelDir + "Suit_suit.obj";
+        const string modelFilepath = ModelDir + "Fence post_fencepost2.obj";
 
         //Console.WriteLine("done");
         //_ = Console.ReadLine();
@@ -117,8 +116,11 @@ class Engine {
         //iw.Run();
         //using var x = new TextureTest(new(1280, 720));
         //x.Run();
-        using var teapot = new Teapot(new(1024, 512), new(modelFilepath));
-        teapot.Run();
+        var m = Model.Cube(1,1,1);
+        using var bt = new BlitTest(new(1280, 720));
+        bt.Run();
+        //using var teapot = new Teapot(new(1024, 512), new(modelFilepath));
+        //teapot.Run();
     }
 
     unsafe private static void TestDirectSound () {

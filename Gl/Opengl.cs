@@ -174,18 +174,31 @@ unsafe public static class Opengl {
         return IntPtr.Zero;
     }
     public static bool ExtensionsSupported => Extensions.wglGetPixelFormatAttribivARB is not null;
+
     unsafe public static int GetPixelFormatCount (IntPtr dc, int a, int b, uint c) {
         int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
         var count = 0;
-        _ = GetPixelFormatAttribivARB(dc, a, b, c, &WGL_NUMBER_PIXEL_FORMATS_ARB, &count);
+        GetPixelFormatAttribivARB(dc, a, b, c, ref WGL_NUMBER_PIXEL_FORMATS_ARB, ref count);
         return count;
     }
+    
+    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, ref int attributes, ref int values) {
+        fixed (int* a = &attributes)
+        fixed (int* v = &values)
+            _ = Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
+    }
 
-    public static bool GetPixelFormatAttribivARB (IntPtr dc, int a, int b, uint c, int* d, int* e) => 0 != Extensions.wglGetPixelFormatAttribivARB(dc, a, b, c, d, e);
+    public static bool GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, int[] attributes, int[] values) {
+        fixed (int* a = attributes)
+        fixed (int* v = values)
+            return 0 != Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
+    }
+
     public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
-        fixed (int* p = &attribs[0])
+        fixed (int* p = attribs)
             return Extensions.wglCreateContextAttribsARB(dc, sharedContext, p);
     }
+
     public static void GetDepthRange (out float near, out float far) {
         float* floats = stackalloc float[2];
 

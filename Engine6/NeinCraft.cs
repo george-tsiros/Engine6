@@ -7,7 +7,7 @@ using Gl;
 using Win32;
 using static Gl.Opengl;
 
-class NeinCraft:GlWindow {
+class NeinCraft:GlWindowArb {
 
     public NeinCraft (Vector2i size) : base(size) { }
 

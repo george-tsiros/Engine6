@@ -8,7 +8,7 @@ using static Gl.Opengl;
 using Win32;
 using System.Diagnostics;
 
-class Teapot:GlWindow {
+class Teapot:GlWindowArb {
     public Teapot (Vector2i size, Model model) : base(size) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;

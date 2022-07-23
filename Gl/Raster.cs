@@ -13,6 +13,13 @@ public class Raster:IDisposable {
     
     public byte[] Pixels;
     public Raster (Vector2i size, int channels, int bytesPerChannel) {
+        if (size.X < 1 || size.Y < 1)
+            throw new ArgumentException("invalid value", nameof(size));
+        if (channels < 1 || 8 < channels)
+            throw new ArgumentException("invalid value", nameof(channels));
+        if (bytesPerChannel < 1 || 8 < bytesPerChannel)
+            throw new ArgumentException("invalid value", nameof(bytesPerChannel));
+
         (Size, Channels, BytesPerChannel) = (size, channels, bytesPerChannel);
         Pixels = new byte[Width * Height * Channels * BytesPerChannel];
         Stride = Width * Channels * BytesPerChannel;

@@ -11,12 +11,13 @@ using System.Text.RegularExpressions;
 using Win32;
 
 public class Model {
-    public List<Vector3i> Faces { get; } = new();
-    public List<Vector3> Vertices { get; } = new();
+    public List<Vector3i> Faces { get; init; } = new();
+    public List<Vector3> Vertices { get; init; } = new();
     public Vector3 Min { get; private set; }
     public Vector3 Max { get; private set; }
     private static readonly char[] space = { ' ' };
     private static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
+    private Model () { }
     public Model (StreamReader reader) {
         Read(reader);
     }
@@ -61,4 +62,25 @@ public class Model {
         Max = new(maxx, maxy, maxz);
 
     }
+
+    static List<Vector3> CubeVertices (float w, float h, float d) => new List<Vector3> { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
+
+    public static Model Cube (float w, float h, float d) => new() {
+        Vertices= CubeVertices(w, h, d),
+        Faces = new List<Vector3i> {
+            new(4, 5, 6),
+            new(4, 6, 7),
+            new(1, 0, 3),
+            new(1, 3, 2),
+            new(0, 1, 5),
+            new(0, 5, 4),
+            new(7, 6, 2),
+            new(7, 2, 3),
+            new(5, 1, 2),
+            new(5, 2, 6),
+            new(0, 4, 7),
+            new(0, 7, 3),
+        }
+    };
+
 }

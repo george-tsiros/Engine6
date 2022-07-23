@@ -54,10 +54,6 @@ public enum TextureParameter {
     WrapR = Const.TEXTURE_WRAP_R,
 }
 
-public enum MagFilter {
-    Nearest = Const.NEAREST,
-    Linear = Const.LINEAR,
-}
 
 public enum WrapCoordinate {
     WrapR = Const.TEXTURE_WRAP_R,
@@ -68,6 +64,11 @@ public enum WrapCoordinate {
 public enum Wrap {
     ClampToEdge = Const.CLAMP_TO_EDGE,
     ClampToBorder = Const.CLAMP_TO_BORDER,
+}
+
+public enum MagFilter {
+    Nearest = Const.NEAREST,
+    Linear = Const.LINEAR,
 }
 
 public enum MinFilter {

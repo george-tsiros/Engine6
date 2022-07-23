@@ -10,7 +10,7 @@ using Win32;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-class TextureTest:GlWindow {
+class TextureTest:GlWindowArb {
     [Flags]
     enum Dir {
         None = 0,

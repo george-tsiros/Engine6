@@ -21,6 +21,9 @@ public class SimpleWindow:WindowBase {
     protected virtual void Load () { }
     protected virtual void KeyUp (Keys k) { }
 
+    private Rect WindowRect = new();
+    private int lastMouseButtonState = 0;
+    
     protected virtual void KeyDown (Keys k) {
         switch (k) {
             case Keys.Escape:
@@ -29,7 +32,6 @@ public class SimpleWindow:WindowBase {
         }
     }
 
-    private Rect WindowRect = new();
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
         Demand(User.InvalidateRect(WindowHandle, ref WindowRect, IntPtr.Zero));
@@ -56,13 +58,18 @@ public class SimpleWindow:WindowBase {
             Invalidate();
         }
     }
-    private int lastMouseButtonState = 0;
+
+    private static (short x, short y) Split (IntPtr self) {
+        var i = (int)(self.ToInt64() & int.MaxValue);
+        return ((short)(i & ushort.MaxValue), (short)((i >> 16) & ushort.MaxValue));
+    }
+
     override protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wPtr, IntPtr lPtr) {
         switch (msg) {
             case WinMessage.MouseMove: {
                     if (!IsForeground)
                         break;
-                    var (x, y) = lPtr.Split();
+                    var (x, y) = Split(lPtr);
                     MouseMove(x, y);
                 }
                 return IntPtr.Zero;

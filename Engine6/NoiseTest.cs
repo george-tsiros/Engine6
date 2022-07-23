@@ -9,7 +9,7 @@ using System;
 using System.Diagnostics;
 using Win32;
 
-class NoiseTest:GlWindow {
+class NoiseTest:GlWindowArb {
     public NoiseTest (Vector2i size) : base(size) {
         threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;
         rowsPerThread = _HEIGHT / threadCount;
@@ -85,7 +85,6 @@ class NoiseTest:GlWindow {
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
         StartThreads();
-        _ = Gdi.SwapBuffers(DeviceContext);
     }
 
     private unsafe void StartThreads () {
