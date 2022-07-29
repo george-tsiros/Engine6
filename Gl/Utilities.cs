@@ -3,7 +3,7 @@ namespace Gl;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-
+using System.Numerics;
 public static class Utilities {
     public static byte[] AssertShorts (byte[] bytes) => Assert(bytes, 1);
     public static byte[] AssertInts (byte[] bytes) => Assert(bytes, 3);
@@ -22,22 +22,21 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 ((ushort*)bp)[i] = us;
     }
-    unsafe public static void MemSet (byte[] bytes, uint ui) {
+
+    public unsafe static void MemSet (byte[] bytes, uint u32) {
         if ((bytes.Length & 3) != 0)
             throw new Exception();
-        var l = bytes.Length >> 2;
-        fixed (byte* bp = bytes)
-            for (var i = 0; i < l; i++)
-                ((uint*)bp)[i] = ui;
+        fixed (byte* bp = bytes) {
+            uint* p = (uint*)bp;
+            var count = bytes.Length >> 2;
+            for (var i = 0; i < count; ++i)
+                p[i] = u32;
+        }
     }
-    unsafe public static void MemSet (byte[] bytes, ulong ul) {
-        if ((bytes.Length & 7) != 0)
-            throw new Exception();
-        var l = bytes.Length >> 4;
-        fixed (byte* bp = bytes)
-            for (var i = 0; i < l; i++)
-                ((ulong*)bp)[i] = ul;
-    }
+
+    //unsafe static void MemSetU64 (byte[] bytes, ulong ul) {
+    //}
+
     public static void Wipe (byte[] bytes) {
         var l = bytes.Length;
         if ((l & 7) == 0)
@@ -108,7 +107,7 @@ public static class Utilities {
     public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) => (eh = GetBackingField(type, prop, flags)) != null;
     unsafe public static int ShaderFromString (ShaderType type, string source) {
         var vs = Opengl.CreateShader(type);
-        Opengl.ShaderSource(vs,$"#version {Opengl.VersionString} core\n{source}");
+        Opengl.ShaderSource(vs, $"#version {Opengl.VersionString} core\n{source}");
         Opengl.CompileShader(vs);
         var log = Opengl.GetShaderInfoLog(vs);
         if (log.Length > 0)

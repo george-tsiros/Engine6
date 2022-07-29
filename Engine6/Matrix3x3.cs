@@ -25,7 +25,7 @@ public readonly struct Vector3d {
 
     public static double Dot (Vector3d a, Vector3d b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
     public double MagnitudeSquared () => X * X + Y * Y + Z * Z;
-    public double Magnitude () => Math.Sqrt(MagnitudeSquared());
+    public double Magnitude () => double.Sqrt(MagnitudeSquared());
     public static Vector3d Cross (Vector3d a, Vector3d b) => new(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
     public static Vector3d Normalize (Vector3d v) {
         var magnitude = v.Magnitude();
@@ -97,7 +97,7 @@ public readonly struct Matrix3x3 {
         var B = (double)M32 * M13 - (double)M12 * M33;
         var C = (double)M12 * M23 - (double)M22 * M13;
         var det = M11 * A + M21 * B + M31 * C;
-        if (Math.Abs(det) < float.Epsilon) {
+        if (double.Abs(det) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }

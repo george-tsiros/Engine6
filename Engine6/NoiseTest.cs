@@ -42,7 +42,7 @@ class NoiseTest:GlWindowArb {
                 var b = .5f + .5f * noise.GetNoise(xscaled + ms, yscaled);
                 var g = .5f + .5f * noise.GetNoise(xscaled + _XSCALE * _WIDTH, yscaleddelayed);
                 var r = .5f + .5f * noise.GetNoise(xscaled, yscaledshifted);
-                var max = Math.Max(b, Math.Max(g, r));
+                var max = float.Max(b, float.Max(g, r));
                 //var min = Math.Min(b, Math.Min(g, r));
                 //var d = max - min;
                 var value = (byte)(255f * max);
@@ -71,7 +71,7 @@ class NoiseTest:GlWindowArb {
         StartThreads();
     }
 
-    unsafe protected override void Render (float dt) {
+    unsafe protected override void Render () {
         countdown.Wait();
         countdown.Reset(threadCount);
         fixed (byte* p = bytes)

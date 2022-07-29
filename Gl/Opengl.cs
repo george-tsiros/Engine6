@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Win32;
+using System.IO;
 
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
 
@@ -61,6 +62,8 @@ unsafe public static class Opengl {
     public static extern void Finish ();
     [DllImport(opengl32, EntryPoint = "glDeleteTextures", ExactSpelling = true)]
     unsafe static extern void DeleteTextures (int count, int* ints);
+    [DllImport(opengl32, EntryPoint = "glScissor", ExactSpelling = true)]
+    public static extern void Scissor (int x, int y, int width, int height);
     [DllImport(opengl32, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
     unsafe public static extern void GetIntegerv (int count, int* ints);
     [DllImport(opengl32, EntryPoint = "wglMakeCurrent", ExactSpelling = true, SetLastError = true)]
@@ -127,6 +130,7 @@ unsafe public static class Opengl {
         //public static readonly delegate* unmanaged[Stdcall]<int, float*, void> glGetFloatv;
         public static readonly delegate* unmanaged[Stdcall]<int, long, IntPtr, int, void> glNamedBufferStorage;
         public static readonly delegate* unmanaged[Stdcall]<int, long, long, void*, void> glNamedBufferSubData;
+        //public static readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glScissor;
         public static readonly delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glShaderSource;
         public static readonly delegate* unmanaged[Stdcall]<int, int, int, void> glTextureParameteri;
         public static readonly delegate* unmanaged[Stdcall]<int, int, TextureFormat, int, int, void> glTextureStorage2D;
@@ -175,23 +179,24 @@ unsafe public static class Opengl {
     }
     public static bool ExtensionsSupported => Extensions.wglGetPixelFormatAttribivARB is not null;
 
-    unsafe public static int GetPixelFormatCount (IntPtr dc, int a, int b, uint c) {
+    public static int GetPixelFormatCount (IntPtr dc, int a, int b, uint c) {
         int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
         var count = 0;
         GetPixelFormatAttribivARB(dc, a, b, c, ref WGL_NUMBER_PIXEL_FORMATS_ARB, ref count);
         return count;
     }
-    
+
     private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, ref int attributes, ref int values) {
         fixed (int* a = &attributes)
         fixed (int* v = &values)
             _ = Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
     }
 
-    public static bool GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, int[] attributes, int[] values) {
+    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, int[] attributes, int[] values) {
         fixed (int* a = attributes)
         fixed (int* v = values)
-            return 0 != Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
+            if (0 == Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v))
+                throw new Exception($"{nameof(Extensions.wglGetPixelFormatAttribivARB)}failed");
     }
 
     public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
@@ -206,7 +211,11 @@ unsafe public static class Opengl {
         near = floats[0];
         far = floats[1];
     }
-    public static void ReadnPixels (int x, int y, int width, int height, int format, int type, int bufSize, void* data) => Extensions.glReadnPixels(x, y, width, height, format, type, bufSize, data);
+    public static void ReadOnePixel (int x, int y, int width, int height, out uint pixel) {
+        fixed (uint* p = &pixel)
+            Extensions.glReadnPixels(x, y, width, height, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
+    }
+    //public static void ReadnPixels (int x, int y, int width, int height, int format, int type, int bufSize, void* data) => Extensions.glReadnPixels(x, y, width, height, format, type, bufSize, data);
     public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => Extensions.glNamedFramebufferReadBuffer(framebuffer, mode);
     public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, attachment);
     public static void NamedFramebufferDrawBuffers (int framebuffer, params DrawBuffer[] attachments) => Extensions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, attachments);
@@ -238,6 +247,7 @@ unsafe public static class Opengl {
     public static void NamedRenderbufferStorage (int renderbuffer, RenderbufferFormat format, int width, int height) => Extensions.glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
     public static void NamedBufferStorage (int buffer, long size, IntPtr data, int flags) => Extensions.glNamedBufferStorage(buffer, size, data, flags);
     public static void NamedBufferSubData (int buffer, long offset, long size, void* data) => Extensions.glNamedBufferSubData(buffer, offset, size, data);
+    //public static void Scissor (int x, int y, int width, int height) => Extensions.glScissor(x, y, width, height);
     public static void TextureBaseLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
     public static void TextureFilter (int texture, MagFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
     public static void TextureFilter (int texture, MinFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
@@ -357,6 +367,8 @@ unsafe public static class Opengl {
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
         var pfIndex = FindPixelFormat(dc, ref descriptor, condition);
+        if (0 == pfIndex)
+            throw new Exception("no pixelformat found");
         if (0 == Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
             throw new WinApiException("failed SetPixelFormat");
         var rc = CreateContext(dc);
@@ -379,12 +391,13 @@ unsafe public static class Opengl {
         var formatCount = Gdi.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");
+
         for (var i = 1; i <= formatCount; i++) {
-            if (!Gdi.DescribePixelFormat(dc, i, ref pfd))
-                throw new Exception($"failed to get pixelformat with index {i}");
+            Gdi.DescribePixelFormat(dc, i, ref pfd);
             if (condition(pfd))
                 return i;
         }
+
         return 0;
     }
 }

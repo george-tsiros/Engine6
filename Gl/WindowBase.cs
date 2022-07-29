@@ -7,24 +7,31 @@ using System.Diagnostics;
 using Win32;
 
 public abstract class WindowBase:IDisposable {
-
+    static WindowBase () {
+        Windows = new();
+        staticWndProc = new(StaticWndProc);
+        ClassAtom = User.RegisterWindowClass(staticWndProc, ClassName);
+    }
+    private static readonly Dictionary<IntPtr, WindowBase> Windows;
     private bool disposed;
 
     public void Dispose () {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
     protected List<IDisposable> Disposables { get; } = new();
 
     public void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
+            if (!cursorVisible)
+                _ = User.ShowCursor(true);
             foreach (var disposable in Disposables)
                 disposable.Dispose();
 
             Demand(User.DestroyWindow(WindowHandle));
-            Demand(User.UnregisterClassW(new IntPtr(ClassAtom), IntPtr.Zero));
-            Instance = null;
+
         }
     }
 
@@ -46,32 +53,47 @@ LRESULT CALLBACK TWindow::staticWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     else
         return DefWindowProc(h, m, w, l);
 }*/
-    protected static WindowBase Instance;
 
-    private static IntPtr StaticWndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) {
-        if (msg == WinMessage.NCCREATE)
-            Instance.WindowHandle = hWnd;
-        return Instance.WndProc(hWnd, msg, w, l);
+    private static IntPtr StaticWndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) =>
+        Instance.WndProc(hWnd, msg, w, l);
+
+    private string text;
+    protected string Text {
+        get {
+            return text;
+        }
+
+        set {
+            if (text != value)
+                _ = User.SetWindowText(WindowHandle, text = value);
+        }
     }
 
-    protected readonly WndProc wndProc;
-    protected int Width { get; init; }
-    protected int Height { get; init; }
-    protected ushort ClassAtom { get; }
+    protected static readonly WndProc staticWndProc;
+    protected Vector2i Size { get; }
+    protected int Width => Size.X;
+    protected int Height => Size.Y;
+    protected static readonly ushort ClassAtom;
     protected IntPtr WindowHandle { get; set; }
     protected static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
-    protected virtual string ClassName => "MYWINDOWCLASS";
+    const string ClassName = "MYWINDOWCLASS";
+    private bool cursorVisible = true;
 
+    protected bool CursorVisible {
+        get => cursorVisible;
+        set {
+            if (value != cursorVisible)
+                _ = User.ShowCursor(cursorVisible = value);
+        }
+    }
+    static WindowBase Instance;
     public WindowBase (Vector2i size) {
-        if (Instance is not null)
-            throw new Exception("instance exists");
-        Instance = this;
         if (size.X < 1 || size.Y < 1)
             throw new ArgumentOutOfRangeException(nameof(size));
-        wndProc = new(StaticWndProc);
-        ClassAtom = User.RegisterWindowClass(wndProc, ClassName);
-        User.CreateWindow(ClassAtom, size, SelfHandle);
-        (Width, Height) = size;
+        Instance = this;
+
+        WindowHandle = User.CreateWindow(ClassAtom, size, SelfHandle);
+        Size = size;
     }
 
     abstract protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l);

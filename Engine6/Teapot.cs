@@ -12,6 +12,7 @@ class Teapot:GlWindowArb {
     public Teapot (Vector2i size, Model model) : base(size) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
+        //CursorVisible = false;
     }
 
     Model Model;
@@ -25,23 +26,19 @@ class Teapot:GlWindowArb {
     protected override void Load () {
         Pixels = new byte[Width * Height * sizeof(int)];
         fb = new();
-        depthStencil = new(new(Width, Height), RenderbufferFormat.Depth24Stencil8);
+        depthStencil = new(Size, RenderbufferFormat.Depth24Stencil8);
         fb.Attach(depthStencil, FramebufferAttachment.DepthStencil);
-        color0 = new(new(Width, Height), TextureFormat.Rgba8);
-        color0.Mag = MagFilter.Nearest;
-        color0.Min = MinFilter.Nearest;
+        color0 = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         fb.Attach(color0, FramebufferAttachment.Color0);
-        vertexId = new(new(Width, Height), TextureFormat.R32i);
-        vertexId.Mag = MagFilter.Nearest;
-        vertexId.Min = MinFilter.Nearest;
+        vertexId = new(Size, TextureFormat.R32i) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         fb.Attach(vertexId, FramebufferAttachment.Color1);
 
         NamedFramebufferDrawBuffers(fb, DrawBuffer.Color0, DrawBuffer.Color1);
         NamedFramebufferReadBuffer(fb, DrawBuffer.Color1);
         State.Program = VertexIndex.Id;
 
-        var largestDimension = Math.Max(Math.Max(Model.Max.X - Model.Min.X, Model.Max.Y - Model.Min.Y), Model.Max.Z - Model.Min.Z);
-        Geometry.ScaleInPlace(Model.Vertices, 1 / largestDimension);
+        //var largestDimension = Math.Max(Math.Max(Model.Max.X - Model.Min.X, Model.Max.Y - Model.Min.Y), Model.Max.Z - Model.Min.Z);
+        //Geometry.ScaleInPlace(Model.Vertices, 1 / largestDimension);
 
         vao = new();
         var v = new Vector4[Model.Faces.Count * 3];
@@ -56,8 +53,8 @@ class Teapot:GlWindowArb {
         VertexIndex.Color0(Vector4.One);
         VertexIndex.Color1(new(1, 0, 0, 1));
 
-        VertexIndex.Model(Matrix4x4.CreateTranslation(0, 0, -2));
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 4), (float)Width / Height, 1, 100));
+        VertexIndex.Model(Matrix4x4.CreateTranslation(0, 0, -10));
+        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)Width / Height, 1, 100));
         VertexIndex.View(Matrix4x4.Identity);
 
         State.Program = PassThrough.Id;
@@ -69,40 +66,39 @@ class Teapot:GlWindowArb {
     protected override void KeyUp (Keys k) {
         switch (k) {
             case Keys.Up:
-                fovRatio = Math.Min(fovRatio + 1, 6);
+                fovRatio = int.Min(fovRatio + 1, 6);
                 break;
             case Keys.Down:
-                fovRatio = Math.Max(fovRatio - 1, 2);
+                fovRatio = int.Max(fovRatio - 1, 2);
                 break;
         }
     }
 
 
-    protected override void MouseMove (int x, int y) => (lastX, lastY) = (x, y);
+    protected override void MouseMove (Vector2i p) => (lastX, lastY) = p;
 
     int lastX, lastY;
     int fovRatio = 4;
     uint lastTriangle = 0;
-    unsafe protected override void Render (float dt) {
+    protected override void Render () {
         State.Framebuffer = fb;
         color0.BindTo(0);
         vertexId.BindTo(1);
         Viewport(0, 0, Width, Height);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        ClearColor(0, 0, 0, 1);
+        Clear(BufferBit.ColorDepth);
         State.Program = VertexIndex.Id;
         State.VertexArray = vao;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.LessEqual;
         State.CullFace = true;
         VertexIndex.Tri((int)lastTriangle);
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / fovRatio), (float)Width / Height, 1, 100));
+        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / fovRatio, (float)Width / Height, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
 
         if (lastX >= 0) {
-            Span<uint> pixel = stackalloc uint[1];
-            fixed (uint* p = pixel)
-                ReadnPixels(lastX, Height - lastY, 1, 1, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
-            var tri = pixel[0] / 3;
+            ReadOnePixel(lastX, Height - lastY, 1, 1, out var p);
+            var tri = p / 3;
             if (tri != lastTriangle) {
                 Debug.WriteLine(tri);
                 lastTriangle = tri;
@@ -112,7 +108,7 @@ class Teapot:GlWindowArb {
 
         State.Framebuffer = 0;
         Viewport(0, 0, Width, Height);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        Clear(BufferBit.ColorDepth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         State.DepthTest = false;

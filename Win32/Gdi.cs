@@ -17,11 +17,13 @@ public static class Gdi {
     private unsafe static extern int DescribePixelFormatInternal (IntPtr hdc, int pixelFormat, int bytes, PixelFormatDescriptor* ppfd);
 
     public unsafe static int GetPixelFormatCount (IntPtr hdc) {
-        return DescribePixelFormatInternal(hdc, 0, PixelFormatDescriptor.Size, null);
+        var count = DescribePixelFormatInternal(hdc, 0, PixelFormatDescriptor.Size, null);
+        return count > 0 ? count : throw new WinApiException();
     }
-    public unsafe static bool DescribePixelFormat (IntPtr hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
+    public unsafe static void DescribePixelFormat (IntPtr hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
         fixed (PixelFormatDescriptor* p = &ppfd)
-            return 0 != DescribePixelFormatInternal(hdc, pixelFormat, PixelFormatDescriptor.Size, p);
+            if (0 == DescribePixelFormatInternal(hdc, pixelFormat, PixelFormatDescriptor.Size, p))
+                throw new WinApiException();
     }
     /// <summary>
     /// </summary>

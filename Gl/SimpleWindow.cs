@@ -11,7 +11,7 @@ public class SimpleWindow:WindowBase {
 
     protected bool IsForeground { get; private set; }
 
-    protected virtual void MouseMove (int x, int y) { }
+    protected virtual void MouseMove (Vector2i location) { }
     protected virtual void ButtonDown (int button) { }
     protected virtual void ButtonUp (int button) { }
     protected virtual void MouseLeave () { }
@@ -20,10 +20,11 @@ public class SimpleWindow:WindowBase {
     protected virtual void Paint () { }
     protected virtual void Load () { }
     protected virtual void KeyUp (Keys k) { }
+    protected Vector2i CursorLocation { get; private set; }
 
     private Rect WindowRect = new();
     private int lastMouseButtonState = 0;
-    
+
     protected virtual void KeyDown (Keys k) {
         switch (k) {
             case Keys.Escape:
@@ -34,7 +35,7 @@ public class SimpleWindow:WindowBase {
 
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
-        Demand(User.InvalidateRect(WindowHandle, ref WindowRect, IntPtr.Zero));
+        Demand(User.InvalidateRect(WindowHandle, ref WindowRect, 0));
     }
 
     public virtual void Run () {
@@ -42,14 +43,14 @@ public class SimpleWindow:WindowBase {
         _ = User.ShowWindow(WindowHandle, 10);
         Demand(User.UpdateWindow(WindowHandle));
         Message m = new();
-        var invalidPtr = new IntPtr(-1);
+        var invalidPtr = (nint)(-1);
         var running = true;
         while (running) {
             while (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-                var eh = User.GetMessageW(ref m, IntPtr.Zero, 0, 0);
+                var eh = User.GetMessageW(ref m, 0, 0, 0);
                 if (eh == invalidPtr)
                     Environment.FailFast(null);
-                if (eh == IntPtr.Zero) {
+                if (eh == 0) {
                     running = false;
                     break;
                 }
@@ -59,25 +60,26 @@ public class SimpleWindow:WindowBase {
         }
     }
 
-    private static (short x, short y) Split (IntPtr self) {
-        var i = (int)(self.ToInt64() & int.MaxValue);
-        return ((short)(i & ushort.MaxValue), (short)((i >> 16) & ushort.MaxValue));
+    private static Vector2i Split (nint self) {
+        var i = (int)(self  & int.MaxValue);
+        return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
 
-    override protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr wPtr, IntPtr lPtr) {
+    override protected nint WndProc (nint hWnd, WinMessage msg, nint wPtr, nint lPtr) {
         switch (msg) {
             case WinMessage.MouseMove: {
                     if (!IsForeground)
                         break;
-                    var (x, y) = Split(lPtr);
-                    MouseMove(x, y);
+                    var p = Split(lPtr);
+                    CursorLocation = p;
+                    MouseMove(p);
                 }
-                return IntPtr.Zero;
+                return 0;
             case WinMessage.SysCommand: {
-                    var i = (SysCommand)(IntPtr.Size > 8 ? (int)(wPtr.ToInt64() & int.MaxValue) : wPtr.ToInt32());
+                    var i = (SysCommand)(nint.Size > 4 ? (int)(wPtr.ToInt64() & int.MaxValue) : wPtr.ToInt32());
                     if (i == SysCommand.Close) {
                         User.PostQuitMessage(0);
-                        return IntPtr.Zero;
+                        return 0;
                     }
                 }
                 break;
@@ -121,22 +123,22 @@ public class SimpleWindow:WindowBase {
                     if (m.WasDown)
                         break;
                     KeyDown(m.Key);
-                    return IntPtr.Zero;
+                    return 0;
                 }
             case WinMessage.KeyUp: {
                     var m = new KeyMessage(wPtr, lPtr);
                     KeyUp(m.Key);
-                    return IntPtr.Zero;
+                    return 0;
                 }
             //case WinMessage.Close:
             //    User.PostQuitMessage(0);
             //    break;
             case WinMessage.Paint:
-                var ps = new PaintStruct();
-                _ = Demand(User.BeginPaint(WindowHandle, ref ps));
                 Paint();
-                _ = User.EndPaint(WindowHandle, ref ps);
-                return IntPtr.Zero;
+                //var ps = new PaintStruct();
+                //_ = Demand(User.BeginPaint(WindowHandle, ref ps));
+                //_ = User.EndPaint(WindowHandle, ref ps);
+                return 0;
         }
         return User.DefWindowProcW(hWnd, msg, wPtr, lPtr);
     }

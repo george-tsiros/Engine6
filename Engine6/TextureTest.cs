@@ -127,11 +127,11 @@ class TextureTest:GlWindowArb {
             base.KeyDown(k);
     }
     //private int previousX, previousY;
-    protected override void MouseMove (int x, int y) {
-        Camera.Rotate(new(x * 0.01f, y * 0.01f));
+    protected override void MouseMove (Vector2i v) {
+        Camera.Rotate(.01f * (Vector2)v);
     }
 
-    protected override void Render (float dt) {
+    protected override void Render () {
         Viewport(0, 0, Width, Height);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.Color | BufferBit.Depth);

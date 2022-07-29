@@ -1,24 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <AssemblyName>BitmapToRaster</AssemblyName>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Deterministic>true</Deterministic>
+    <ErrorReport>prompt</ErrorReport>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>preview</LangVersion>
+    <NoWarn>CS0078</NoWarn>
+    <OutputPath>bin\</OutputPath>
+    <OutputType>Exe</OutputType>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
     <ProjectGuid>{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}</ProjectGuid>
     <RootNamespace>BitmapToRaster</RootNamespace>
-    <AssemblyName>BitmapToRaster</AssemblyName>
-    <OutputType>Exe</OutputType>
-    <LangVersion>preview</LangVersion>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-    <PlatformTarget>x64</PlatformTarget>
-    <NoWarn>CS0078</NoWarn>
-    <Prefer32Bit>false</Prefer32Bit>
-    <OutputPath>bin\</OutputPath>
     <WarningLevel>4</WarningLevel>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>DEBUG;TRACE</DefineConstants>

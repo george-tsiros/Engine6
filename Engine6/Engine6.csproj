@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -15,6 +15,7 @@
         <StartupObject />
         <TargetFramework>net7.0-windows</TargetFramework>
         <UseWindowsForms>false</UseWindowsForms>
+        <EnableNETAnalyzers>True</EnableNETAnalyzers>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,7 +36,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="BepuPhysics" Version="2.4.0" />
+      <PackageReference Include="BepuPhysics" Version="2.5.0-beta.6" />
+      <PackageReference Include="NAudio.Wasapi" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -53,6 +55,9 @@
         <None Update="data\teapot.obj">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="data\ufl2.txt">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
@@ -61,6 +66,7 @@
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\font.png $(targetdir)" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
+        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe &quot;Kepler452b-Mono&quot; 36.0 $(targetdir)data" />
     </Target>
 
 </Project>

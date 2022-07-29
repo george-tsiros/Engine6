@@ -258,6 +258,7 @@ public enum Capability:uint {
     Dither = Const.DITHER,
     LineSmooth = Const.LINE_SMOOTH,
     StencilTest = Const.STENCIL_TEST,
+    ScissorTest = Const.SCISSOR_TEST,
 }
 
 public enum DepthFunction {
@@ -276,6 +277,7 @@ public enum BufferBit {
     Color = Const.COLOR_BUFFER_BIT,
     Depth = Const.DEPTH_BUFFER_BIT,
     Stencil = Const.STENCIL_BUFFER_BIT,
+    ColorDepth = Color | Depth,
 }
 
 public enum DebugSource {

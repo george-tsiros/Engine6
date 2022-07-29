@@ -3,6 +3,7 @@ namespace Win32;
 using System;
 [Flags]
 public enum PixelFlags {
+    None = 0,
     DoubleBuffer = 0x00000001,
     Stereo = 0x00000002,
     DrawToWindow = 0x00000004,
@@ -19,6 +20,6 @@ public enum PixelFlags {
     SupportComposition = 0x00008000,
     DepthDontCare = 0x20000000,
     DoubleBufferDontCare = 0x40000000,
-    Stereodontcare = unchecked((int)0x80000000),
+    StereoDontCare = unchecked((int)0x80000000),
     //Typical = DoubleBuffer | DrawToWindow | SupportOpengl | SupportComposition,
 }

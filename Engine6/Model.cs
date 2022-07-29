@@ -18,21 +18,21 @@ public class Model {
     private static readonly char[] space = { ' ' };
     private static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
     private Model () { }
-    public Model (StreamReader reader) {
-        Read(reader);
+    public Model (StreamReader reader, bool center = false) {
+        Read(reader, center);
     }
-    public Model (string filepath) {
+    public Model (string filepath, bool center = false) {
         using var reader = new StreamReader(filepath);
-        Read(reader);
+        Read(reader, center);
     }
 
-    static readonly Regex FaceRegex = new(@"^(\d+)(/\d+)*$");
+    static readonly Regex FaceRegex = new(@"^(\d+)(/(\d+)?)*$");
 
     static int FromFace (string part) => int.Parse(FaceRegex.Match(part).Groups[1].Value);
 
-    private void Read (StreamReader reader) {
-        var (minx, miny, minz) = (float.MaxValue, float.MaxValue, float.MaxValue);
-        var (maxx, maxy, maxz) = (float.MinValue, float.MinValue, float.MinValue);
+    private void Read (StreamReader reader, bool center) {
+        var min = new Vector3(float.MaxValue);
+        var max = new Vector3(float.MinValue);
         foreach (var line in Extra.EnumLines(reader, true)) {
             if (line[0] == '#')
                 continue;
@@ -51,22 +51,34 @@ public class Model {
                 case "v":
                     if (parts.Length != 4)
                         throw new ArgumentException($"line '{line}' invalid");
-                    var (x, y, z) = (float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
-                    (minx, miny, minz) = (Math.Min(x, minx), Math.Min(y, miny), Math.Min(z, minz));
-                    (maxx, maxy, maxz) = (Math.Max(x, maxx), Math.Max(y, maxy), Math.Max(z, maxz));
-                    Vertices.Add(new Vector3(x, y, z));
+                    var x = new Vector3(float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
+                    min = Vector3.Min(x, min);
+                    max = Vector3.Max(x, max);
+                    Vertices.Add(x);
                     break;
             }
         }
-        Min = new(minx, miny, minz);
-        Max = new(maxx, maxy, maxz);
-
+        Min = min;
+        Max = max;
+        if (center) {
+            var c = 0.5f * (Max + Min);
+            for (var i = 0; i < Vertices.Count; ++i)
+                Vertices[i] -= c;
+        }
     }
 
-    static List<Vector3> CubeVertices (float w, float h, float d) => new List<Vector3> { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
+    static List<Vector3> CubeVertices (float w, float h, float d) => new() { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
+
+    public static Model Quad (float w, float h) => new() {
+        Vertices = new() { new(-w / 2, -h / 2, 0), new(w / 2, -h / 2, 0), new(w / 2, h / 2, 0), new(-w / 2, h / 2, 0) },
+        Faces = new() {
+            new(0, 1, 2),
+            new(0, 2, 3),
+        },
+    };
 
     public static Model Cube (float w, float h, float d) => new() {
-        Vertices= CubeVertices(w, h, d),
+        Vertices = CubeVertices(w, h, d),
         Faces = new List<Vector3i> {
             new(4, 5, 6),
             new(4, 6, 7),

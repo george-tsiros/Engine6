@@ -43,7 +43,7 @@ class NeinCraft:GlWindowArb {
         Disposables.Add(skyboxVertices);
         Disposables.Add(skyboxUV);
     }
-    protected override void Render (float dt) {
+    protected override void Render () {
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.Color | BufferBit.Depth);
         State.DepthTest = true;

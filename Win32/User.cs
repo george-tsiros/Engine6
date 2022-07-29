@@ -38,6 +38,22 @@ public static partial class User {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyWindow (IntPtr windowHandle);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="exStyle">The extended window style of the window being created. For a list of possible values, see Extended Window Styles.</param>
+    /// <param name="classNameOrAtom">A null-terminated string or a class atom created by a previous call to the RegisterClass or RegisterClassEx function. The atom must be in the low-order word of lpClassName; the high-order word must be zero. If lpClassName is a string, it specifies the window class name. The class name can be any name registered with RegisterClass or RegisterClassEx, provided that the module that registers the class is also the module that creates the window. The class name can also be any of the predefined system class names.</param>
+    /// <param name="title">The window name. If the window style specifies a title bar, the window title pointed to by lpWindowName is displayed in the title bar. When using CreateWindow to create controls, such as buttons, check boxes, and static controls, use lpWindowName to specify the text of the control. When creating a static control with the SS_ICON style, use lpWindowName to specify the icon name or identifier. To specify an identifier, use the syntax "#num".</param>
+    /// <param name="style">The style of the window being created. This parameter can be a combination of the window style values, plus the control styles indicated in the Remarks section.</param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <param name="parentHandle"></param>
+    /// <param name="menu"></param>
+    /// <param name="instance"></param>
+    /// <param name="param"></param>
+    /// <returns></returns>
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr CreateWindowExW (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
 
@@ -57,6 +73,9 @@ public static partial class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ShowWindow (IntPtr handle, int cmdShow);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
+    public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -151,74 +170,7 @@ public static partial class User {
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr SetWindowLongPtrA (IntPtr hWnd, int nIndex, IntPtr newLong);
 
-    public static void CreateWindow (ushort atom, Vector2i size, IntPtr? moduleHandle = null) {
-        _ = User.CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel.GetModuleHandleW(null), IntPtr.Zero);
-    }
+    public static IntPtr CreateWindow (ushort atom, Vector2i size, IntPtr? moduleHandle = null) => 
+        User.CreateWindowExW(WindowStyleEx.Composited, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, 0, 0, size.X, size.Y, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel.GetModuleHandleW(null), IntPtr.Zero);
 
-}
-public enum RawInputDeviceCommand:uint {
-    PreparsedData = 0x20000005,
-    DeviceName = 0x20000007,
-    DeviceInfo = 0x2000000b,
-}
-
-[Flags]
-public enum WindowStyleEx:uint {
-    None = /*               */0x0,
-    DlgModalFrame = /*      */0x00000001,
-    NoParentNotify = /*     */0x00000004,
-    TopMost = /*            */0x00000008,
-    AcceptFiles = /*        */0x00000010,
-    Transparent = /*        */0x00000020,
-    MdiChild = /*           */0x00000040,
-    ToolWindow = /*         */0x00000080,
-    WindowEdge = /*         */0x00000100,
-    ClientEdge = /*         */0x00000200,
-    ContextHelp = /*        */0x00000400,
-    Right = /*              */0x00001000,
-    RtlReading = /*         */0x00002000,
-    LeftScrollBar = /*      */0x00004000,
-    ControlParent = /*      */0x00010000,
-    StaticEdge = /*         */0x00020000,
-    AppWindow = /*          */0x00040000,
-    Layered = /*            */0x00080000,
-    NoInheritLayout = /*    */0x00100000,
-    NoRedirectionBitmap = /**/0x00200000,
-    LayoutRtl = /*          */0x00400000,
-    Composited = /*         */0x02000000,
-    NoActivate = /*         */0x08000000,
-    OverlappedWindow = /*   */WindowEdge | ClientEdge,
-    PaletteWindow = /*      */WindowEdge | ToolWindow | TopMost,
-}
-
-[Flags]
-public enum WindowStyle:uint {
-    Overlapped = /*     */ 0x00000000,
-    Tabstop = /*        */ 0x00010000,
-    MaximizeBox = /*    */ 0x00010000,
-    MinimizeBox = /*    */ 0x00020000,
-    Group = /*          */ 0x00020000,
-    Thickframe = /*     */ 0x00040000,
-    Sysmenu = /*        */ 0x00080000,
-    Hscroll = /*        */ 0x00100000,
-    Vscroll = /*        */ 0x00200000,
-    Dlgframe = /*       */ 0x00400000,
-    Border = /*         */ 0x00800000,
-    Maximize = /*       */ 0x01000000,
-    ClipChildren = /*   */ 0x02000000,
-    ClipSiblings = /*   */ 0x04000000,
-    Disabled = /*       */ 0x08000000,
-    Visible = /*        */ 0x10000000,
-    Minimize = /*       */ 0x20000000,
-    Child = /*          */ 0x40000000,
-    Popup = unchecked(0x80000000),
-    Tiled = Overlapped,
-    ChildWindow = Child,
-    Iconic = Minimize,
-    Sizebox = Thickframe,
-    Caption = Border | Dlgframe,
-    OverlappedWindow = Caption | Sysmenu | Thickframe | MinimizeBox | MaximizeBox,
-    TiledWindow = OverlappedWindow,
-    PopupWindow = Popup | Border | Sysmenu,
-    ClipPopup = ClipChildren | ClipSiblings | Popup,
 }
