@@ -6,6 +6,9 @@ using static Opengl;
 
 public sealed class State {
 
+    private static string SetBoolFailed (string name, bool value) => $"failed to turn {name} {(value ? "on" : "off")}";
+    private static string SetInt32Failed (string name, int value) => $"failed to set {name} to {value}";
+    private static string SetEnumFailed<T> (T value) where T : Enum => $"failed to set {typeof(T)} to {value}";
     private static void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam) {
         Debug.WriteLine($"{nameof(DebugSource)}: {sourceEnum}");
         Debug.WriteLine($"{nameof(DebugType)}: {typeEnum}");
@@ -28,8 +31,7 @@ public sealed class State {
                 Disable(cap);
         }
         if (requested != IsEnabled(cap)) {
-            var eh = GetError();
-            throw new Exception();
+            throw new GlException(SetBoolFailed(cap.ToString(), requested));
         }
     }
 
@@ -38,7 +40,7 @@ public sealed class State {
         set {
             if (value != SwapInterval)
                 if (!SwapIntervalEXT(value) || value != SwapInterval)
-                    throw new Exception();
+                    throw new GlException(SetInt32Failed(nameof(SwapInterval), value));
         }
     }
 
@@ -70,7 +72,7 @@ public sealed class State {
         get => IsEnabled(Capability.DebugOutput);
         set {
             MaybeToggle(Capability.DebugOutput, value);
-            Gl.Opengl.DebugMessageCallback(value ? debugProc : null, IntPtr.Zero);
+            DebugMessageCallback(value ? debugProc : null, IntPtr.Zero);
         }
     }
     public static bool CullFace {
@@ -84,16 +86,17 @@ public sealed class State {
             if (value != DepthWriteMask)
                 DepthMask(value);
             if (value != DepthWriteMask)
-                throw new Exception();
+                throw new GlException(SetBoolFailed(nameof(IntParameter.DepthMask), value));
         }
     }
+
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
             if (value != DepthFunc)
                 DepthFunc(value);
             if (value != DepthFunc)
-                throw new Exception();
+                throw new GlException(SetEnumFailed(value));
         }
     }
     public static int Framebuffer {
@@ -102,7 +105,7 @@ public sealed class State {
             if (value != Framebuffer)
                 BindFramebuffer(FramebufferTarget.Framebuffer, value);
             if (value != Framebuffer)
-                throw new Exception();
+                throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), value));
         }
     }
     public static int Program {
@@ -111,7 +114,7 @@ public sealed class State {
             if (value != Program)
                 UseProgram(value);
             if (value != Program)
-                throw new Exception();
+                throw new GlException(SetInt32Failed(nameof(IntParameter.CurrentProgram), value));
         }
     }
     public static int ArrayBuffer {
@@ -120,7 +123,7 @@ public sealed class State {
             if (value != ArrayBuffer)
                 BindBuffer(BufferTarget.Array, value);
             if (value != ArrayBuffer)
-                throw new Exception();
+                throw new GlException(SetInt32Failed(nameof(IntParameter.ArrayBufferBinding), value));
         }
     }
     public static int VertexArray {
@@ -129,7 +132,7 @@ public sealed class State {
             if (value != VertexArray)
                 BindVertexArray(value);
             if (value != VertexArray)
-                throw new Exception();
+                throw new GlException(SetInt32Failed(nameof(IntParameter.VertexArrayBinding), value));
         }
     }
 }

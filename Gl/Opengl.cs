@@ -21,7 +21,7 @@ unsafe public static class Opengl {
     }
 
     [DllImport(opengl32, EntryPoint = "glGetError", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    public static extern uint GetError ();
+    public static extern int GetError ();
     [DllImport(opengl32, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
@@ -377,6 +377,7 @@ unsafe public static class Opengl {
         if (!MakeCurrent(dc, rc))
             throw new WinApiException("failed wglMakeCurrent");
         var versionString = Marshal.PtrToStringAnsi(GetString(OpenglString.Version));
+        Console.WriteLine(versionString);
         var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
         if (!m.Success)
             throw new Exception($"'{versionString}' not a version string");
@@ -391,13 +392,14 @@ unsafe public static class Opengl {
         var formatCount = Gdi.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");
-
+        var x = 0;
         for (var i = 1; i <= formatCount; i++) {
             Gdi.DescribePixelFormat(dc, i, ref pfd);
-            if (condition(pfd))
-                return i;
+            Console.WriteLine(pfd);
+            if (condition(pfd) && x == 0)
+                x = i;
         }
 
-        return 0;
+        return x;
     }
 }

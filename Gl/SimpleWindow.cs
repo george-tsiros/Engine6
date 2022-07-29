@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Win32;
@@ -61,11 +62,16 @@ public class SimpleWindow:WindowBase {
     }
 
     private static Vector2i Split (nint self) {
-        var i = (int)(self  & int.MaxValue);
+        var i = (int)(self & int.MaxValue);
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
-
+    readonly Queue<WinMessage> lastMessages = new(MessageHistoryLength);
+    const int MessageHistoryLength = 1000;
+    protected IReadOnlyCollection<WinMessage> LastMessages => lastMessages;
     override protected nint WndProc (nint hWnd, WinMessage msg, nint wPtr, nint lPtr) {
+        if (lastMessages.Count == MessageHistoryLength)
+            _ = lastMessages.Dequeue();
+        lastMessages.Enqueue(msg);
         switch (msg) {
             case WinMessage.MouseMove: {
                     if (!IsForeground)
@@ -76,7 +82,7 @@ public class SimpleWindow:WindowBase {
                 }
                 return 0;
             case WinMessage.SysCommand: {
-                    var i = (SysCommand)(nint.Size > 4 ? (int)(wPtr.ToInt64() & int.MaxValue) : wPtr.ToInt32());
+                    var i = (SysCommand)((int)(wPtr & int.MaxValue));
                     if (i == SysCommand.Close) {
                         User.PostQuitMessage(0);
                         return 0;
@@ -87,7 +93,7 @@ public class SimpleWindow:WindowBase {
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
             case WinMessage.XButtonDown: {
-                    var w = (int)(ushort.MaxValue & wPtr.ToInt64());
+                    var w = (int)(ushort.MaxValue & wPtr);
                     var change = w ^ lastMouseButtonState;
                     ButtonDown(change);
                     lastMouseButtonState = w;
@@ -97,7 +103,7 @@ public class SimpleWindow:WindowBase {
             case WinMessage.RButtonUp:
             case WinMessage.MButtonUp:
             case WinMessage.XButtonUp: {
-                    var w = (int)(ushort.MaxValue & wPtr.ToInt64());
+                    var w = (int)(ushort.MaxValue & wPtr);
                     var change = w ^ lastMouseButtonState;
                     ButtonUp(change);
                     lastMouseButtonState = w;

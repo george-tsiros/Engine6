@@ -228,6 +228,7 @@ class Engine {
         var model = Model.Quad(1, 1);
 #endif
         var size = args.Length == 2 && int.TryParse(args[0], out var width) && int.TryParse(args[1], out var height) && 320 <= width && width <= 2560 && 240 <= height && height <= 1440 ? new Vector2i(width, height) : new(1280, 720);
+
         using var bt = new BlitTest(size, model);
         bt.Run();
     }

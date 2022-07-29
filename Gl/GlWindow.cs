@@ -5,16 +5,18 @@ using System.Diagnostics;
 using Win32;
 
 public class GlWindow:SimpleWindow {
-    const PixelFlags RequiredFlags =
-        PixelFlags.DrawToWindow |
-        PixelFlags.SupportOpengl |
-        PixelFlags.DoubleBuffer |
-        PixelFlags.SupportComposition;
+    const PixelFlags RequiredFlags = PixelFlags.None
+        | PixelFlags.DrawToWindow
+        | PixelFlags.DoubleBuffer
+        | PixelFlags.SupportOpengl
+        | PixelFlags.SwapExchange
+        | PixelFlags.SupportComposition
+        ;
 
-    const PixelFlags RejectedFlags =
-        PixelFlags.GenericAccelerated |
-        PixelFlags.SwapCopy |
-        PixelFlags.GenericFormat;
+    const PixelFlags RejectedFlags = PixelFlags.None
+        | PixelFlags.GenericAccelerated
+        | PixelFlags.GenericFormat
+        ;
 
     const int FrameTimeCount = 255;
     protected IntPtr DeviceContext;

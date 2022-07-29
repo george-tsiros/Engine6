@@ -38,7 +38,7 @@ public class GlWindowArb:GlWindow {
 
         //using (var f = new StreamWriter("ExtendedPixelFormats.txt", false, Encoding.ASCII) { NewLine = "\n" })
         //    foreach (var eh in candidates)
-        //        f.WriteLine(f);
+        //        f.WriteLine(eh);
 
         var selectedFormat = candidates.Find(IsAppropriate);
         if (selectedFormat.Index == 0)
@@ -72,13 +72,14 @@ public class GlWindowArb:GlWindow {
         _ = Opengl.MakeCurrent(DeviceContext, RenderingContext);
         var extensionsPtr = Opengl.GetExtensionsString();
         var extensionsString = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(extensionsPtr);
-        State.DebugOutput = true;
+        //State.DebugOutput = true;
     }
-    static bool IsAppropriate (ExtendedPixelFormat f) =>
-        f.ColorBits == 32 &&
-        f.DepthBits > 24 &&
-        f.Acceleration == Acceleration.Full
-        && f.DoubleBuffer &&
-        f.SwapMethod == SwapMethod.Undefined
-        && f.PixelType == PixelType.Rgba;
+    static bool IsAppropriate (ExtendedPixelFormat f) => true
+        && f.ColorBits == 32
+        && f.DepthBits >= 24
+        && f.Acceleration == Acceleration.Full
+        && f.DoubleBuffer
+        //&& f.SwapMethod == SwapMethod.Copy
+        && f.PixelType == PixelType.Rgba
+        ;
 }

@@ -10,18 +10,56 @@ using static Gl.Opengl;
 using static Gl.Utilities;
 using System.Threading;
 
-class BlitTest:GlWindowArb {
-    const int TicksPerSecond = 10_000_000;
-    const int TicksPerMillisecond = TicksPerSecond / 1000;
-    const int TicksPerMicrosecond = TicksPerMillisecond / 1000;
-    const int PerfWidth = 300;
-    const int FrequencyLog10 = 7;
-    const int MaxParallelism = 16;
-    const int MinFramerate = 30;
-    const int MaxFramerate = 144;
-    static readonly Vector2i Eight = new(8, 8), Sixteen = new(16, 16);
+internal class BlitTest:GlWindow {
+    private const int TicksPerSecond = 10_000_000;
+    private const int TicksPerMillisecond = TicksPerSecond / 1000;
+    private const int TicksPerMicrosecond = TicksPerMillisecond / 1000;
+    private const int PerfWidth = 300;
+    private const int FrequencyLog10 = 7;
+    private const int MaxParallelism = 16;
+    private const int MinFramerate = 30;
+    private const int MaxFramerate = 60;
+    private static readonly Vector2i Eight = new(8, 8), Sixteen = new(16, 16);
+    private const int HistoryDepth = 256;
+    private readonly long[] Deltas = new long[HistoryDepth];
+    private readonly double[] Means = new double[HistoryDepth];
+    private int meanIndex = 0;
+    private const int BinCount = 100;
+    private readonly int[] bins = new int[BinCount];
+    private int syncIndex = 0;
+    private int targetFramerate = MaxFramerate;//= State.SwapInterval == -1 ? desiredFrameRate : MaxFramerate;
+    private int targetTicks;//= (double)Stopwatch.Frequency / targetFramerate;
+    private long previousSyncTime;
 
-    static void Log (object ob) =>
+    //static float Frac (float f) => f - float.Floor(f);
+    private static double Frac (double d) => d - double.Floor(d);
+
+    private int adjustment;
+    private long lastDelta;
+    private long sum;
+    private readonly double Radius;
+    private readonly Vector2i Center;
+    private Vector2i previousCursorLocation = -Vector2i.UnitX;
+    private Raster raster;
+    private Sampler2D sampler;
+    private VertexArray quad;
+    private VertexBuffer<Vector4> quadBuffer;
+    private float[] DepthBuffer;
+    private int PointCount;
+    private Vector3[] points3D;
+    private Vector2i[] points2Di;
+    private Vector3[] NormalizedPoints3D;
+    private float theta, phi;
+    private Matrix4x4 viewProjection;
+    private readonly Matrix4x4 ModelTranslation = Matrix4x4.Identity;
+    private bool leftDown;
+    private Framebuffer fb;
+    private Sampler2D fbsampler;
+    private Renderbuffer rb;
+    private Font font;
+    private Model model;
+
+    private static void Log (object ob) =>
 #if DEBUG
         Debug
 #else
@@ -42,34 +80,10 @@ class BlitTest:GlWindowArb {
         DepthBuffer = new float[Width * Height];
         Radius = double.Min(Width, Height) / 4;
         Center = new Vector2i(Width / 2, Height / 2);
-        State.SwapInterval = 0;
+        State.SwapInterval = 1;
         RecalculateTimings();
     }
-    readonly double Radius;
-    readonly Vector2i Center;
 
-    Raster raster;
-    Sampler2D sampler;
-    VertexArray quad;
-    VertexBuffer<Vector4> quadBuffer;
-    float[] DepthBuffer;
-    int PointCount;
-    Vector3[] points3D;
-    Vector2i[] points2Di;
-    Vector3[] NormalizedPoints3D;
-
-    float theta, phi;
-
-    Matrix4x4 viewProjection;
-    readonly Matrix4x4 ModelTranslation = Matrix4x4.Identity;
-    bool leftDown;
-
-    Framebuffer fb;
-    Sampler2D fbsampler;
-    Renderbuffer rb;
-    Font font;
-    Model model;
-    int desiredFrameRate = MaxFramerate;
     protected override void Load () {
 
         font = new("data\\Kepler452b-Mono.txt");
@@ -100,6 +114,7 @@ class BlitTest:GlWindowArb {
         Disposables.Add(quad);
         Disposables.Add(quadBuffer);
         CursorVisible = false;
+        previousSyncTime = Stopwatch.GetTimestamp();
     }
 
     protected override void ButtonDown (int b) {
@@ -110,7 +125,7 @@ class BlitTest:GlWindowArb {
         if (b == 1)
             leftDown = false;
     }
-    Vector2i previousCursorLocation = -Vector2i.UnitX;
+
     protected override void MouseMove (Vector2i location) {
         if (!leftDown)
             return;
@@ -130,21 +145,6 @@ class BlitTest:GlWindowArb {
         previousCursorLocation = location;
     }
 
-    const int HistoryDepth = 256;
-    private readonly long[] Deltas = new long[HistoryDepth];
-    private readonly double[] Means = new double[HistoryDepth];
-    private int meanIndex = 0;
-    const int BinCount = 100;
-    private readonly int[] bins = new int[BinCount];
-    private int syncIndex = 0;
-    int targetFramerate;//= State.SwapInterval == -1 ? desiredFrameRate : MaxFramerate;
-    int ticksPerFrame;//= (double)Stopwatch.Frequency / targetFramerate;
-    long previousSyncTime;
-    //static float Frac (float f) => f - float.Floor(f);
-    static double Frac (double d) => d - double.Floor(d);
-    int adjustment = 1000;
-    long lastDelta;
-    long sum;
     protected override void Render () {
         var textRow = -font.Height;
         var mvp = Matrix4x4.CreateRotationY(theta) * Matrix4x4.CreateRotationX(phi) * ModelTranslation * viewProjection;
@@ -167,8 +167,8 @@ class BlitTest:GlWindowArb {
         raster.HorizontalU32(x0, originRow + 1, HistoryDepth, Color.Red);
         raster.HorizontalU32(x0, originRow - BinCount - 1, HistoryDepth, Color.Red);
         raster.DrawString(syncs[1 + State.SwapInterval], font, 0, textRow += font.Height);
-        if (-1 == State.SwapInterval)
-            raster.DrawString($"target: {targetFramerate}", font, 0, textRow += font.Height);
+        raster.DrawString($"target: {targetFramerate}", font, 0, textRow += font.Height);
+        //if (-1 == State.SwapInterval)
 
         //raster.VerticalU32(Width / 2, 0, Height);
         var delta = LastSync - previousSyncTime;
@@ -184,10 +184,10 @@ class BlitTest:GlWindowArb {
             sum -= lastDelta;
             lastDelta = delta;
 
-            var meanTicks = (int)double.Round((double)sum / HistoryDepth);
-            raster.DrawString($"meanticks: {meanTicks}", font, 0, textRow += font.Height);
-
-            var meanFps = (long)double.Round((double)TicksPerSecond / meanTicks);
+            var meanTicksD = (double)sum / HistoryDepth;
+            var meanTicks = (int)double.Round(meanTicksD);
+            var meanFpsD = TicksPerSecond / meanTicksD;
+            var meanFps = (long)double.Round(meanFpsD);
 
             foreach (var dt in Deltas) {
                 var r = (double)(dt % meanTicks) / meanTicks;
@@ -195,26 +195,31 @@ class BlitTest:GlWindowArb {
                 ++bins[bin];
             }
 
-            raster.DrawString($"actual: {double.Round(meanFps, 1)}", font, 0, textRow += font.Height);
-            Means[meanIndex] = meanFps;
+            raster.DrawString($"actual: {double.Round(meanFpsD, 1)}", font, 0, textRow += font.Height);
+            Means[meanIndex] = meanFpsD;
             if (++meanIndex == HistoryDepth)
                 meanIndex = 0;
-            if (meanFps >= 30) {
+
+            if (meanFps >= MinFramerate) {
+
                 var framerateIsStable = true;
                 for (var i = 0; i < HistoryDepth && framerateIsStable; ++i)
-                    framerateIsStable = double.Abs(Means[i] - meanFps) / meanFps < .01;
+                    framerateIsStable = double.Abs(Means[i] - meanFpsD) / meanFpsD <= .01;
 
                 if (framerateIsStable) {
-                    var diff = meanFps - targetFramerate;
-                    var changed = true;
-                    if (diff < -.1)
-                        ++adjustment;
-                    else if (.1 < diff)
-                        --adjustment;
-                    else
-                        changed = false;
-                    if (changed) {
-                        raster.DrawString($"diff: {(diff < 0 ? '-' : '+')} {double.Round(double.Abs(diff / targetFramerate * 100), 2),3} %", font, 0, textRow += font.Height, Color.Yellow);
+                    var diff = meanTicks - targetTicks;
+                    var diffMag = int.Abs(diff);
+
+                    if (diffMag > 0) {
+                        if (diffMag > 1000) {
+                            adjustment -= diff >> 4;
+                        } else {
+                            adjustment -= diff;
+                        }
+
+                        var pct = (int)double.Round(100.0 * diffMag / targetTicks);
+
+                        raster.DrawString($"diff: {(diff < 0 ? '+' : '-')}{pct,3} %", font, 0, textRow += font.Height, Color.Yellow);
                         raster.DrawString($"adjustment: {adjustment}", font, 0, textRow += font.Height, Color.Yellow);
                     } else
                         raster.DrawString($"stable", font, 0, textRow += font.Height, Color.Green);
@@ -264,8 +269,8 @@ class BlitTest:GlWindowArb {
         Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
-        State.DepthTest = true;
         State.DepthFunc = DepthFunction.Always;
+        State.DepthTest = true;
         State.CullFace = true;
         sampler.BindTo(1);
         PassThrough.Tex(1);
@@ -278,11 +283,9 @@ class BlitTest:GlWindowArb {
         fbsampler.BindTo(1);
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
-        if (-1 == State.SwapInterval) {
-            var nextSyncTicks = LastSync + ticksPerFrame - adjustment;
-            while (Stopwatch.GetTimestamp() < nextSyncTicks)
-                ;
-        }
+        var nextSyncTicks = LastSync + targetTicks + adjustment;
+        while (Stopwatch.GetTimestamp() < nextSyncTicks)
+            ;
     }
 
 
@@ -295,13 +298,14 @@ class BlitTest:GlWindowArb {
                     p[raster.Width * point.Y + point.X] = color;
         }
     }
-    static readonly string[] syncs = "Free sink,No VSync at all,\"Common\" VSync".Split(',');
+
+    private static readonly string[] syncs = "Free sink,No VSync at all,\"Common\" VSync".Split(',');
     protected override void KeyUp (Keys k) {
         base.KeyUp(k);
     }
-    void RecalculateTimings () {
-        targetFramerate = State.SwapInterval == -1 ? desiredFrameRate : MaxFramerate;
-        ticksPerFrame = TicksPerSecond / targetFramerate;
+
+    private void RecalculateTimings () {
+        targetTicks = TicksPerSecond / targetFramerate;
     }
     protected override void KeyDown (Keys k) {
         switch (k) {
@@ -312,20 +316,16 @@ class BlitTest:GlWindowArb {
                 State.SwapInterval = s;
                 break;
             case Keys.Up:
-                if (State.SwapInterval == -1)
-                    desiredFrameRate = int.Clamp(desiredFrameRate + 1, MinFramerate, MaxFramerate);
+                targetFramerate = int.Clamp(targetFramerate + 1, MinFramerate, MaxFramerate);
                 break;
             case Keys.Down:
-                if (State.SwapInterval == -1)
-                    desiredFrameRate = int.Clamp(desiredFrameRate - 1, MinFramerate, MaxFramerate);
+                targetFramerate = int.Clamp(targetFramerate - 1, MinFramerate, MaxFramerate);
                 break;
             case Keys.PageUp:
-                if (State.SwapInterval == -1)
-                    desiredFrameRate = int.Clamp(desiredFrameRate + 10, MinFramerate, MaxFramerate);
+                targetFramerate = int.Clamp(targetFramerate + 10, MinFramerate, MaxFramerate);
                 break;
             case Keys.PageDown:
-                if (State.SwapInterval == -1)
-                    desiredFrameRate = int.Clamp(desiredFrameRate - 10, MinFramerate, MaxFramerate);
+                targetFramerate = int.Clamp(targetFramerate - 10, MinFramerate, MaxFramerate);
                 break;
             default:
                 base.KeyDown(k);

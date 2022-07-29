@@ -82,11 +82,11 @@ public static partial class User {
     public static extern bool UpdateWindow (IntPtr handle);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
+    public static extern nint GetMessageW (ref Message m, nint handle, uint min, uint max);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
+    public static extern bool PeekMessageW (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -128,7 +128,7 @@ public static partial class User {
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool InvalidateRect ([In] IntPtr handle, [In] ref Rect rect, [In] IntPtr erase);
+    public static extern bool InvalidateRect ([In] IntPtr handle, [In] ref Rect rect, nint erase);
 
     /// <summary>
     /// 
