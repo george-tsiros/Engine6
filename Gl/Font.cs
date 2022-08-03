@@ -4,20 +4,21 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 public class Font {
-    public readonly int Height;
-    public readonly bool IsProportional = true;
+    public int Height { get; private set; }
+    public bool IsProportional { get; private set; } = true;
     public IReadOnlyList<int> Offset => offsets;
     public IReadOnlyList<byte> Pixels => pixels;
     public IReadOnlyList<int> Width => widths;
+    public string FamilyName { get; private set; }
+    public float EmSize { get; private set; }
 
-    readonly int[] widths, offsets;
-    readonly byte[] pixels;
+    int[] widths, offsets;
+    byte[] pixels;
 
-    public int WidthOf (string str) {
-        if (str is null)
-            throw new ArgumentNullException(nameof(str));
+    public int WidthOf (ReadOnlySpan<char> str) {
         if (str.Length == 0)
             return 0;
         var width = 0;
@@ -29,8 +30,28 @@ public class Font {
         return width;
     }
 
+    public Font (string familyName, float size) {
+        EmSize = size;
+        var startInfo = new ProcessStartInfo("bitmaptoraster.exe", $"\"{familyName}\" {size}") {
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+        };
+        using (var p = Process.Start(startInfo)) {
+            ReadFrom(p.StandardOutput);
+            p.WaitForExit();
+            if (p.ExitCode != 0)
+                throw new Exception($"failed to create a size {size} {familyName} font file");
+        }
+    }
+
     public Font (string filepath) {
-        using var r = new StreamReader(filepath);
+        using var f = new StreamReader(filepath);
+        ReadFrom(f);
+    }
+
+    void ReadFrom (StreamReader r) {
+        FamilyName = r.ReadLine();
         var info = r.ReadLine().Split(',').Select(int.Parse).ToArray();
         widths = new int[256];
         offsets = new int[256];

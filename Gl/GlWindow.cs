@@ -4,13 +4,13 @@ using System;
 using System.Diagnostics;
 using Win32;
 
-public class GlWindow:SimpleWindow {
+public class GlWindow:SimpleWindow{
     const PixelFlags RequiredFlags = PixelFlags.None
         | PixelFlags.DrawToWindow
         | PixelFlags.DoubleBuffer
         | PixelFlags.SupportOpengl
-        | PixelFlags.SwapExchange
-        | PixelFlags.SupportComposition
+        //| PixelFlags.SwapExchange
+        //| PixelFlags.SupportComposition
         ;
 
     const PixelFlags RejectedFlags = PixelFlags.None
@@ -31,9 +31,19 @@ public class GlWindow:SimpleWindow {
         DeviceContext = User.GetDC(WindowHandle);
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Demand(Opengl.MakeCurrent(DeviceContext, RenderingContext), "failed to make context current");
+        LastSync = Stopwatch.GetTimestamp();
     }
 
-    protected override void Paint () {
+    protected override void OnKeyUp (Keys k) {
+        switch (k) {
+            case Keys.Escape:
+                User.PostQuitMessage(0);
+                return;
+        }
+        base.OnKeyUp(k);
+    }
+
+    protected override void OnPaint () {
         //long t0 = Stopwatch.GetTimestamp();
         //var dticks = t0 - lastTicks;
         //lastTicks = t0;
@@ -45,6 +55,9 @@ public class GlWindow:SimpleWindow {
         //Opengl.Scissor(0, 0, 100, 100);
         //Opengl.Clear(BufferBit.ColorDepth);
         //Opengl.Disable(Capability.ScissorTest);
+        //var until = LastSync + 100000;
+        //while (Stopwatch.GetTimestamp() < until)
+        //    Pump();
         var swapOk = Gdi.SwapBuffers(DeviceContext);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
@@ -59,10 +72,13 @@ public class GlWindow:SimpleWindow {
         Opengl.Clear(BufferBit.ColorDepth);
     }
 
-    public override void Run () {
-        base.Run();
-        Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
-        Demand(Opengl.DeleteContext(RenderingContext));
-        Demand(User.ReleaseDC(WindowHandle, DeviceContext));
+    bool disposed = false;
+    public override void Dispose (bool dispose) {
+        if (dispose && !disposed) {
+            disposed = true;
+            Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
+            Demand(Opengl.DeleteContext(RenderingContext));
+            Demand(User.ReleaseDC(WindowHandle, DeviceContext));
+        }
     }
 }

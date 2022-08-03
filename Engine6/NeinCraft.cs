@@ -9,7 +9,9 @@ using static Gl.Opengl;
 
 class NeinCraft:GlWindowArb {
 
-    public NeinCraft (Vector2i size) : base(size) { }
+    public NeinCraft (Vector2i size) : base(size) {
+        Load += Load_self;
+    }
 
     private Camera Camera { get; } = new(new(0, 0, -5));
     private VertexArray skyboxVao, cubeVao;
@@ -17,7 +19,7 @@ class NeinCraft:GlWindowArb {
     private VertexBuffer<Vector4> skyboxVertices, cubeVertices;
     private VertexBuffer<Vector2> skyboxUV;
 
-    protected override void Load () {
+    void Load_self (object sender, EventArgs args) {
         skyboxVao = new();
         State.Program = SkyBox.Id;
         skyboxTexture = Sampler2D.FromFile("data/skybox.raw");

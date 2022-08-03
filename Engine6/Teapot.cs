@@ -12,6 +12,9 @@ class Teapot:GlWindowArb {
     public Teapot (Vector2i size, Model model) : base(size) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
+        Load += Load_self;
+        KeyUp += KeyUp_self;
+        MouseMove += MouseMove_self;
         //CursorVisible = false;
     }
 
@@ -23,7 +26,7 @@ class Teapot:GlWindowArb {
     Sampler2D vertexId, color0;
     VertexArray quad;
     byte[] Pixels;
-    protected override void Load () {
+    void Load_self (object sender, EventArgs args) {
         Pixels = new byte[Width * Height * sizeof(int)];
         fb = new();
         depthStencil = new(Size, RenderbufferFormat.Depth24Stencil8);
@@ -63,7 +66,7 @@ class Teapot:GlWindowArb {
         State.SwapInterval = 1;
     }
 
-    protected override void KeyUp (Keys k) {
+    void KeyUp_self (object sender, Keys k) {
         switch (k) {
             case Keys.Up:
                 fovRatio = int.Min(fovRatio + 1, 6);
@@ -75,7 +78,7 @@ class Teapot:GlWindowArb {
     }
 
 
-    protected override void MouseMove (Vector2i p) => (lastX, lastY) = p;
+    void MouseMove_self (object sender, Vector2i p) => (lastX, lastY) = p;
 
     int lastX, lastY;
     int fovRatio = 4;

@@ -13,6 +13,7 @@ class NoiseTest:GlWindowArb {
     public NoiseTest (Vector2i size) : base(size) {
         threadCount = Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1;
         rowsPerThread = _HEIGHT / threadCount;
+        Load += Load_self;
     }
 
     private VertexArray quad;
@@ -58,7 +59,7 @@ class NoiseTest:GlWindowArb {
         }
     }
 
-    unsafe protected override void Load () {
+    void Load_self (object sender, EventArgs args) {
         quad = new();
         quad.Assign(new VertexBuffer<Vector4>(Quad.Vertices), PassThrough.VertexPosition);
         tex = new(new(_WIDTH, _HEIGHT), TextureFormat.Rgba8) { Min = MinFilter.Nearest, Mag = MagFilter.Nearest, Wrap = Wrap.ClampToEdge };

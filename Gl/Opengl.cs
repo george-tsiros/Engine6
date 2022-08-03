@@ -377,7 +377,7 @@ unsafe public static class Opengl {
         if (!MakeCurrent(dc, rc))
             throw new WinApiException("failed wglMakeCurrent");
         var versionString = Marshal.PtrToStringAnsi(GetString(OpenglString.Version));
-        Console.WriteLine(versionString);
+        //Console.WriteLine(versionString);
         var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
         if (!m.Success)
             throw new Exception($"'{versionString}' not a version string");
@@ -395,7 +395,7 @@ unsafe public static class Opengl {
         var x = 0;
         for (var i = 1; i <= formatCount; i++) {
             Gdi.DescribePixelFormat(dc, i, ref pfd);
-            Console.WriteLine(pfd);
+            //Console.WriteLine(pfd);
             if (condition(pfd) && x == 0)
                 x = i;
         }

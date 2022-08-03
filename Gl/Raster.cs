@@ -27,6 +27,22 @@ public class Raster:IDisposable {
         Stride = Width * Channels * BytesPerChannel;
     }
 
+    public void ClearU32 (Color color) {
+        if (Channels != 4)
+            throw new InvalidOperationException($"{nameof(ClearU32)} only works with 4 channels, not {Channels}");
+        ClearU32Internal((color.Argb << 32) | color.Argb);
+    }
+    unsafe private void ClearU32Internal (ulong ul) {
+        fixed (byte* bp = Pixels) {
+            var p = (ulong*)bp;
+            if ((Pixels.Length & 7) != 0)
+                throw new InvalidOperationException("???");
+            var count = Pixels.Length >> 3;
+            for (var i = 0; i < count; ++i)
+                p[i] = ul;
+        }
+    }
+
     public void FillRectU32 (Rectangle r, uint color = ~0u) {
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(FillRectU32)} only works with 4 channels, not {Channels}");
@@ -52,53 +68,104 @@ public class Raster:IDisposable {
             }
         }
     }
-    public void HorizontalU32 (int x, int y, int length, uint color = ~0u) {
-        if (Channels != 4)
-            throw new InvalidOperationException($"{nameof(HorizontalU32)} only works with 4 channels, not {Channels}");
-        if (y < 0 || Height <= y)
-            return;
-        if (length <= 0)
-            return;
-        var from = int.Clamp(x, 0, Width);
-        var to = int.Clamp(x + length, 0, Width);
-        if (to <= from)
-            return;
-        HorizontalU32Internal(from, to, y, color);
-    }
-    unsafe void HorizontalU32Internal (int x0, int x1, int y, uint color) {
-        fixed (byte* bytes = Pixels) {
-            uint* p = (uint*)bytes;
-            var line = (Height - y - 1) * Width;
-            var start = line + x0;
-            var end = line + x1;
-            while (start < end)
-                p[start++] = color;
-        }
-    }
+    static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
+        a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
-    public void VerticalU32 (int x, int y, int height, uint color = ~0u) {
-        if (Channels != 4)
-            throw new InvalidOperationException($"{nameof(VerticalU32)} only works with 4 channels, not {Channels}");
-        if (x < 0 || Width <= x)
-            return;
-        if (height <= 0)
-            return;
-        var from = int.Clamp(y, 0, Height);
-        var to = int.Clamp(y + height, 0, Height);
-        VerticalU32Internal(from, to, x, color);
-    }
+    static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
-    unsafe void VerticalU32Internal (int y0, int y1, int x, uint color) {
-        fixed (byte* bytes = Pixels) {
-            uint* p = (uint*)bytes;
-            var start = (Height - y0 - 1) * Width + x;
-            while (y0 < y1) {
-                p[start] = color;
-                ++y0;
-                start -= Width;
+    unsafe public void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
+        if (Channels != 4)
+            throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
+        var c = color.Argb;
+        var min = Vector2i.Max(Vector2i.Min(Vector2i.Min(v0, v1), v2), Vector2i.Zero);
+        var max = Vector2i.Min(Vector2i.Max(Vector2i.Max(v0, v1), v2), Size - Vector2i.One);
+
+        int bias0 = IsTopLeft(v1, v2) ? 0 : -1;
+        int bias1 = IsTopLeft(v2, v0) ? 0 : -1;
+        int bias2 = IsTopLeft(v0, v1) ? 0 : -1;
+
+        int A01 = v0.Y - v1.Y, B01 = v1.X - v0.X;
+        int A12 = v1.Y - v2.Y, B12 = v2.X - v1.X;
+        int A20 = v2.Y - v0.Y, B20 = v0.X - v2.X;
+
+        int w0_row = Orient2D(v1, v2, min) + bias0;
+        int w1_row = Orient2D(v2, v0, min) + bias1;
+        int w2_row = Orient2D(v0, v1, min) + bias2;
+
+        fixed (byte* bp = Pixels) {
+            var p = (uint*)bp;
+            for (var y = min.Y; y <= max.Y; ++y) {
+                int w0 = w0_row;
+                int w1 = w1_row;
+                int w2 = w2_row;
+                for (var x = min.X; x <= max.X; ++x) {
+                    if (0 <= w0 && 0 <= w1 && 0 <= w2)
+                        p[Width * y + x] = c;
+                    w0 += A12;
+                    w1 += A20;
+                    w2 += A01;
+                }
+                w0_row += B12;
+                w1_row += B20;
+                w2_row += B01;
             }
         }
     }
+
+    public void PixelU32 (Vector2i p, Color color) {
+        if (Channels != 4)
+            throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
+        PixelU32Internal(p, color.Argb);
+    }
+    void PixelU32Internal (Vector2i p, uint c) {
+        if (0 <= p.X && p.X < Width && 0 <= p.Y && p.Y < Height) {
+            var i = p.Y * Stride + 4 * p.X;
+            Pixels[i] = (byte)(c & 0xff);
+            Pixels[i + 1] = (byte)((c >> 8) & 0xff);
+            Pixels[i + 2] = (byte)((c >> 16) & 0xff);
+            Pixels[i + 3] = (byte)(c >> 24);
+        }
+    }
+
+    unsafe public void LineU32 (Vector2i a, Vector2i b, Color color) {
+        if (Channels != 4)
+            throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
+        if (a == b) {
+            PixelU32Internal(a, color.Argb);
+        } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
+            var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
+            var (x0, x1) = (int.Clamp(x0unbounded, 0, Width - 1), int.Clamp(x1unbounded, 0, Width - 1));
+            fixed (byte* bytes = Pixels) {
+                uint* p = (uint*)bytes;
+                var line = a.Y * Width; // NOT stride
+                var start = line + x0;
+                var end = line + x1;
+                while (start <= end)
+                    p[start++] = color.Argb;
+            }
+        } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
+            var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
+            var (y0, y1) = (int.Clamp(y0unbound, 0, Height - 1), int.Clamp(y1unbound, 0, Height - 1));
+            fixed (byte* bp = Pixels) {
+                var p = (uint*)bp;
+                for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
+                    p[i] = color.Argb;
+            }
+        } else {
+
+            var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
+            var dp = p1 - p0;
+            // for now, clipping is a problem 
+            if (int.Abs(dp.X) < int.Abs(dp.Y)) {
+                // tall
+
+            } else {
+                // flat
+
+            }
+        }
+    }
+
     private static Raster FromStream (FileStream f) {
         using var r = new BinaryReader(f, System.Text.Encoding.UTF8, true);
         var width = r.ReadInt32();
@@ -127,12 +194,12 @@ public class Raster:IDisposable {
         }
     }
 
-    /// <summary><paramref name="y"/> top down</summary>
-    public void DrawString (string str, Font font, int x, int y, uint color = ~0u) {
-        var textLength = font.WidthOf(str);
-        if (x < 0 || Width < x + textLength)
+    /// <summary><paramref name="y"/> y=0 is top of screen</summary>
+    public void DrawString (ReadOnlySpan<char> str, Font font, int x, int y, uint color = ~0u) {
+        var textWidth = font.WidthOf(str);
+        if (x < 0 || Width <= x + textWidth)
             return;
-        if (y < 0 || Height < y + font.Height)
+        if (y < 0 || Height <= y + font.Height)
             return;
         var i = (Height - y - 1) * Width + x;
         // bottom row starts at i = 0

@@ -49,12 +49,17 @@ class BitmapToRaster {
     //    }
     //}
 
-    private static void Main (string[] args) {
-        if (args.Length == 2) {
-            ImageToRaster(args[0], args[1]);
-        } else {
-            FontToTextFont(CreateFont(args[0], float.Parse(args[1])), args[2]);
+    private static int Main (string[] args) {
+        try {
+            if (args.Length == 2 && float.TryParse(args[1], out var emsize)) {
+                FontToTextFont(CreateFont(args[0], emsize));
+            } else {
+                ImageToRaster(args[0], args[1]);
+            }
+        } catch {
+            return -1;
         }
+        return 0;
     }
     static int Ceil (float f) => (int)Math.Ceiling(f);
 
@@ -67,7 +72,7 @@ class BitmapToRaster {
         return graphics;
     }
 
-    private static void FontToTextFont (Font font, string outputRoot) {
+    private static void FontToTextFont (Font font) {
         const char OnChar = 'X', OffChar = '.';
         var alignment = new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
 
@@ -88,9 +93,8 @@ class BitmapToRaster {
         Rectangle glyphRectangle = FindRegion(bitmap, out var stride);
         Debug.Assert(stride == bitmap.Width * sizeof(int));
         var size = glyphRectangle.Size;
-        var filepath = Path.Combine(outputRoot, font.Name.Replace(' ', '_') + ".txt");
-        Console.WriteLine($"\"{font.Name}\" ({font.Size} {font.Unit}) => {filepath} ({Directory.GetCurrentDirectory()})");
-        using var text = new StreamWriter(filepath, false, System.Text.Encoding.ASCII) { NewLine = "\n" };
+        var text = Console.Out;// new StreamWriter(filepath, false, System.Text.Encoding.ASCII) { NewLine = "\n" };
+        text.Write("{0}\n", font.FontFamily.Name);
         text.Write("{0},{1}\n", size.Height, (int)OnChar);
         var blank = new string('.', size.Width) + "\n";
         int blankLineCount = size.Height * '!';

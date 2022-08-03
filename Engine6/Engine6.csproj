@@ -36,6 +36,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="data\font.png" />
+      <None Remove="data\teapot.hits" />
+      <None Remove="data\ufl2.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\BitmapToRaster\bin\BitmapToRaster.exe" Link="BitmapToRaster.exe">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="BepuPhysics" Version="2.5.0-beta.6" />
       <PackageReference Include="NAudio.Wasapi" Version="2.1.0" />
     </ItemGroup>
@@ -46,16 +58,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="data\font.png">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="data\teapot.hits">
+        <None Update="data\IBM_3270.txt">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="data\teapot.obj">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="data\ufl2.txt">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
@@ -63,10 +69,8 @@
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="..\fixeol\bin\fixeol.exe" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
-        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\font.png $(targetdir)" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
-        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe &quot;Kepler452b-Mono&quot; 36.0 $(targetdir)data" />
     </Target>
 
 </Project>

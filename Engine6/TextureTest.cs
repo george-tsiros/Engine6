@@ -37,7 +37,12 @@ class TextureTest:GlWindowArb {
         Dir.Down,                                   // 1 1 1 0
         Dir.None,                                   // 1 1 1 1
     };
-    public TextureTest (Vector2i size) : base(size) { }
+    public TextureTest (Vector2i size) : base(size) {
+        Load += Load_self;
+        KeyDown += KeyDown_self;
+        KeyUp += KeyUp_self;
+        MouseMove += MouseMove_self;
+    }
 
     private Camera Camera { get; } = new(new(0, 0, 0));
     private VertexArray quad, skyboxVao;
@@ -47,7 +52,7 @@ class TextureTest:GlWindowArb {
     private VertexBuffer<Matrix4x4> quadModelBuffer, cubeModelBuffer;
     private VertexArray cube;
 
-    protected unsafe override void Load () {
+    void Load_self (object sender, EventArgs args) {
         quad = new();
         State.Program = SimpleTexture.Id;
         quadBuffer = new(Quad.Vertices);
@@ -110,10 +115,6 @@ class TextureTest:GlWindowArb {
 
     private static readonly Keys[] keys = { Keys.D, Keys.C, Keys.X, Keys.Z };
     private Dir keyState = Dir.None;
-    protected override void KeyUp (Keys k) {
-        if (!KeyAction(k, false))
-            base.KeyUp(k);
-    }
     private bool KeyAction (Keys k, bool down) {
         var i = Array.IndexOf(keys, k);
         if (i < 0)
@@ -122,12 +123,15 @@ class TextureTest:GlWindowArb {
         keyState = down ? keyState | d : keyState & ~d;
         return true;
     }
-    protected override void KeyDown (Keys k) {
-        if (!KeyAction(k, true))
-            base.KeyDown(k);
+
+    void KeyUp_self (object sender, Keys k) {
+        _=KeyAction(k, false);
+    }
+    void KeyDown_self (object sender, Keys k) {
+        _=KeyAction(k, true);
     }
     //private int previousX, previousY;
-    protected override void MouseMove (Vector2i v) {
+    void MouseMove_self (object sender, Vector2i v) {
         Camera.Rotate(.01f * (Vector2)v);
     }
 

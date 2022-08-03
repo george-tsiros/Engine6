@@ -6,54 +6,67 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Win32;
 
-public class SimpleWindow:WindowBase {
+public class SimpleWindow:Window {
 
     public SimpleWindow (Vector2i size) : base(size) { }
 
-    protected bool IsForeground { get; private set; }
+    public bool IsFocused { get; private set; }
+    public event EventHandler<Buttons> ButtonDown;
+    public event EventHandler<Buttons> ButtonUp;
+    public event EventHandler<bool> FocusChanged;
+    public event EventHandler<Keys> KeyDown;
+    public event EventHandler<Keys> KeyUp;
+    public event EventHandler Load;
+    public event EventHandler MouseLeave;
+    public event EventHandler<Vector2i> MouseMove;
+    public event EventHandler Paint;
 
-    protected virtual void MouseMove (Vector2i location) { }
-    protected virtual void ButtonDown (int button) { }
-    protected virtual void ButtonUp (int button) { }
-    protected virtual void MouseLeave () { }
-    protected virtual void CaptureChanged () { }
-    protected virtual void FocusChanged (bool focused) { }
-    protected virtual void Paint () { }
-    protected virtual void Load () { }
-    protected virtual void KeyUp (Keys k) { }
     protected Vector2i CursorLocation { get; private set; }
-
+    protected virtual void OnButtonDown (Buttons changed) => ButtonDown?.Invoke(this, changed);
+    protected virtual void OnButtonUp (Buttons changed) => ButtonUp?.Invoke(this, changed);
+    protected virtual void OnFocusChanged (bool isFocused) => FocusChanged?.Invoke(this, isFocused);
+    protected virtual void OnKeyDown (Keys k) => KeyDown?.Invoke(this, k);
+    protected virtual void OnKeyUp (Keys k) => KeyUp?.Invoke(this, k);
+    protected virtual void OnLoad () => Load?.Invoke(this, new());
+    protected virtual void OnMouseLeave () => MouseLeave?.Invoke(this, new());
+    protected virtual void OnMouseMove (Vector2i v) => MouseMove?.Invoke(this, v);
+    protected virtual void OnPaint () => Paint?.Invoke(this, new());
     private Rect WindowRect = new();
-    private int lastMouseButtonState = 0;
-
-    protected virtual void KeyDown (Keys k) {
-        switch (k) {
-            case Keys.Escape:
-                User.PostQuitMessage(0);
-                break;
-        }
-    }
+    private Buttons lastMouseButtonState = Buttons.None;
 
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
         Demand(User.InvalidateRect(WindowHandle, ref WindowRect, 0));
     }
 
+    protected void Pump () {
+        Message m = new();
+        if (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+            var eh = User.GetMessageW(ref m, 0, 0, 0);
+            if (-1 == eh)
+                Environment.FailFast(null);
+            if (0 == eh) {
+                running = false;
+                return;
+            }
+            _ = User.DispatchMessageW(ref m);
+        }
+    }
+
+    bool running = true;
     public virtual void Run () {
-        Load();
+        OnLoad();
         _ = User.ShowWindow(WindowHandle, 10);
         Demand(User.UpdateWindow(WindowHandle));
         Message m = new();
-        var invalidPtr = (nint)(-1);
-        var running = true;
         while (running) {
             while (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
                 var eh = User.GetMessageW(ref m, 0, 0, 0);
-                if (eh == invalidPtr)
+                if (-1 == eh)
                     Environment.FailFast(null);
-                if (eh == 0) {
+                if (0 == eh) {
                     running = false;
-                    break;
+                    return;
                 }
                 _ = User.DispatchMessageW(ref m);
             }
@@ -65,24 +78,20 @@ public class SimpleWindow:WindowBase {
         var i = (int)(self & int.MaxValue);
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
-    readonly Queue<WinMessage> lastMessages = new(MessageHistoryLength);
-    const int MessageHistoryLength = 1000;
-    protected IReadOnlyCollection<WinMessage> LastMessages => lastMessages;
+
+
     override protected nint WndProc (nint hWnd, WinMessage msg, nint wPtr, nint lPtr) {
-        if (lastMessages.Count == MessageHistoryLength)
-            _ = lastMessages.Dequeue();
-        lastMessages.Enqueue(msg);
         switch (msg) {
             case WinMessage.MouseMove: {
-                    if (!IsForeground)
+                    if (!IsFocused)
                         break;
                     var p = Split(lPtr);
-                    CursorLocation = p;
-                    MouseMove(p);
+                    CursorLocation = new(p.X, Height - p.Y - 1);
+                    OnMouseMove(p);
                 }
                 return 0;
             case WinMessage.SysCommand: {
-                    var i = (SysCommand)((int)(wPtr & int.MaxValue));
+                    var i = (SysCommand)(int)(wPtr & int.MaxValue);
                     if (i == SysCommand.Close) {
                         User.PostQuitMessage(0);
                         return 0;
@@ -93,9 +102,9 @@ public class SimpleWindow:WindowBase {
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
             case WinMessage.XButtonDown: {
-                    var w = (int)(ushort.MaxValue & wPtr);
+                    var w = (Buttons)(ushort.MaxValue & wPtr);
                     var change = w ^ lastMouseButtonState;
-                    ButtonDown(change);
+                    OnButtonDown(change);
                     lastMouseButtonState = w;
                 }
                 break;
@@ -103,23 +112,23 @@ public class SimpleWindow:WindowBase {
             case WinMessage.RButtonUp:
             case WinMessage.MButtonUp:
             case WinMessage.XButtonUp: {
-                    var w = (int)(ushort.MaxValue & wPtr);
+                    var w = (Buttons)(ushort.MaxValue & wPtr);
                     var change = w ^ lastMouseButtonState;
-                    ButtonUp(change);
+                    OnButtonUp(change);
                     lastMouseButtonState = w;
                 }
                 break;
             case WinMessage.MouseLeave:
-                MouseLeave();
+                OnMouseLeave();
                 break;
-            case WinMessage.CaptureChanged:
-                CaptureChanged();
-                break;
+            //case WinMessage.CaptureChanged:
+            //    OnCaptureChanged();
+            //    break;
             case WinMessage.SetFocus:
-                FocusChanged(IsForeground = true);
+                OnFocusChanged(IsFocused = true);
                 break;
             case WinMessage.KillFocus:
-                FocusChanged(IsForeground = false);
+                OnFocusChanged(IsFocused = false);
                 break;
             //case WinMessage.Destroy:
             //    User.PostQuitMessage(0);
@@ -128,24 +137,29 @@ public class SimpleWindow:WindowBase {
                     var m = new KeyMessage(wPtr, lPtr);
                     if (m.WasDown)
                         break;
-                    KeyDown(m.Key);
+                    OnKeyDown(m.Key);
                     return 0;
                 }
             case WinMessage.KeyUp: {
                     var m = new KeyMessage(wPtr, lPtr);
-                    KeyUp(m.Key);
+                    OnKeyUp(m.Key);
                     return 0;
                 }
             //case WinMessage.Close:
             //    User.PostQuitMessage(0);
             //    break;
             case WinMessage.Paint:
-                Paint();
-                //var ps = new PaintStruct();
-                //_ = Demand(User.BeginPaint(WindowHandle, ref ps));
-                //_ = User.EndPaint(WindowHandle, ref ps);
+                if (running && !painting) {
+                    var ps = new PaintStruct();
+                    painting = true;
+                    _ = Demand(User.BeginPaint(WindowHandle, ref ps));
+                    OnPaint();
+                    _ = User.EndPaint(WindowHandle, ref ps);
+                    painting = false;
+                }
                 return 0;
         }
         return User.DefWindowProcW(hWnd, msg, wPtr, lPtr);
     }
+    private bool painting;
 }
