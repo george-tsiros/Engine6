@@ -30,6 +30,7 @@ internal class BlitTest:GlWindow {
     string txt = "asdgf";
 
     Vector2i lastCursorPosition = new(-1, -1);
+    Vector3d modelPosition = new();
     double phi = 0, theta = 0;
     private static void Log (object ob) =>
 #if DEBUG
@@ -55,8 +56,8 @@ internal class BlitTest:GlWindow {
         State.SwapInterval = 1;
         KeyDown += KeyDown_self;
         Load += Load_self;
-        ButtonDown += ButtonDown_self;
-        ButtonUp += ButtonUp_self;
+        //ButtonDown += ButtonDown_self;
+        //ButtonUp += ButtonUp_self;
         MouseMove += MouseMove_self;
     }
     void Load_self (object sender, EventArgs args) {
@@ -88,38 +89,37 @@ internal class BlitTest:GlWindow {
     private void MouseMove_self (object sender, Vector2i e) {
         var d = e - lastCursorPosition;
         lastCursorPosition = e;
-        if (leftIsDown) {
-            theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
-            phi = double.Clamp(phi + 0.01 * d.Y, -double.Pi / 2, double.Pi / 2);
+        switch (Buttons) {
+            case Buttons.Left:
+                theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
+                phi = double.Clamp(phi + 0.01 * d.Y, -double.Pi / 2, double.Pi / 2);
+                break;
+            case Buttons.Right:
+                modelPosition += new Vector3d(d.X, d.Y, 0);
+                break;
         }
     }
 
-    void ButtonDown_self (object sender, Buttons buttons) {
-        if (buttons == Buttons.Left) {
-            leftIsDown = true;
-            lastCursorPosition = CursorLocation;
-        }
-    }
-    void ButtonUp_self (object sender, Buttons buttons) {
-        if (buttons == Buttons.Left)
-            leftIsDown = false;
-    }
+    //void ButtonDown_self (object sender, Buttons buttons) {
+    //        lastCursorPosition = CursorLocation;
+    //}
+    //void ButtonUp_self (object sender, Buttons buttons) {
+    //    if (buttons == Buttons.Left)
+    //        leftIsDown = false;
+    //}
 
     private static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
     protected override void Render () {
 
         var textRow = -Font.Height;
         raster.ClearU32(Color.Black);
-        raster.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
-        raster.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
-        raster.DrawString(txt, Font, 0, textRow += Font.Height);
         var faceCount = Obj.Faces.Count;
         var vertexCount = Obj.Vertices.Count;
-        var roty = Matrix4d.RotationY(theta);
-        var rotx = Matrix4d.RotationX(phi);
+        var rotation = Matrix4d.RotationX(phi) * Matrix4d.RotationY(theta);
+        var translation = Matrix4d.Translate(modelPosition);
         for (var i = 0; i < vertexCount; ++i) {
             var vertex = new Vector4d(Obj.Vertices[i], 1);
-            var modelSpace = vertex  * rotx* roty;
+            var modelSpace = vertex * rotation * translation;
             ModelSpace[i] = modelSpace.Xyz();
             var position = modelSpace * Matrix4d.Translate(-cameraPosition);
             var projected = position * Projection;
@@ -162,6 +162,10 @@ internal class BlitTest:GlWindow {
             }
         }
         var t1 = Stopwatch.GetTimestamp();
+        raster.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
+        raster.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
+        raster.DrawString(modelPosition.ToString(), Font, 0, textRow += Font.Height);
+        raster.DrawString(txt, Font, 0, textRow += Font.Height);
         txt = ((double)(t1 - t0) / Stopwatch.Frequency).ToEng();
         var (cx, cy) = CursorLocation;
         if (0 <= cx && cx < Width && 0 <= cy && cy < Height) {

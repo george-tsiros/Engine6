@@ -21,18 +21,18 @@ public class SimpleWindow:Window {
     public event EventHandler<Vector2i> MouseMove;
     public event EventHandler Paint;
 
-    protected Vector2i CursorLocation { get; private set; } = new(-1, -1);
-    protected virtual void OnButtonDown (Buttons changed) => ButtonDown?.Invoke(this, changed);
-    protected virtual void OnButtonUp (Buttons changed) => ButtonUp?.Invoke(this, changed);
+    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
+    protected virtual void OnButtonDown (Buttons depressed) => ButtonDown?.Invoke(this, depressed);
+    protected virtual void OnButtonUp (Buttons released) => ButtonUp?.Invoke(this, released);
     protected virtual void OnFocusChanged (bool isFocused) => FocusChanged?.Invoke(this, isFocused);
     protected virtual void OnKeyDown (Keys k) => KeyDown?.Invoke(this, k);
     protected virtual void OnKeyUp (Keys k) => KeyUp?.Invoke(this, k);
     protected virtual void OnLoad () => Load?.Invoke(this, new());
     protected virtual void OnMouseLeave () => MouseLeave?.Invoke(this, new());
-    protected virtual void OnMouseMove (Vector2i v) => MouseMove?.Invoke(this, v);
+    protected virtual void OnMouseMove (Vector2i currentPosition) => MouseMove?.Invoke(this, currentPosition);
     protected virtual void OnPaint () => Paint?.Invoke(this, new());
     private Rect WindowRect = new();
-    private Buttons lastMouseButtonState = Buttons.None;
+    public Buttons Buttons { get; private set; }
 
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
@@ -87,8 +87,7 @@ public class SimpleWindow:Window {
                     if (!IsFocused)
                         break;
                     var p = Split(lPtr);
-                    CursorLocation = new(p.X, Height - p.Y - 1);
-                    OnMouseMove(p);
+                    OnMouseMove(CursorLocation = new(p.X, Height - p.Y - 1));
                 }
                 return 0;
             case WinMessage.SysCommand: {
@@ -104,9 +103,9 @@ public class SimpleWindow:Window {
             case WinMessage.MButtonDown:
             case WinMessage.XButtonDown: {
                     var w = (Buttons)(ushort.MaxValue & wPtr);
-                    var change = w ^ lastMouseButtonState;
+                    var change = w ^ Buttons;
+                    Buttons = w;
                     OnButtonDown(change);
-                    lastMouseButtonState = w;
                 }
                 break;
             case WinMessage.LButtonUp:
@@ -114,9 +113,9 @@ public class SimpleWindow:Window {
             case WinMessage.MButtonUp:
             case WinMessage.XButtonUp: {
                     var w = (Buttons)(ushort.MaxValue & wPtr);
-                    var change = w ^ lastMouseButtonState;
+                    var change = w ^ Buttons;
+                    Buttons = w;
                     OnButtonUp(change);
-                    lastMouseButtonState = w;
                 }
                 break;
             case WinMessage.MouseLeave:

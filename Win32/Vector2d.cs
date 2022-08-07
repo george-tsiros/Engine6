@@ -2,6 +2,8 @@ namespace Win32;
 using System.Numerics;
 using System;
 
+// at some point these will have to be taken out of this project
+
 public readonly struct Vector2d {
 
     public readonly double X, Y;
