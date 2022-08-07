@@ -1,7 +1,7 @@
 namespace Engine;
 
 using System;
-using System.Numerics;
+//using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,9 +12,9 @@ using Win32;
 
 public class Model {
     public List<Vector3i> Faces { get; init; } = new();
-    public List<Vector3> Vertices { get; init; } = new();
-    public Vector3 Min { get; private set; }
-    public Vector3 Max { get; private set; }
+    public List<Vector3d> Vertices { get; init; } = new();
+    public Vector3d Min { get; private set; }
+    public Vector3d Max { get; private set; }
     private static readonly char[] space = { ' ' };
     private static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
     private Model () { }
@@ -31,8 +31,8 @@ public class Model {
     static int FromFace (string part) => int.Parse(FaceRegex.Match(part).Groups[1].Value);
 
     private void Read (StreamReader reader, bool center) {
-        var min = new Vector3(float.MaxValue);
-        var max = new Vector3(float.MinValue);
+        var min = new Vector3d(double.MaxValue);
+        var max = new Vector3d(double.MinValue);
         foreach (var line in Extra.EnumLines(reader, true)) {
             if (line[0] == '#')
                 continue;
@@ -51,9 +51,9 @@ public class Model {
                 case "v":
                     if (parts.Length != 4)
                         throw new ArgumentException($"line '{line}' invalid");
-                    var x = new Vector3(float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
-                    min = Vector3.Min(x, min);
-                    max = Vector3.Max(x, max);
+                    var x = new Vector3d(float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
+                    min = Vector3d.Min(x, min);
+                    max = Vector3d.Max(x, max);
                     Vertices.Add(x);
                     break;
             }
@@ -67,7 +67,7 @@ public class Model {
         }
     }
 
-    static List<Vector3> CubeVertices (float w, float h, float d) => new() { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
+    static List<Vector3d> CubeVertices (float w, float h, float d) => new() { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
 
     public static Model Quad (float w, float h) => new() {
         Vertices = new() { new(-w / 2, -h / 2, 0), new(w / 2, -h / 2, 0), new(w / 2, h / 2, 0), new(-w / 2, h / 2, 0) },

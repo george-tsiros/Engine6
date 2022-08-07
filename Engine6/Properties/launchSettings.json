@@ -1,1 +1,1 @@
-{ "profiles": { "Engine6": { "commandName": "Project", "commandLineArgs": "1280 720" } } }
+{ "profiles": { "Engine6": { "commandName": "Project", "commandLineArgs": "640 480 \"ibm 3270\" 16" } } }

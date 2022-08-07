@@ -47,9 +47,9 @@ class Teapot:GlWindowArb {
         var v = new Vector4[Model.Faces.Count * 3];
         for (var (i, j) = (0, 0); j < VertexCount; ++i, ++j) {
             var face = Model.Faces[i];
-            v[j] = new(Model.Vertices[face.X], 1);
-            v[++j] = new(Model.Vertices[face.Y], 1);
-            v[++j] = new(Model.Vertices[face.Z], 1);
+            v[j] = new((Vector3)Model.Vertices[face.X], 1);
+            v[++j] = new((Vector3)Model.Vertices[face.Y], 1);
+            v[++j] = new((Vector3)Model.Vertices[face.Z], 1);
         }
 
         vao.Assign(new VertexBuffer<Vector4>(v), VertexIndex.VertexPosition);

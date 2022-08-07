@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 static class Extra {
 
-    public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) { 
+    public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) {
         while (f.ReadLine() is string line)
             if (!skipBlank || !string.IsNullOrWhiteSpace(line))
                 yield return line;
@@ -52,13 +52,14 @@ static class Extra {
             angle -= 2 * float.Pi;
         return angle;
     }
-    internal static double ModuloTwoPi (ref double angle, double delta) {
-        angle += delta;
-        while (angle < 0)
-            angle += 2 * double.Pi;
-        while (angle > 2 * double.Pi)
-            angle -= 2 * double.Pi;
-        return angle;
+    internal static double ModuloTwoPi (double angle, double delta) {
+        var d = delta < 0 ? double.Tau - (-delta % double.Tau) : (delta % double.Tau);
+        //angle += delta;
+        //while (angle < 0)
+        //    angle += double.Tau;
+        //while (angle > double.Tau)
+        //    angle -= double.Tau;
+        return (angle + d) % double.Tau;
     }
 
     internal static (int min, float max) Extrema (int[] ints) {

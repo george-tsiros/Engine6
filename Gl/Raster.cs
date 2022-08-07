@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using Win32;
 
 public class Raster:IDisposable {
@@ -13,6 +15,10 @@ public class Raster:IDisposable {
     public readonly int Channels, BytesPerChannel, Stride;
 
     public byte[] Pixels;
+    //bool IsInside (Vector2i v) => 0 <= v.X && v.X < Width && 0 <= v.Y && v.Y < Height;
+    //public uint UInt32At (int x, int y) => UInt32At(new(x, y));
+    //public uint UInt32At(Vector2i v) => IsInside(v) ? Pixels[v.Y * Stride + 4
+    //public byte ByteAt (Vector2i v) => IsInside(v) ? Pixels[v.Y * Stride + v.X] : throw new ArgumentOutOfRangeException(nameof(v));
 
     public Raster (Vector2i size, int channels, int bytesPerChannel) {
         if (size.X < 1 || size.Y < 1)
@@ -71,50 +77,104 @@ public class Raster:IDisposable {
     static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
         a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#endif
+    // width * height - width * height;
     static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
     unsafe public void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
         if (Channels != 4)
-            throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
+            throw new InvalidOperationException($"{nameof(TriangleU32)} only works with 4 channels, not {Channels}");
+        if (BytesPerChannel != 1)
+            throw new InvalidOperationException($"{nameof(TriangleU32)} only works with 1 Bpp, not {BytesPerChannel}");
         var c = color.Argb;
         var min = Vector2i.Max(Vector2i.Min(Vector2i.Min(v0, v1), v2), Vector2i.Zero);
         var max = Vector2i.Min(Vector2i.Max(Vector2i.Max(v0, v1), v2), Size - Vector2i.One);
 
-        int bias0 = IsTopLeft(v1, v2) ? 0 : -1;
-        int bias1 = IsTopLeft(v2, v0) ? 0 : -1;
-        int bias2 = IsTopLeft(v0, v1) ? 0 : -1;
+        var bias0 = IsTopLeft(v1, v2) ? 0 : -1;
+        var bias1 = IsTopLeft(v2, v0) ? 0 : -1;
+        var bias2 = IsTopLeft(v0, v1) ? 0 : -1;
 
-        int A01 = v0.Y - v1.Y, B01 = v1.X - v0.X;
-        int A12 = v1.Y - v2.Y, B12 = v2.X - v1.X;
-        int A20 = v2.Y - v0.Y, B20 = v0.X - v2.X;
+        var (A01, B01) = (v0.Y - v1.Y, v1.X - v0.X);
+        var (A12, B12) = (v1.Y - v2.Y, v2.X - v1.X);
+        var (A20, B20) = (v2.Y - v0.Y, v0.X - v2.X);
 
-        int w0_row = Orient2D(v1, v2, min) + bias0;
-        int w1_row = Orient2D(v2, v0, min) + bias1;
-        int w2_row = Orient2D(v0, v1, min) + bias2;
+        var w0_row = Orient2D(v1, v2, min) + bias0;
+        var w1_row = Orient2D(v2, v0, min) + bias1;
+        var w2_row = Orient2D(v0, v1, min) + bias2;
 
         fixed (byte* bp = Pixels) {
-            var p = (uint*)bp;
+            var p = (uint*)bp;// new Span<uint>((uint*)bp, Pixels.Length >> 2);
+            var row0 = min.Y * Width + min.X;
             for (var y = min.Y; y <= max.Y; ++y) {
-                int w0 = w0_row;
-                int w1 = w1_row;
-                int w2 = w2_row;
+                var w0biased = w0_row;
+                var w1biased = w1_row;
+                var w2biased = w2_row;
+                var i = row0;
                 for (var x = min.X; x <= max.X; ++x) {
-                    if (0 <= w0 && 0 <= w1 && 0 <= w2)
-                        p[Width * y + x] = c;
-                    w0 += A12;
-                    w1 += A20;
-                    w2 += A01;
+                    if (0 <= (w0biased | w1biased | w2biased)) {
+                        p[i] = c;
+                    }
+                    ++i;
+                    w0biased += A12;
+                    w1biased += A20;
+                    w2biased += A01;
                 }
                 w0_row += B12;
                 w1_row += B20;
                 w2_row += B01;
+                row0 += Width;
             }
+        }
+    }
+
+    unsafe public void TriangleU8 (Vector2i v0, Vector2i v1, Vector2i v2, byte u8) {
+        if (Channels != 1)
+            throw new InvalidOperationException($"{nameof(TriangleU8)} only works with 1 channels, not {Channels}");
+        if (BytesPerChannel != 1)
+            throw new InvalidOperationException($"{nameof(TriangleU8)} only works with 1 Bpp, not {BytesPerChannel}");
+        var min = Vector2i.Max(Vector2i.Min(Vector2i.Min(v0, v1), v2), Vector2i.Zero);
+        var max = Vector2i.Min(Vector2i.Max(Vector2i.Max(v0, v1), v2), Size - Vector2i.One);
+
+        var bias0 = IsTopLeft(v1, v2) ? 0 : -1;
+        var bias1 = IsTopLeft(v2, v0) ? 0 : -1;
+        var bias2 = IsTopLeft(v0, v1) ? 0 : -1;
+
+        var (A01, B01) = (v0.Y - v1.Y, v1.X - v0.X);
+        var (A12, B12) = (v1.Y - v2.Y, v2.X - v1.X);
+        var (A20, B20) = (v2.Y - v0.Y, v0.X - v2.X);
+
+        var w0_row = Orient2D(v1, v2, min) + bias0;
+        var w1_row = Orient2D(v2, v0, min) + bias1;
+        var w2_row = Orient2D(v0, v1, min) + bias2;
+
+        var row0 = min.Y * Width + min.X;
+        for (var y = min.Y; y <= max.Y; ++y) {
+            var w0biased = w0_row;
+            var w1biased = w1_row;
+            var w2biased = w2_row;
+            var i = row0;
+            for (var x = min.X; x <= max.X; ++x) {
+                if (0 <= (w0biased | w1biased | w2biased)) {
+
+                    Pixels[i] = u8;
+                }
+                ++i;
+                w0biased += A12;
+                w1biased += A20;
+                w2biased += A01;
+            }
+            w0_row += B12;
+            w1_row += B20;
+            w2_row += B01;
+            row0 += Width;
         }
     }
 
     public void PixelU32 (Vector2i p, Color color) {
         if (Channels != 4)
-            throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
+            throw new InvalidOperationException($"{nameof(PixelU32)} only works with 4 channels, not {Channels}");
         PixelU32Internal(p, color.Argb);
     }
     void PixelU32Internal (Vector2i p, uint c) {
@@ -155,6 +215,7 @@ public class Raster:IDisposable {
 
             var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
             var dp = p1 - p0;
+
             // for now, clipping is a problem 
             if (int.Abs(dp.X) < int.Abs(dp.Y)) {
                 // tall

@@ -40,7 +40,6 @@ class Engine {
 
         memory.Position = 0;
         var copyFilepath = Path.Combine(Path.GetDirectoryName(filepath), Path.GetFileNameWithoutExtension(filepath) + ".obj");
-        Console.WriteLine(copyFilepath);
         using (var copy = File.Create(copyFilepath))
             memory.CopyTo(copy);
     }
@@ -60,17 +59,45 @@ class Engine {
         (p.X - a.X) * (b.Y - a.Y) - (p.Y - a.Y) * (b.X - a.X);
 
     //static Vector2 Scale(Vector2 a, Vector2
-
+    static readonly char[] Values = ".-+*".ToCharArray();
 
     [STAThread]
     static void Main (string[] args) {
-        var model = Model.Quad(1, 1);
+        /*
+        var r = new Raster(new(160, 120), 1, 1);
+        var a = new Vector2i(15, 10);
+        var b = new Vector2i(20, 20);
+        var c = new Vector2i(10, 20);
+        var points = new Vector2i[] {a,b,c };
+        var ab = b - a;
+        var ac = c - a;
+        var cross = Vector3.Cross(new((Vector2)ab, 0), new((Vector2)ac, 0));
+        var mag = cross.Length();
+        r.TriangleU8(a, b, c, byte.MaxValue);
+        var chars = new char[r.Width];
+        for (var y = r.Height - 1; 0 <= y; --y) {
+            Set(chars, ' ');
+            for (var x = 0; x < r.Width; ++x) {
+                var i = new Vector2i(x, y);
+                var isPoint = Array.Exists(points, p => p == i);
+                var isInside = r.Pixels[r.Stride * y + x] != 0;
+                chars[x] = Values[(isPoint ? 1 : 0) + (isInside ? 2 : 0)];
+            }
+            Console.WriteLine(new string(chars));
+        }
+        Console.WriteLine("done");
+        _ = Console.ReadLine();
+*/
+        var model = new Model(@"C:\Users\tsiros\Downloads\wavefront\fer.obj", true);
         var size = args.Length > 1 && int.TryParse(args[0], out var width) && int.TryParse(args[1], out var height) && 320 <= width && width <= 2560 && 240 <= height && height <= 1440 ? new Vector2i(width, height) : new(1280, 720);
         var f = args.Length > 3 && float.TryParse(args[3], out var emSize) ? new Font(args[2], emSize) : new Font("data\\IBM_3270.txt");
         using var bt = new BlitTest(size, model) { Font = f };
         bt.Run();
     }
-
+    static void Set<T> (T[] array, T value) where T : struct {
+        for (var i = 0; i < array.Length; ++i)
+            array[i] = value;
+    }
 
     unsafe private static void TestDirectSound () {
         throw new NotImplementedException();

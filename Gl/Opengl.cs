@@ -156,7 +156,7 @@ unsafe public static class Opengl {
                     if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
                         f.SetValue(null, GetProcAddress(f.Name));
             } catch (Exception e) {
-                Console.WriteLine(e);
+                //Console.WriteLine(e);
                 throw;
             }
         }

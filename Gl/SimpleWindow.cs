@@ -21,7 +21,7 @@ public class SimpleWindow:Window {
     public event EventHandler<Vector2i> MouseMove;
     public event EventHandler Paint;
 
-    protected Vector2i CursorLocation { get; private set; }
+    protected Vector2i CursorLocation { get; private set; } = new(-1, -1);
     protected virtual void OnButtonDown (Buttons changed) => ButtonDown?.Invoke(this, changed);
     protected virtual void OnButtonUp (Buttons changed) => ButtonUp?.Invoke(this, changed);
     protected virtual void OnFocusChanged (bool isFocused) => FocusChanged?.Invoke(this, isFocused);
@@ -56,7 +56,7 @@ public class SimpleWindow:Window {
     bool running = true;
     public virtual void Run () {
         OnLoad();
-        _ = User.ShowWindow(WindowHandle, 10);
+        _ = User.ShowWindow(WindowHandle, CmdShow.Show);
         Demand(User.UpdateWindow(WindowHandle));
         Message m = new();
         while (running) {
@@ -70,7 +70,8 @@ public class SimpleWindow:Window {
                 }
                 _ = User.DispatchMessageW(ref m);
             }
-            Invalidate();
+            if (running && !painting)
+                Invalidate();
         }
     }
 

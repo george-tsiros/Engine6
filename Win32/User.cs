@@ -76,7 +76,7 @@ public static partial class User {
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ShowWindow (IntPtr handle, int cmdShow);
+    public static extern bool ShowWindow (IntPtr handle, CmdShow cmdShow);
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi)]
     public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);

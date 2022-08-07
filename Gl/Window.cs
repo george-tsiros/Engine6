@@ -6,28 +6,28 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Win32;
 
-public abstract class Window : IDisposable {
-    private static IntPtr StaticWndProc(IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) =>
+public abstract class Window:IDisposable {
+    private static IntPtr StaticWndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) =>
         Instance.WndProc(hWnd, msg, w, l);
 
     protected static readonly WndProc staticWndProc;
     protected static readonly ushort ClassAtom;
     protected static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
 
-    static Window() {
+    static Window () {
         staticWndProc = new(StaticWndProc);
         ClassAtom = User.RegisterWindowClass(staticWndProc, ClassName);
     }
     private bool disposed;
 
-    public void Dispose() {
+    public void Dispose () {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     protected List<IDisposable> Disposables { get; } = new();
 
-    public virtual void Dispose(bool dispose) {
+    public virtual void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
             if (!cursorVisible)
@@ -64,7 +64,7 @@ LRESULT CALLBACK TWindow::staticWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
         get => text;
         set => _ = text != value ? User.SetWindowText(WindowHandle, text = value) : false;
     }
-
+    public Font Font { get; set; }
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
@@ -77,7 +77,7 @@ LRESULT CALLBACK TWindow::staticWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
         set => _ = value != cursorVisible ? User.ShowCursor(cursorVisible = value) : 0;
     }
 
-    public Window(Vector2i size) {
+    public Window (Vector2i size) {
         if (size.X < 1 || size.Y < 1)
             throw new ArgumentOutOfRangeException(nameof(size));
         Instance = this;
@@ -86,26 +86,23 @@ LRESULT CALLBACK TWindow::staticWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
         Size = size;
     }
 
-    abstract protected IntPtr WndProc(IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l);
+    abstract protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l);
 
-    public static IntPtr Demand(IntPtr p) {
+    public static IntPtr Demand (IntPtr p) {
         Demand(IntPtr.Zero != p);
         return p;
     }
 
-    public static int Demand(int p) {
+    public static int Demand (int p) {
         Demand(0 != p);
         return p;
     }
 
-    public static void Demand(bool condition, string message = null) {
+    public static void Demand (bool condition, string message = null) {
         if (!condition) {
             var stackFrame = new StackFrame(1, true);
             var m = $">{stackFrame.GetFileName()}({stackFrame.GetFileLineNumber()},{stackFrame.GetFileColumnNumber()}): {message ?? "?"} ({Kernel.GetLastError():X})";
-            if (Debugger.IsAttached)
-                throw new Exception(m);
-            else
-                Console.WriteLine(m);
+            throw new Exception(m);
         }
     }
 }
