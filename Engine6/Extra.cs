@@ -54,11 +54,6 @@ static class Extra {
     }
     internal static double ModuloTwoPi (double angle, double delta) {
         var d = delta < 0 ? double.Tau - (-delta % double.Tau) : (delta % double.Tau);
-        //angle += delta;
-        //while (angle < 0)
-        //    angle += double.Tau;
-        //while (angle > double.Tau)
-        //    angle -= double.Tau;
         return (angle + d) % double.Tau;
     }
 

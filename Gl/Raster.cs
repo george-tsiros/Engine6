@@ -15,10 +15,6 @@ public class Raster:IDisposable {
     public readonly int Channels, BytesPerChannel, Stride;
 
     public byte[] Pixels;
-    //bool IsInside (Vector2i v) => 0 <= v.X && v.X < Width && 0 <= v.Y && v.Y < Height;
-    //public uint UInt32At (int x, int y) => UInt32At(new(x, y));
-    //public uint UInt32At(Vector2i v) => IsInside(v) ? Pixels[v.Y * Stride + 4
-    //public byte ByteAt (Vector2i v) => IsInside(v) ? Pixels[v.Y * Stride + v.X] : throw new ArgumentOutOfRangeException(nameof(v));
 
     public Raster (Vector2i size, int channels, int bytesPerChannel) {
         if (size.X < 1 || size.Y < 1)
@@ -77,10 +73,6 @@ public class Raster:IDisposable {
     static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
         a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#endif
-    // width * height - width * height;
     static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
     unsafe public void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
@@ -105,7 +97,7 @@ public class Raster:IDisposable {
         var w2_row = Orient2D(v0, v1, min) + bias2;
 
         fixed (byte* bp = Pixels) {
-            var p = (uint*)bp;// new Span<uint>((uint*)bp, Pixels.Length >> 2);
+            var p = (uint*)bp;
             var row0 = min.Y * Width + min.X;
             for (var y = min.Y; y <= max.Y; ++y) {
                 var w0biased = w0_row;
@@ -262,7 +254,6 @@ public class Raster:IDisposable {
             return;
         if (y < 0 || Height <= y + font.Height)
             return;
-        var i = (Height - y - 1) * Width + x;
         // bottom row starts at i = 0
         // second row (from bottom) starts at i = width
         // top row starts at Width * (Height - 1)
@@ -272,22 +263,29 @@ public class Raster:IDisposable {
         // Height - 1           | 0             | (Height - 1) * Width
         //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
         foreach (var c in str) {
-            var charWidth = font.Width[c];
-            x += charWidth;
-            if (Width < x)
+            if (Width <= x)
                 return;
-            Blit(c, font, i, charWidth, color);
-            i += charWidth;
+            var charWidth = font.Width[c];
+            Blit(c, font, x, y, charWidth, color);
+            x += charWidth;
         }
     }
 
-    private unsafe void Blit (char ascii, Font font, int offset, int w, uint color) {
-        var i = font.Offset[ascii];
+    private unsafe void Blit (char ascii, Font font, int x, int y, int charWidth, uint color) {
+        var rowStart = (Height - y - 1) * Width;
+        var source = font.Offset[ascii];
+        var offset = rowStart + x;
         fixed (byte* b = Pixels) {
             uint* p = (uint*)b;
-            for (var row = 0; row < font.Height; ++row, offset -= Width, i += w)
-                for (var column = 0; column < w; ++column)
-                    p[offset + column] = font.Pixels[i + column] != 0 ? color : 0xff000000u;
+
+            for (var row = 0; row < font.Height; ++row, offset -= Width, source += charWidth) {
+                var xpos = x;
+                for (var column = 0; xpos < Width && column < charWidth; ++column, ++xpos) {
+
+                    p[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
+
+                }
+            }
         }
     }
 

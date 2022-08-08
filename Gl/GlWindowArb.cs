@@ -36,10 +36,6 @@ public class GlWindowArb:GlWindow {
             candidates.Add(format);
         }
 
-        //using (var f = new StreamWriter("ExtendedPixelFormats.txt", false, Encoding.ASCII) { NewLine = "\n" })
-        //    foreach (var eh in candidates)
-        //        f.WriteLine(eh);
-
         var selectedFormat = candidates.Find(IsAppropriate);
         if (selectedFormat.Index == 0)
             throw new Exception();
@@ -72,6 +68,7 @@ public class GlWindowArb:GlWindow {
         _ = Opengl.MakeCurrent(DeviceContext, RenderingContext);
         var extensionsPtr = Opengl.GetExtensionsString();
         var extensionsString = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(extensionsPtr);
+        // optional
         //State.DebugOutput = true;
     }
     static bool IsAppropriate (ExtendedPixelFormat f) => true
@@ -79,7 +76,6 @@ public class GlWindowArb:GlWindow {
         && f.DepthBits >= 24
         && f.Acceleration == Acceleration.Full
         && f.DoubleBuffer
-        //&& f.SwapMethod == SwapMethod.Copy
         && f.PixelType == PixelType.Rgba
         ;
 }

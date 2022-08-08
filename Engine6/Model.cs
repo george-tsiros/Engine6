@@ -1,26 +1,28 @@
 namespace Engine;
 
 using System;
-//using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Gl;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Win32;
 
 public class Model {
-    public List<Vector3i> Faces { get; init; } = new();
-    public List<Vector3d> Vertices { get; init; } = new();
+    public List<Vector3i> Faces { get; private set; }
+    public List<Vector3d> Vertices { get; private set; }
     public Vector3d Min { get; private set; }
     public Vector3d Max { get; private set; }
-    private static readonly char[] space = { ' ' };
-    private static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
-    private Model () { }
+    protected static readonly char[] space = { ' ' };
+    protected static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
+
+    Model () { }
+
     public Model (StreamReader reader, bool center = false) {
         Read(reader, center);
     }
+
     public Model (string filepath, bool center = false) {
         using var reader = new StreamReader(filepath);
         Read(reader, center);
@@ -30,9 +32,9 @@ public class Model {
 
     static int FromFace (string part) => int.Parse(FaceRegex.Match(part).Groups[1].Value);
 
-    private void Read (StreamReader reader, bool center) {
-        var min = new Vector3d(double.MaxValue);
-        var max = new Vector3d(double.MinValue);
+    void Read (StreamReader reader, bool center) {
+        Faces = new();
+        Vertices = new();
         foreach (var line in Extra.EnumLines(reader, true)) {
             if (line[0] == '#')
                 continue;
@@ -40,7 +42,6 @@ public class Model {
             var parts = line.Split(space, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0 || parts[0].Length != 1)
                 continue;
-
 
             switch (parts[0]) {
                 case "f":
@@ -51,34 +52,100 @@ public class Model {
                 case "v":
                     if (parts.Length != 4)
                         throw new ArgumentException($"line '{line}' invalid");
-                    var x = new Vector3d(float.Parse(parts[1], AllowDot), float.Parse(parts[2], AllowDot), float.Parse(parts[3], AllowDot));
-                    min = Vector3d.Min(x, min);
-                    max = Vector3d.Max(x, max);
-                    Vertices.Add(x);
+                    Vertices.Add(new(double.Parse(parts[1]), double.Parse(parts[2]), double.Parse(parts[3])));
                     break;
             }
         }
-        Min = min;
-        Max = max;
+        (Min, Max) = (Vector3d.MaxValue, Vector3d.MinValue);
+        foreach (var v in Vertices)
+            (Min, Max) = (Vector3d.Min(Min, v), Vector3d.Max(Max, v));
+        //Min = min;
+        //Max = max;
         if (center) {
-            var c = 0.5f * (Max + Min);
+            // Center of bounding volume
+            var c = 0.5f * (Max + Min); 
             for (var i = 0; i < Vertices.Count; ++i)
                 Vertices[i] -= c;
         }
     }
 
-    static List<Vector3d> CubeVertices (float w, float h, float d) => new() { new(-w / 2, -h / 2, -d / 2), new(+w / 2, -h / 2, -d / 2), new(+w / 2, +h / 2, -d / 2), new(-w / 2, +h / 2, -d / 2), new(-w / 2, -h / 2, +d / 2), new(+w / 2, -h / 2, +d / 2), new(+w / 2, +h / 2, +d / 2), new(-w / 2, +h / 2, +d / 2), };
+    public IEnumerable<Vector3d> CreateNormals () {
+        foreach (var (a, b, c) in Faces) {
+            var (v0, v1, v2) = (Vertices[a], Vertices[b], Vertices[c]);
+            yield return Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0));
+        }
+    }
 
     public static Model Quad (float w, float h) => new() {
         Vertices = new() { new(-w / 2, -h / 2, 0), new(w / 2, -h / 2, 0), new(w / 2, h / 2, 0), new(-w / 2, h / 2, 0) },
-        Faces = new() {
-            new(0, 1, 2),
-            new(0, 2, 3),
-        },
+        Faces = new() { new(0, 1, 2), new(0, 2, 3), },
     };
 
+    public static Model Sphere (int nTheta, int nPhi, double radius) {
+        int vertexCount = 2 + nTheta * (nPhi - 1);
+        int triangleCount = 2 * (nPhi - 1) * nTheta;
+        var dTheta = 2 * double.Pi / nTheta;
+        var dPhi = double.Pi / nPhi;
+        var phi = dPhi;
+        var model = new Model() { Vertices = new(), Faces = new() };
+        model.Vertices.Add(radius * Vector3d.UnitY);
+
+        for (int vi = 1; vi < nPhi; ++vi, phi += dPhi) {
+            var (sin, cos) = double.SinCos(phi);
+            double theta = 0d;
+            for (var hi = 0; hi < nTheta; ++hi, theta += dTheta)
+                model.Vertices.Add(new(radius * sin * double.Cos(theta), radius * cos, radius * sin * double.Sin(theta)));
+        }
+
+        model.Vertices.Add(-radius * Vector3d.UnitY);
+
+        var faceIndex = 0;
+        for (var i = 1; i <= nTheta; ++i, ++faceIndex)
+            model.Faces.Add(new(0, i % nTheta + 1, i));
+
+        for (var y = 1; y < nPhi - 1; ++y)
+            for (var x = 1; x <= nTheta; ++x) {
+                // a--d
+                // |\ |
+                // | \|
+                // b--c
+                int
+                    a = (y - 1) * nTheta + x,
+                    b = y * nTheta + x,
+                    c = y * nTheta + x % nTheta + 1,
+                    d = (y - 1) * nTheta + x % nTheta + 1;
+                model.Faces.Add(new(a, c, b));
+                model.Faces.Add(new(a, d, c));
+            }
+
+        for (var i = 1; i <= nTheta; ++i, ++faceIndex) {
+            // y = 0 => 1 vertex
+            // y = 1 ntheta vertices, starting from '1' = (y-1) * nTheta + 1
+            // y = nphi-2 , second to last, starting from (nphi-3) * ntheta +1
+            // y = nphi - 1, last row, 1 vertex (the last one)
+            int
+                a = (nPhi - 2) * nTheta + i,
+                b = (nPhi - 2) * nTheta + i % nTheta + 1;
+
+            Debug.Assert(a < model.Vertices.Count);
+            Debug.Assert(b < model.Vertices.Count);
+            model.Faces.Add(new(a, b, model.Vertices.Count - 1));
+        }
+        Debug.Assert(triangleCount == model.Faces.Count);
+        return model;
+    }
+
     public static Model Cube (float w, float h, float d) => new() {
-        Vertices = CubeVertices(w, h, d),
+        Vertices = new() {
+            new(-w / 2, -h / 2, -d / 2),
+            new(+w / 2, -h / 2, -d / 2),
+            new(+w / 2, +h / 2, -d / 2),
+            new(-w / 2, +h / 2, -d / 2),
+            new(-w / 2, -h / 2, +d / 2),
+            new(+w / 2, -h / 2, +d / 2),
+            new(+w / 2, +h / 2, +d / 2),
+            new(-w / 2, +h / 2, +d / 2),
+        },
         Faces = new List<Vector3i> {
             new(4, 5, 6),
             new(4, 6, 7),

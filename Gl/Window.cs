@@ -38,25 +38,6 @@ public abstract class Window:IDisposable {
         }
     }
 
-    /*
-    CreateWindowEx(0, eh, NULL, WS_OVERLAPPEDWINDOW, 0, 0, 800, 600, NULL, NULL, GetModuleHandle(NULL), (LPVOID)this);
-
-LRESULT CALLBACK TWindow::staticWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
-    TWindow* self;
-    if (m == WM_NCCREATE) {
-        LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(l);
-        self = static_cast<TWindow*>(lpcs->lpCreateParams);
-        self->windowHandle = h;
-        SetWindowLongPtr(h, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
-    } else {
-        self = reinterpret_cast<TWindow*>(GetWindowLongPtr(h, GWLP_USERDATA));
-    }
-    if (self)
-        return self->WndProc(m, w, l);
-    else
-        return DefWindowProc(h, m, w, l);
-}*/
-
     static Window Instance;
 
     private string text;

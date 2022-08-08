@@ -5,6 +5,7 @@
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <ApplicationIcon />
+        <EnableNETAnalyzers>True</EnableNETAnalyzers>
         <LangVersion>preview</LangVersion>
         <NoWarn>1701;1702;CS0078</NoWarn>
         <OutputPath>bin</OutputPath>
@@ -15,7 +16,6 @@
         <StartupObject />
         <TargetFramework>net7.0-windows</TargetFramework>
         <UseWindowsForms>false</UseWindowsForms>
-        <EnableNETAnalyzers>True</EnableNETAnalyzers>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

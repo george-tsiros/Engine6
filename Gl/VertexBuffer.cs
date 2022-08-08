@@ -10,7 +10,7 @@ public class VertexBuffer<T>:OpenglObject where T : unmanaged {
     public int ElementSize { get; } = Marshal.SizeOf<T>();
     public int Capacity { get; }
     public VertexBuffer (int capacityInElements) => NamedBufferStorage(Id, ElementSize * (Capacity = capacityInElements), IntPtr.Zero, Const.DYNAMIC_STORAGE_BIT);
-    public VertexBuffer (T[] data) : this(data.Length) => BufferData(data, data.Length, 0, 0);
+    public VertexBuffer (in ReadOnlySpan<T> data) : this(data.Length) => BufferData(data, data.Length, 0, 0);
     private void Check (int sourceOffset, int targetOffset, int count, int dataLength) {
         if (Disposed)
             throw new ObjectDisposedException(null);
@@ -19,7 +19,7 @@ public class VertexBuffer<T>:OpenglObject where T : unmanaged {
         if (targetOffset + count > Capacity)
             throw new Exception();
     }
-    unsafe public void BufferData (T[] data, int count, int sourceOffset, int targetOffset) {
+    unsafe public void BufferData (in ReadOnlySpan<T> data, int count, int sourceOffset, int targetOffset) {
         Check(sourceOffset, targetOffset, count, data.Length);
         fixed (T* ptr = data)
             NamedBufferSubData(Id, ElementSize * targetOffset, ElementSize * count, ptr + sourceOffset);

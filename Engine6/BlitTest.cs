@@ -10,35 +10,57 @@ using static Gl.Opengl;
 using static Gl.Utilities;
 using System.Threading;
 
-internal class BlitTest:GlWindow {
-    private Raster raster;
-    private Sampler2D sampler;
-    private VertexArray quad;
-    private VertexBuffer<Vector4> quadBuffer;
-    private bool leftIsDown;
-    private Framebuffer fb;
-    private Sampler2D fbsampler;
-    private Renderbuffer rb;
-    private Model Obj;
-    private Matrix4d Projection;
-    private Vector3d[] ClipSpace;
-    private Vector2i[] ScreenSpace;
-    private Vector3d[] ModelSpace;
-    private double[] FaceZ;
-    private (double depth, int index)[] FacesAndDots;
-    Vector3d cameraPosition = new(10, 0, 30);
-    string txt = "asdgf";
-
-    Vector2i lastCursorPosition = new(-1, -1);
-    Vector3d modelPosition = new();
-    double phi = 0, theta = 0;
-    private static void Log (object ob) =>
+internal class BlitTest:GlWindowArb {
+    static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
+    static void Log (object ob) =>
 #if DEBUG
         Debug
 #else
         Console
 #endif
         .WriteLine(ob);
+
+    static readonly Vector4[] QuadVertices = {
+        new(-1f, -1f, 0, 1),
+        new(+1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, +1f, 0, 1),
+    };
+
+    static Vector2i NormalizedToScreen (in Vector3d n, in Vector2i size) =>
+        new((int)((n.X + 1) * 0.5 * size.X), (int)((n.Y + 1) * 0.5 * size.Y));
+
+    static bool IsInside (in Vector3d v) =>
+        -1 < v.Z && v.Z < 1;
+
+    Model Obj;
+    Vector3d cameraPosition = new(0, 0, 30);
+    string txt = "asdgf";
+    bool useOpenGl = true;
+    Vector2i lastCursorPosition = new(-1, -1);
+    Vector3d modelPosition = new();
+    double phi = 0, theta = 0;
+    readonly Vector3d lightDirection = Vector3d.Normalize(new(0, -1, 0));
+
+    Raster softwareRenderSurface;
+    Sampler2D softwareRenderTexture;
+    VertexArray quad;
+    Framebuffer offscreenFramebuffer;
+    Sampler2D offscreenRenderingSurface;
+    Renderbuffer offscreenDepthbuffer;
+    Matrix4d Projection;
+    Vector3d[] ClipSpace;
+    Vector2i[] ScreenSpace;
+    Vector3d[] ModelSpace;
+    double[] FaceZ;
+    (double depth, int index)[] FacesAndDots;
+
+    VertexArray vao;
+    VertexBuffer<Vector4> quadBuffer;
+    VertexBuffer<Vector4> vertexBuffer;
+    VertexBuffer<Vector4> normalBuffer;
 
     public BlitTest (Vector2i size, Model m = null) : base(size) {
         Font ??= new("ubuntu mono", 18f);
@@ -56,66 +78,82 @@ internal class BlitTest:GlWindow {
         State.SwapInterval = 1;
         KeyDown += KeyDown_self;
         Load += Load_self;
-        //ButtonDown += ButtonDown_self;
-        //ButtonUp += ButtonUp_self;
         MouseMove += MouseMove_self;
     }
+
     void Load_self (object sender, EventArgs args) {
-        rb = new(Size, RenderbufferFormat.Depth24Stencil8);
-
-        fbsampler = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
-
-        fb = new();
-
-        fb.Attach(rb, FramebufferAttachment.DepthStencil);
-
-        fb.Attach(fbsampler, FramebufferAttachment.Color0);
-        NamedFramebufferDrawBuffer(fb, DrawBuffer.Color0);
-
+        offscreenDepthbuffer = new(Size, RenderbufferFormat.Depth24Stencil8);
+        offscreenRenderingSurface = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        offscreenFramebuffer = new();
+        offscreenFramebuffer.Attach(offscreenDepthbuffer, FramebufferAttachment.DepthStencil);
+        offscreenFramebuffer.Attach(offscreenRenderingSurface, FramebufferAttachment.Color0);
+        NamedFramebufferDrawBuffer(offscreenFramebuffer, DrawBuffer.Color0);
         quad = new();
         State.Program = PassThrough.Id;
-        quadBuffer = new(Quad.Vertices);
+        quadBuffer = new(QuadVertices);
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
-        raster = new(Size, 4, 1);
+        softwareRenderSurface = new(Size, 4, 1);
+        softwareRenderTexture = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
 
-        sampler = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
-        Disposables.Add(raster);
-        Disposables.Add(sampler);
+        State.Program = DirectionalFlat.Id;
+        var faceCount = Obj.Faces.Count;
+        var vertexCount = faceCount * 3;
+        var vertices = new Vector4[vertexCount];
+        var normals = new Vector4[faceCount];
+        for (var (i, j) = (0, 0); j < vertexCount; ++i, ++j) {
+            var (a, b, c) = Obj.Faces[i];
+            var (v0, v1, v2) = (Obj.Vertices[a], Obj.Vertices[b], Obj.Vertices[c]);
+            normals[i] = new((Vector3)Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0)), 0);
+            vertices[j] = new((Vector3)v0, 1);
+            vertices[++j] = new((Vector3)v1, 1);
+            vertices[++j] = new((Vector3)v2, 1);
+        }
+
+        vertexBuffer = new(vertices);
+        normalBuffer = new(normals);
+        vao = new();
+        vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition, 1);
+        vao.Assign(normalBuffer, DirectionalFlat.FaceNormal, 3);
+        Disposables.Add(softwareRenderSurface);
+        Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
         Disposables.Add(quadBuffer);
         CursorVisible = false;
     }
 
-    private void MouseMove_self (object sender, Vector2i e) {
-        var d = e - lastCursorPosition;
-        lastCursorPosition = e;
-        switch (Buttons) {
-            case Buttons.Left:
-                theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
-                phi = double.Clamp(phi + 0.01 * d.Y, -double.Pi / 2, double.Pi / 2);
-                break;
-            case Buttons.Right:
-                modelPosition += new Vector3d(d.X, d.Y, 0);
-                break;
-        }
+    protected override void Render () {
+        if (useOpenGl)
+            RenderHardware();
+        else
+            RenderSoftware();
     }
 
-    //void ButtonDown_self (object sender, Buttons buttons) {
-    //        lastCursorPosition = CursorLocation;
-    //}
-    //void ButtonUp_self (object sender, Buttons buttons) {
-    //    if (buttons == Buttons.Left)
-    //        leftIsDown = false;
-    //}
+    void RenderHardware () {
+        var t0 = Stopwatch.GetTimestamp();
+        State.Framebuffer = 0;
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.ColorDepth);
+        State.Program = DirectionalFlat.Id;
+        State.VertexArray = vao;
+        State.DepthTest = true;
+        State.DepthFunc = DepthFunction.LessEqual;
+        State.CullFace = true;
+        DirectionalFlat.LightDirection(new((Vector3)lightDirection, 0));
+        DirectionalFlat.Model(Matrix4x4.CreateRotationY((float)theta) * Matrix4x4.CreateRotationX(-(float)phi) * Matrix4x4.CreateTranslation((Vector3)modelPosition));
+        DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
+        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)Width / Height, 0.1f, 100));
+        DrawArraysInstanced(Primitive.Triangles, 0, 3, Obj.Faces.Count);
+        var t1 = Stopwatch.GetTimestamp();
+        Debug.WriteLine(((double)(t1 - t0) / Stopwatch.Frequency).ToEng());
+    }
 
-    private static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
-    protected override void Render () {
-
+    void RenderSoftware () {
+        var t0 = Stopwatch.GetTimestamp();
         var textRow = -Font.Height;
-        raster.ClearU32(Color.Black);
+        softwareRenderSurface.ClearU32(Color.Black);
         var faceCount = Obj.Faces.Count;
         var vertexCount = Obj.Vertices.Count;
-        var rotation = Matrix4d.RotationX(phi) * Matrix4d.RotationY(theta);
+        var rotation = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(modelPosition);
         for (var i = 0; i < vertexCount; ++i) {
             var vertex = new Vector4d(Obj.Vertices[i], 1);
@@ -128,7 +166,6 @@ internal class BlitTest:GlWindow {
             ScreenSpace[i] = NormalizedToScreen(n, Size);
         }
         var drawn = 0;
-        var light = Vector3d.Normalize(new(0, 1, 1));
         for (var i = 0; i < faceCount; ++i) {
             var (a, b, c) = Obj.Faces[i];
             var na = ClipSpace[a];
@@ -146,34 +183,30 @@ internal class BlitTest:GlWindow {
             var cross = Vector3d.Cross(sb - ModelSpace[a], ModelSpace[c] - sb);
 
             FaceZ[drawn] = -na.Z - nb.Z - nc.Z;
-            FacesAndDots[drawn] = ((float)Vector3d.Dot(Vector3d.Normalize(cross), light), i);
+            FacesAndDots[drawn] = ((float)Vector3d.Dot(Vector3d.Normalize(cross), -lightDirection), i);
             ++drawn;
         }
-        var t0 = Stopwatch.GetTimestamp();
         if (drawn > 0) {
             if (drawn > 1)
                 Array.Sort(FaceZ, FacesAndDots, 0, drawn);
 
             for (var i = 0; i < drawn; ++i) {
                 var (d, idx) = FacesAndDots[i];
-                var intensity = int.Clamp((int)Math.Floor(d * 256), byte.MinValue, byte.MaxValue);
+                var intensity = int.Clamp((int)double.Floor(d * 256), byte.MinValue, byte.MaxValue);
                 var (a, b, c) = Obj.Faces[idx];
-                raster.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], Color.FromRgb(intensity, intensity, intensity));
+                softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], Color.FromRgb(intensity, intensity, intensity));
             }
         }
-        var t1 = Stopwatch.GetTimestamp();
-        raster.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
-        raster.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
-        raster.DrawString(modelPosition.ToString(), Font, 0, textRow += Font.Height);
-        raster.DrawString(txt, Font, 0, textRow += Font.Height);
-        txt = ((double)(t1 - t0) / Stopwatch.Frequency).ToEng();
+        softwareRenderSurface.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
+        softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
+        softwareRenderSurface.DrawString(txt, Font, 0, textRow += Font.Height);
         var (cx, cy) = CursorLocation;
         if (0 <= cx && cx < Width && 0 <= cy && cy < Height) {
-            raster.LineU32(CursorLocation, CursorLocation + new Vector2i(9, 0), Color.Green); // 10 pixels lit
-            raster.LineU32(CursorLocation, CursorLocation + new Vector2i(0, -9), Color.Green);
+            softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(9, 0), Color.Green); // 10 pixels lit
+            softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(0, -9), Color.Green);
         }
-        sampler.Upload(raster);
-        State.Framebuffer = fb;
+        softwareRenderTexture.Upload(softwareRenderSurface);
+        State.Framebuffer = offscreenFramebuffer;
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.ColorDepth);
         State.Program = PassThrough.Id;
@@ -181,7 +214,7 @@ internal class BlitTest:GlWindow {
         State.DepthFunc = DepthFunction.Always;
         State.DepthTest = true;
         State.CullFace = true;
-        sampler.BindTo(1);
+        softwareRenderTexture.BindTo(1);
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
 
@@ -189,16 +222,12 @@ internal class BlitTest:GlWindow {
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.ColorDepth);
 
-        fbsampler.BindTo(1);
+        offscreenRenderingSurface.BindTo(1);
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
+        var t1 = Stopwatch.GetTimestamp();
+        txt = ((double)(t1 - t0) / Stopwatch.Frequency).ToEng();
     }
-
-    public static Vector2i NormalizedToScreen (in Vector3d n, in Vector2i size) =>
-        new((int)((n.X + 1) * 0.5 * size.X), (int)((n.Y + 1) * 0.5 * size.Y));
-
-    public static bool IsInside (in Vector3d v) =>
-        -1 < v.Z && v.Z < 1;
 
     void AdjustFont (float delta) {
         var fh = Font.EmSize;
@@ -222,6 +251,33 @@ internal class BlitTest:GlWindow {
             case Keys.Oemplus:
                 AdjustFont(+1f);
                 return;
+            case Keys.Tab:
+                useOpenGl = !useOpenGl;
+                return;
         }
     }
+
+    void MouseMove_self (object sender, Vector2i e) {
+        var d = e - lastCursorPosition;
+        lastCursorPosition = e;
+        switch (Buttons) {
+            case Buttons.Left:
+                theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
+                phi = double.Clamp(phi + 0.01 * d.Y, -double.Pi / 2, double.Pi / 2);
+                break;
+            case Buttons.Right:
+                if (cameraPosition.Z > 0) {
+                    var recipDistance = 1 / cameraPosition.Z;
+                    modelPosition += new Vector3d(recipDistance * d.X, recipDistance * d.Y, 0);
+                }
+                break;
+            case Buttons.ButtonX1:
+                if (cameraPosition.Z > 0) {
+                    var recipDistance = 1 / cameraPosition.Z;
+                    modelPosition += new Vector3d(recipDistance * d.X, 0, -recipDistance * d.Y);
+                }
+                break;
+        }
+    }
+
 }

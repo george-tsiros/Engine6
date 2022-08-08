@@ -34,9 +34,6 @@ public static class Utilities {
         }
     }
 
-    //unsafe static void MemSetU64 (byte[] bytes, ulong ul) {
-    //}
-
     public static void Wipe (byte[] bytes) {
         var l = bytes.Length;
         if ((l & 7) == 0)
@@ -79,8 +76,6 @@ public static class Utilities {
         var formatted = TraceFormat(message, 1);
         if (Debugger.IsAttached)
             Debug.WriteLine(formatted);
-        //else
-        //    Console.WriteLine(formatted);
     }
 
     public static void CycleThrough<T> (ref T value, bool backwards = false) where T : struct, Enum {

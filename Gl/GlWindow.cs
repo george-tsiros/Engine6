@@ -18,14 +18,9 @@ public class GlWindow:SimpleWindow{
         | PixelFlags.GenericFormat
         ;
 
-    const int FrameTimeCount = 255;
     protected IntPtr DeviceContext;
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
-    //protected long RenderTicks { get; private set; }
-    //protected readonly long[] FrameTicks = new long[FrameTimeCount];
-    //protected int FrameIndex { get; private set; }
-    //private long lastTicks = long.MaxValue;
     protected long LastSync { get; private set; }
     public GlWindow (Vector2i size) : base(size) {
         DeviceContext = User.GetDC(WindowHandle);
@@ -44,27 +39,11 @@ public class GlWindow:SimpleWindow{
     }
 
     protected override void OnPaint () {
-        //long t0 = Stopwatch.GetTimestamp();
-        //var dticks = t0 - lastTicks;
-        //lastTicks = t0;
         Render();
-        //RenderTicks = Stopwatch.GetTimestamp() - t0;
-        //State.Framebuffer = 0;
-        //Opengl.Enable(Capability.ScissorTest);
-        //Opengl.ClearColor(0.5f, 0.5f, 0.5f, 1);
-        //Opengl.Scissor(0, 0, 100, 100);
-        //Opengl.Clear(BufferBit.ColorDepth);
-        //Opengl.Disable(Capability.ScissorTest);
-        //var until = LastSync + 100000;
-        //while (Stopwatch.GetTimestamp() < until)
-        //    Pump();
         var swapOk = Gdi.SwapBuffers(DeviceContext);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
         Demand(swapOk);
-        //FrameTicks[FrameIndex] = RenderTicks;
-        //if (++FrameIndex == FrameTimeCount)
-        //    FrameIndex = 0;
     }
 
     protected virtual void Render () {

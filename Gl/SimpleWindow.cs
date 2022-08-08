@@ -121,18 +121,12 @@ public class SimpleWindow:Window {
             case WinMessage.MouseLeave:
                 OnMouseLeave();
                 break;
-            //case WinMessage.CaptureChanged:
-            //    OnCaptureChanged();
-            //    break;
             case WinMessage.SetFocus:
                 OnFocusChanged(IsFocused = true);
                 break;
             case WinMessage.KillFocus:
                 OnFocusChanged(IsFocused = false);
                 break;
-            //case WinMessage.Destroy:
-            //    User.PostQuitMessage(0);
-            //    break;
             case WinMessage.KeyDown: {
                     var m = new KeyMessage(wPtr, lPtr);
                     if (m.WasDown)
@@ -145,9 +139,6 @@ public class SimpleWindow:Window {
                     OnKeyUp(m.Key);
                     return 0;
                 }
-            //case WinMessage.Close:
-            //    User.PostQuitMessage(0);
-            //    break;
             case WinMessage.Paint:
                 if (running && !painting) {
                     var ps = new PaintStruct();

@@ -6,15 +6,13 @@ using Shaders;
 using Gl;
 using static Gl.Opengl;
 using Win32;
-using System.Diagnostics;
 
-class Teapot:GlWindowArb {
-    public Teapot (Vector2i size, Model model) : base(size) {
+class HighlightTriangle:GlWindowArb {
+    public HighlightTriangle (Vector2i size, Model model) : base(size) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
         Load += Load_self;
         KeyUp += KeyUp_self;
-        MouseMove += MouseMove_self;
         //CursorVisible = false;
     }
 
@@ -40,9 +38,6 @@ class Teapot:GlWindowArb {
         NamedFramebufferReadBuffer(fb, DrawBuffer.Color1);
         State.Program = VertexIndex.Id;
 
-        //var largestDimension = Math.Max(Math.Max(Model.Max.X - Model.Min.X, Model.Max.Y - Model.Min.Y), Model.Max.Z - Model.Min.Z);
-        //Geometry.ScaleInPlace(Model.Vertices, 1 / largestDimension);
-
         vao = new();
         var v = new Vector4[Model.Faces.Count * 3];
         for (var (i, j) = (0, 0); j < VertexCount; ++i, ++j) {
@@ -62,9 +57,19 @@ class Teapot:GlWindowArb {
 
         State.Program = PassThrough.Id;
         quad = new();
-        quad.Assign(new VertexBuffer<Vector4>(Quad.Vertices), PassThrough.VertexPosition);
+
+        quad.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
         State.SwapInterval = 1;
     }
+
+    static readonly Vector4[] QuadVertices = {
+        new(-1f, -1f, 0, 1),
+        new(+1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, +1f, 0, 1),
+    };
 
     void KeyUp_self (object sender, Keys k) {
         switch (k) {
@@ -77,10 +82,6 @@ class Teapot:GlWindowArb {
         }
     }
 
-
-    void MouseMove_self (object sender, Vector2i p) => (lastX, lastY) = p;
-
-    int lastX, lastY;
     int fovRatio = 4;
     uint lastTriangle = 0;
     protected override void Render () {
@@ -99,14 +100,9 @@ class Teapot:GlWindowArb {
         VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / fovRatio, (float)Width / Height, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
 
-        if (lastX >= 0) {
-            ReadOnePixel(lastX, Height - lastY, 1, 1, out var p);
-            var tri = p / 3;
-            if (tri != lastTriangle) {
-                Debug.WriteLine(tri);
-                lastTriangle = tri;
-            }
-            lastX = -1;
+        if (0 <= CursorLocation.X && CursorLocation.X < Width && 0 <= CursorLocation.Y && CursorLocation.Y < Height) {
+            ReadOnePixel(CursorLocation.X, CursorLocation.Y, 1, 1, out var p);
+            lastTriangle = p / 3;
         }
 
         State.Framebuffer = 0;
