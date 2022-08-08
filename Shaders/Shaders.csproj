@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
