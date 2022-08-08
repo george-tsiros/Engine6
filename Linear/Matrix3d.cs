@@ -1,7 +1,6 @@
-namespace Engine;
-
+﻿namespace Linear;
 using System;
-using System.Numerics;
+using static Linear.Maths;
 
 public readonly struct Matrix3d {
 
@@ -63,7 +62,7 @@ public readonly struct Matrix3d {
     }
 
     public static Matrix3d RotationX (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix3d(
             1, 0, 0,
             0, c, s,
@@ -72,7 +71,7 @@ public readonly struct Matrix3d {
     }
 
     public static Matrix3d RotationY (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix3d(
             c, 0, -s,
             0, 1, 0, 
@@ -81,7 +80,7 @@ public readonly struct Matrix3d {
     }
 
     public static Matrix3d RotationZ (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix3d(
            c, s, 0, 
            -s, c, 0, 

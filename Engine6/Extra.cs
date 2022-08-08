@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using static Linear.Maths;
 
 static class Extra {
 
@@ -19,17 +20,11 @@ static class Extra {
                 yield return line;
     }
 
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#endif
     private static void PushAscii (Span<byte> a, ref long int64, ref int offset) {
-        (int64, var d) = long.DivRem(int64, 10);
+        (int64, var d) = LongDivRem(int64, 10);
         a[--offset] = (byte)(d + '0');
     }
 
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#endif
     internal static int ToChars (long int64, Span<byte> bytes) {
         var isNegative = int64 < 0l;
         if (isNegative)
@@ -42,19 +37,17 @@ static class Extra {
             bytes[--offset] = (byte)'-';
         return offset;
     }
-
-
     internal static float ModuloTwoPi (ref float angle, float delta) {
         angle += delta;
         while (angle < 0)
-            angle += 2 * float.Pi;
-        while (angle > 2 * float.Pi)
-            angle -= 2 * float.Pi;
+            angle += fTau;
+        while (angle > fTau)
+            angle -= fTau;
         return angle;
     }
     internal static double ModuloTwoPi (double angle, double delta) {
-        var d = delta < 0 ? double.Tau - (-delta % double.Tau) : (delta % double.Tau);
-        return (angle + d) % double.Tau;
+        var d = delta < 0 ? dTau - (-delta % dTau) : (delta % dTau);
+        return (angle + d) % dTau;
     }
 
     internal static (int min, float max) Extrema (int[] ints) {
@@ -103,9 +96,7 @@ static class Extra {
         return (min, max);
 #endif
     }
-#if !DEBUG
-    [MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
+
     private static void Extrema (float l, ref float min, ref float max) {
         if (l < min)
             min = l;

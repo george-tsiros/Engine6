@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -12,13 +11,4 @@
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="..\fixeol\bin\fixeol.exe" />
-    </Target>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Linear\Linear.csproj" />
-    </ItemGroup>
-
 </Project>

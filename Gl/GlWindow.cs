@@ -3,6 +3,7 @@ namespace Gl;
 using System;
 using System.Diagnostics;
 using Win32;
+using Linear;
 
 public class GlWindow:SimpleWindow{
     const PixelFlags RequiredFlags = PixelFlags.None

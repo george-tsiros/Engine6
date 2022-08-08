@@ -3,6 +3,7 @@ namespace Gl;
 using System;
 using static Opengl;
 using Win32;
+using Linear;
 
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteTexture;
@@ -85,6 +86,6 @@ public class Sampler2D:OpenglObject {
     private static readonly TextureFormat[] textureFormats = { TextureFormat.R8, TextureFormat.Rg8, TextureFormat.Rgb8, TextureFormat.Rgba8 };
     private static TextureFormat TextureFormatWith (int channels) => 1 <= channels && channels <= 4 ? textureFormats[channels - 1] : throw new ApplicationException();
 
-    private static readonly PixelFormat[] pixelFormats = { PixelFormat.Red, PixelFormat.Rg, PixelFormat.Bgr, PixelFormat.Bgra };
+    private static readonly PixelFormat[] pixelFormats = { PixelFormat.Red, PixelFormat.Rg, PixelFormat.Rgb, PixelFormat.Rgba };
     private static PixelFormat PixelFormatWith (int channels) => 1 <= channels && channels <= 4 ? pixelFormats[channels - 1] : throw new ApplicationException();
 }

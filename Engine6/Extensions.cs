@@ -4,6 +4,8 @@ using System;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Numerics;
+using static Linear.Maths;
+using Linear;
 
 static class Extensions {
     internal static double NextDouble (this Random self, double min, double max) => (max - min) * self.NextDouble() + min;
@@ -11,16 +13,16 @@ static class Extensions {
 
     internal static string ToEng (this double self) {
         if (self > 1e9)
-            return $"{double.Round(self / 1e9, 2)} G";
+            return $"{DoubleRound(self / 1e9, 2)} G";
         if (self > 1e6)
-            return $"{double.Round(self / 1e6, 2)} M";
+            return $"{DoubleRound(self / 1e6, 2)} M";
         if (self > 1e3)
-            return $"{double.Round(self / 1e3, 2)} K";
+            return $"{DoubleRound(self / 1e3, 2)} K";
         if (self > 1)
-            return $"{double.Round(self, 2)}";
+            return $"{DoubleRound(self, 2)}";
         if (self > 1e-3)
-            return $"{double.Round(self * 1e3, 2)} m";
-        return $"{double.Round(self * 1e6, 2)} u";
+            return $"{DoubleRound(self * 1e3, 2)} m";
+        return $"{DoubleRound(self * 1e6, 2)} u";
     }
 
 

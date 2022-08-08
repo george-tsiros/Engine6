@@ -1,10 +1,7 @@
-namespace Engine;
-
-using BepuUtilities;
+﻿namespace Linear;
 using System.Numerics;
-using System.Runtime.InteropServices;
+using static Linear.Maths;
 
-//[StructLayout(LayoutKind.Explicit)]
 public readonly struct Matrix3x3 {
     public readonly float M11;
     public readonly float M12;
@@ -36,7 +33,7 @@ public readonly struct Matrix3x3 {
     public bool TrySolve (Vector3 p, out Vector3 x) {
         var V = new Vector3d((double)M22 * M33 - (double)M32 * M23, (double)M32 * M13 - (double)M12 * M33, (double)M12 * M23 - (double)M22 * M13);
         var ddet = M11 * V.X + M21 * V.Y + M31 * V.Z;
-        if (double.Abs(ddet) < float.Epsilon) {
+        if (DoubleAbs(ddet) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }
@@ -56,7 +53,7 @@ public readonly struct Matrix3x3 {
         var B = (double)M32 * M13 - (double)M12 * M33;
         var C = (double)M12 * M23 - (double)M22 * M13;
         var det = M11 * A + M21 * B + M31 * C;
-        if (double.Abs(det) < float.Epsilon) {
+        if (DoubleAbs(det) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }

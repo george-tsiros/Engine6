@@ -3,6 +3,8 @@ namespace Engine;
 using System;
 using System.Numerics;
 using static Extra;
+using static Linear.Maths;
+using Linear;
 
 sealed class Camera {
     private static bool WasInvalid (ref bool isValid) {
@@ -44,7 +46,7 @@ sealed class Camera {
             lookAtIsValid = false;
             rotationOnlyIsValid = false;
             _ = ModuloTwoPi(ref yaw, -v.X);
-            pitch = float.Clamp(v.Y, -.4f * float.Pi, .4f * float.Pi);
+            pitch = FloatClamp(v.Y, -.4f * fPi, .4f * fPi);
         }
     }
 }

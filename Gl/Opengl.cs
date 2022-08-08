@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Win32;
 using System.IO;
+using Linear;
 
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
 

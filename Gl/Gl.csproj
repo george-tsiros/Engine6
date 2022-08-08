@@ -10,7 +10,7 @@
         <PlatformTarget>x64</PlatformTarget>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,6 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Linear\Linear.csproj" />
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

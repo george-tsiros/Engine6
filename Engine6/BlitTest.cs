@@ -9,6 +9,8 @@ using Win32;
 using static Gl.Opengl;
 using static Gl.Utilities;
 using System.Threading;
+using static Linear.Maths;
+using Linear;
 
 internal class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
@@ -68,7 +70,7 @@ internal class BlitTest:GlWindowArb {
         Text = "asdfg";
         const string TeapotFilepath = @"data\teapot.obj";
         Obj = m ?? new Model(TeapotFilepath);
-        Projection = Matrix4d.Project(double.Pi / 4.0, (double)Width / Height, 0.1, 100.0);
+        Projection = Matrix4d.Project(dPi / 4.0, (double)Width / Height, 0.1, 100.0);
         ClipSpace = new Vector3d[Obj.Vertices.Count];
         ScreenSpace = new Vector2i[Obj.Vertices.Count];
         ModelSpace = new Vector3d[Obj.Vertices.Count];
@@ -141,7 +143,7 @@ internal class BlitTest:GlWindowArb {
         DirectionalFlat.LightDirection(new((Vector3)lightDirection, 0));
         DirectionalFlat.Model(Matrix4x4.CreateRotationY((float)theta) * Matrix4x4.CreateRotationX(-(float)phi) * Matrix4x4.CreateTranslation((Vector3)modelPosition));
         DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
-        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)Width / Height, 0.1f, 100));
+        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 0.1f, 100));
         DrawArraysInstanced(Primitive.Triangles, 0, 3, Obj.Faces.Count);
         var t1 = Stopwatch.GetTimestamp();
         Debug.WriteLine(((double)(t1 - t0) / Stopwatch.Frequency).ToEng());
@@ -192,7 +194,7 @@ internal class BlitTest:GlWindowArb {
 
             for (var i = 0; i < drawn; ++i) {
                 var (d, idx) = FacesAndDots[i];
-                var intensity = int.Clamp((int)double.Floor(d * 256), byte.MinValue, byte.MaxValue);
+                var intensity = IntClamp((int)DoubleFloor(d * 256), byte.MinValue, byte.MaxValue);
                 var (a, b, c) = Obj.Faces[idx];
                 softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], Color.FromRgb(intensity, intensity, intensity));
             }
@@ -231,7 +233,7 @@ internal class BlitTest:GlWindowArb {
 
     void AdjustFont (float delta) {
         var fh = Font.EmSize;
-        var nh = float.Clamp(Font.EmSize + delta, 12, 36);
+        var nh = FloatClamp(Font.EmSize + delta, 12, 36);
         if (fh == nh)
             return;
         Font = new(Font.FamilyName, nh);
@@ -263,7 +265,7 @@ internal class BlitTest:GlWindowArb {
         switch (Buttons) {
             case Buttons.Left:
                 theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
-                phi = double.Clamp(phi + 0.01 * d.Y, -double.Pi / 2, double.Pi / 2);
+                phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
                 break;
             case Buttons.Right:
                 if (cameraPosition.Z > 0) {

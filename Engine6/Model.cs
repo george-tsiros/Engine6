@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Win32;
+using static Linear.Maths;
+using Linear;
 
 public class Model {
     public List<Vector3i> Faces { get; private set; }
@@ -59,8 +61,7 @@ public class Model {
         (Min, Max) = (Vector3d.MaxValue, Vector3d.MinValue);
         foreach (var v in Vertices)
             (Min, Max) = (Vector3d.Min(Min, v), Vector3d.Max(Max, v));
-        //Min = min;
-        //Max = max;
+
         if (center) {
             // Center of bounding volume
             var c = 0.5f * (Max + Min); 
@@ -84,17 +85,17 @@ public class Model {
     public static Model Sphere (int nTheta, int nPhi, double radius) {
         int vertexCount = 2 + nTheta * (nPhi - 1);
         int triangleCount = 2 * (nPhi - 1) * nTheta;
-        var dTheta = 2 * double.Pi / nTheta;
-        var dPhi = double.Pi / nPhi;
+        var dTheta = 2 * dPi / nTheta;
+        var dPhi = dPi / nPhi;
         var phi = dPhi;
         var model = new Model() { Vertices = new(), Faces = new() };
         model.Vertices.Add(radius * Vector3d.UnitY);
 
         for (int vi = 1; vi < nPhi; ++vi, phi += dPhi) {
-            var (sin, cos) = double.SinCos(phi);
+            var (sin, cos) = DoubleSinCos(phi);
             double theta = 0d;
             for (var hi = 0; hi < nTheta; ++hi, theta += dTheta)
-                model.Vertices.Add(new(radius * sin * double.Cos(theta), radius * cos, radius * sin * double.Sin(theta)));
+                model.Vertices.Add(new(radius * sin * DoubleCos(theta), radius * cos, radius * sin * DoubleSin(theta)));
         }
 
         model.Vertices.Add(-radius * Vector3d.UnitY);

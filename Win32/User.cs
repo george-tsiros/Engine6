@@ -2,6 +2,7 @@ namespace Win32;
 
 using System.Runtime.InteropServices;
 using System;
+using Linear;
 
 [Flags]
 public enum PeekRemove:uint {

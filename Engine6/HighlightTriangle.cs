@@ -6,6 +6,8 @@ using Shaders;
 using Gl;
 using static Gl.Opengl;
 using Win32;
+using static Linear.Maths;
+using Linear;
 
 class HighlightTriangle:GlWindowArb {
     public HighlightTriangle (Vector2i size, Model model) : base(size) {
@@ -52,7 +54,7 @@ class HighlightTriangle:GlWindowArb {
         VertexIndex.Color1(new(1, 0, 0, 1));
 
         VertexIndex.Model(Matrix4x4.CreateTranslation(0, 0, -10));
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)Width / Height, 1, 100));
+        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 1, 100));
         VertexIndex.View(Matrix4x4.Identity);
 
         State.Program = PassThrough.Id;
@@ -74,10 +76,10 @@ class HighlightTriangle:GlWindowArb {
     void KeyUp_self (object sender, Keys k) {
         switch (k) {
             case Keys.Up:
-                fovRatio = int.Min(fovRatio + 1, 6);
+                fovRatio = IntMin(fovRatio + 1, 6);
                 break;
             case Keys.Down:
-                fovRatio = int.Max(fovRatio - 1, 2);
+                fovRatio = IntMax(fovRatio - 1, 2);
                 break;
         }
     }
@@ -97,7 +99,7 @@ class HighlightTriangle:GlWindowArb {
         State.DepthFunc = DepthFunction.LessEqual;
         State.CullFace = true;
         VertexIndex.Tri((int)lastTriangle);
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / fovRatio, (float)Width / Height, 1, 100));
+        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)Width / Height, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
 
         if (0 <= CursorLocation.X && CursorLocation.X < Width && 0 <= CursorLocation.Y && CursorLocation.Y < Height) {

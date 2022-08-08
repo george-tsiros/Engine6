@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Win32;
+using Linear;
 
 public class Raster:IDisposable {
     public readonly Vector2i Size;
@@ -186,7 +187,7 @@ public class Raster:IDisposable {
             PixelU32Internal(a, color.Argb);
         } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
             var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
-            var (x0, x1) = (int.Clamp(x0unbounded, 0, Width - 1), int.Clamp(x1unbounded, 0, Width - 1));
+            var (x0, x1) = (Math.Clamp(x0unbounded, 0, Width - 1), Math.Clamp(x1unbounded, 0, Width - 1));
             fixed (byte* bytes = Pixels) {
                 uint* p = (uint*)bytes;
                 var line = a.Y * Width; // NOT stride
@@ -197,7 +198,7 @@ public class Raster:IDisposable {
             }
         } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
             var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
-            var (y0, y1) = (int.Clamp(y0unbound, 0, Height - 1), int.Clamp(y1unbound, 0, Height - 1));
+            var (y0, y1) = (Math.Clamp(y0unbound, 0, Height - 1), Math.Clamp(y1unbound, 0, Height - 1));
             fixed (byte* bp = Pixels) {
                 var p = (uint*)bp;
                 for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
@@ -209,7 +210,7 @@ public class Raster:IDisposable {
             var dp = p1 - p0;
 
             // for now, clipping is a problem 
-            if (int.Abs(dp.X) < int.Abs(dp.Y)) {
+            if (Math.Abs(dp.X) < Math.Abs(dp.Y)) {
                 // tall
 
             } else {

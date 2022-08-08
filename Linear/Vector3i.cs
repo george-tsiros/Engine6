@@ -1,5 +1,4 @@
-namespace Win32;
-
+﻿namespace Linear;
 using System;
 using System.Runtime.InteropServices;
 

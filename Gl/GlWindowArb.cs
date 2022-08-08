@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Win32;
+using Linear;
 
 public class GlWindowArb:GlWindow {
 

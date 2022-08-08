@@ -1,7 +1,7 @@
-namespace Engine;
-
+﻿namespace Linear;
 using System;
 using System.Numerics;
+using static Linear.Maths;
 
 public readonly struct Matrix4d {
 
@@ -97,7 +97,7 @@ public readonly struct Matrix4d {
 
 */
     public static Matrix4d Project (double fov, double ar, double n, double f) {
-        var t = 1 / double.Tan(fov / 2);
+        var t = 1 / DoubleTan(fov / 2);
         return new(
             t / ar, 0, 0, 0,
             0, t, 0, 0,
@@ -121,7 +121,7 @@ public readonly struct Matrix4d {
     );
 
     public static Matrix4d RotationX (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix4d(
             1, 0, 0, 0,
             0, c, s, 0,
@@ -131,7 +131,7 @@ public readonly struct Matrix4d {
     }
 
     public static Matrix4d RotationY (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix4d(
             c, 0, -s, 0,
             0, 1, 0, 0,
@@ -141,7 +141,7 @@ public readonly struct Matrix4d {
     }
 
     public static Matrix4d RotationZ (double a) {
-        var (s, c) = double.SinCos(a);
+        var (s, c) = DoubleSinCos(a);
         return new Matrix4d(
            c, s, 0, 0,
            -s, c, 0, 0,
