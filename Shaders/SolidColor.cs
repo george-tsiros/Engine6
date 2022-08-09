@@ -5,6 +5,8 @@ using System.Numerics;
 using Linear;
 public static class SolidColor {
 #pragma warning disable CS0649
+    public const string VertexSource = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgdW5pZm9ybSBtYXQ0IG1vZGVsLCB2aWV3LCBwcm9qZWN0aW9uOyB2b2lkIG1haW4gKCkgeyBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
+    public const string FragmentSource = "dW5pZm9ybSB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gY29sb3I7IH0=";
 
     //size 1, type 35666
     [GlAttrib("vertexPosition")]

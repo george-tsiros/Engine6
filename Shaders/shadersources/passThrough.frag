@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 in vec2 not_FragPos;
 
 uniform sampler2D tex;

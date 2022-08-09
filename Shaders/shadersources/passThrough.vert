@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 in vec4 vertexPosition;
 
 out vec2 not_FragPos;

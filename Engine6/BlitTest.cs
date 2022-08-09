@@ -60,6 +60,7 @@ internal class BlitTest:GlWindowArb {
     (double depth, int index)[] FacesAndDots;
 
     VertexArray vao;
+    VertexArray someLines;
     VertexBuffer<Vector4> quadBuffer;
     VertexBuffer<Vector4> vertexBuffer;
     VertexBuffer<Vector4> normalBuffer;
@@ -116,9 +117,14 @@ internal class BlitTest:GlWindowArb {
         vao = new();
         vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition);
         vao.Assign(normalBuffer, DirectionalFlat.FaceNormal);
+        someLines = new();
+        var eh = new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) };
+        someLines.Assign(new VertexBuffer<Vector2i>(eh), Lines.VertexPosition);
         Disposables.Add(softwareRenderSurface);
         Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
+        Disposables.Add(vao);
+        Disposables.Add(someLines);
         Disposables.Add(quadBuffer);
         Disposables.Add(normalBuffer);
         Disposables.Add(vertexBuffer);
@@ -135,6 +141,7 @@ internal class BlitTest:GlWindowArb {
             RenderHardware();
         else
             RenderSoftware();
+
         State.Framebuffer = 0;
         State.VertexArray = quad;
         State.Program = PassThrough.Id;
@@ -159,8 +166,15 @@ internal class BlitTest:GlWindowArb {
         DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
         DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 0.1f, 100));
         DrawArrays(Primitive.Triangles, 0, 3 * Obj.Faces.Count);
-
-
+        
+        State.VertexArray = someLines;
+        State.Program = Lines.Id;
+        State.DepthTest = false;
+        State.CullFace = false;
+        Lines.Color(new(0,1,0,1));
+        Lines.RenderSize(Size);
+        Lines.Offset(CursorLocation);
+        DrawArrays(Primitive.LineStrip, 0, 3);
     }
 
     void RenderSoftware () {

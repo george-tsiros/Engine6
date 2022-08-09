@@ -5,6 +5,8 @@ using System.Numerics;
 using Linear;
 public static class VertexIndex {
 #pragma warning disable CS0649
+    public const string VertexSource = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgdW5pZm9ybSBtYXQ0IG1vZGVsLCB2aWV3LCBwcm9qZWN0aW9uOyBmbGF0IG91dCBpbnQgdmVydGV4SWQ7IHZvaWQgbWFpbiAoKSB7IGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHZlcnRleFBvc2l0aW9uOyB2ZXJ0ZXhJZCA9IGdsX1ZlcnRleElEICsgMTsgfQ==";
+    public const string FragmentSource = "dW5pZm9ybSB2ZWM0IGNvbG9yMCwgY29sb3IxOyB1bmlmb3JtIGludCB0cmk7IG91dCB2ZWM0IG91dDA7IGZsYXQgaW4gaW50IHZlcnRleElkOyBvdXQgaW50IG91dDE7IHZvaWQgbWFpbiAoKSB7IG91dDAgPSAodHJpID09IHZlcnRleElkIC8gMykgPyBjb2xvcjEgOiBjb2xvcjA7IG91dDEgPSB2ZXJ0ZXhJZDsgfQ==";
 
     //size 1, type 35666
     [GlAttrib("vertexPosition")]

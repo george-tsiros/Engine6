@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 in vec4 vertexPosition;
 in vec4 faceNormal;
 

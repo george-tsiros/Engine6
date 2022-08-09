@@ -145,6 +145,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Stdcall]<int, void> glUseProgram;
         public static readonly delegate* unmanaged[Stdcall]<int, int, void> glVertexAttribDivisor;
         public static readonly delegate* unmanaged[Stdcall]<int, int, AttribType, bool, int, long, void> glVertexAttribPointer;
+        public static readonly delegate* unmanaged[Stdcall]<int, int, AttribType, int, long, void> glVertexAttribIPointer;
         public static readonly delegate* unmanaged[Stdcall]<IntPtr> wglGetExtensionsStringEXT;
         public static readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr> wglGetExtensionsStringARB;
         public static readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB;
@@ -261,6 +262,7 @@ unsafe public static class Opengl {
     public static void UseProgram (int p) => Extensions.glUseProgram(p);
     public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, type, normalized, stride, ptr);
+    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => Extensions.glVertexAttribIPointer(index, size, type, stride, ptr);
     public static void Viewport (Vector2i position, Vector2i size) => Viewport(position.X, position.Y, size.X, size.Y);
 
     public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);

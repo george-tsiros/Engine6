@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 uniform vec4 color0, color1;
 uniform int tri;
 

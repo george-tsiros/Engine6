@@ -24,7 +24,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
-        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
+          <Private>False</Private>
+          <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
@@ -34,10 +37,10 @@
         <None Update="shadersources\directionalLightFlat.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\gui.frag">
+        <None Update="shadersources\lines.frag">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\gui.vert">
+        <None Update="shadersources\lines.vert">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.frag">
@@ -47,16 +50,16 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\passThrough.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\passThrough.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\plot.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -77,16 +80,16 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalFlat.frag">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalFlat.vert">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\VertexIndex.frag">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\VertexIndex.vert">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\drawArrays.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -119,22 +122,22 @@
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\skyBox.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\skyBox.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\simpleTexture.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\simpleTexture.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\solidColor.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\solidColor.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\textureSimpleWithTranslation.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>

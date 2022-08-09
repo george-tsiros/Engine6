@@ -7,6 +7,8 @@ using Gl;
 using static Gl.Opengl;
 using static Gl.Utilities;
 using Win32;
+using System.Text;
+
 class ShaderGen {
     private static bool CreateFrom (string[] args) {
         const int expectedArgumentCount = 2;
@@ -18,22 +20,17 @@ class ShaderGen {
 
 
         try {
-            using var window = new GlWindow(new(320,240));
+            using var window = new GlWindow(new(320, 240));
             foreach (var vertexShaderFilepath in Directory.EnumerateFiles(args[0], "*.vert")) {
                 var shaderName = UppercaseFirst(Path.GetFileNameWithoutExtension(vertexShaderFilepath));
                 Trace($"creating {shaderName}");
                 var fragmentShaderFilepath = Path.Combine(Path.GetDirectoryName(vertexShaderFilepath), shaderName + ".frag");
-                if (File.Exists(fragmentShaderFilepath)) {
-                    var vertexShaderSource = File.ReadAllText(vertexShaderFilepath);
-                    var fragmentShaderSource = File.ReadAllText(fragmentShaderFilepath);
-                    var program = ProgramFromStrings(vertexShaderSource, fragmentShaderSource);
+                if (File.Exists(fragmentShaderFilepath))
                     using (var f = new StreamWriter(Path.Combine(args[1], shaderName + ".cs")) { })
-                        DoProgram(program, shaderName, f);
-                    DeleteProgram(program);
-                }
+                        DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderName, f);
+
             }
-        }
-        catch (TypeInitializationException ex) {
+        } catch (TypeInitializationException ex) {
             Trace($"'{ex.Message}' for '{ex.TypeName}'");
             if (ex.InnerException is MarshalDirectiveException inner)
                 Trace($"({inner.Message})");
@@ -57,7 +54,17 @@ class ShaderGen {
     }
 
     private static bool IsPrimitive (string name) => name == "float" || name == "double" || name == "byte" || name == "char";
-    private static void DoProgram (int program, string className, StreamWriter f) {
+    private static readonly char[] SplitChars = { '\n', '\r', ' ' };
+
+    // really horrible
+    private static string Pack (string text) => 
+        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Join(' ', text.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries))));
+
+    private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, StreamWriter f) {
+        var vertexShaderSource = File.ReadAllText(vertexShaderFilepath);
+        var fragmentShaderSource = File.ReadAllText(fragmentShaderFilepath);
+        var program = ProgramFromStrings(vertexShaderSource, fragmentShaderSource);
+
         f.Write($@"namespace Shaders;
 using Gl;
 using static Gl.Opengl;
@@ -66,6 +73,14 @@ using Linear;
 public static class {className} {{
 #pragma warning disable CS0649
 ");
+        f.Write("    public const string VertexSource = \"");
+        f.Write(Pack(vertexShaderSource));
+        f.Write("\";\n");
+
+        f.Write("    public const string FragmentSource = \"");
+        f.Write(Pack(fragmentShaderSource));
+        f.Write("\";\n");
+
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {
             var x = GetActiveAttrib(program, i);
@@ -92,19 +107,21 @@ public static class {className} {{
     public static void {UppercaseFirst(y.name)} ({UniformTypeToTypeName(y.type)} v) => Uniform({fieldName}, v);
 ");
         }
+
         f.Write($@"
     public static int Id {{ get; }}
     static {className} () => ParsedShader.Prepare(typeof({className}));
 #pragma warning restore CS0649
 }}");
+
+        DeleteProgram(program);
     }
     private static readonly string dashes = new('-', 100);
     [STAThread]
     public static int Main (string[] args) {
         try {
             return CreateFrom(args) ? 0 : -1;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             Trace(ex.Message);
             return -1;
         }

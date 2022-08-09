@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 in vec4 vertexPosition;
 in vec2 vertexUV;
 in mat4 model;

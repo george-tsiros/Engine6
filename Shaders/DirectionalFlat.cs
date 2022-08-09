@@ -5,6 +5,8 @@ using System.Numerics;
 using Linear;
 public static class DirectionalFlat {
 #pragma warning disable CS0649
+    public const string VertexSource = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjNCBmYWNlTm9ybWFsOyB1bmlmb3JtIHZlYzQgbGlnaHREaXJlY3Rpb247IHVuaWZvcm0gbWF0NCBtb2RlbCwgdmlldywgcHJvamVjdGlvbjsgZmxhdCBvdXQgdmVjNCBjb2xvcjsgdm9pZCBtYWluICgpIHsgZmxvYXQgbGlnaHRJbnRlbnNpdHkgPSBkb3Qobm9ybWFsaXplKG1vZGVsICogZmFjZU5vcm1hbCkueHl6LCAtbGlnaHREaXJlY3Rpb24ueHl6KTsgY29sb3IgPSB2ZWM0KGxpZ2h0SW50ZW5zaXR5LCBsaWdodEludGVuc2l0eSwgbGlnaHRJbnRlbnNpdHksIDEpOyBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
+    public const string FragmentSource = "ZmxhdCBpbiB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gY29sb3I7IH0=";
 
     //size 1, type 35666
     [GlAttrib("faceNormal")]

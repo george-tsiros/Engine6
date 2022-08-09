@@ -1,5 +1,3 @@
-#pragma debug(on)
-
 in vec2 uv;
 
 uniform sampler2D tex;

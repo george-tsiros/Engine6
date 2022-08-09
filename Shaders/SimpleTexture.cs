@@ -5,6 +5,8 @@ using System.Numerics;
 using Linear;
 public static class SimpleTexture {
 #pragma warning disable CS0649
+    public const string VertexSource = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjMiB2ZXJ0ZXhVVjsgaW4gbWF0NCBtb2RlbDsgdW5pZm9ybSBtYXQ0IHZpZXcsIHByb2plY3Rpb247IG91dCB2ZWMyIHV2OyB2b2lkIG1haW4gKCkgeyB1diA9IHZlcnRleFVWOyBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
+    public const string FragmentSource = "aW4gdmVjMiB1djsgdW5pZm9ybSBzYW1wbGVyMkQgdGV4OyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gdGV4dHVyZSh0ZXgsIHV2KTsgfQ==";
 
     //size 1, type 35676
     [GlAttrib("model")]

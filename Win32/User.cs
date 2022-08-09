@@ -37,7 +37,18 @@ public static partial class User {
 
     [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool DestroyCursor ([In] IntPtr cursor);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyWindow (IntPtr windowHandle);
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr LoadImageA (IntPtr instance, [MarshalAs(UnmanagedType.LPStr)] string name, uint type, int cx, int cy, uint load);
+
+
+    [DllImport(user32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    unsafe public static extern IntPtr CreateCursor (IntPtr instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
 
     /// <summary>
     /// ?
