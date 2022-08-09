@@ -2,7 +2,6 @@
     "rdocCaptureSettings": 1,
     "settings": {
         "autoStart": true,
-        "commandLine": "640 480",
         "environment": [
         ],
         "executable": "bin\\Engine6.exe",
