@@ -62,6 +62,7 @@ class ShaderGen {
 using Gl;
 using static Gl.Opengl;
 using System.Numerics;
+using Linear;
 public static class {className} {{
 #pragma warning disable CS0649
 ");

@@ -12,6 +12,7 @@ using System.Threading;
 using static Linear.Maths;
 using Linear;
 
+
 internal class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
     static void Log (object ob) =>
@@ -39,12 +40,11 @@ internal class BlitTest:GlWindowArb {
 
     Model Obj;
     Vector3d cameraPosition = new(0, 0, 30);
-    string txt = "asdgf";
     bool useOpenGl = true;
     Vector2i lastCursorPosition = new(-1, -1);
     Vector3d modelPosition = new();
     double phi = 0, theta = 0;
-    readonly Vector3d lightDirection = Vector3d.Normalize(new(0, -1, 0));
+    readonly Vector3d lightDirection = Vector3d.Normalize(new(0, 0, -1));
 
     Raster softwareRenderSurface;
     Sampler2D softwareRenderTexture;
@@ -65,7 +65,7 @@ internal class BlitTest:GlWindowArb {
     VertexBuffer<Vector4> normalBuffer;
 
     public BlitTest (Vector2i size, Model m = null) : base(size) {
-        Font ??= new("ubuntu mono", 18f);
+        Font ??= new("data/IBM_3270.txt");
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         Text = "asdfg";
         const string TeapotFilepath = @"data\teapot.obj";
@@ -101,11 +101,11 @@ internal class BlitTest:GlWindowArb {
         var faceCount = Obj.Faces.Count;
         var vertexCount = faceCount * 3;
         var vertices = new Vector4[vertexCount];
-        var normals = new Vector4[faceCount];
+        var normals = new Vector4[vertexCount];
         for (var (i, j) = (0, 0); j < vertexCount; ++i, ++j) {
             var (a, b, c) = Obj.Faces[i];
             var (v0, v1, v2) = (Obj.Vertices[a], Obj.Vertices[b], Obj.Vertices[c]);
-            normals[i] = new((Vector3)Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0)), 0);
+            normals[j + 2] = normals[j + 1] = normals[j] = new((Vector3)Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0)), 0);
             vertices[j] = new((Vector3)v0, 1);
             vertices[++j] = new((Vector3)v1, 1);
             vertices[++j] = new((Vector3)v2, 1);
@@ -114,27 +114,41 @@ internal class BlitTest:GlWindowArb {
         vertexBuffer = new(vertices);
         normalBuffer = new(normals);
         vao = new();
-        vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition, 1);
-        vao.Assign(normalBuffer, DirectionalFlat.FaceNormal, 3);
+        vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition);
+        vao.Assign(normalBuffer, DirectionalFlat.FaceNormal);
         Disposables.Add(softwareRenderSurface);
         Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
         Disposables.Add(quadBuffer);
+        Disposables.Add(normalBuffer);
+        Disposables.Add(vertexBuffer);
         CursorVisible = false;
     }
 
     protected override void Render () {
+        var t0 = Stopwatch.GetTimestamp();
+        State.Framebuffer = offscreenFramebuffer;
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.ColorDepth);
+
         if (useOpenGl)
             RenderHardware();
         else
             RenderSoftware();
+        State.Framebuffer = 0;
+        State.VertexArray = quad;
+        State.Program = PassThrough.Id;
+        Viewport(0, 0, Width, Height);
+        Clear(BufferBit.ColorDepth);
+
+        offscreenRenderingSurface.BindTo(1);
+        PassThrough.Tex(1);
+        DrawArrays(Primitive.Triangles, 0, 6);
+        var t1 = Stopwatch.GetTimestamp();
     }
 
     void RenderHardware () {
-        var t0 = Stopwatch.GetTimestamp();
-        State.Framebuffer = 0;
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.ColorDepth);
+
         State.Program = DirectionalFlat.Id;
         State.VertexArray = vao;
         State.DepthTest = true;
@@ -144,13 +158,12 @@ internal class BlitTest:GlWindowArb {
         DirectionalFlat.Model(Matrix4x4.CreateRotationY((float)theta) * Matrix4x4.CreateRotationX(-(float)phi) * Matrix4x4.CreateTranslation((Vector3)modelPosition));
         DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
         DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 0.1f, 100));
-        DrawArraysInstanced(Primitive.Triangles, 0, 3, Obj.Faces.Count);
-        var t1 = Stopwatch.GetTimestamp();
-        Debug.WriteLine(((double)(t1 - t0) / Stopwatch.Frequency).ToEng());
+        DrawArrays(Primitive.Triangles, 0, 3 * Obj.Faces.Count);
+
+
     }
 
     void RenderSoftware () {
-        var t0 = Stopwatch.GetTimestamp();
         var textRow = -Font.Height;
         softwareRenderSurface.ClearU32(Color.Black);
         var faceCount = Obj.Faces.Count;
@@ -201,16 +214,13 @@ internal class BlitTest:GlWindowArb {
         }
         softwareRenderSurface.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
         softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
-        softwareRenderSurface.DrawString(txt, Font, 0, textRow += Font.Height);
         var (cx, cy) = CursorLocation;
         if (0 <= cx && cx < Width && 0 <= cy && cy < Height) {
             softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(9, 0), Color.Green); // 10 pixels lit
             softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(0, -9), Color.Green);
         }
         softwareRenderTexture.Upload(softwareRenderSurface);
-        State.Framebuffer = offscreenFramebuffer;
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.ColorDepth);
+
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         State.DepthFunc = DepthFunction.Always;
@@ -220,15 +230,6 @@ internal class BlitTest:GlWindowArb {
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
 
-        State.Framebuffer = 0;
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.ColorDepth);
-
-        offscreenRenderingSurface.BindTo(1);
-        PassThrough.Tex(1);
-        DrawArrays(Primitive.Triangles, 0, 6);
-        var t1 = Stopwatch.GetTimestamp();
-        txt = ((double)(t1 - t0) / Stopwatch.Frequency).ToEng();
     }
 
     void AdjustFont (float delta) {
@@ -281,5 +282,4 @@ internal class BlitTest:GlWindowArb {
                 break;
         }
     }
-
 }

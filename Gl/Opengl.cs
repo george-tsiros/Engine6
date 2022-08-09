@@ -139,6 +139,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Stdcall]<int, int, void> glUniform1i;
         public static readonly delegate* unmanaged[Stdcall]<int, float, void> glUniform1f;
         public static readonly delegate* unmanaged[Stdcall]<int, float, float, void> glUniform2f;
+        public static readonly delegate* unmanaged[Stdcall]<int, int, int, void> glUniform2i;
         public static readonly delegate* unmanaged[Stdcall]<int, float, float, float, float, void> glUniform4f;
         public static readonly delegate* unmanaged[Stdcall]<int, long, bool, Matrix4x4, void> glUniformMatrix4fv;
         public static readonly delegate* unmanaged[Stdcall]<int, void> glUseProgram;
@@ -255,6 +256,7 @@ unsafe public static class Opengl {
     public static void Uniform (int uniform, int i) => Extensions.glUniform1i(uniform, i);
     public static void Uniform (int uniform, Matrix4x4 m) => Extensions.glUniformMatrix4fv(uniform, 1, false, m);
     public static void Uniform (int uniform, Vector2 v) => Extensions.glUniform2f(uniform, v.X, v.Y);
+    public static void Uniform (int uniform, Vector2i v) => Extensions.glUniform2i(uniform, v.X, v.Y);
     public static void Uniform (int uniform, Vector4 v) => Extensions.glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
     public static void UseProgram (int p) => Extensions.glUseProgram(p);
     public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);

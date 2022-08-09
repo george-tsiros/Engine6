@@ -24,7 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
-        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj"/>
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,6 +33,12 @@
         </None>
         <None Update="shadersources\directionalLightFlat.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="shadersources\gui.frag">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="shadersources\gui.vert">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

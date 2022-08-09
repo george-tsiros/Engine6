@@ -10,6 +10,6 @@ flat out vec4 color;
 
 void main () {
     float lightIntensity = dot(normalize(model * faceNormal).xyz, -lightDirection.xyz);
-    color = vec4(lightIntensity, 1, lightIntensity, 1);
+    color = vec4(lightIntensity, lightIntensity, lightIntensity, 1);
     gl_Position = projection * view * model * vertexPosition; 
 }

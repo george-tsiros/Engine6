@@ -2,6 +2,7 @@ namespace Shaders;
 using Gl;
 using static Gl.Opengl;
 using System.Numerics;
+using Linear;
 public static class SimpleTexture {
 #pragma warning disable CS0649
 

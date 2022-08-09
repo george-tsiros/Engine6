@@ -24,31 +24,6 @@ class BitmapToRaster {
     private static readonly string[] KnownImageExtensions = "bmp,png,jpg".Split(',');
     private static bool IsImageExtension (string extension) => Array.Exists(KnownImageExtensions, e => string.Equals(extension, e, StringComparison.OrdinalIgnoreCase));
 
-    //static void Foo () {
-    //    using var b = new Bitmap(100, 100, PixelFormat.Format32bppRgb);
-    //    using var g = Graphics.FromImage(b);
-    //    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
-    //    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
-    //    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
-    //    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-    //    using var r = new StreamWriter("fontreport.txt", false, System.Text.Encoding.ASCII) { NewLine = "\n" };
-
-    //    foreach (var f in FontFamily.Families.Select(ff => new Font(ff, 10f))) {
-    //        var s = g.MeasureString("!", f);
-    //        Console.WriteLine(f.Name);
-    //        r.Write("{0}: {1}, ", f.Name, s);
-    //        var isMonospace = true;
-    //        for (var c = '"'; isMonospace && c <= '~'; ++c) {
-    //            var os = g.MeasureString($"{c}", f);
-    //            isMonospace &= s == os;
-    //            if (!isMonospace)
-    //                r.Write("no: {0} {1}\n", c, os);
-    //        }
-    //        if (isMonospace)
-    //            r.Write("ok\n");
-    //    }
-    //}
-
     private static int Main (string[] args) {
         try {
             if (args.Length == 2 && float.TryParse(args[1], out var emsize)) {
@@ -86,11 +61,8 @@ class BitmapToRaster {
                 graphics.DrawString($"{c}", font, Brushes.White, entireBitmapF, alignment);
             }
         }
-        //const string TempImageFilename = "b.png";
-        //using (var f = File.Create(TempImageFilename))
-        //    bitmap.Save(f, ImageFormat.Png);
-        //_ = Process.Start(@"C:\Program Files\paint.net\PaintDotNet.exe", $"\"{Path.Combine(Directory.GetCurrentDirectory(), TempImageFilename)}\"");
-        Rectangle glyphRectangle = FindRegion(bitmap, out var stride);
+
+        var glyphRectangle = FindRegion(bitmap, out var stride);
         Debug.Assert(stride == bitmap.Width * sizeof(int));
         var size = glyphRectangle.Size;
         var text = Console.Out;// new StreamWriter(filepath, false, System.Text.Encoding.ASCII) { NewLine = "\n" };
@@ -112,8 +84,7 @@ class BitmapToRaster {
                 graphics.Clear(Color.Transparent);
                 graphics.DrawString($"{c}", font, Brushes.White, entireBitmapF, alignment);
             }
-            //using (var f = File.Create($"u{(int)c:x4}.png"))
-            //    bitmap.Save(f, ImageFormat.Png);
+
             var lb = bitmap.LockBits(entireBitmap, ImageLockMode.ReadOnly, bitmap.PixelFormat);
 
             for (int y = 0, rowOffset = firstPixelOffset; y < size.Height; ++y, rowOffset += stride) {
