@@ -1,14 +1,7 @@
 namespace Engine;
 
 using System;
-using System.Reflection;
 using System.IO;
-#if !DEBUG
-using System.Runtime.CompilerServices;
-#endif
-using System.Diagnostics;
-using System.Numerics;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using static Linear.Maths;
 
@@ -37,6 +30,7 @@ static class Extra {
             bytes[--offset] = (byte)'-';
         return offset;
     }
+    
     internal static float ModuloTwoPi (ref float angle, float delta) {
         angle += delta;
         while (angle < 0)
@@ -45,6 +39,7 @@ static class Extra {
             angle -= fTau;
         return angle;
     }
+    
     internal static double ModuloTwoPi (double angle, double delta) {
         var d = delta < 0 ? dTau - (-delta % dTau) : (delta % dTau);
         return (angle + d) % dTau;
@@ -56,6 +51,7 @@ static class Extra {
             Extrema(ints[i], ref min, ref max);
         return (min, max);
     }
+
     internal static void Extrema (int i, ref int min, ref int max) {
         if (i < min)
             min = i;
@@ -64,37 +60,25 @@ static class Extra {
     }
 
     internal static (double a, double b) Lin (double min, double max, double from, double to) {
-        /*
-        a * min + b = from
-        a * max + b = to
-        a (max-min) = to-from
-        a = to-from/(max-min)
-        b = to - a * max
-*/
+        // if 
+        // a * min + b = from
+        // a * max + b = to
+        // then
+        // a (max-min) = to-from
+        // a = (to-from)/(max-min)
+        // b = to - a * max
+
         var a = (to - from) / (max - min);
         return (a, to - a * max);
 
     }
 
     internal static (float min, float max) Extrema (float[] ycoords) {
-#if !true
-            var min = new Vector<float>(float.MaxValue);
-            var max = new Vector<float>(float.MinValue);
-            var total = ycoords.Length;
-            var vectored = total & 0xfffffff8;
-            for (var i = 0; i < vectored; i += 8) {
-                var y = new Vector<float>(ycoords, i);
-                min = Vector.Min(min, y);
-                max = Vector.Max(max, y);
-            }
-            return (0f, 100f);
-#else
         var min = float.MaxValue;
         var max = float.MinValue;
         for (var i = 0; i < ycoords.Length; i++)
             Extrema(ycoords[i], ref min, ref max);
         return (min, max);
-#endif
     }
 
     private static void Extrema (float l, ref float min, ref float max) {

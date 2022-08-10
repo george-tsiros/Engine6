@@ -4,9 +4,6 @@ namespace Engine;
 using System;
 using System.Diagnostics;
 using System.IO;
-#if !DEBUG
-using System.Runtime.CompilerServices;
-#endif
 using System.Text;
 
 sealed class Perf<T>:IDisposable where T : struct, Enum {
@@ -18,16 +15,20 @@ sealed class Perf<T>:IDisposable where T : struct, Enum {
         var names = Enum.GetNames<T>();
         writer.Write(names.Length);
         foreach (var name in names) {
-            writer.Write((byte)(int)Enum.Parse(typeof(T), name));
+            var nameLength = name.Length < 256 ? name.Length : throw new Exception("name must have length < 256 characters");
+            var value = (int)Enum.Parse(typeof(T), name);
+            writer.Write((byte)value);
             writer.Write(name.Length);
-            writer.Write(Encoding.ASCII.GetBytes(name));
+            var bytes = Encoding.ASCII.GetBytes(name);
+            if (!Array.TrueForAll(bytes, b => 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || '0' <= b && b <= '9' || b == '_'))
+                throw new Exception("name may only contain a..z, A..Z, underscores and digits");
+            writer.Write(bytes);
         }
     }
 
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
     unsafe public void Leave () {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Perf<T>));
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
             *(long*)p = Stopwatch.GetTimestamp();
@@ -35,10 +36,10 @@ sealed class Perf<T>:IDisposable where T : struct, Enum {
         }
         writer.Write(bytes);
     }
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
+
     unsafe public void Enter (int id) {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Perf<T>));
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
             *(long*)p = Stopwatch.GetTimestamp();

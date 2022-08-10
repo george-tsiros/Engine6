@@ -12,6 +12,16 @@ using System.Threading;
 using static Linear.Maths;
 using Linear;
 
+enum FooNum {
+    Frame = 1,
+    Software,
+    Hardware,
+    Clear,
+    Geometry,
+    Visibility,
+    Rasterization,
+    TextureUpload,
+}
 
 internal class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
@@ -40,7 +50,7 @@ internal class BlitTest:GlWindowArb {
 
     Model Obj;
     Vector3d cameraPosition = new(0, 0, 30);
-    bool useOpenGl = true;
+    bool useOpenGl = false;
     Vector2i lastCursorPosition = new(-1, -1);
     Vector3d modelPosition = new();
     double phi = 0, theta = 0;
@@ -64,9 +74,8 @@ internal class BlitTest:GlWindowArb {
     VertexBuffer<Vector4> quadBuffer;
     VertexBuffer<Vector4> vertexBuffer;
     VertexBuffer<Vector4> normalBuffer;
-
+    Perf<FooNum> prf;
     public BlitTest (Vector2i size, Model m = null) : base(size) {
-        Font ??= new("data/IBM_3270.txt");
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         Text = "asdfg";
         const string TeapotFilepath = @"data\teapot.obj";
@@ -77,7 +86,6 @@ internal class BlitTest:GlWindowArb {
         ModelSpace = new Vector3d[Obj.Vertices.Count];
         FaceZ = new double[Obj.Faces.Count];
         FacesAndDots = new (double, int)[Obj.Faces.Count];
-
         State.SwapInterval = 1;
         KeyDown += KeyDown_self;
         Load += Load_self;
@@ -128,20 +136,25 @@ internal class BlitTest:GlWindowArb {
         Disposables.Add(quadBuffer);
         Disposables.Add(normalBuffer);
         Disposables.Add(vertexBuffer);
+        Disposables.Add(prf = new("log.bin"));
         CursorVisible = false;
     }
 
     protected override void Render () {
+        prf.Enter((int)FooNum.Frame);
         var t0 = Stopwatch.GetTimestamp();
         State.Framebuffer = offscreenFramebuffer;
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.ColorDepth);
 
-        if (useOpenGl)
+        if (useOpenGl) {
+            prf.Enter((int)FooNum.Hardware);
             RenderHardware();
-        else
+        } else {
+            prf.Enter((int)FooNum.Software);
             RenderSoftware();
-
+        }
+        prf.Leave();
         State.Framebuffer = 0;
         State.VertexArray = quad;
         State.Program = PassThrough.Id;
@@ -151,7 +164,18 @@ internal class BlitTest:GlWindowArb {
         offscreenRenderingSurface.BindTo(1);
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
+
+        State.VertexArray = someLines;
+        State.Program = Lines.Id;
+        State.DepthTest = false;
+        State.CullFace = false;
+        Lines.Color(new(0, 1, 0, 1));
+        Lines.RenderSize(Size);
+        Lines.Offset(CursorLocation);
+        DrawArrays(Primitive.LineStrip, 0, 3);
+
         var t1 = Stopwatch.GetTimestamp();
+        prf.Leave();
     }
 
     void RenderHardware () {
@@ -166,20 +190,15 @@ internal class BlitTest:GlWindowArb {
         DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
         DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 0.1f, 100));
         DrawArrays(Primitive.Triangles, 0, 3 * Obj.Faces.Count);
-        
-        State.VertexArray = someLines;
-        State.Program = Lines.Id;
-        State.DepthTest = false;
-        State.CullFace = false;
-        Lines.Color(new(0,1,0,1));
-        Lines.RenderSize(Size);
-        Lines.Offset(CursorLocation);
-        DrawArrays(Primitive.LineStrip, 0, 3);
+
     }
 
     void RenderSoftware () {
         var textRow = -Font.Height;
+        prf.Enter((int)FooNum.Clear);
         softwareRenderSurface.ClearU32(Color.Black);
+        prf.Leave();
+        prf.Enter((int)FooNum.Geometry);
         var faceCount = Obj.Faces.Count;
         var vertexCount = Obj.Vertices.Count;
         var rotation = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
@@ -194,6 +213,8 @@ internal class BlitTest:GlWindowArb {
             ClipSpace[i] = n;
             ScreenSpace[i] = NormalizedToScreen(n, Size);
         }
+        prf.Leave();
+        prf.Enter((int)FooNum.Visibility);
         var drawn = 0;
         for (var i = 0; i < faceCount; ++i) {
             var (a, b, c) = Obj.Faces[i];
@@ -215,6 +236,8 @@ internal class BlitTest:GlWindowArb {
             FacesAndDots[drawn] = ((float)Vector3d.Dot(Vector3d.Normalize(cross), -lightDirection), i);
             ++drawn;
         }
+        prf.Leave();
+        prf.Enter((int)FooNum.Rasterization);
         if (drawn > 0) {
             if (drawn > 1)
                 Array.Sort(FaceZ, FacesAndDots, 0, drawn);
@@ -228,13 +251,11 @@ internal class BlitTest:GlWindowArb {
         }
         softwareRenderSurface.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
         softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
-        var (cx, cy) = CursorLocation;
-        if (0 <= cx && cx < Width && 0 <= cy && cy < Height) {
-            softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(9, 0), Color.Green); // 10 pixels lit
-            softwareRenderSurface.LineU32(CursorLocation, CursorLocation + new Vector2i(0, -9), Color.Green);
-        }
-        softwareRenderTexture.Upload(softwareRenderSurface);
+        prf.Leave();
+        prf.Enter((int)FooNum.TextureUpload);
 
+        softwareRenderTexture.Upload(softwareRenderSurface);
+        prf.Leave();
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         State.DepthFunc = DepthFunction.Always;
@@ -251,7 +272,9 @@ internal class BlitTest:GlWindowArb {
         var nh = FloatClamp(Font.EmSize + delta, 12, 36);
         if (fh == nh)
             return;
-        Font = new(Font.FamilyName, nh);
+        try {
+            Font = new(Font.FamilyName, nh);
+        } catch { }
     }
 
     void KeyDown_self (object sender, Keys k) {

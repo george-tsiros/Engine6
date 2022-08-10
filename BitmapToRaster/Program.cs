@@ -9,20 +9,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 
-public static class Ext {
-    public static IEnumerable<U> Select<T, U> (this T[] array, Func<T, U> f) {
-        for (var i = 0; i < array.Length; ++i)
-            yield return f(array[i]);
-    }
-}
-
 class BitmapToRaster {
+
     private static Font CreateFont (string familyName, float emSize) {
         var f = new Font(familyName, emSize, GraphicsUnit.Pixel);
         return string.Equals(f.FontFamily.Name, familyName, StringComparison.OrdinalIgnoreCase) ? f : throw new ArgumentException("no such font", nameof(familyName));
     }
-    private static readonly string[] KnownImageExtensions = "bmp,png,jpg".Split(',');
-    private static bool IsImageExtension (string extension) => Array.Exists(KnownImageExtensions, e => string.Equals(extension, e, StringComparison.OrdinalIgnoreCase));
 
     private static int Main (string[] args) {
         try {
@@ -36,7 +28,6 @@ class BitmapToRaster {
         }
         return 0;
     }
-    static int Ceil (float f) => (int)Math.Ceiling(f);
 
     static Graphics FromImage (Bitmap bitmap) {
         var graphics = Graphics.FromImage(bitmap);

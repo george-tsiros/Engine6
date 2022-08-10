@@ -5,7 +5,7 @@ using System.Diagnostics;
 using Win32;
 using Linear;
 
-public class GlWindow:SimpleWindow{
+public class GlWindow:SimpleWindow {
     const PixelFlags RequiredFlags = PixelFlags.None
         | PixelFlags.DrawToWindow
         | PixelFlags.DoubleBuffer

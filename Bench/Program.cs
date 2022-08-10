@@ -1,36 +1,38 @@
 namespace Bench;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
-#if !DEBUG
-using System.Runtime.CompilerServices;
-#endif
 using System.Text;
 
 class Program {
+
     private enum Kind:byte {
         Stamp,
         Enter,
         Leave,
     }
+
     private class BenchResult:IComparable<BenchResult> {
         public double Performance { get; }
         public string Message { get; }
-        public BenchResult (double performance, string message) => (Performance, Message) = (performance, message);
-        public int CompareTo (BenchResult other) => Performance.CompareTo(other.Performance);
-        public override string ToString () => Message;
+        public BenchResult (double performance, string message) => 
+            (Performance, Message) = (performance, message);
+
+        public int CompareTo (BenchResult other) => 
+            Performance.CompareTo(other.Performance);
+
+        public override string ToString () => 
+            Message;
+
     }
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#endif
+
     private static void PushAscii (Span<byte> bytes, ref long int64, ref int offset) {
         int64 = Math.DivRem(int64, 10, out var d);
         bytes[--offset] = (byte)(d + '0');
     }
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#endif
+
     public static int ToChars (long int64, Span<byte> bytes) {
         var isNegative = int64 < 0l;
         if (isNegative)
@@ -59,13 +61,13 @@ class Program {
     }
 
     static void Main () {
-        Console.WriteLine("press enter when debugger diagnostics wake up");
-        _ = Console.ReadLine();
-        Console.WriteLine("press any key to stop");
-        TestOneUseStringMemoryPressure(TextWriter.Null);
-        File.Delete("test.bin");
-        Console.WriteLine("done");
-        _ = Console.ReadLine();
+        //Console.WriteLine("press enter when debugger diagnostics wake up");
+        //_ = Console.ReadLine();
+        //Console.WriteLine("press any key to stop");
+        //TestOneUseStringMemoryPressure(TextWriter.Null);
+        //File.Delete("test.bin");
+        //Console.WriteLine("done");
+        //_ = Console.ReadLine();
     }
 
     private static void TestOneUseStringMemoryPressure (TextWriter writer) {
@@ -75,12 +77,15 @@ class Program {
                 writer.Write(RandomString(r));
     }
 
-    private static void Trace () => Console.WriteLine(new StackFrame(1).GetMethod().Name);
+    private static void Trace () => 
+        Console.WriteLine(new StackFrame(1).GetMethod().Name);
+
     private static void Bench_Actual_Stream (string filename) {
         Trace();
         using var stream = File.Create(filename);
         Bench(stream);
     }
+    
     private static void Bench_Null_Stream () {
         Trace();
         Bench(Stream.Null);
@@ -91,14 +96,17 @@ class Program {
         using var writer = new StreamWriter("test.txt");
         Bench(writer);
     }
+    
     private static void Bench_StringFormat_Null_StreamWriter () {
         Trace();
         Bench(StreamWriter.Null);
     }
+    
     private static void Bench_Binary_Null () {
         Trace();
         Bench_Binary(Stream.Null);
     }
+    
     private static void Bench_BinaryWriter (string filename, long count = 1000000l) {
         Trace();
         using BinaryWriter writer = new BinaryWriter(File.Create(filename));
@@ -136,6 +144,7 @@ class Program {
 
         } while (!Console.KeyAvailable);
     }
+    
     unsafe private static void WithBinaryWriterUnsafe (BinaryWriter writer, long int64, int int32) {
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
@@ -144,10 +153,12 @@ class Program {
         }
         writer.Write(bytes);
     }
+    
     private static void WithBinaryWriterSimplest (BinaryWriter writer, long int64, int int32) {
         writer.Write(int64);
         writer.Write((byte)int32);
     }
+    
     private static void Bench_Binary_Actual (string filename) {
         Trace();
         using Stream writer = File.Create(filename);
@@ -165,9 +176,11 @@ class Program {
             }
         return bestIndex;
     }
+
     private enum FooEnum:byte {
         A, B, C, D
     }
+
     private static void Bench_Binary (Stream writer, long count = 1000000l) {
         var kinds = new Kind[count];
         var longs = new long[count];
@@ -232,9 +245,7 @@ class Program {
             results.Clear();
         } while (!Console.KeyAvailable);
     }
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
+
     unsafe static private void SimplestPossible (Stream stream, long int64, int int32) {
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
@@ -448,7 +459,8 @@ class Program {
         stream.Write(new ReadOnlySpan<byte>(bytes, byteCount));
     }
 
-    private static void Rep (long ticks, long count, string info = null) => Console.WriteLine(Format(ticks, count, info));
+    private static void Rep (long ticks, long count, string info = null) => 
+        Console.WriteLine(Format(ticks, count, info));
 
     private static string RandomString (Random r) {
         var l = r.Next(5, 100);
@@ -480,5 +492,6 @@ class Program {
         };
         return $"{newValue:##0.000} {symbol}{unit}";
     }
-    private static string Format (long ticks, long count, string info = null) => $"{info}{ticks} ticks, {(double)ticks / count} ticks/item, {ToEng((double)ticks / Stopwatch.Frequency)}s, {ToEng((double)ticks / count / Stopwatch.Frequency)}s/item ";
+    private static string Format (long ticks, long count, string info = null) => 
+        $"{info}{ticks} ticks, {(double)ticks / count} ticks/item, {ToEng((double)ticks / Stopwatch.Frequency)}s, {ToEng((double)ticks / count / Stopwatch.Frequency)}s/item ";
 }

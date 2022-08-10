@@ -52,7 +52,13 @@ public class Font {
 
     void ReadFrom (StreamReader r) {
         FamilyName = r.ReadLine();
-        var info = r.ReadLine().Split(',').Select(int.Parse).ToArray();
+        if (FamilyName is null)
+            return;
+        var _a = r.ReadLine();
+        if (_a is null)
+            return;
+        var _b = _a.Split(',');
+        var info = _b.Select(int.Parse).ToArray();
         widths = new int[256];
         offsets = new int[256];
         Height = info[0];

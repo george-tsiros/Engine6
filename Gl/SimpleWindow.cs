@@ -35,24 +35,26 @@ public class SimpleWindow:Window {
     private Rect WindowRect = new();
     public Buttons Buttons { get; private set; }
 
+    protected List<IDisposable> Disposables { get; } = new();
+
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
         Demand(User.InvalidateRect(WindowHandle, ref WindowRect, 0));
     }
 
-    protected void Pump () {
-        Message m = new();
-        if (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-            var eh = User.GetMessageW(ref m, 0, 0, 0);
-            if (-1 == eh)
-                Environment.FailFast(null);
-            if (0 == eh) {
-                running = false;
-                return;
-            }
-            _ = User.DispatchMessageW(ref m);
-        }
-    }
+    //protected void Pump () {
+    //    Message m = new();
+    //    if (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+    //        var eh = User.GetMessageW(ref m, 0, 0, 0);
+    //        if (-1 == eh)
+    //            Environment.FailFast(null);
+    //        if (0 == eh) {
+    //            running = false;
+    //            return;
+    //        }
+    //        _ = User.DispatchMessageW(ref m);
+    //    }
+    //}
 
     bool running = true;
     public virtual void Run () {
@@ -67,13 +69,15 @@ public class SimpleWindow:Window {
                     Environment.FailFast(null);
                 if (0 == eh) {
                     running = false;
-                    return;
+                    break;
                 }
                 _ = User.DispatchMessageW(ref m);
             }
             if (running && !painting)
                 Invalidate();
         }
+        foreach (var disposable in Disposables)
+            disposable.Dispose();
     }
 
     private static Vector2i Split (nint self) {

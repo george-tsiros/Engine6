@@ -26,15 +26,12 @@ public abstract class Window:IDisposable {
         GC.SuppressFinalize(this);
     }
 
-    protected List<IDisposable> Disposables { get; } = new();
 
     public virtual void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
             if (!cursorVisible)
                 _ = User.ShowCursor(true);
-            foreach (var disposable in Disposables)
-                disposable.Dispose();
             Demand(User.DestroyWindow(WindowHandle));
         }
     }
@@ -43,10 +40,20 @@ public abstract class Window:IDisposable {
 
     private string text;
     public string Text {
-        get => text;
-        set => _ = text != value ? User.SetWindowText(WindowHandle, text = value) : false;
+        get => 
+            text;
+        set => 
+            _ = text != value ? User.SetWindowText(WindowHandle, text = value) : false;
     }
-    public Font Font { get; set; }
+
+    private Font font;
+    public Font Font {
+        get =>
+            font ??= new("data/ibm_3270.txt");
+        set =>
+            font = value;
+    }
+    
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
@@ -55,8 +62,10 @@ public abstract class Window:IDisposable {
     private bool cursorVisible = true;
 
     public bool CursorVisible {
-        get => cursorVisible;
-        set => _ = value != cursorVisible ? User.ShowCursor(cursorVisible = value) : 0;
+        get => 
+            cursorVisible;
+        set => 
+            _ = value != cursorVisible ? User.ShowCursor(cursorVisible = value) : 0;
     }
 
     public Window (Vector2i size) {
@@ -82,8 +91,8 @@ public abstract class Window:IDisposable {
 
     public static void Demand (bool condition, string message = null) {
         if (!condition) {
-            var stackFrame = new StackFrame(1, true);
-            var m = $">{stackFrame.GetFileName()}({stackFrame.GetFileLineNumber()},{stackFrame.GetFileColumnNumber()}): {message ?? "?"} ({Kernel.GetLastError():X})";
+            var f = new StackFrame(1, true);
+            var m = $">{f.GetFileName()}({f.GetFileLineNumber()},{f.GetFileColumnNumber()}): {message ?? "?"} ({Kernel.GetLastError():X})";
             throw new Exception(m);
         }
     }
