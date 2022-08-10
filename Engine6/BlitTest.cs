@@ -48,13 +48,13 @@ internal class BlitTest:GlWindowArb {
     static bool IsInside (in Vector3d v) =>
         -1 < v.Z && v.Z < 1;
 
+    Camera camera = new(new());
     Model Obj;
-    Vector3d cameraPosition = new(0, 0, 30);
     bool useOpenGl = false;
     Vector2i lastCursorPosition = new(-1, -1);
     Vector3d modelPosition = new();
     double phi = 0, theta = 0;
-    readonly Vector3d lightDirection = Vector3d.Normalize(new(0, 0, -1));
+    readonly Vector3d lightDirection = Vector3d.Normalize(-Vector3d.One);
 
     Raster softwareRenderSurface;
     Sampler2D softwareRenderTexture;
@@ -187,7 +187,7 @@ internal class BlitTest:GlWindowArb {
         State.CullFace = true;
         DirectionalFlat.LightDirection(new((Vector3)lightDirection, 0));
         DirectionalFlat.Model(Matrix4x4.CreateRotationY((float)theta) * Matrix4x4.CreateRotationX(-(float)phi) * Matrix4x4.CreateTranslation((Vector3)modelPosition));
-        DirectionalFlat.View(Matrix4x4.CreateTranslation(-(Vector3)cameraPosition));
+        DirectionalFlat.View(Matrix4x4.CreateTranslation(-camera.Location));
         DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, 0.1f, 100));
         DrawArrays(Primitive.Triangles, 0, 3 * Obj.Faces.Count);
 
@@ -207,7 +207,7 @@ internal class BlitTest:GlWindowArb {
             var vertex = new Vector4d(Obj.Vertices[i], 1);
             var modelSpace = vertex * rotation * translation;
             ModelSpace[i] = modelSpace.Xyz();
-            var position = modelSpace * Matrix4d.Translate(-cameraPosition);
+            var position = modelSpace * Matrix4d.Translate(-camera.Location);
             var projected = position * Projection;
             var n = new Vector3d(-projected.X / projected.W, -projected.Y / projected.W, -projected.Z / projected.W);
             ClipSpace[i] = n;
@@ -306,14 +306,14 @@ internal class BlitTest:GlWindowArb {
                 phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
                 break;
             case Buttons.Right:
-                if (cameraPosition.Z > 0) {
-                    var recipDistance = 1 / cameraPosition.Z;
+                if (camera.Location.Z > 0) {
+                    var recipDistance = 1 / camera.Location.Z;
                     modelPosition += new Vector3d(recipDistance * d.X, recipDistance * d.Y, 0);
                 }
                 break;
             case Buttons.ButtonX1:
-                if (cameraPosition.Z > 0) {
-                    var recipDistance = 1 / cameraPosition.Z;
+                if (camera.Location.Z > 0) {
+                    var recipDistance = 1 / camera.Location.Z;
                     modelPosition += new Vector3d(recipDistance * d.X, 0, -recipDistance * d.Y);
                 }
                 break;

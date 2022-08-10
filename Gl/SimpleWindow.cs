@@ -34,6 +34,10 @@ public class SimpleWindow:Window {
     protected virtual void OnPaint () => Paint?.Invoke(this, new());
     private Rect WindowRect = new();
     public Buttons Buttons { get; private set; }
+    private int[] KeyState = new int[256 / 32];
+
+    public bool IsKeyDown (Keys key) =>
+        (KeyState[(int)key >> 5] & 1 << ((int)key) & 31) != 0;
 
     protected List<IDisposable> Disposables { get; } = new();
 
@@ -136,12 +140,14 @@ public class SimpleWindow:Window {
                     var m = new KeyMessage(wPtr, lPtr);
                     if (m.WasDown)
                         break;
+                    KeyState[(int)m.Key >> 5] |= 1 << ((int)m.Key & 31);
                     OnKeyDown(m.Key);
                     return 0;
                 }
             case WinMessage.KeyUp: {
-                    var m = new KeyMessage(wPtr, lPtr);
-                    OnKeyUp(m.Key);
+                    var k = new KeyMessage(wPtr, lPtr).Key;
+                    KeyState[(int)k >> 5] &= ~(1 << ((int)k & 31));
+                    OnKeyUp(k);
                     return 0;
                 }
             case WinMessage.Paint:

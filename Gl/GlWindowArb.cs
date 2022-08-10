@@ -35,6 +35,7 @@ public class GlWindowArb:GlWindow {
             format.DoubleBuffer = values[4] != 0;
             format.SwapMethod = (SwapMethod)values[5];
             candidates.Add(format);
+            Console.WriteLine(format);
         }
 
         var selectedFormat = candidates.Find(IsAppropriate);

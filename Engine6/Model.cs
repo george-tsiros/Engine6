@@ -19,6 +19,14 @@ public class Model {
     protected static readonly char[] space = { ' ' };
     protected static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
 
+    public static void InvertFaces (Model m) {
+        var count = m.Faces.Count;
+        for (var i = 0; i < count; ++i) {
+            var (a, b, c) = m.Faces[i];
+            m.Faces[i] = new(a, c, b);
+        }
+    }
+
     Model () { }
 
     public Model (StreamReader reader, bool center = false) {
