@@ -23,7 +23,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindowArb {
+internal class BlitTest:GlWindow {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
     static void Log (object ob) =>
 #if DEBUG
@@ -51,7 +51,6 @@ internal class BlitTest:GlWindowArb {
     Camera camera = new(new(0, 0, 10));
     readonly Vector3i[] Faces;
     readonly Vector4d[] Vertices;
-    bool useOpenGl = false;
     Vector2i lastCursorPosition = new(-1, -1);
     double phi = 0, theta = 0;
     readonly Vector3d lightDirection = Vector3d.Normalize(-Vector3d.One);
@@ -69,11 +68,8 @@ internal class BlitTest:GlWindowArb {
     double[] FaceZ;
     (double depth, int index)[] FacesAndDots;
 
-    VertexArray vao;
     VertexArray someLines;
     VertexBuffer<Vector4> quadBuffer;
-    VertexBuffer<Vector4> vertexBuffer;
-    VertexBuffer<Vector4> normalBuffer;
     Perf<FooNum> prf;
 
     public BlitTest (Vector2i size, Model m = null, Vector2i? position = null) : base(size, position) {
@@ -124,22 +120,13 @@ internal class BlitTest:GlWindowArb {
             vertices[++j] = (Vector4)v2;
         }
 
-        vertexBuffer = new(vertices);
-        normalBuffer = new(normals);
-        vao = new();
-        vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition);
-        vao.Assign(normalBuffer, DirectionalFlat.FaceNormal);
         someLines = new();
-        var eh = new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) };
-        someLines.Assign(new VertexBuffer<Vector2i>(eh), Lines.VertexPosition);
+        someLines.Assign(new VertexBuffer<Vector2i>(new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) }), Lines.VertexPosition);
         Disposables.Add(softwareRenderSurface);
         Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
-        Disposables.Add(vao);
         Disposables.Add(someLines);
         Disposables.Add(quadBuffer);
-        Disposables.Add(normalBuffer);
-        Disposables.Add(vertexBuffer);
         Disposables.Add(prf = new("log.bin"));
         CursorVisible = false;
     }
@@ -156,18 +143,12 @@ internal class BlitTest:GlWindowArb {
         if (IsKeyDown(Keys.D))
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
-        var t0 = Stopwatch.GetTimestamp();
         State.Framebuffer = offscreenFramebuffer;
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.ColorDepth);
 
-        if (useOpenGl) {
-            prf.Enter((int)FooNum.Hardware);
-            RenderHardware();
-        } else {
-            prf.Enter((int)FooNum.Software);
-            RenderSoftware();
-        }
+        prf.Enter((int)FooNum.Software);
+        RenderSoftware();
         prf.Leave();
         State.Framebuffer = 0;
         State.VertexArray = quad;
@@ -190,22 +171,7 @@ internal class BlitTest:GlWindowArb {
             DrawArrays(Primitive.LineStrip, 0, 3);
         }
 
-        var t1 = Stopwatch.GetTimestamp();
         prf.Leave();
-    }
-
-    void RenderHardware () {
-        State.Program = DirectionalFlat.Id;
-        State.VertexArray = vao;
-        State.DepthTest = true;
-        State.DepthFunc = DepthFunction.LessEqual;
-        State.CullFace = true;
-        DirectionalFlat.LightDirection(new((Vector3)lightDirection, 0));
-        var model = Matrix4x4.CreateRotationY((float)theta) * Matrix4x4.CreateRotationX(-(float)phi);
-        DirectionalFlat.Model(model);
-        DirectionalFlat.View(Matrix4x4.CreateTranslation(-camera.Location));
-        DirectionalFlat.Projection(Projection);
-        DrawArrays(Primitive.Triangles, 0, 3 * Faces.Length);
     }
 
     void RenderSoftware () {
@@ -274,8 +240,8 @@ internal class BlitTest:GlWindowArb {
         prf.Leave();
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
-        State.DepthFunc = DepthFunction.Always;
         State.DepthTest = true;
+        State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;
         softwareRenderTexture.BindTo(1);
         PassThrough.Tex(1);
@@ -303,9 +269,6 @@ internal class BlitTest:GlWindowArb {
                 return;
             case Keys.Oemplus:
                 AdjustFont(+1f);
-                return;
-            case Keys.Tab:
-                useOpenGl = !useOpenGl;
                 return;
             case Keys.M:
                 CursorGrabbed = !CursorGrabbed;

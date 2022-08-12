@@ -8,5 +8,6 @@ struct ExtendedPixelFormat {
     public int DepthBits;
     public bool DoubleBuffer;
     public SwapMethod SwapMethod;
-    public override string ToString () => $"{Index}: {PixelType}, {Acceleration}, {ColorBits}/{DepthBits}, {DoubleBuffer}, {SwapMethod}";
+    public override string ToString () => 
+        $"{Index}: {PixelType}, {Acceleration}, {ColorBits}/{DepthBits}, {DoubleBuffer}, {SwapMethod}";
 }

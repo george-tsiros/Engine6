@@ -73,7 +73,7 @@ public class SimpleWindow:Window {
 
     protected void Invalidate () {
         Demand(User.GetClientRect(WindowHandle, ref WindowRect));
-        Demand(User.InvalidateRect(WindowHandle, ref WindowRect, 0));
+        Demand(User.InvalidateRect(WindowHandle, ref WindowRect, IntPtr.Zero));
     }
 
     //protected void Pump () {
@@ -97,7 +97,7 @@ public class SimpleWindow:Window {
         Message m = new();
         while (running) {
             while (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-                var eh = User.GetMessageW(ref m, 0, 0, 0);
+                var eh = User.GetMessageW(ref m, IntPtr.Zero, 0, 0);
                 if (-1 == eh)
                     Environment.FailFast(null);
                 if (0 == eh) {

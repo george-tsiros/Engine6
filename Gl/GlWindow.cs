@@ -19,14 +19,12 @@ public class GlWindow:SimpleWindow {
         | PixelFlags.GenericFormat
         ;
 
-    protected IntPtr DeviceContext;
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
     public GlWindow (Vector2i size, Vector2i? position = null) : base(size, position) {
-        DeviceContext = User.GetDC(WindowHandle);
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
-        Demand(Opengl.MakeCurrent(DeviceContext, RenderingContext), "failed to make context current");
+        Opengl.MakeCurrent(DeviceContext, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
     }
 
@@ -56,8 +54,8 @@ public class GlWindow:SimpleWindow {
     public override void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
-            Demand(Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero));
-            Demand(Opengl.DeleteContext(RenderingContext));
+            Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero);
+            Opengl.DeleteContext(RenderingContext);
             Demand(User.ReleaseDC(WindowHandle, DeviceContext));
         }
     }

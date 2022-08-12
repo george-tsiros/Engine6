@@ -62,6 +62,7 @@ public abstract class Window:IDisposable {
     public IntPtr WindowHandle { get; protected set; }
     const string ClassName = "MYWINDOWCLASS";
     private bool cursorVisible = true;
+    protected IntPtr DeviceContext;
 
     public bool CursorVisible {
         get =>
@@ -78,6 +79,7 @@ public abstract class Window:IDisposable {
             throw new ArgumentOutOfRangeException(nameof(size));
         Instance = this;
         WindowHandle = User.CreateWindow(ClassAtom, new(position ?? new(), size), SelfHandle);
+        DeviceContext = User.GetDC(WindowHandle);
         Size = size;
     }
 

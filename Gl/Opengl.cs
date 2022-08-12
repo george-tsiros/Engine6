@@ -69,12 +69,12 @@ unsafe public static class Opengl {
     public static extern void Scissor (int x, int y, int width, int height);
     [DllImport(opengl32, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
     unsafe public static extern void GetIntegerv (int count, int* ints);
-    [DllImport(opengl32, EntryPoint = "wglMakeCurrent", ExactSpelling = true, SetLastError = true)]
+    [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool MakeCurrent (IntPtr dc, IntPtr hglrc);
-    [DllImport(opengl32, EntryPoint = "wglDeleteContext", ExactSpelling = true, SetLastError = true)]
+    private static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
+    [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public extern static bool DeleteContext (IntPtr hglrc);
+    private extern static bool wglDeleteContext (IntPtr hglrc);
 
     private static class Extensions {
 #pragma warning disable CS0649
@@ -157,7 +157,7 @@ unsafe public static class Opengl {
 
         static Extensions () {
             foreach (var f in typeof(Extensions).GetFields(BindingFlags.Public | BindingFlags.Static))
-                if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
+                if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero) 
                     f.SetValue(null, GetProcAddress(f.Name));
         }
 
@@ -196,12 +196,14 @@ unsafe public static class Opengl {
         fixed (int* a = attributes)
         fixed (int* v = values)
             if (0 == Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v))
-                throw new Exception($"{nameof(Extensions.wglGetPixelFormatAttribivARB)}failed");
+                throw new WinApiException(nameof(Extensions.wglGetPixelFormatAttribivARB));
     }
 
     public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
-        fixed (int* p = attribs)
-            return Extensions.wglCreateContextAttribsARB(dc, sharedContext, p);
+        fixed (int* p = attribs) {
+            var context = Extensions.wglCreateContextAttribsARB(dc, sharedContext, p);
+            return IntPtr.Zero != context ? context : throw new WinApiException(nameof(Extensions.wglCreateContextAttribsARB));
+        }
     }
 
     public static void GetDepthRange (out float near, out float far) {
@@ -358,12 +360,21 @@ unsafe public static class Opengl {
         GetIntegerv((int)p, &i);
         return i;
     }
+    public static void MakeCurrent (IntPtr deviceContext, IntPtr renderingContext) {
+        if (!wglMakeCurrent(deviceContext, renderingContext))
+            throw new WinApiException(nameof(wglMakeCurrent));
+    }
 
+    public static void DeleteContext (IntPtr renderingContext) {
+        if (!wglDeleteContext(renderingContext))
+            throw new WinApiException(nameof(wglDeleteContext));
+    }
     public static int CreateTexture2D () {
         int i;
         Extensions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
         return i;
     }
+
     public unsafe static IntPtr CreateSimpleContext (IntPtr dc, Predicate<PixelFormatDescriptor> condition) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
@@ -371,13 +382,12 @@ unsafe public static class Opengl {
         var pfIndex = FindPixelFormat(dc, ref descriptor, condition);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
-        if (0 == Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
+        if (!Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
             throw new WinApiException("failed SetPixelFormat");
         var rc = CreateContext(dc);
         if (rc == IntPtr.Zero)
             throw new WinApiException("failed wglCreateContext");
-        if (!MakeCurrent(dc, rc))
-            throw new WinApiException("failed wglMakeCurrent");
+        MakeCurrent(dc, rc);
         var versionString = Marshal.PtrToStringAnsi(GetString(OpenglString.Version));
         var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
         if (!m.Success)
