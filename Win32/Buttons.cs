@@ -1,15 +1,14 @@
 namespace Win32;
 using System;
 
-public enum CmdShow { 
-Hide = 0,
-ShowNormal = 1,
-ShowMinimized,
-ShowMaximized,
-ShowNoActivate,
-Show,
-Minimize,
-
+public enum CmdShow {
+    Hide = 0,
+    ShowNormal = 1,
+    ShowMinimized,
+    ShowMaximized,
+    ShowNoActivate,
+    Show,
+    Minimize,
 }
 
 [Flags]

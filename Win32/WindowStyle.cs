@@ -5,10 +5,8 @@ using System;
 [Flags]
 public enum WindowStyle:uint {
     Overlapped = /*     */ 0x00000000,
-    Tabstop = /*        */ 0x00010000,
     MaximizeBox = /*    */ 0x00010000,
     MinimizeBox = /*    */ 0x00020000,
-    Group = /*          */ 0x00020000,
     Thickframe = /*     */ 0x00040000,
     Sysmenu = /*        */ 0x00080000,
     Hscroll = /*        */ 0x00100000,

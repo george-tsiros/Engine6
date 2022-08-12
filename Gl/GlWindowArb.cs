@@ -7,119 +7,102 @@ using System.Text;
 using Win32;
 using Linear;
 using System.Diagnostics;
+using System.Drawing;
 
 public class GlWindowArb:GlWindow {
 
     public GlWindowArb (Vector2i size, Vector2i? position = null) : base(size, position) {
 
         var extendedFormatCount = Opengl.GetPixelFormatCount(DeviceContext, 1, 0, 1);
-        var attributes = new int[] {
-            (int)PixelFormatAttributes.PIXEL_TYPE,
-            (int)PixelFormatAttributes.ACCELERATION,
-            (int)PixelFormatAttributes.COLOR_BITS,
-            (int)PixelFormatAttributes.DEPTH_BITS,
-            (int)PixelFormatAttributes.DOUBLE_BUFFER,
-            (int)PixelFormatAttributes.SWAP_METHOD,
+        var attributeNames = new int[] {
+            (int)PixelFormatAttributes.Acceleration,
+            (int)PixelFormatAttributes.ColorBits,
+            (int)PixelFormatAttributes.DepthBits,
+            (int)PixelFormatAttributes.DoubleBuffer,
+            (int)PixelFormatAttributes.DrawToWindow,
+            (int)PixelFormatAttributes.PixelType,
         };
-        var values = new int[attributes.Length];
-        var format = new ExtendedPixelFormat();
-        var candidates = new List<ExtendedPixelFormat>();
+
+        var attributeValues = new int[attributeNames.Length];
+        var attributeNameValuePairs = new int[attributeNames.Length * 2 + 2 + 8];
+        attributeNameValuePairs[attributeNames.Length * 2] = (int)ContextAttributes.ContextFlags;
+        attributeNameValuePairs[attributeNames.Length * 2 + 2] = (int)ContextAttributes.MajorVersion;
+        attributeNameValuePairs[attributeNames.Length * 2 + 4] = (int)ContextAttributes.MinorVersion;
+        attributeNameValuePairs[attributeNames.Length * 2 + 6] = (int)ContextAttributes.ProfileMask;
+        var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
-            Opengl.GetPixelFormatAttribivARB(DeviceContext, i, 0, 6, attributes, values);
-            format.Index = i;
-            format.PixelType = (PixelType)values[0];
-            format.Acceleration = (Acceleration)values[1];
-            format.ColorBits = values[2];
-            format.DepthBits = values[3];
-            format.DoubleBuffer = values[4] != 0;
-            format.SwapMethod = (SwapMethod)values[5];
-            //if (IsAppropriate(format))
-            candidates.Add(format);
+            Opengl.GetPixelFormatAttribivARB(DeviceContext, i, 0, attributeNames.Length, attributeNames, attributeValues);
+            if ((int)Acceleration.Full == attributeValues[0] && 32 == attributeValues[1] && 24 <= attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5])
+                candidates.Add(i);
         }
 
         if (0 == candidates.Count)
-            throw new Exception();
-
-        //Opengl.MakeCurrent(DeviceContext, IntPtr.Zero);
-        //Opengl.DeleteContext(RenderingContext);
-        //RenderingContext = IntPtr.Zero;
-        //if (!User.ReleaseDC(WindowHandle, DeviceContext))
-        //    throw new WinApiException(nameof(User.ReleaseDC));
-        //DeviceContext = IntPtr.Zero;
-        //_ = User.DestroyWindow(WindowHandle);
-        //WindowHandle = IntPtr.Zero;
+            throw new Exception("failed to find any pixel formats");
 
         var pfd = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        var workingPfdIndices = new List<int>();
+        bool windowUsed = true;
 
-        foreach (var candidate in candidates) {
+        foreach (var index in candidates) {
+            if (windowUsed) {
+                Recreate();
+                windowUsed = false;
+            }
             try {
-                if (IntPtr.Zero != RenderingContext) {
-                    Opengl.MakeCurrent(DeviceContext, RenderingContext);
-                    Opengl.DeleteContext(RenderingContext);
-                    RenderingContext = IntPtr.Zero;
-                }
-                if (IntPtr.Zero != DeviceContext) {
-                    if (!User.ReleaseDC(WindowHandle, DeviceContext))
-                        throw new WinApiException(nameof(User.ReleaseDC));
-                    DeviceContext = IntPtr.Zero;
-                }
-                if (IntPtr.Zero != WindowHandle) {
-                    _ = User.DestroyWindow(WindowHandle);
-                    WindowHandle = IntPtr.Zero;
-                }
-                WindowHandle = User.CreateWindow(ClassAtom, new(position ?? new(), size), SelfHandle);
-                DeviceContext = User.GetDC(WindowHandle);
-                if (IntPtr.Zero == DeviceContext)
-                    throw new WinApiException(nameof(User.GetDC));
-
-                Debug.WriteLine($"trying #{candidate.Index}");
-                Gdi.DescribePixelFormat(DeviceContext, candidate.Index, ref pfd);
-                if (!Gdi.SetPixelFormat(DeviceContext, candidate.Index, ref pfd))
+                Gdi.DescribePixelFormat(DeviceContext, index, ref pfd);
+                if (!Gdi.SetPixelFormat(DeviceContext, index, ref pfd))
                     throw new WinApiException(nameof(Gdi.SetPixelFormat));
-                var attribs = new int[] { (int)ContextAttribute.MAJOR_VERSION, Opengl.ShaderVersion.Major, (int)ContextAttribute.MINOR_VERSION, Opengl.ShaderVersion.Minor, (int)PixelFormatAttributes.ACCELERATION, (int)candidate.Acceleration, (int)PixelFormatAttributes.PIXEL_TYPE, (int)candidate.PixelType, (int)PixelFormatAttributes.COLOR_BITS, candidate.ColorBits, (int)PixelFormatAttributes.DEPTH_BITS, candidate.DepthBits, (int)PixelFormatAttributes.SWAP_METHOD, (int)candidate.SwapMethod, (int)PixelFormatAttributes.DOUBLE_BUFFER, candidate.DoubleBuffer ? 1 : 0, (int)PixelFormatAttributes.DRAW_TO_WINDOW, 1, (int)PixelFormatAttributes.STEREO, 0, (int)ContextAttribute.FLAGS, 1, (int)ContextAttribute.PROFILE_MASK, 1, 0, 0 };
-                var candidateContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attribs);
+
+                windowUsed = true;
+
+                for (var i = 0; i < attributeNames.Length; ++i)
+                    attributeNameValuePairs[2 * i + 1] = attributeValues[i];
+
+                attributeNameValuePairs[attributeNames.Length * 2 + 1] = (int)(ContextFlags.Debug | ContextFlags.ForwardCompatible);
+                attributeNameValuePairs[attributeNames.Length * 2 + 3] = Opengl.ShaderVersion.Major;
+                attributeNameValuePairs[attributeNames.Length * 2 + 5] = Opengl.ShaderVersion.Minor;
+                attributeNameValuePairs[attributeNames.Length * 2 + 7] = (int)ProfileMask.Core;
+
+                var candidateContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attributeNameValuePairs);
                 Opengl.MakeCurrent(DeviceContext, candidateContext);
                 RenderingContext = candidateContext;
-                var depthTestState = Opengl.IsEnabled(Capability.DepthTest);
-                Debug.Write($"{nameof(Capability.DepthTest)} is {OnOff(depthTestState)}");
-                if (depthTestState)
+                var initial = Opengl.IsEnabled(Capability.DepthTest);
+                if (initial)
                     Opengl.Disable(Capability.DepthTest);
                 else
                     Opengl.Enable(Capability.DepthTest);
-                if (depthTestState != Opengl.IsEnabled(Capability.DepthTest)) {
-                    Debug.Write(", toggled ok");
-                    if (!depthTestState)
-                        Opengl.Enable(Capability.DepthTest);
-                    else
-                        Opengl.Disable(Capability.DepthTest);
-                    if (depthTestState == Opengl.IsEnabled(Capability.DepthTest)) {
-                        Debug.WriteLine(", restored ok");
-                        workingPfdIndices.Add(candidate.Index);
-                    } else
-                        Debug.WriteLine(", failed to restore");
-                } else {
-                    Debug.WriteLine($", failed to toggle");
+                var toggled = Opengl.IsEnabled(Capability.DepthTest);
+                if (initial == toggled)
+                    throw new GlException();
+                if (toggled)
+                    Opengl.Disable(Capability.DepthTest);
+                else
+                    Opengl.Enable(Capability.DepthTest);
+                var restored = Opengl.IsEnabled(Capability.DepthTest);
+                if (initial == restored) {
+                    Debug.WriteLine($"{index} works");
+                    break;
                 }
             } catch (Exception e) when (e is GlException || e is WinApiException) {
                 Debug.WriteLine(e);
-                continue;
             }
         }
-
-
-        var extensionsPtr = Opengl.GetExtensionsString();
-        var extensionsString = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(extensionsPtr);
-        // optional
-        //State.DebugOutput = true;
+    }
+    void Recreate () {
+        if (IntPtr.Zero != Opengl.GetCurrentContext())
+            Opengl.MakeCurrent(DeviceContext, IntPtr.Zero);
+        if (IntPtr.Zero != RenderingContext)
+            Opengl.DeleteContext(RenderingContext);
+        if (!User.ReleaseDC(WindowHandle, DeviceContext))
+            throw new WinApiException(nameof(User.ReleaseDC));
+        if (!User.DestroyWindow(WindowHandle))
+            throw new WinApiException(nameof(User.DestroyWindow));
+        WindowHandle = User.CreateWindow(ClassAtom, new(new(), Size), SelfHandle);
+        if (IntPtr.Zero == WindowHandle)
+            throw new WinApiException(nameof(User.CreateWindow));
+        DeviceContext = User.GetDC(WindowHandle);
+        if (IntPtr.Zero == DeviceContext)
+            throw new WinApiException(nameof(User.GetDC));
     }
     static string OnOff (bool yes) => yes ? "on" : "off";
-    static bool IsAppropriate (ExtendedPixelFormat f) => true
-        && f.PixelType == PixelType.Rgba
-        && f.Acceleration == Acceleration.Full
-        && f.ColorBits == 32
-        && f.DepthBits >= 24
-        //&& f.DoubleBuffer
-        //&& SwapMethod.Undefined != f.SwapMethod
-        ;
+
 }

@@ -185,7 +185,7 @@ public static partial class User {
 
     public static ushort RegisterWindowClass (WndProc wndProc, string className) {
         var windowClass = WindowClassExW.Create();
-        windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw | ClassStyle.OwnDc;
+        windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw;
         windowClass.wndProc = wndProc;
         windowClass.classname = className;
         var atom = RegisterClassExW(ref windowClass);
@@ -202,5 +202,4 @@ public static partial class User {
         var p = CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, r.Left, r.Top, r.Width, r.Height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel.GetModuleHandleW(null), IntPtr.Zero);
         return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExW));
     }
-
 }

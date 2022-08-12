@@ -153,7 +153,7 @@ unsafe public static class Opengl {
         public static readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB;
         public static readonly delegate* unmanaged[Stdcall]<int, int> wglSwapIntervalEXT;
         public static readonly delegate* unmanaged[Stdcall]<int> wglGetSwapIntervalEXT;
-        public static readonly delegate* unmanaged[Stdcall]<IntPtr, int, int, uint, int*, int*, int> wglGetPixelFormatAttribivARB;
+        public static readonly delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
 
         static Extensions () {
             foreach (var f in typeof(Extensions).GetFields(BindingFlags.Public | BindingFlags.Static))
@@ -179,27 +179,27 @@ unsafe public static class Opengl {
     }
     public static bool ExtensionsSupported => Extensions.wglGetPixelFormatAttribivARB is not null;
 
-    public static int GetPixelFormatCount (IntPtr dc, int a, int b, uint c) {
-        int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
+    public static int GetPixelFormatCount (IntPtr dc, int a, int b, int c) {
+        int pixelFormatCount = (int)PixelFormatAttributes.PixelFormatCount;
         var count = 0;
-        GetPixelFormatAttribivARB(dc, a, b, c, ref WGL_NUMBER_PIXEL_FORMATS_ARB, ref count);
+        GetPixelFormatAttribivARB(dc, a, b, c, ref pixelFormatCount, ref count);
         return count;
     }
 
-    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, ref int attributes, ref int values) {
+    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, int c, ref int attributes, ref int values) {
         fixed (int* a = &attributes)
         fixed (int* v = &values)
             _ = Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
     }
 
-    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, uint c, int[] attributes, int[] values) {
+    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, int c, int[] attributes, int[] values) {
         fixed (int* a = attributes)
         fixed (int* v = values)
             if (0 == Extensions.wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v))
                 throw new WinApiException(nameof(Extensions.wglGetPixelFormatAttribivARB));
     }
 
-    public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, int[] attribs) {
+    public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, ReadOnlySpan<int> attribs) {
         fixed (int* p = attribs) {
             var context = Extensions.wglCreateContextAttribsARB(dc, sharedContext, p);
             return IntPtr.Zero != context ? context : throw new WinApiException(nameof(Extensions.wglCreateContextAttribsARB));

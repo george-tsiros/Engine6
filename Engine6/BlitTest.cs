@@ -23,7 +23,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindow {
+internal class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
     static void Log (object ob) =>
 #if DEBUG
