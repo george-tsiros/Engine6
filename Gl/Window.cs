@@ -40,10 +40,12 @@ public abstract class Window:IDisposable {
 
     private string text;
     public string Text {
-        get => 
+        get =>
             text;
-        set => 
-            _ = text != value ? User.SetWindowText(WindowHandle, text = value) : false;
+        set {
+            if (value != text)
+                _ = User.SetWindowText(WindowHandle, text = value);
+        }
     }
 
     private Font font;
@@ -53,7 +55,7 @@ public abstract class Window:IDisposable {
         set =>
             font = value;
     }
-    
+
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
@@ -62,18 +64,20 @@ public abstract class Window:IDisposable {
     private bool cursorVisible = true;
 
     public bool CursorVisible {
-        get => 
+        get =>
             cursorVisible;
-        set => 
-            _ = value != cursorVisible ? User.ShowCursor(cursorVisible = value) : 0;
+        set {
+            if (value != cursorVisible)
+                _ = User.ShowCursor(cursorVisible = value);
+        }
     }
 
-    public Window (Vector2i size) {
+    public Window (Vector2i size, Vector2i? position = null) {
+
         if (size.X < 1 || size.Y < 1)
             throw new ArgumentOutOfRangeException(nameof(size));
         Instance = this;
-
-        WindowHandle = User.CreateWindow(ClassAtom, size, SelfHandle);
+        WindowHandle = User.CreateWindow(ClassAtom, new(position ?? new(), size), SelfHandle);
         Size = size;
     }
 

@@ -259,6 +259,7 @@ public enum Capability:uint {
     LineSmooth = Const.LINE_SMOOTH,
     StencilTest = Const.STENCIL_TEST,
     ScissorTest = Const.SCISSOR_TEST,
+    PointSize = Const.POINT_SIZE,
 }
 
 public enum DepthFunction {
@@ -452,4 +453,9 @@ public enum IntParameter {
     ArrayBufferBinding = Const.ARRAY_BUFFER_BINDING,
     VertexArrayBinding = Const.VERTEX_ARRAY_BINDING,
     ActiveTexture = Const.ACTIVE_TEXTURE,
+}
+
+public enum FloatParameter {
+    PointSize = Const.POINT_SIZE,
+    PointSizeGranularity = Const.POINT_SIZE_GRANULARITY,
 }

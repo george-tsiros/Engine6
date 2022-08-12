@@ -14,18 +14,26 @@ sealed class Camera {
     }
     private Vector3 location;
     public Vector3 Location {
-        get => location;
+        get => 
+            location;
         set {
+            if (location == value)
+                return;
             lookAtIsValid = false;
             rotationOnlyIsValid = false;
             location = value;
         }
     }
     private float yaw = 0f, pitch = 0f;
-    public Camera (Vector3 location) => Location = location;
+    public Camera (Vector3 location) => 
+        Location = location;
 
-    public Matrix4x4 RotationOnly => WasInvalid(ref rotationOnlyIsValid) ? (rotationOnly = CreateLookAt(Vector3.Zero, yaw, pitch)) : rotationOnly;
-    public Matrix4x4 LookAtMatrix => WasInvalid(ref lookAtIsValid) ? (lookAt = CreateLookAt(location, yaw, pitch)) : lookAt;
+    public Matrix4x4 RotationOnly => 
+        WasInvalid(ref rotationOnlyIsValid) ? (rotationOnly = CreateLookAt(Vector3.Zero, yaw, pitch)) : rotationOnly;
+
+    public Matrix4x4 LookAtMatrix => 
+        WasInvalid(ref lookAtIsValid) ? (lookAt = CreateLookAt(location, yaw, pitch)) : lookAt;
+
 
     private bool rotationOnlyIsValid = false;
     private bool lookAtIsValid = false;
@@ -41,12 +49,15 @@ sealed class Camera {
         return Matrix4x4.CreateLookAt(location, location + forward, up);
     }
 
+    public void Walk (Vector3 d) => 
+        Location += Vector3.Transform(d, Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw));
+
     public void Rotate (Vector2 v) {
         if (v.X != 0 || v.Y != 0) {
             lookAtIsValid = false;
             rotationOnlyIsValid = false;
-            _ = ModuloTwoPi(ref yaw, -v.X);
-            pitch = FloatClamp(v.Y, -.4f * fPi, .4f * fPi);
+            yaw = (yaw - v.X) % fTau;
+            pitch = FloatClamp(pitch + v.Y, -.4f * fPi, .4f * fPi);
         }
     }
 }

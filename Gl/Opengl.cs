@@ -57,6 +57,8 @@ unsafe public static class Opengl {
     public static extern void DepthFunc (DepthFunction f);
     [DllImport(opengl32, EntryPoint = "glFlush", ExactSpelling = true)]
     public static extern void Flush ();
+    [DllImport(opengl32, EntryPoint = "glPointSize", ExactSpelling = true, SetLastError = true)]
+    public static extern void PointSize (float size);
     [DllImport(opengl32, EntryPoint = "glGetString", ExactSpelling = true)]
     public static extern IntPtr GetString (OpenglString name);
     [DllImport(opengl32, EntryPoint = "glFinish", ExactSpelling = true)]

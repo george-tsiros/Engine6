@@ -4,7 +4,7 @@ in vec4 faceNormal;
 uniform vec4 lightDirection;
 uniform mat4 model, view, projection;
 
-flat out vec4 color;
+out vec4 color;
 
 void main () {
     float lightIntensity = dot(normalize(model * faceNormal).xyz, -lightDirection.xyz);

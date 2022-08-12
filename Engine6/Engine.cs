@@ -1,14 +1,15 @@
 namespace Engine;
 
+using Linear;
 using System;
-
+using System.Numerics;
+using static Linear.Maths;
 class Engine {
 
     [STAThread]
     static void Main () {
-        var model = Model.Cube(20, 20, 20);// new Model("data/teapot.obj", true);
-        Model.InvertFaces(model);
-        using var f = new BlitTest(new(1280, 720), model) { Font = new("ubuntu mono", 15f) };
+        //var model =  new Model("data/teapot.obj", true);
+        using var f = new MovementTest(new(1280, 720), Model.Sphere(50,25,1));
         f.Run();
     }
 }

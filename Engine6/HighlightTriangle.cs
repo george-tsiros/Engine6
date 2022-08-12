@@ -15,7 +15,6 @@ class HighlightTriangle:GlWindowArb {
         VertexCount = Model.Faces.Count * 3;
         Load += Load_self;
         KeyUp += KeyUp_self;
-        //CursorVisible = false;
     }
 
     Model Model;

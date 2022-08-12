@@ -101,7 +101,7 @@ public readonly struct Matrix4d {
         return new(
             t / ar, 0, 0, 0,
             0, t, 0, 0,
-            0, 0, (n + f) / (n - f), 1,
+            0, 0, (n + f) / (n - f), -1,
             0, 0, 2 * n * f / (n - f), 0
         );
     }

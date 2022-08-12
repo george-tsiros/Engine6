@@ -26,7 +26,6 @@ class NoiseTest:GlWindowArb {
     VertexArray quad;
     Sampler2D tex;
     Raster raster;
-    //readonly byte[] bytes = new byte[_WIDTH * _HEIGHT * 4];
     readonly int rowsPerThread;
     FastNoiseLite[] noises;
     CountdownEvent countdown;

@@ -9,7 +9,7 @@ using Linear;
 
 public class GlWindowArb:GlWindow {
 
-    public GlWindowArb (Vector2i size) : base(size) {
+    public GlWindowArb (Vector2i size, Vector2i? position = null) : base(size, position) {
         var lastDeviceContext = Opengl.GetCurrentDC();
         var lastRenderingContext = Opengl.GetCurrentContext();
 
@@ -35,7 +35,6 @@ public class GlWindowArb:GlWindow {
             format.DoubleBuffer = values[4] != 0;
             format.SwapMethod = (SwapMethod)values[5];
             candidates.Add(format);
-            Console.WriteLine(format);
         }
 
         var selectedFormat = candidates.Find(IsAppropriate);
@@ -44,7 +43,7 @@ public class GlWindowArb:GlWindow {
         _ = Opengl.MakeCurrent(lastDeviceContext, lastRenderingContext);
         _ = Opengl.DeleteContext(RenderingContext);
         _ = User.DestroyWindow(WindowHandle);
-        WindowHandle = User.CreateWindow(ClassAtom, size, SelfHandle);
+        WindowHandle = User.CreateWindow(ClassAtom, new(position ?? new(), size), SelfHandle);
         DeviceContext = User.GetDC(WindowHandle);
         var pfd = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
         Gdi.DescribePixelFormat(DeviceContext, selectedFormat.Index, ref pfd);

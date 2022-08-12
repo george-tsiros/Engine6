@@ -5,7 +5,7 @@ using System.Numerics;
 using Linear;
 public static class Lines {
 #pragma warning disable CS0649
-    public const string VertexSource = "dW5pZm9ybSBpdmVjMiByZW5kZXJTaXplOyB1bmlmb3JtIGl2ZWMyIG9mZnNldDsgaW4gaXZlYzIgdmVydGV4UG9zaXRpb247IHZvaWQgbWFpbiAoKSB7IHZlYzIgYSA9IDIgLyAocmVuZGVyU2l6ZSAtIHZlYzIoMS4wLDEuMCkpOyBnbF9Qb3NpdGlvbiA9IHZlYzQoKHZlcnRleFBvc2l0aW9uICsgb2Zmc2V0KSAqIGEgLSB2ZWMyKDEuMCwgMS4wKSwgMC4wLCAxLjApOyB9";
+    public const string VertexSource = "dW5pZm9ybSBpdmVjMiByZW5kZXJTaXplOyB1bmlmb3JtIGl2ZWMyIG9mZnNldDsgaW4gaXZlYzIgdmVydGV4UG9zaXRpb247IHZvaWQgbWFpbiAoKSB7IHZlYzIgYSA9IDIgLyAocmVuZGVyU2l6ZSAtIHZlYzIoMS4wKSk7IGdsX1Bvc2l0aW9uID0gdmVjNCgodmVydGV4UG9zaXRpb24gKyBvZmZzZXQpICogYSAtIHZlYzIoMS4wKSwgMC4wLCAxLjApOyB9";
     public const string FragmentSource = "dW5pZm9ybSB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gY29sb3I7IH0=";
 
     //size 1, type 35667

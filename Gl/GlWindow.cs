@@ -23,7 +23,7 @@ public class GlWindow:SimpleWindow {
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
-    public GlWindow (Vector2i size) : base(size) {
+    public GlWindow (Vector2i size, Vector2i? position = null) : base(size, position) {
         DeviceContext = User.GetDC(WindowHandle);
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Demand(Opengl.MakeCurrent(DeviceContext, RenderingContext), "failed to make context current");
