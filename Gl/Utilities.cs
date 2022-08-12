@@ -76,6 +76,8 @@ public static class Utilities {
         var formatted = TraceFormat(message, 1);
         if (Debugger.IsAttached)
             Debug.WriteLine(formatted);
+        else
+            Console.Error.WriteLine(formatted);
     }
 
     public static void CycleThrough<T> (ref T value, bool backwards = false) where T : struct, Enum {
