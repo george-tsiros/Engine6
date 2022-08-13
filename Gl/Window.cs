@@ -11,6 +11,13 @@ public abstract class Window:IDisposable {
     private static IntPtr StaticWndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) =>
         Instance.WndProc(hWnd, msg, w, l);
 
+    protected static void WriteLine (object ob) {
+        if (Debugger.IsAttached)
+            Debug.WriteLine(ob);
+        else 
+            Console.WriteLine(ob);
+    }
+
     protected static readonly WndProc staticWndProc;
     protected static readonly ushort ClassAtom;
     protected static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);

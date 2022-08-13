@@ -104,7 +104,7 @@ public static class Utilities {
     public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) => (eh = GetBackingField(type, prop, flags)) != null;
     unsafe public static int ShaderFromString (ShaderType type, string source) {
         var vs = Opengl.CreateShader(type);
-        Opengl.ShaderSource(vs, $"#version {Opengl.VersionString} core\n{source}");
+        Opengl.ShaderSource(vs, $"#version {Opengl.ShaderVersionString} core\n{source}");
         Opengl.CompileShader(vs);
         var log = Opengl.GetShaderInfoLog(vs);
         if (log.Length > 0)

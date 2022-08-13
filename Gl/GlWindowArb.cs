@@ -21,18 +21,19 @@ public class GlWindowArb:GlWindow {
             (int)PixelFormatAttributes.DoubleBuffer,
             (int)PixelFormatAttributes.DrawToWindow,
             (int)PixelFormatAttributes.PixelType,
+            (int)PixelFormatAttributes.SupportOpengl,
         };
 
         var attributeValues = new int[attributeNames.Length];
         var attributeNameValuePairs = new int[attributeNames.Length * 2 + 2 + 8];
-        attributeNameValuePairs[attributeNames.Length * 2] = (int)ContextAttributes.ContextFlags;
-        attributeNameValuePairs[attributeNames.Length * 2 + 2] = (int)ContextAttributes.MajorVersion;
-        attributeNameValuePairs[attributeNames.Length * 2 + 4] = (int)ContextAttributes.MinorVersion;
-        attributeNameValuePairs[attributeNames.Length * 2 + 6] = (int)ContextAttributes.ProfileMask;
+        attributeNameValuePairs[0] = (int)ContextAttributes.ProfileMask;
+        attributeNameValuePairs[2] = (int)ContextAttributes.MajorVersion;
+        attributeNameValuePairs[4] = (int)ContextAttributes.MinorVersion;
+        attributeNameValuePairs[6] = (int)ContextAttributes.ContextFlags;
         var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
             Opengl.GetPixelFormatAttribivARB(DeviceContext, i, 0, attributeNames.Length, attributeNames, attributeValues);
-            if ((int)Acceleration.Full == attributeValues[0] && 32 == attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5])
+            if ((int)Acceleration.Full == attributeValues[0] && 32 == attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5] && 0 != attributeValues[6])
                 candidates.Add(i);
         }
 
@@ -55,26 +56,31 @@ public class GlWindowArb:GlWindow {
                 windowUsed = true;
 
                 for (var i = 0; i < attributeNames.Length; ++i)
-                    attributeNameValuePairs[2 * i + 1] = attributeValues[i];
+                    attributeNameValuePairs[attributeNames.Length + 2 * i + 1] = attributeValues[i];
 
-                attributeNameValuePairs[attributeNames.Length * 2 + 1] = (int)ContextFlags.Debug ;// (int)(ContextFlags.Debug | ContextFlags.ForwardCompatible);
-                attributeNameValuePairs[attributeNames.Length * 2 + 3] = Opengl.ShaderVersion.Major;
-                attributeNameValuePairs[attributeNames.Length * 2 + 5] = Opengl.ShaderVersion.Minor;
-                attributeNameValuePairs[attributeNames.Length * 2 + 7] = (int)profileMask;
+                attributeNameValuePairs[1] = (int)profileMask;
+                attributeNameValuePairs[3] = Opengl.ShaderVersion.Major;
+                attributeNameValuePairs[5] = Opengl.ShaderVersion.Minor;
+                attributeNameValuePairs[7] = (int)ContextFlags.Debug;
 
                 var candidateContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attributeNameValuePairs);
                 Opengl.MakeCurrent(DeviceContext, candidateContext);
-                if (profileMask != Opengl.Profile)
-                    throw new GlException($"requested {profileMask}, got {Opengl.Profile}");
                 RenderingContext = candidateContext;
+                if (profileMask != Opengl.Profile) {
+                    WriteLine($"requested {profileMask} profile for pixelformat #{index}, got {Opengl.Profile} ({Opengl.VersionString})");
+                    continue;
+                }
+                WriteLine($"{Opengl.VersionString}");
                 var initial = Opengl.IsEnabled(Capability.DepthTest);
                 if (initial)
                     Opengl.Disable(Capability.DepthTest);
                 else
                     Opengl.Enable(Capability.DepthTest);
                 var toggled = Opengl.IsEnabled(Capability.DepthTest);
-                if (initial == toggled)
-                    throw new GlException();
+                if (initial == toggled) {
+                    WriteLine($"pixelformat #{index} failed to toggle depth test, skipping");
+                    continue;
+                }
                 if (toggled)
                     Opengl.Disable(Capability.DepthTest);
                 else
@@ -87,7 +93,7 @@ public class GlWindowArb:GlWindow {
                     break;
                 }
             } catch (Exception e) when (e is GlException || e is WinApiException) {
-                Debug.WriteLine(e);
+                WriteLine(e);
             }
         }
     }
@@ -96,6 +102,7 @@ public class GlWindowArb:GlWindow {
             Opengl.ReleaseCurrent(DeviceContext);
         if (IntPtr.Zero != RenderingContext)
             Opengl.DeleteContext(RenderingContext);
+        RenderingContext = IntPtr.Zero;
         if (!User.ReleaseDC(WindowHandle, DeviceContext))
             throw new WinApiException(nameof(User.ReleaseDC));
         if (!User.DestroyWindow(WindowHandle))

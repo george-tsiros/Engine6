@@ -375,14 +375,14 @@ unsafe public static class Opengl {
         var stringPointer = GetString(OpenglString.Version);
         if (IntPtr.Zero == stringPointer)
             throw new GlException("GetString(OpenglString.Version) returned 0");
-        var versionString = Marshal.PtrToStringAnsi(stringPointer);
-        if (string.IsNullOrEmpty(versionString))
+        VersionString = Marshal.PtrToStringAnsi(stringPointer);
+        if (string.IsNullOrEmpty(VersionString))
             throw new GlException("failed to get opengl version string");
-        var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) (Core|Compatibility)?");
+        var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) (Core|Compatibility)?");
         if (!m.Success)
-            throw new Exception($"'{versionString}' not a version string");
+            throw new Exception($"'{VersionString}' not a version string");
         ShaderVersion = Version.Parse(m.Groups[1].Value);
-        VersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
+        ShaderVersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
         if (m.Groups[2].Success && Enum.TryParse<ProfileMask>(m.Groups[2].Value, out var profileMask))
             Profile = profileMask;
     }
@@ -412,6 +412,7 @@ unsafe public static class Opengl {
     }
     public static ProfileMask Profile { get; private set; } = ProfileMask.Unknown;
     public static Version ShaderVersion { get; private set; }
+    public static string ShaderVersionString { get; private set; }
     public static string VersionString { get; private set; }
 
     unsafe static int FindPixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd, Predicate<PixelFormatDescriptor> condition) {

@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+
 public enum ContextAttributes {
     MajorVersion = 0x2091,
     MinorVersion = 0x2092,
@@ -8,16 +9,20 @@ public enum ContextAttributes {
     ContextFlags = 0x2094,
     ProfileMask = 0x9126,
 }
+
 [Flags]
 public enum ContextFlags {
+    None = 0,
     Debug = 1,
     ForwardCompatible = 2,
 }
+
 public enum ProfileMask {
     Unknown = 0,
     Core = 1,
     Compatibility = 2,
 }
+
 public enum OpenglString {
     Vendor = 0x1F00,
     Renderer = 0x1F01,
@@ -80,6 +85,7 @@ public enum MinFilter {
     NearestMipMapLinear = Const.NEAREST_MIPMAP_LINEAR,
     LinearMipMapLinear = Const.LINEAR_MIPMAP_LINEAR,
 }
+
 public enum PixelFormat {
     Red = Const.RED,
     Rg = Const.RG,
@@ -88,6 +94,7 @@ public enum PixelFormat {
     Bgr = Const.BGR,
     Bgra = Const.BGRA,
 }
+
 public enum TextureFormat {
     R16 = Const.R16,
     R8 = Const.R8,
