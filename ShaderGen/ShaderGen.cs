@@ -35,6 +35,9 @@ class ShaderGen {
             if (ex.InnerException is MarshalDirectiveException inner)
                 Trace($"({inner.Message})");
             return false;
+        } catch (GlException e) {
+            Trace(e.ToString());
+            return false;
         }
         return true;
     }

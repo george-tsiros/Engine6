@@ -105,6 +105,8 @@ internal class BlitTest:GlWindowArb {
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
         softwareRenderSurface = new(Size, 4, 1);
         softwareRenderTexture = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        offscreenRenderingSurface.BindTo(1);
+        PassThrough.Tex(1);
 
         State.Program = DirectionalFlat.Id;
         var faceCount = Faces.Length;
@@ -156,8 +158,6 @@ internal class BlitTest:GlWindowArb {
         Viewport(0, 0, Width, Height);
         Clear(BufferBit.ColorDepth);
 
-        offscreenRenderingSurface.BindTo(1);
-        PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
 
         if (!CursorGrabbed) {
@@ -231,8 +231,6 @@ internal class BlitTest:GlWindowArb {
         }
         softwareRenderSurface.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
         softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
-        _ = User.GetCursorPos(out var p);
-        softwareRenderSurface.DrawString(p.ToString(), Font, 0, textRow += Font.Height);
         prf.Leave();
         prf.Enter((int)FooNum.TextureUpload);
 

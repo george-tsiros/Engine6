@@ -23,7 +23,7 @@ public class GlWindow:SimpleWindow {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
     public GlWindow (Vector2i size, Vector2i? position = null) : base(size, position) {
-        RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
+        RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits == 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Opengl.MakeCurrent(DeviceContext, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
     }
@@ -54,7 +54,7 @@ public class GlWindow:SimpleWindow {
     public override void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
-            Opengl.MakeCurrent(IntPtr.Zero, IntPtr.Zero);
+            Opengl.ReleaseCurrent(DeviceContext);
             Opengl.DeleteContext(RenderingContext);
             Demand(User.ReleaseDC(WindowHandle, DeviceContext));
         }

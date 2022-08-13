@@ -36,6 +36,7 @@ public static class Maths {
     public static double DoubleAbs (double a) => Math.Abs(a);
     public static double DoubleFloor (double a) => Math.Floor(a);
     public static double DoubleRound (double a, int digits) => Math.Round(a, digits);
+    public static double DoubleRound (double a) => Math.Round(a);
     public static (double, double) DoubleSinCos (double angle) => Math.SinCos(angle);
     public static double DoubleCos (double angle) => Math.Cos(angle);
     public static double DoubleSin (double angle) => Math.Sin(angle);

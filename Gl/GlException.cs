@@ -4,15 +4,26 @@ using System;
 using static Opengl;
 
 public class GlException:Exception {
-    
-    public int GlError { get; }
+
+    public GlErrorCodes GlError { get; }
     public string GlMessage { get; }
-    
-    public GlException (string message = null) : base(message ?? "") {
-        GlError = GetError();
-        GlMessage = Glu.ErrorString(GlError);
+
+    public static void Assert () {
+        var e = GetError();
+        if (GlErrorCodes.NoError != e)
+            throw new GlException(e, Glu.ErrorString((int)e));
     }
 
-    public override string ToString () => 
+    private GlException (GlErrorCodes e, string str) : base(str) {
+        GlError = e;
+        GlMessage = str;
+    }
+
+    public GlException (string message = null) : base(message ?? "") {
+        GlError = GetError();
+        GlMessage = Glu.ErrorString((int)GlError);
+    }
+
+    public override string ToString () =>
         $"opengl says: '{GlMessage}' ({GlError}), '{Message}'";
 }

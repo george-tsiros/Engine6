@@ -1,7 +1,7 @@
 ﻿namespace Linear;
 using System;
 using System.Numerics;
-
+using static Maths;
 public readonly struct Vector2d {
 
     public readonly double X, Y;
@@ -19,8 +19,8 @@ public readonly struct Vector2d {
     public static implicit operator Vector2d (in Vector2 v) => new(v);
     public static implicit operator Vector2d (in Vector2i v) => new(v);
     public static double Dot (in Vector2d a, in Vector2d b) => a.X * b.X + a.Y * b.Y;
-    public static Vector2i Round (in Vector2d v) => new((int)Math.Round(v.X), (int)Math.Round(v.Y));
-    public double Magnitude () => Math.Sqrt(X * X + Y * Y);
+    public static Vector2i Round (in Vector2d v) => new((int)DoubleRound(v.X), (int)DoubleRound(v.Y));
+    public double Magnitude () => DoubleSqrt(X * X + Y * Y);
     public static Vector2d Normalize (in Vector2d v) {
         var magnitude = v.Magnitude();
         return 1e-6 < magnitude ? 1 / magnitude * v : throw new ArgumentOutOfRangeException(nameof(v));

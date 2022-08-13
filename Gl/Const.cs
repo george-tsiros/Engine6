@@ -2,6 +2,13 @@ namespace Gl;
 
 internal static class Const {
 #pragma warning disable IDE1006 // Naming Styles
+    internal const int NO_ERROR = 0x0000;
+    internal const int INVALID_ENUM = 0x0500;
+    internal const int INVALID_VALUE = 0x0501;
+    internal const int INVALID_OPERATION = 0x0502;
+    internal const int STACK_OVERFLOW = 0x0503;
+    internal const int STACK_UNDERFLOW = 0x0504;
+    internal const int OUT_OF_MEMORY = 0x0505;
     internal const int DEPTH_BUFFER_BIT = 0x0100;
     internal const int ACCUM_BUFFER_BIT = 0x0200;
     internal const int STENCIL_BUFFER_BIT = 0x0400;

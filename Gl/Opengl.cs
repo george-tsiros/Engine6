@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using Win32;
 using System.IO;
 using Linear;
+using System.Diagnostics;
 
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
 
@@ -22,7 +23,7 @@ unsafe public static class Opengl {
     }
 
     [DllImport(opengl32, EntryPoint = "glGetError", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    public static extern int GetError ();
+    public static extern GlErrorCodes GetError ();
     [DllImport(opengl32, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError = true)]
     public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
@@ -157,7 +158,7 @@ unsafe public static class Opengl {
 
         static Extensions () {
             foreach (var f in typeof(Extensions).GetFields(BindingFlags.Public | BindingFlags.Static))
-                if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero) 
+                if (f.IsInitOnly && (IntPtr)f.GetValue(null) == IntPtr.Zero)
                     f.SetValue(null, GetProcAddress(f.Name));
         }
 
@@ -360,9 +361,30 @@ unsafe public static class Opengl {
         GetIntegerv((int)p, &i);
         return i;
     }
+    public static void ReleaseCurrent (IntPtr deviceContext) {
+        if (IntPtr.Zero == GetCurrentContext())
+            throw new Exception("no current context");
+        if (!wglMakeCurrent(deviceContext, IntPtr.Zero))
+            throw new WinApiException(nameof(wglMakeCurrent));
+    }
+
     public static void MakeCurrent (IntPtr deviceContext, IntPtr renderingContext) {
         if (!wglMakeCurrent(deviceContext, renderingContext))
             throw new WinApiException(nameof(wglMakeCurrent));
+        GlException.Assert();
+        var stringPointer = GetString(OpenglString.Version);
+        if (IntPtr.Zero == stringPointer)
+            throw new GlException("GetString(OpenglString.Version) returned 0");
+        var versionString = Marshal.PtrToStringAnsi(stringPointer);
+        if (string.IsNullOrEmpty(versionString))
+            throw new GlException("failed to get opengl version string");
+        var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) (Core|Compatibility)?");
+        if (!m.Success)
+            throw new Exception($"'{versionString}' not a version string");
+        ShaderVersion = Version.Parse(m.Groups[1].Value);
+        VersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
+        if (m.Groups[2].Success && Enum.TryParse<ProfileMask>(m.Groups[2].Value, out var profileMask))
+            Profile = profileMask;
     }
 
     public static void DeleteContext (IntPtr renderingContext) {
@@ -374,7 +396,8 @@ unsafe public static class Opengl {
         Extensions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
         return i;
     }
-
+    static Opengl () {
+    }
     public unsafe static IntPtr CreateSimpleContext (IntPtr dc, Predicate<PixelFormatDescriptor> condition) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
@@ -385,17 +408,9 @@ unsafe public static class Opengl {
         if (!Gdi.SetPixelFormat(dc, pfIndex, ref descriptor))
             throw new WinApiException("failed SetPixelFormat");
         var rc = CreateContext(dc);
-        if (rc == IntPtr.Zero)
-            throw new WinApiException("failed wglCreateContext");
-        MakeCurrent(dc, rc);
-        var versionString = Marshal.PtrToStringAnsi(GetString(OpenglString.Version));
-        var m = Regex.Match(versionString, @"^(\d\.\d\.\d+) ");
-        if (!m.Success)
-            throw new Exception($"'{versionString}' not a version string");
-        ShaderVersion = Version.Parse(m.Groups[1].Value);
-        VersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
-        return rc;
+        return rc != IntPtr.Zero ? rc : throw new WinApiException("failed wglCreateContext");
     }
+    public static ProfileMask Profile { get; private set; } = ProfileMask.Unknown;
     public static Version ShaderVersion { get; private set; }
     public static string VersionString { get; private set; }
 

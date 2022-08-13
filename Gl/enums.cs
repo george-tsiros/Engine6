@@ -14,6 +14,7 @@ public enum ContextFlags {
     ForwardCompatible = 2,
 }
 public enum ProfileMask {
+    Unknown = 0,
     Core = 1,
     Compatibility = 2,
 }

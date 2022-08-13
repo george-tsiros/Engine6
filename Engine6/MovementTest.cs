@@ -11,10 +11,16 @@ using System.Diagnostics;
 using Win32;
 
 class MovementTest:GlWindowArb {
-    readonly Model model;
-    public MovementTest (Vector2i size, Model m = null, Vector2i? position = null) : base(size, position) {
-        const string TeapotFilepath = @"data\teapot.obj";
-        model = m ?? new(TeapotFilepath, true);
+    static readonly Vector4[] QuadVertices = {
+        new(-1f, -1f, 0, 1),
+        new(+1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, -1f, 0, 1),
+        new(+1f, +1f, 0, 1),
+        new(-1f, +1f, 0, 1),
+    };
+
+    public MovementTest (Vector2i size) : base(size) {
         Load += Load_self;
         MouseMove += MouseMove_self;
         CursorGrabbed = true;
@@ -24,37 +30,45 @@ class MovementTest:GlWindowArb {
         camera.Rotate(.001f * (Vector2)e);
     }
 
-    VertexArray vao;
-    VertexBuffer<Vector4> vertexBuffer;
-    VertexBuffer<Vector3> normalBuffer;
-    Vector4 lightDirection = -new Vector4(Vector3.Normalize(Vector3.One),0);
-    Camera camera = new(new(0, 1.8f, 10));
+    Vector4 lightDirection = new(0, -1, 0, 0);
+    Camera camera = new(new(0, 1.8f, 5));
+    VertexArray renderingVertexArray, presentationVertexArray;
+    Framebuffer renderingFramebuffer;
+
     void Load_self (object sender, EventArgs args) {
+        renderingFramebuffer = new();
+        renderingFramebuffer.Attach(new Renderbuffer(Size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
+        var renderingSurface = new Sampler2D(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        renderingFramebuffer.Attach(renderingSurface, FramebufferAttachment.Color0);
+        NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
         State.Program = DirectionalFlat.Id;
-        var faceCount = model.Faces.Count;
-        var vertexCount = faceCount * 3;
-        var normals = new Vector3[vertexCount];
-        for (var i = 0; i < faceCount; ++i) {
-            var (a, b, c) = model.Faces[i];
-            var (v0, v1, v2) = (model.Vertices[a], model.Vertices[b], model.Vertices[c]);
-            normals[3 * i + 2] = normals[3 * i + 1] = normals[3 * i] = (Vector3)Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0));
-        }
+        renderingVertexArray = new();
+        var vertices = new VertexBuffer<Vector4>(new Vector4[] { 
+            new(-1, 0, +1, +1), 
+            new(+1, 0, +1, +1), 
+            new(+1, 0, -1, +1), 
+            new(-1, 0, +1, +1), 
+            new(+1, 0, -1, +1), 
+            new(-1, 0, -1, +1), 
+        });
+        renderingVertexArray.Assign(vertices, DirectionalFlat.VertexPosition);
+        var normals = new VertexBuffer<Vector4>(new Vector4[] {
+            new(0, 1, 0, 0),
+            new(0, 1, 0, 0),
+            new(0, 1, 0, 0),
+            new(0, 1, 0, 0),
+            new(0, 1, 0, 0),
+            new(0, 1, 0, 0),
+        });
+        renderingVertexArray.Assign(normals, DirectionalFlat.FaceNormal);
+        State.Program = PassThrough.Id;
+        presentationVertexArray = new();
+        presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
+        renderingSurface.BindTo(1);
+        PassThrough.Tex(1);
 
-        var vertices = new Vector4[vertexCount];
-        for (var (i, j) = (0, 0); j < vertexCount; ++i, ++j) {
-            var (a, b, c) = model.Faces[i];
-            var (v0, v1, v2) = (model.Vertices[a], model.Vertices[b], model.Vertices[c]);
-            vertices[j] = new((Vector3)v0, 1);
-            vertices[++j] = new((Vector3)v1, 1);
-            vertices[++j] = new((Vector3)v2, 1);
-        }
-
-        vertexBuffer = new(vertices);
-        normalBuffer = new(normals);
-        vao = new();
-        vao.Assign(vertexBuffer, DirectionalFlat.VertexPosition);
-        vao.Assign(normalBuffer, DirectionalFlat.FaceNormal);
     }
+
     long previousSync;
     float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
     void Move (float dt) {
@@ -70,24 +84,30 @@ class MovementTest:GlWindowArb {
         if (0 == dx && 0 == dz)// && 0 == dz)
             return;
         var velocity = IsKeyDown(Keys.ShiftKey) ? 8f : 5f;
-        camera.Walk(velocity* dt * Vector3.Normalize(new(dx,0, dz)));
+        camera.Walk(velocity * dt * Vector3.Normalize(new(dx, 0, dz)));
     }
     protected override void Render () {
-        Viewport(0, 0, Width, Height);
-        Clear(BufferBit.ColorDepth);
         var dt = Dt;
         if (0f < dt)
             Move(Dt);
-        previousSync = LastSync;
         State.Program = DirectionalFlat.Id;
-        State.VertexArray = vao;
-        State.DepthTest = true;
-        State.DepthFunc = DepthFunction.LessEqual;
-        State.CullFace = true;
+        State.Framebuffer = renderingFramebuffer;
+        State.VertexArray = renderingVertexArray;
+        Viewport(0, 0, Width, Height);
+        ClearColor(0, 0, 0, 1);
+        Clear(BufferBit.ColorDepth);
         DirectionalFlat.LightDirection(lightDirection);
-        DirectionalFlat.Model(Matrix4x4.CreateTranslation(0, (float)model.Min.Y, 0));
+        DirectionalFlat.Model(Matrix4x4.Identity);
         DirectionalFlat.View(camera.LookAtMatrix);
-        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, .1f, 100f));
-        DrawArrays(Primitive.Triangles, 0, 3 * model.Faces.Count);
+        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)Width / Height, .1f, 100));
+        DrawArrays(Primitive.Triangles, 0, 6);
+        State.Program = PassThrough.Id;
+        State.Framebuffer = 0;
+        State.VertexArray = presentationVertexArray;
+        Viewport(0, 0, Width, Height);
+        ClearColor(0, 0, 0, 1);
+        Clear(BufferBit.ColorDepth);
+        DrawArrays(Primitive.Triangles, 0, 6);
+        previousSync = LastSync;
     }
 }
