@@ -1,58 +1,215 @@
 namespace Gl;
 
 using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Win32;
 using Linear;
 
-public abstract class Window:IDisposable {
-    private static IntPtr StaticWndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l) =>
-        Instance.WndProc(hWnd, msg, w, l);
+public class Window:BaseWindow {
 
-    protected static void WriteLine (object ob) {
-        if (Debugger.IsAttached)
-            Debug.WriteLine(ob);
-        else 
-            Console.WriteLine(ob);
+    public bool IsFocused { get; private set; }
+
+    bool running = true;
+
+    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
+    public Buttons Buttons { get; private set; }
+
+    public event EventHandler<Buttons> ButtonDown;
+    protected virtual void OnButtonDown (Buttons depressed) => ButtonDown?.Invoke(this, depressed);
+
+    public event EventHandler<Buttons> ButtonUp;
+    protected virtual void OnButtonUp (Buttons released) => ButtonUp?.Invoke(this, released);
+
+    public event EventHandler<bool> FocusChanged;
+    protected virtual void OnFocusChanged (bool isFocused) => FocusChanged?.Invoke(this, isFocused);
+
+    public event EventHandler<Keys> KeyDown;
+    protected virtual void OnKeyDown (Keys k) => KeyDown?.Invoke(this, k);
+
+    public event EventHandler<Keys> KeyUp;
+    protected virtual void OnKeyUp (Keys k) => KeyUp?.Invoke(this, k);
+
+    public event EventHandler Load;
+    protected virtual void OnLoad () => Load?.Invoke(this, new());
+
+    public event EventHandler MouseLeave;
+    protected virtual void OnMouseLeave () => MouseLeave?.Invoke(this, new());
+
+    public event EventHandler<Vector2i> MouseMove;
+    protected virtual void OnMouseMove (Vector2i currentPosition) => MouseMove?.Invoke(this, currentPosition);
+
+    public event EventHandler Paint;
+    protected virtual void OnPaint () => Paint?.Invoke(this, new());
+
+    readonly int[] KeyState = new int[256 / 32];
+    bool painting;
+
+    public bool IsKeyDown (Keys key) {
+        var (h, l) = Split(key);
+        return (KeyState[h] & l) != 0;
     }
 
-    protected static readonly WndProc staticWndProc;
-    protected static readonly ushort ClassAtom;
-    protected static readonly IntPtr SelfHandle = Kernel.GetModuleHandleW(null);
+    protected List<IDisposable> Disposables { get; } = new();
 
-    static Window () {
-        staticWndProc = new(StaticWndProc);
-        ClassAtom = User.RegisterWindowClass(staticWndProc, ClassName);
-    }
-    private bool disposed;
-
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+    protected void Invalidate () {
+        Demand(User32.GetClientRect(WindowHandle, ref rect));
+        Demand(User32.InvalidateRect(WindowHandle, ref rect, IntPtr.Zero));
     }
 
+    //protected void Pump () {
+    //    Message m = new();
+    //    if (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+    //        var eh = User.GetMessageW(ref m, 0, 0, 0);
+    //        if (-1 == eh)
+    //            Environment.FailFast(null);
+    //        if (0 == eh) {
+    //            running = false;
+    //            return;
+    //        }
+    //        _ = User.DispatchMessageW(ref m);
+    //    }
+    //}
 
-    public virtual void Dispose (bool dispose) {
-        if (dispose && !disposed) {
-            disposed = true;
-            if (!cursorVisible)
-                _ = User.ShowCursor(true);
-            Demand(User.DestroyWindow(WindowHandle));
+    public virtual void Run () {
+        OnLoad();
+        _ = User32.ShowWindow(WindowHandle, CmdShow.Show);
+        Demand(User32.UpdateWindow(WindowHandle));
+        Message m = new();
+        while (running) {
+            while (User32.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+                var eh = User32.GetMessageW(ref m, IntPtr.Zero, 0, 0);
+                if (-1 == eh)
+                    Environment.FailFast(null);
+                if (0 == eh) {
+                    running = false;
+                    break;
+                }
+                _ = User32.DispatchMessageW(ref m);
+            }
+            if (running && !painting)
+                Invalidate();
         }
+        foreach (var disposable in Disposables)
+            disposable.Dispose();
+    }
+    void Move (Vector2i p) {
+        Debug.WriteLine($"{nameof(Move)} {p}");
     }
 
-    static Window Instance;
+    void Moving (Rect r) {
+        Debug.WriteLine($"{nameof(Moving)} {r}");
+    }
 
-    private string text;
-    public string Text {
-        get =>
-            text;
-        set {
-            if (value != text)
-                _ = User.SetWindowText(WindowHandle, text = value);
+    void WindowPosChanging (WindowPos p) {
+        Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
+        if (!p.flags.HasFlag(WindowPosFlags.NoMove))
+            rect = new(new(p.left, p.top), rect.Size);
+        if (!p.flags.HasFlag(WindowPosFlags.NoSize))
+            rect = new(rect.Location, new(p.width, p.height));
+    }
+
+    void WindowPosChanged (WindowPos p) {
+        Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
+        if (!p.flags.HasFlag(WindowPosFlags.NoMove))
+            rect = new(new(p.left, p.top), rect.Size);
+        if (!p.flags.HasFlag(WindowPosFlags.NoSize))
+            rect = new(rect.Location, new(p.width, p.height));
+    }
+    void Size (Vector2i size) {
+        rect = new(rect.Location, size);
+    }
+    override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
+        switch (m) {
+            case WinMessage.Move:
+                Move(Split(l));
+                return 0;
+            case WinMessage.Moving:
+                Moving(*(Rect*)l);
+                return 0;
+            case WinMessage.WindowPosChanged:
+                WindowPosChanged(*(WindowPos*)l);
+                return 0;
+            case WinMessage.Size:
+                Size(Split(l));
+                return 0;
+            case WinMessage.WindowPosChanging:
+                WindowPosChanging(*(WindowPos*)l);
+                return 0;
+            case WinMessage.MouseMove: {
+                    if (!IsFocused)
+                        break;
+                    var position = Split(l);
+                    OnMouseMove(CursorLocation = new(position.X, Rect.Height - position.Y - 1));
+                }
+                return 0;
+            case WinMessage.SysCommand: {
+                    var i = (SysCommand)(int)(w & int.MaxValue);
+                    if (i == SysCommand.Close) {
+                        User32.PostQuitMessage(0);
+                        return 0;
+                    }
+                }
+                break;
+            case WinMessage.LButtonDown:
+            case WinMessage.RButtonDown:
+            case WinMessage.MButtonDown:
+            case WinMessage.XButtonDown: {
+                    var wAsShort = (Buttons)(ushort.MaxValue & w);
+                    var change = wAsShort ^ Buttons;
+                    Buttons = wAsShort;
+                    OnButtonDown(change);
+                }
+                break;
+            case WinMessage.LButtonUp:
+            case WinMessage.RButtonUp:
+            case WinMessage.MButtonUp:
+            case WinMessage.XButtonUp: {
+                    var wAsShort = (Buttons)(ushort.MaxValue & w);
+                    var change = wAsShort ^ Buttons;
+                    Buttons = wAsShort;
+                    OnButtonUp(change);
+                }
+                break;
+            case WinMessage.MouseLeave:
+                OnMouseLeave();
+                break;
+            case WinMessage.SetFocus:
+                OnFocusChanged(IsFocused = true);
+                break;
+            case WinMessage.KillFocus:
+                OnFocusChanged(IsFocused = false);
+                break;
+            case WinMessage.KeyDown: {
+                    var km = new KeyMessage(w, l);
+                    if (km.WasDown)
+                        break;
+                    var key = km.Key;
+                    var (hi, lo) = Split(key);
+                    KeyState[hi] |= lo;
+                    OnKeyDown(key);
+                    return 0;
+                }
+            case WinMessage.KeyUp: {
+                    var key = new KeyMessage(w, l).Key;
+                    var (hi, lo) = Split(key);
+                    KeyState[hi] &= ~lo;
+                    OnKeyUp(key);
+                    return 0;
+                }
+            case WinMessage.Paint:
+                if (running && !painting) {
+                    var ps = new PaintStruct();
+                    painting = true;
+                    _ = Demand(User32.BeginPaint(WindowHandle, ref ps));
+                    OnPaint();
+                    _ = User32.EndPaint(WindowHandle, ref ps);
+                    painting = false;
+                }
+                return 0;
         }
+        return User32.DefWindowProcW(h, m, w, l);
     }
 
     private Font font;
@@ -63,50 +220,22 @@ public abstract class Window:IDisposable {
             font = value;
     }
 
-    public Vector2i Size { get; }
-    public int Width => Size.X;
-    public int Height => Size.Y;
-    public IntPtr WindowHandle { get; protected set; }
-    const string ClassName = "MYWINDOWCLASS";
     private bool cursorVisible = true;
-    protected IntPtr DeviceContext;
 
     public bool CursorVisible {
         get =>
             cursorVisible;
         set {
             if (value != cursorVisible)
-                _ = User.ShowCursor(cursorVisible = value);
+                _ = User32.ShowCursor(cursorVisible = value);
         }
     }
 
-    public Window (Vector2i size, Vector2i? position = null) {
+    static (int h, int l) Split (Keys k) =>
+        ((int)k >> 5, 1 << ((int)k & 31));
 
-        if (size.X < 1 || size.Y < 1)
-            throw new ArgumentOutOfRangeException(nameof(size));
-        Instance = this;
-        WindowHandle = User.CreateWindow(ClassAtom, new(position ?? new(), size), SelfHandle);
-        DeviceContext = User.GetDC(WindowHandle);
-        Size = size;
-    }
-
-    abstract protected IntPtr WndProc (IntPtr hWnd, WinMessage msg, IntPtr w, IntPtr l);
-
-    public static IntPtr Demand (IntPtr p) {
-        Demand(IntPtr.Zero != p);
-        return p;
-    }
-
-    public static int Demand (int p) {
-        Demand(0 != p);
-        return p;
-    }
-
-    public static void Demand (bool condition, string message = null) {
-        if (!condition) {
-            var f = new StackFrame(1, true);
-            var m = $">{f.GetFileName()}({f.GetFileLineNumber()},{f.GetFileColumnNumber()}): {message ?? "?"} ({Kernel.GetLastError():X})";
-            throw new Exception(m);
-        }
+    static Vector2i Split (nint l) {
+        var i = (int)(l & int.MaxValue);
+        return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
 }

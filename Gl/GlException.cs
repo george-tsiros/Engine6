@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+using System.Collections.Generic;
 using static Opengl;
 
 public class GlException:Exception {
@@ -9,9 +10,17 @@ public class GlException:Exception {
     public string GlMessage { get; }
 
     public static void Assert () {
+        var errors = new List<GlErrorCodes>();
+        for (; ; ) { 
         var e = GetError();
-        if (GlErrorCodes.NoError != e)
-            throw new GlException(e, Glu.ErrorString((int)e));
+            if (GlErrorCodes.NoError == e)
+                break;
+            errors.Add(e);
+        }
+        if (0 < errors.Count) {
+            var strings = errors.ConvertAll(e => Glu.ErrorString((int)e));
+            throw new Exception();
+        }
     }
 
     private GlException (GlErrorCodes e, string str) : base(str) {

@@ -7,11 +7,9 @@ readonly struct KeyMessage {
     public short RepeatCount { get; }
     public Keys Key { get; }
     public bool WasDown { get; }
-    public KeyMessage (nint w, nint l) {
-        var wi = (uint)(w & uint.MaxValue);
-        var li = (uint)(l & uint.MaxValue);
-        RepeatCount = (short)(li & short.MaxValue);
-        Key = (Keys)(byte)(wi & byte.MaxValue);
-        WasDown = (li & 0x40000000) != 0;
+    public KeyMessage (nuint w, nint l) {
+        RepeatCount = (short)(l & short.MaxValue);
+        Key = (Keys)(byte)(w & byte.MaxValue);
+        WasDown = (l & 0x40000000) != 0;
     }
 }

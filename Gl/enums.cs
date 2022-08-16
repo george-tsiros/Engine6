@@ -461,6 +461,7 @@ public enum IntParameter {
     ArrayBufferBinding = Const.ARRAY_BUFFER_BINDING,
     VertexArrayBinding = Const.VERTEX_ARRAY_BINDING,
     ActiveTexture = Const.ACTIVE_TEXTURE,
+    NumExtensions = Const.NUM_EXTENSIONS,
 }
 
 public enum FloatParameter {

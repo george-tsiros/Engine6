@@ -5,7 +5,7 @@ using System.Diagnostics;
 using Win32;
 using Linear;
 
-public class GlWindow:SimpleWindow {
+public class GlWindow:Window {
     const PixelFlags RequiredFlags = PixelFlags.None
         | PixelFlags.DrawToWindow
         | PixelFlags.DoubleBuffer
@@ -22,7 +22,7 @@ public class GlWindow:SimpleWindow {
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
-    public GlWindow (Vector2i size, Vector2i? position = null) : base(size, position) {
+    public GlWindow () {
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits == 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Opengl.MakeCurrent(DeviceContext, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
@@ -31,7 +31,7 @@ public class GlWindow:SimpleWindow {
     protected override void OnKeyUp (Keys k) {
         switch (k) {
             case Keys.Escape:
-                User.PostQuitMessage(0);
+                User32.PostQuitMessage(0);
                 return;
         }
         base.OnKeyUp(k);
@@ -39,7 +39,7 @@ public class GlWindow:SimpleWindow {
 
     protected override void OnPaint () {
         Render();
-        var swapOk = Gdi.SwapBuffers(DeviceContext);
+        var swapOk = Gdi32.SwapBuffers(DeviceContext);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
         Demand(swapOk);
@@ -56,7 +56,7 @@ public class GlWindow:SimpleWindow {
             disposed = true;
             Opengl.ReleaseCurrent(DeviceContext);
             Opengl.DeleteContext(RenderingContext);
-            Demand(User.ReleaseDC(WindowHandle, DeviceContext));
+            Demand(User32.ReleaseDC(WindowHandle, DeviceContext));
         }
     }
 }

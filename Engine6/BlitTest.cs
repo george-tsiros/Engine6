@@ -1,4 +1,4 @@
-namespace Engine;
+namespace Engine6;
 
 using System;
 using System.Numerics;
@@ -65,12 +65,12 @@ internal class BlitTest:GlWindowArb {
     VertexBuffer<Vector4> quadBuffer;
     Perf<FooNum> prf;
 
-    public BlitTest (Vector2i size, Model m = null, Vector2i? position = null) : base(size, position) {
+    public BlitTest (Model m = null)  {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         Text = "asdfg";
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);
-        Projection = Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Width / Height, .1f, 100f);// Matrix4d.Project(dPi / 4.0, (double)Width / Height, .1, 100.0);
+        Projection = Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Rect.Width / Rect.Height, .1f, 100f);// Matrix4d.Project(dPi / 4.0, (double)Width / Height, .1, 100.0);
         Vertices = model.Vertices.ConvertAll(v => new Vector4d(v, 1)).ToArray();
         Faces = model.Faces.ToArray();
         ClipSpace = new Vector3d[model.Vertices.Count];
@@ -86,8 +86,9 @@ internal class BlitTest:GlWindowArb {
     }
 
     void Load_self (object sender, EventArgs args) {
-        offscreenDepthbuffer = new(Size, RenderbufferFormat.Depth24Stencil8);
-        offscreenRenderingSurface = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        var size = Rect.Size;
+        offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
+        offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         offscreenFramebuffer = new();
         offscreenFramebuffer.Attach(offscreenDepthbuffer, FramebufferAttachment.DepthStencil);
         offscreenFramebuffer.Attach(offscreenRenderingSurface, FramebufferAttachment.Color0);
@@ -96,8 +97,8 @@ internal class BlitTest:GlWindowArb {
         State.Program = PassThrough.Id;
         quadBuffer = new(QuadVertices);
         quad.Assign(quadBuffer, PassThrough.VertexPosition);
-        softwareRenderSurface = new(Size, 4, 1);
-        softwareRenderTexture = new(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        softwareRenderSurface = new(size, 4, 1);
+        softwareRenderTexture = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         offscreenRenderingSurface.BindTo(1);
         PassThrough.Tex(1);
 
@@ -139,7 +140,7 @@ internal class BlitTest:GlWindowArb {
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
         State.Framebuffer = offscreenFramebuffer;
-        Viewport(0, 0, Width, Height);
+        Viewport(new(), Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         prf.Enter((int)FooNum.Software);
@@ -148,21 +149,21 @@ internal class BlitTest:GlWindowArb {
         State.Framebuffer = 0;
         State.VertexArray = quad;
         State.Program = PassThrough.Id;
-        Viewport(0, 0, Width, Height);
+        Viewport(new(),Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
-        if (!CursorGrabbed) {
-            State.VertexArray = someLines;
-            State.Program = Lines.Id;
-            State.DepthTest = false;
-            State.CullFace = false;
-            Lines.Color(new(0, 1, 0, 1));
-            Lines.RenderSize(Size);
-            Lines.Offset(CursorLocation);
-            DrawArrays(Primitive.LineStrip, 0, 3);
-        }
+        //if (!CursorGrabbed) {
+        //    State.VertexArray = someLines;
+        //    State.Program = Lines.Id;
+        //    State.DepthTest = false;
+        //    State.CullFace = false;
+        //    Lines.Color(new(0, 1, 0, 1));
+        //    Lines.RenderSize(Size);
+        //    Lines.Offset(CursorLocation);
+        //    DrawArrays(Primitive.LineStrip, 0, 3);
+        //}
 
         prf.Leave();
     }
@@ -177,14 +178,14 @@ internal class BlitTest:GlWindowArb {
         var vertexCount = Vertices.Length;
         var model = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(-camera.Location);
-        var projection = Matrix4d.Project(dPi / 4, (double)Width / Height, .1, 100);
+        var projection = Matrix4d.Project(dPi / 4, (double)Rect.Width / Rect.Height, .1, 100);
         for (var i = 0; i < vertexCount; ++i) {
             var modelSpace = Vertices[i] * model;
             ModelSpace[i] = modelSpace.Xyz();
             var projected = modelSpace * translation * projection;
             var n = projected.Xyz() / projected.W;
             ClipSpace[i] = n;
-            ScreenSpace[i] = NormalizedToScreen(n, Size);
+            ScreenSpace[i] = NormalizedToScreen(n, Rect.Size);
         }
         prf.Leave();
         prf.Enter((int)FooNum.Visibility);
@@ -261,29 +262,29 @@ internal class BlitTest:GlWindowArb {
             case Keys.Oemplus:
                 AdjustFont(+1f);
                 return;
-            case Keys.M:
-                CursorGrabbed = !CursorGrabbed;
-                return;
+            //case Keys.M:
+            //    CursorGrabbed = !CursorGrabbed;
+            //    return;
         }
     }
 
     void MouseMove_self (object sender, Vector2i e) {
-        if (CursorGrabbed) {
-            switch (Buttons) {
-                case Buttons.Left:
-                    theta = Extra.ModuloTwoPi(theta, 0.01 * e.X);
-                    phi = DoubleClamp(phi - 0.01 * e.Y, -dPi / 2, dPi / 2);
-                    break;
-            }
-        } else {
-            var d = e - lastCursorPosition;
-            switch (Buttons) {
-                case Buttons.Left:
-                    theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
-                    phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
-                    break;
-            }
+        //if (CursorGrabbed) {
+        //    switch (Buttons) {
+        //        case Buttons.Left:
+        //            theta = Extra.ModuloTwoPi(theta, 0.01 * e.X);
+        //            phi = DoubleClamp(phi - 0.01 * e.Y, -dPi / 2, dPi / 2);
+        //            break;
+        //    }
+        //} else {
+        var d = e - lastCursorPosition;
+        switch (Buttons) {
+            case Buttons.Left:
+                theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
+                phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
+                break;
         }
+        //}
         lastCursorPosition = e;
     }
 }

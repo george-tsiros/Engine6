@@ -11,8 +11,8 @@ using System.Drawing;
 
 public class GlWindowArb:GlWindow {
 
-    public GlWindowArb (Vector2i size, Vector2i? position = null) : base(size, position) {
-
+    public GlWindowArb (Version shaderVersion = null) {
+        shaderVersion ??= Opengl.ShaderVersion;
         var extendedFormatCount = Opengl.GetPixelFormatCount(DeviceContext, 1, 0, 1);
         var attributeNames = new int[] {
             (int)PixelFormatAttributes.Acceleration,
@@ -49,9 +49,9 @@ public class GlWindowArb:GlWindow {
                 windowUsed = false;
             }
             try {
-                Gdi.DescribePixelFormat(DeviceContext, index, ref pfd);
-                if (!Gdi.SetPixelFormat(DeviceContext, index, ref pfd))
-                    throw new WinApiException(nameof(Gdi.SetPixelFormat));
+                Gdi32.DescribePixelFormat(DeviceContext, index, ref pfd);
+                if (!Gdi32.SetPixelFormat(DeviceContext, index, ref pfd))
+                    throw new WinApiException(nameof(Gdi32.SetPixelFormat));
 
                 windowUsed = true;
 
@@ -59,9 +59,9 @@ public class GlWindowArb:GlWindow {
                     attributeNameValuePairs[attributeNames.Length + 2 * i + 1] = attributeValues[i];
 
                 attributeNameValuePairs[1] = (int)profileMask;
-                attributeNameValuePairs[3] = Opengl.ShaderVersion.Major;
-                attributeNameValuePairs[5] = Opengl.ShaderVersion.Minor;
-                attributeNameValuePairs[7] = (int)ContextFlags.Debug;
+                attributeNameValuePairs[3] = shaderVersion?.Major ?? Opengl.ShaderVersion.Major;
+                attributeNameValuePairs[5] = shaderVersion?.Minor ?? Opengl.ShaderVersion.Minor;
+                attributeNameValuePairs[7] = (int)(ContextFlags.Debug | ContextFlags.ForwardCompatible);
 
                 var candidateContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attributeNameValuePairs);
                 Opengl.MakeCurrent(DeviceContext, candidateContext);
@@ -70,7 +70,10 @@ public class GlWindowArb:GlWindow {
                     WriteLine($"requested {profileMask} profile for pixelformat #{index}, got {Opengl.Profile} ({Opengl.VersionString})");
                     continue;
                 }
-                WriteLine($"{Opengl.VersionString}");
+                if (shaderVersion is Version v && (v.Major != Opengl.ShaderVersion.Major || v.Minor != Opengl.ShaderVersion.Minor)) {
+                    WriteLine($"requested {v.Major}.{v.Minor} profile for pixelformat #{index}, got {Opengl.ShaderVersion.Major}.{Opengl.ShaderVersion.Minor})");
+                    continue;
+                }
                 var initial = Opengl.IsEnabled(Capability.DepthTest);
                 if (initial)
                     Opengl.Disable(Capability.DepthTest);
@@ -86,33 +89,24 @@ public class GlWindowArb:GlWindow {
                 else
                     Opengl.Enable(Capability.DepthTest);
                 var restored = Opengl.IsEnabled(Capability.DepthTest);
-                if (initial == restored) {
-                    Debug.WriteLine($"{index} works");
-                    Debug.WriteLine(System.Runtime.InteropServices.Marshal.PtrToStringAnsi(Opengl.GetString(OpenglString.Renderer)));
-                    Debug.WriteLine(System.Runtime.InteropServices.Marshal.PtrToStringAnsi(Opengl.GetString(OpenglString.Version)));
-                    break;
+                if (initial != restored) {
+                    WriteLine($"pixelformat #{index} failed to restore depth test, skipping");
+                    continue;
                 }
+                WriteLine($"pixelformat #{index}, '{Opengl.Renderer}', {Opengl.VersionString}");
+                break;
             } catch (Exception e) when (e is GlException || e is WinApiException) {
                 WriteLine(e);
             }
         }
     }
-    void Recreate () {
+    protected override void Recreate () {
         if (IntPtr.Zero != Opengl.GetCurrentContext())
             Opengl.ReleaseCurrent(DeviceContext);
         if (IntPtr.Zero != RenderingContext)
             Opengl.DeleteContext(RenderingContext);
         RenderingContext = IntPtr.Zero;
-        if (!User.ReleaseDC(WindowHandle, DeviceContext))
-            throw new WinApiException(nameof(User.ReleaseDC));
-        if (!User.DestroyWindow(WindowHandle))
-            throw new WinApiException(nameof(User.DestroyWindow));
-        WindowHandle = User.CreateWindow(ClassAtom, new(new(), Size), SelfHandle);
-        if (IntPtr.Zero == WindowHandle)
-            throw new WinApiException(nameof(User.CreateWindow));
-        DeviceContext = User.GetDC(WindowHandle);
-        if (IntPtr.Zero == DeviceContext)
-            throw new WinApiException(nameof(User.GetDC));
+        base.Recreate();
     }
     static string OnOff (bool yes) => yes ? "on" : "off";
 

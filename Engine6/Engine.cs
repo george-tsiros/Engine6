@@ -1,17 +1,12 @@
-namespace Engine;
+namespace Engine6;
 
-using Linear;
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Numerics;
-using static Linear.Maths;
-class Engine {
 
-    [STAThread]
+class Engine6 {
+
     static void Main () {
-        //var model =  new Model("data/teapot.obj", true);
-        using var f = new MovementTest(new(1920, 1080));
-        f.Run();
+        using var f = new BlitTest();f.Run();
+
     }
 }
+

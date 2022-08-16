@@ -20,7 +20,7 @@ class ShaderGen {
 
 
         try {
-            using var window = new GlWindow(new(320, 240));
+            using var window = new GlWindow();
             foreach (var vertexShaderFilepath in Directory.EnumerateFiles(args[0], "*.vert")) {
                 var shaderName = UppercaseFirst(Path.GetFileNameWithoutExtension(vertexShaderFilepath));
                 Trace($"creating {shaderName}");

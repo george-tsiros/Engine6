@@ -48,7 +48,7 @@
 // https://github.com/Auburn/FastNoise
 
 
-namespace Engine;
+namespace Engine6;
 
 using System;
 using System.Runtime.CompilerServices;

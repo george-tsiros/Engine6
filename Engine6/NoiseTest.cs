@@ -1,4 +1,4 @@
-namespace Engine;
+namespace Engine6;
 
 using System.Threading;
 using Gl;
@@ -11,15 +11,40 @@ using Win32;
 using static Linear.Maths;
 using Linear;
 
+class CursorData {
+    public Vector2i restingPosition;
+    public Vector2i delta;
+}
+
+class ThreadedInput:GlWindow {
+
+    void Input () { }
+    Thread input;
+    public ThreadedInput (Vector2i size) : base() {
+        Load += Load_self;
+    }
+
+    void Load_self (object sender, EventArgs args) {
+        CursorVisible = false;
+        var cursor = new CursorData() { restingPosition = new(Rect.Width/2, Rect.Height/2) };
+    }
+    protected override void Render () {
+        Viewport(new(),Rect.Size);
+        ClearColor(0f, 0f, 0f, 1f);
+        Clear(BufferBit.Color | BufferBit.Depth);
+        DrawArrays(Primitive.Triangles, 0, 6);
+    }
+}
+
 class NoiseTest:GlWindowArb {
 
-    const int _WIDTH = 512, _HEIGHT = 512;
+    const int _WIDTH = 256, _HEIGHT = 256;
     const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     const int ThreadCount = 4;
 
-    public NoiseTest (Vector2i size) : base(size) {
+    public NoiseTest () : base() {
         rowsPerThread = _HEIGHT / ThreadCount;
-        raster = new(size, 4, 1);
+        raster = new(Rect.Size, 4, 1);
         Load += Load_self;
     }
 
@@ -46,9 +71,9 @@ class NoiseTest:GlWindowArb {
                 var b = .5f + .5f * noise.GetNoise(xscaled + ms, yscaled);
                 var g = .5f + .5f * noise.GetNoise(xscaled + _XSCALE * _WIDTH, yscaleddelayed);
                 var r = .5f + .5f * noise.GetNoise(xscaled, yscaledshifted);
-                raster.Pixels[offset] /*  */ = (byte)(127.5f * b + 127.5);
-                raster.Pixels[++offset] /**/ = (byte)(127.5f * g + 127.5);
-                raster.Pixels[++offset] /**/ = (byte)(127.5f * r + 127.5);
+                raster.Pixels[offset] /*  */ = (byte)(127.5f * b + 127.5f);
+                raster.Pixels[++offset] /**/ = (byte)(127.5f * g + 127.5f);
+                raster.Pixels[++offset] /**/ = (byte)(127.5f * r + 127.5f);
             }
         }
         var done = countdown.Signal();
@@ -64,6 +89,11 @@ class NoiseTest:GlWindowArb {
             noises[i] = new FastNoiseLite(123);
         countdown = new(ThreadCount);
         StartThreads();
+        var sampler = new Sampler2D(new(512, 512), TextureFormat.Rgba8);
+        var ahndle = GetTextureHandleARB(sampler);
+        MakeTextureHandleResidentARB(ahndle);
+        GlException.Assert();
+        State.SwapInterval = 1;
     }
 
     static readonly Vector4[] QuadVertices = {
@@ -75,11 +105,11 @@ class NoiseTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    unsafe protected override void Render () {
+    protected override void Render () {
         countdown.Wait();
-        countdown.Reset(ThreadCount);
         tex.Upload(raster);
-        Viewport(0, 0, Width, Height);
+        StartThreads();
+        Viewport(new(), Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.Color | BufferBit.Depth);
         State.Program = PassThrough.Id;
@@ -87,10 +117,10 @@ class NoiseTest:GlWindowArb {
         tex.BindTo(1);
         PassThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
-        StartThreads();
     }
 
     void StartThreads () {
+        countdown.Reset(ThreadCount);
         for (var i = 0; i < ThreadCount; ++i) {
             var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, true);
             if (!ok)

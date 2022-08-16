@@ -3,6 +3,7 @@ using System;
 
 [Flags]
 public enum WindowPosFlags {
+    None = 0x0,
     NoSize = 0x1,
     NoMove = 0x2,
     NoZOrder = 0x4,

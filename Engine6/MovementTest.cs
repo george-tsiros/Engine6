@@ -1,4 +1,4 @@
-namespace Engine;
+namespace Engine6;
 
 using System;
 using System.Numerics;
@@ -20,11 +20,9 @@ class MovementTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    public MovementTest (Vector2i size) : base(size) {
+    public MovementTest () {
         Load += Load_self;
         MouseMove += MouseMove_self;
-        CursorGrabbed = true;
-        CursorVisible = false;
     }
     void MouseMove_self (object sender, Vector2i e) {
         camera.Rotate(.001f * (Vector2)e);
@@ -37,8 +35,9 @@ class MovementTest:GlWindowArb {
 
     void Load_self (object sender, EventArgs args) {
         renderingFramebuffer = new();
-        renderingFramebuffer.Attach(new Renderbuffer(Size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
-        var renderingSurface = new Sampler2D(Size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
+        var size = Rect.Size;
+        renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
+        var renderingSurface = new Sampler2D(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         renderingFramebuffer.Attach(renderingSurface, FramebufferAttachment.Color0);
         NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
         State.Program = DirectionalFlat.Id;
@@ -66,7 +65,6 @@ class MovementTest:GlWindowArb {
         presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
         renderingSurface.BindTo(1);
         PassThrough.Tex(1);
-
     }
 
     long previousSync;
@@ -93,20 +91,26 @@ class MovementTest:GlWindowArb {
         State.Program = DirectionalFlat.Id;
         State.Framebuffer = renderingFramebuffer;
         State.VertexArray = renderingVertexArray;
-        Viewport(0, 0, Width, Height);
+        var (w, h) = Rect.Size;
+        Viewport(0, 0, w, h);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
+        Enable(Capability.DepthTest);
         DirectionalFlat.LightDirection(lightDirection);
-        DirectionalFlat.Model(Matrix4x4.Identity);
         DirectionalFlat.View(camera.LookAtMatrix);
-        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)Width / Height, .1f, 100));
-        DrawArrays(Primitive.Triangles, 0, 6);
+        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w/h, .1f, 10));
+        for (var z = 0f; z < 5f; z += 1f)
+            for (var x = -5f; x <= 5f; x += 1f) {
+                DirectionalFlat.Model(Matrix4x4.CreateTranslation(x, 0, z));
+                DrawArrays(Primitive.Triangles, 0, 6);
+            }
         State.Program = PassThrough.Id;
         State.Framebuffer = 0;
         State.VertexArray = presentationVertexArray;
-        Viewport(0, 0, Width, Height);
+        Viewport(0, 0, w, h);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
+        Disable(Capability.DepthTest);
         DrawArrays(Primitive.Triangles, 0, 6);
         previousSync = LastSync;
     }

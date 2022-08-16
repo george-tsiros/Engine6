@@ -4,7 +4,7 @@ using System;
 
 public class WinApiException:Exception {
  
-    public uint LastError { get; } = Kernel.GetLastError();
+    public uint LastError { get; } = Kernel32.GetLastError();
 
     public WinApiException (string message) : base(message) { }
     

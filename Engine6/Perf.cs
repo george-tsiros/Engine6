@@ -1,6 +1,6 @@
 #define __BINARY__
 
-namespace Engine;
+namespace Engine6;
 using System;
 using System.Diagnostics;
 using System.IO;
