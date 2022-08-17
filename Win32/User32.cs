@@ -214,11 +214,10 @@ public static partial class User32 {
     //public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
     public static ushort RegisterWindowClass (WndProc wndProc, string className) {
-        var windowClass = new WindowClassExW {
-            style = ClassStyle.HRedraw | ClassStyle.VRedraw,
-            wndProc = wndProc,
-            classname = className
-        };
+        var windowClass = WindowClassExW.Create();
+        windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw;
+        windowClass.wndProc = wndProc;
+        windowClass.classname = className;
         return RegisterClassExW(ref windowClass);
     }
 

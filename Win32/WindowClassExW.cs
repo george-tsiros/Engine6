@@ -18,7 +18,6 @@ public unsafe struct WindowClassExW {
     [MarshalAs(UnmanagedType.LPWStr)]
     public string classname;
     public IntPtr hIconsm;
-    public WindowClassExW () { 
-        size = (uint)Marshal.SizeOf<WindowClassExW>(); 
-    }
+    public static WindowClassExW Create () 
+        => new() { size = (uint)Marshal.SizeOf<WindowClassExW>() };
 }
