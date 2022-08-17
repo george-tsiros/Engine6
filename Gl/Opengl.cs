@@ -428,8 +428,7 @@ unsafe public static class Opengl {
         var pfIndex = FindPixelFormat(dc, ref descriptor, condition);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
-        if (!Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor))
-            throw new WinApiException("failed SetPixelFormat");
+        Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
         var rc = CreateContext(dc);
         return rc != IntPtr.Zero ? rc : throw new WinApiException("failed wglCreateContext");
     }

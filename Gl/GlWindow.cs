@@ -39,10 +39,9 @@ public class GlWindow:Window {
 
     protected override void OnPaint () {
         Render();
-        var swapOk = Gdi32.SwapBuffers(DeviceContext);
+        Gdi32.SwapBuffers(DeviceContext);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
-        Demand(swapOk);
     }
 
     protected virtual void Render () {
@@ -56,7 +55,8 @@ public class GlWindow:Window {
             disposed = true;
             Opengl.ReleaseCurrent(DeviceContext);
             Opengl.DeleteContext(RenderingContext);
-            Demand(User32.ReleaseDC(WindowHandle, DeviceContext));
+            if (!User32.ReleaseDC(WindowHandle, DeviceContext))
+                throw new Exception(nameof(User32.ReleaseDC));
         }
     }
 }

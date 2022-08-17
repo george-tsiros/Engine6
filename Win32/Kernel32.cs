@@ -5,12 +5,10 @@ using System;
 
 public static class Kernel32 {
     private const string dll = nameof(Kernel32) + ".dll";
+    
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public extern static uint GetLastError ();
-    [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-    unsafe public extern static void* GetProcAddress (IntPtr module, [MarshalAs(UnmanagedType.LPStr)] string name);
-    [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-    public extern static IntPtr LoadLibraryA (string filename);
+
     [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
     public extern static IntPtr GetModuleHandleA (string moduleName);
 }

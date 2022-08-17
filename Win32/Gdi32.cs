@@ -31,15 +31,30 @@ public static class Gdi32 {
     /// <param name="format"></param>
     /// <param name="pfd"></param>
     /// <returns>If the function succeeds, the return value is TRUE.If the function fails, the return value is FALSE. To get extended error information, call <see cref="Kernel32.GetLastError"/>.</returns>
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "SetPixelFormat", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern int ChoosePixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd);
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern bool SetPixelFormat_ (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
+
+    public static void SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd) {
+        if (!SetPixelFormat_(dc, format, ref pfd))
+            throw new WinApiException(nameof(SetPixelFormat));
+    }
+
+    [DllImport(dll, EntryPoint = "SwapBuffers", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SwapBuffers (IntPtr dc);
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    private static extern bool SwapBuffers_ (IntPtr dc);
+
+    public static void SwapBuffers (IntPtr dc) {
+        if (!SwapBuffers_(dc))
+            throw new WinApiException(nameof(SwapBuffers));
+    }
+
+    [DllImport(dll, EntryPoint = "DeleteDC", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool DeleteDC (IntPtr dc);
+    private static extern bool DeleteDC_ (IntPtr dc);
+
+    public static void DeleteDC (IntPtr dc) {
+        if (!DeleteDC_(dc))
+            throw new WinApiException(nameof(DeleteDC));
+    }
 }

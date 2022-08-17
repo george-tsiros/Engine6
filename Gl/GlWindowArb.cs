@@ -45,13 +45,12 @@ public class GlWindowArb:GlWindow {
         const ProfileMask profileMask = ProfileMask.Core;
         foreach (var index in candidates) {
             if (windowUsed) {
-                Recreate();
+                Create();
                 windowUsed = false;
             }
             try {
                 Gdi32.DescribePixelFormat(DeviceContext, index, ref pfd);
-                if (!Gdi32.SetPixelFormat(DeviceContext, index, ref pfd))
-                    throw new WinApiException(nameof(Gdi32.SetPixelFormat));
+                Gdi32.SetPixelFormat(DeviceContext, index, ref pfd);
 
                 windowUsed = true;
 
@@ -67,11 +66,9 @@ public class GlWindowArb:GlWindow {
                 Opengl.MakeCurrent(DeviceContext, candidateContext);
                 RenderingContext = candidateContext;
                 if (profileMask != Opengl.Profile) {
-                    WriteLine($"requested {profileMask} profile for pixelformat #{index}, got {Opengl.Profile} ({Opengl.VersionString})");
                     continue;
                 }
                 if (shaderVersion is Version v && (v.Major != Opengl.ShaderVersion.Major || v.Minor != Opengl.ShaderVersion.Minor)) {
-                    WriteLine($"requested {v.Major}.{v.Minor} profile for pixelformat #{index}, got {Opengl.ShaderVersion.Major}.{Opengl.ShaderVersion.Minor})");
                     continue;
                 }
                 var initial = Opengl.IsEnabled(Capability.DepthTest);
@@ -81,7 +78,6 @@ public class GlWindowArb:GlWindow {
                     Opengl.Enable(Capability.DepthTest);
                 var toggled = Opengl.IsEnabled(Capability.DepthTest);
                 if (initial == toggled) {
-                    WriteLine($"pixelformat #{index} failed to toggle depth test, skipping");
                     continue;
                 }
                 if (toggled)
@@ -90,24 +86,19 @@ public class GlWindowArb:GlWindow {
                     Opengl.Enable(Capability.DepthTest);
                 var restored = Opengl.IsEnabled(Capability.DepthTest);
                 if (initial != restored) {
-                    WriteLine($"pixelformat #{index} failed to restore depth test, skipping");
                     continue;
                 }
-                WriteLine($"pixelformat #{index}, '{Opengl.Renderer}', {Opengl.VersionString}");
                 break;
             } catch (Exception e) when (e is GlException || e is WinApiException) {
-                WriteLine(e);
             }
         }
     }
-    protected override void Recreate () {
+    protected override void Create () {
         if (IntPtr.Zero != Opengl.GetCurrentContext())
             Opengl.ReleaseCurrent(DeviceContext);
         if (IntPtr.Zero != RenderingContext)
             Opengl.DeleteContext(RenderingContext);
         RenderingContext = IntPtr.Zero;
-        base.Recreate();
+        base.Create();
     }
-    static string OnOff (bool yes) => yes ? "on" : "off";
-
 }

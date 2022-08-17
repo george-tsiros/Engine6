@@ -11,7 +11,7 @@ public class Window:BaseWindow {
 
     public bool IsFocused { get; private set; }
 
-    bool running = true;
+    bool running;
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
     public Buttons Buttons { get; private set; }
@@ -54,8 +54,9 @@ public class Window:BaseWindow {
     protected List<IDisposable> Disposables { get; } = new();
 
     protected void Invalidate () {
-        Demand(User32.GetClientRect(WindowHandle, ref rect));
-        Demand(User32.InvalidateRect(WindowHandle, ref rect, IntPtr.Zero));
+        rect = User32.GetClientRect(WindowHandle);
+        if (!User32.InvalidateRect(WindowHandle, ref rect, false))
+            throw new Exception(nameof(User32.InvalidateRect));
     }
 
     //protected void Pump () {
@@ -74,8 +75,11 @@ public class Window:BaseWindow {
 
     public virtual void Run () {
         OnLoad();
+        running = true;
         _ = User32.ShowWindow(WindowHandle, CmdShow.Show);
-        Demand(User32.UpdateWindow(WindowHandle));
+        if (!User32.UpdateWindow(WindowHandle))
+            throw new WinApiException(nameof(User32.UpdateWindow));
+
         Message m = new();
         while (running) {
             while (User32.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
@@ -94,15 +98,15 @@ public class Window:BaseWindow {
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
-    void Move (Vector2i p) {
+    private void Move (Vector2i p) {
         Debug.WriteLine($"{nameof(Move)} {p}");
     }
 
-    void Moving (Rect r) {
+    private void Moving (Rect r) {
         Debug.WriteLine($"{nameof(Moving)} {r}");
     }
 
-    void WindowPosChanging (WindowPos p) {
+    private void WindowPosChanging (WindowPos p) {
         Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
         if (!p.flags.HasFlag(WindowPosFlags.NoMove))
             rect = new(new(p.left, p.top), rect.Size);
@@ -110,16 +114,18 @@ public class Window:BaseWindow {
             rect = new(rect.Location, new(p.width, p.height));
     }
 
-    void WindowPosChanged (WindowPos p) {
+    private void WindowPosChanged (WindowPos p) {
         Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
         if (!p.flags.HasFlag(WindowPosFlags.NoMove))
             rect = new(new(p.left, p.top), rect.Size);
         if (!p.flags.HasFlag(WindowPosFlags.NoSize))
             rect = new(rect.Location, new(p.width, p.height));
     }
-    void Size (Vector2i size) {
+    
+    private void Size (Vector2i size) {
         rect = new(rect.Location, size);
     }
+
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Move:
@@ -202,9 +208,9 @@ public class Window:BaseWindow {
                 if (running && !painting) {
                     var ps = new PaintStruct();
                     painting = true;
-                    _ = Demand(User32.BeginPaint(WindowHandle, ref ps));
+                    _ = User32.BeginPaint(WindowHandle, ref ps);
                     OnPaint();
-                    _ = User32.EndPaint(WindowHandle, ref ps);
+                    User32.EndPaint(WindowHandle, ref ps);
                     painting = false;
                 }
                 return 0;

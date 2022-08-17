@@ -67,7 +67,6 @@ internal class BlitTest:GlWindowArb {
 
     public BlitTest (Model m = null)  {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
-        Text = "asdfg";
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);
         Projection = Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Rect.Width / Rect.Height, .1f, 100f);// Matrix4d.Project(dPi / 4.0, (double)Width / Height, .1, 100.0);
@@ -154,16 +153,14 @@ internal class BlitTest:GlWindowArb {
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
-        //if (!CursorGrabbed) {
-        //    State.VertexArray = someLines;
-        //    State.Program = Lines.Id;
-        //    State.DepthTest = false;
-        //    State.CullFace = false;
-        //    Lines.Color(new(0, 1, 0, 1));
-        //    Lines.RenderSize(Size);
-        //    Lines.Offset(CursorLocation);
-        //    DrawArrays(Primitive.LineStrip, 0, 3);
-        //}
+        State.VertexArray = someLines;
+        State.Program = Lines.Id;
+        State.DepthTest = false;
+        State.CullFace = false;
+        Lines.Color(new(0, 1, 0, 1));
+        Lines.RenderSize(Rect.Size);
+        Lines.Offset(CursorLocation);
+        DrawArrays(Primitive.LineStrip, 0, 3);
 
         prf.Leave();
     }
