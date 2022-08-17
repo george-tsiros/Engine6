@@ -33,7 +33,7 @@ public class GlWindowArb:GlWindow {
         var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
             Opengl.GetPixelFormatAttribivARB(DeviceContext, i, 0, attributeNames.Length, attributeNames, attributeValues);
-            if ((int)Acceleration.Full == attributeValues[0] && 32 == attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5] && 0 != attributeValues[6])
+            if ((int)Acceleration.Full == attributeValues[0] && 24 <= attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5] && 0 != attributeValues[6])
                 candidates.Add(i);
         }
 

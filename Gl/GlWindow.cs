@@ -23,7 +23,7 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
     public GlWindow () {
-        RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits == 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
+        RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Opengl.MakeCurrent(DeviceContext, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
     }
