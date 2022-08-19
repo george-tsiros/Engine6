@@ -386,15 +386,15 @@ unsafe public static class Opengl {
             throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
         VersionString = GetString(OpenglString.Version);
         Renderer = GetString(OpenglString.Renderer);
-        var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) (Core|Compatibility)? ");
+        var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )? ");
         if (!m.Success)
             throw new Exception($"'{VersionString}' not a version string");
         ShaderVersion = Version.Parse(m.Groups[1].Value);
         ShaderVersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
-        if (m.Groups[2].Success && Enum.TryParse<ProfileMask>(m.Groups[2].Value, out var profileMask))
+        if (m.Groups[3].Success && Enum.TryParse<ProfileMask>(m.Groups[3].Value, out var profileMask))
             Profile = profileMask;
         else
-            throw new Exception("failed to determine profile");
+            Profile = ProfileMask.Unknown;
 
         Extensions = new();
         if (ProfileMask.Core == Profile) {
