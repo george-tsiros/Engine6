@@ -84,7 +84,7 @@ class HighlightTriangle:GlWindowArb {
                 break;
         }
     }
-
+    Vector2i CursorLocation = new();
     int fovRatio = 4;
     uint lastTriangle = 0;
     protected override void Render () {

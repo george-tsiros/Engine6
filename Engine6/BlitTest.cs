@@ -7,8 +7,6 @@ using System.Diagnostics;
 using Gl;
 using Win32;
 using static Gl.Opengl;
-using static Gl.Utilities;
-using System.Threading;
 using static Linear.Maths;
 using Linear;
 
@@ -41,7 +39,7 @@ internal class BlitTest:GlWindowArb {
     static bool IsInside (in Vector3d v) =>
         -1 < v.Z && v.Z < 1;
 
-    Camera camera = new(new(0, 0, 10));
+    Camera camera = new(new(0, 0, 20));
     readonly Vector3i[] Faces;
     readonly Vector4d[] Vertices;
     Vector2i lastCursorPosition = new(-1, -1);
@@ -54,7 +52,6 @@ internal class BlitTest:GlWindowArb {
     Framebuffer offscreenFramebuffer;
     Sampler2D offscreenRenderingSurface;
     Renderbuffer offscreenDepthbuffer;
-    Matrix4x4 Projection;
     Vector3d[] ClipSpace;
     Vector2i[] ScreenSpace;
     Vector3d[] ModelSpace;
@@ -69,7 +66,6 @@ internal class BlitTest:GlWindowArb {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);
-        Projection = Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)Rect.Width / Rect.Height, .1f, 100f);// Matrix4d.Project(dPi / 4.0, (double)Width / Height, .1, 100.0);
         Vertices = model.Vertices.ConvertAll(v => new Vector4d(v, 1)).ToArray();
         Faces = model.Faces.ToArray();
         ClipSpace = new Vector3d[model.Vertices.Count];
@@ -159,11 +155,12 @@ internal class BlitTest:GlWindowArb {
         State.CullFace = false;
         Lines.Color(new(0, 1, 0, 1));
         Lines.RenderSize(Rect.Size);
-        Lines.Offset(CursorLocation);
+        Lines.Offset(cursorLocation);
         DrawArrays(Primitive.LineStrip, 0, 3);
 
         prf.Leave();
     }
+    Vector2i cursorLocation = new(-1, -1);
 
     void RenderSoftware () {
         var textRow = -Font.Height;
@@ -175,7 +172,7 @@ internal class BlitTest:GlWindowArb {
         var vertexCount = Vertices.Length;
         var model = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(-camera.Location);
-        var projection = Matrix4d.Project(dPi / 4, (double)Rect.Width / Rect.Height, .1, 100);
+        var projection = Matrix4d.Project(dPi / 4, (double)Rect.Width / Rect.Height, 1, 100);
         for (var i = 0; i < vertexCount; ++i) {
             var modelSpace = Vertices[i] * model;
             ModelSpace[i] = modelSpace.Xyz();
@@ -220,8 +217,10 @@ internal class BlitTest:GlWindowArb {
                 softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], Color.FromRgb(intensity, intensity, intensity));
             }
         }
-        softwareRenderSurface.DrawString($"font height: {Font.Height} (EmSize {Font.EmSize})", Font, 0, textRow += Font.Height);
+        softwareRenderSurface.DrawString(VersionString, Font, 0, textRow += Font.Height);
+        softwareRenderSurface.DrawString(IsSupported("GL_ARB_clip_control").ToString(), Font, 0, textRow += Font.Height);
         softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
+
         prf.Leave();
         prf.Enter((int)FooNum.TextureUpload);
 

@@ -5,7 +5,8 @@ using System;
 class Engine6 {
 
     static void Main () {
-        using var f = new BlitTest();
+        //var model = Model.Sphere(100, 50, 6.371e6);
+        using var f = new MovementTest();
         f.Run();
     }
 }

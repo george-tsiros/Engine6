@@ -72,7 +72,7 @@ public class Model {
 
         if (center) {
             // Center of bounding volume
-            var c = 0.5f * (Max + Min); 
+            var c = 0.5f * (Max + Min);
             for (var i = 0; i < Vertices.Count; ++i)
                 Vertices[i] -= c;
         }
@@ -171,4 +171,48 @@ public class Model {
         }
     };
 
+    public static Model Plane (Vector2d size, Vector2i divisions) {
+        if (size.X < float.Epsilon || size.Y < float.Epsilon)
+            throw new ArgumentException($"size must be at least {float.Epsilon} in both dimensions", nameof(size));
+        if (divisions.X < 1 || divisions.Y < 1)
+            throw new ArgumentException("subdivisions must be at least 1 in both dimensions", nameof(divisions));
+        // 1 subd -> 2 vert
+        // 2 subd -> 3 vert
+        // total vert = (subd.X+1)*(subd.Y+1)
+        var vertexCount = (divisions.X + 1) * (divisions.Y + 1);
+        var vertices = new Vector3d[vertexCount];
+        var dx = size.X / divisions.X;
+        var dy = size.Y / divisions.Y;
+
+
+        /*
+ 0,0 0,1 0,2 0,3
+  Xa  Xb  X   X
+
+ 1,0 1,1 1,2 1,3
+  Xd  Xc  X   X
+        +------->
+        |      x
+        |
+  X   X | X   X
+        |
+        vz
+*/
+
+        for (var (row, z) = (0, -size.Y / 2); row <= divisions.Y; ++row, z += dy)
+            for (var (column, x) = (0, -size.X / 2); column <= divisions.X; ++column, x += dx)
+                vertices[row * (divisions.X + 1) + column] = new(x, 0, z);
+
+        var faces = new Vector3i[divisions.X * divisions.Y * 2];
+        for (var (row, i) = (0, 0); row < divisions.Y; ++row)
+            for (var column = 0; column < divisions.X; ++column, ++i) {
+                var a = row * (divisions.X + 1) + column;
+                var b = a + 1;
+                var c = b + divisions.X + 1;
+                var d = c - 1;
+                faces[i] = new(b, a, d);
+                faces[++i] = new(b, d, c);
+            }
+        return new() { Faces = new(faces), Vertices = new(vertices), Min = new(-size.X / 2, 0, -size.Y / 2), Max = new(size.X / 2, 0, size.Y / 2), };
+    }
 }

@@ -88,6 +88,8 @@ public class GlWindowArb:GlWindow {
                 if (initial != restored) {
                     continue;
                 }
+                foreach (var e in Opengl.SupportedExtensions)
+                    Debug.WriteLine(e);
                 break;
             } catch (Exception e) when (e is GlException || e is WinApiException) {
             }

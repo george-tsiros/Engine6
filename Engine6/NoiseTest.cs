@@ -11,27 +11,20 @@ using Win32;
 using static Linear.Maths;
 using Linear;
 
-class CursorData {
-    public Vector2i restingPosition;
-    public Vector2i delta;
-}
 
-class ThreadedInput:GlWindow {
+class Boxes:GlWindow {
 
-    void Input () { }
-    Thread input;
-    public ThreadedInput (Vector2i size) : base() {
+    public Boxes ()  {
         Load += Load_self;
     }
 
     void Load_self (object sender, EventArgs args) {
-        CursorVisible = false;
-        var cursor = new CursorData() { restingPosition = new(Rect.Width/2, Rect.Height/2) };
     }
+
     protected override void Render () {
         Viewport(new(),Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        Clear(BufferBit.ColorDepth);
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 }
@@ -111,7 +104,7 @@ class NoiseTest:GlWindowArb {
         StartThreads();
         Viewport(new(), Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
-        Clear(BufferBit.Color | BufferBit.Depth);
+        Clear(BufferBit.ColorDepth);
         State.Program = PassThrough.Id;
         State.VertexArray = quad;
         tex.BindTo(1);

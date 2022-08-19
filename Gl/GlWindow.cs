@@ -55,8 +55,7 @@ public class GlWindow:Window {
             disposed = true;
             Opengl.ReleaseCurrent(DeviceContext);
             Opengl.DeleteContext(RenderingContext);
-            if (!User32.ReleaseDC(WindowHandle, DeviceContext))
-                throw new Exception(nameof(User32.ReleaseDC));
+            Dispose();
         }
     }
 }

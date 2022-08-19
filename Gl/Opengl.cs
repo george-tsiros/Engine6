@@ -438,6 +438,7 @@ unsafe public static class Opengl {
     public static string VersionString { get; private set; }
     public static string Renderer { get; private set; }
     static readonly List<string> supportedExtensions = new();
+    public static bool IsSupported (string extension) => supportedExtensions.Contains(extension);
     public static IReadOnlyCollection<string> SupportedExtensions { get; } = supportedExtensions;
     unsafe static int FindPixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd, Predicate<PixelFormatDescriptor> condition) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);

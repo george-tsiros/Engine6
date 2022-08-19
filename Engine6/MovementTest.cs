@@ -32,7 +32,7 @@ class MovementTest:GlWindowArb {
     Camera camera = new(new(0, 1.8f, 5));
     VertexArray renderingVertexArray, presentationVertexArray;
     Framebuffer renderingFramebuffer;
-
+    int vertexCount=0;
     void Load_self (object sender, EventArgs args) {
         renderingFramebuffer = new();
         var size = Rect.Size;
@@ -42,24 +42,21 @@ class MovementTest:GlWindowArb {
         NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
         State.Program = DirectionalFlat.Id;
         renderingVertexArray = new();
-        var vertices = new VertexBuffer<Vector4>(new Vector4[] { 
-            new(-1, 0, +1, +1), 
-            new(+1, 0, +1, +1), 
-            new(+1, 0, -1, +1), 
-            new(-1, 0, +1, +1), 
-            new(+1, 0, -1, +1), 
-            new(-1, 0, -1, +1), 
-        });
-        renderingVertexArray.Assign(vertices, DirectionalFlat.VertexPosition);
-        var normals = new VertexBuffer<Vector4>(new Vector4[] {
-            new(0, 1, 0, 0),
-            new(0, 1, 0, 0),
-            new(0, 1, 0, 0),
-            new(0, 1, 0, 0),
-            new(0, 1, 0, 0),
-            new(0, 1, 0, 0),
-        });
-        renderingVertexArray.Assign(normals, DirectionalFlat.FaceNormal);
+        var plane = Model.Plane(new(200, 200), new(100, 100));
+        vertexCount = 3 * plane.Faces.Count;
+        var vertices = new Vector4[vertexCount];
+        var vi = 0;
+        foreach (var (i, j, k) in plane.Faces) {
+            var (a, b, c) = (plane.Vertices[i], plane.Vertices[j], plane.Vertices[k]);
+            vertices[vi++] = new((float)a.X, (float)a.Y, (float)a.Z, 1);
+            vertices[vi++] = new((float)b.X, (float)b.Y, (float)b.Z, 1);
+            vertices[vi++] = new((float)c.X, (float)c.Y, (float)c.Z, 1);
+        }
+        renderingVertexArray.Assign(new VertexBuffer<Vector4>(vertices), DirectionalFlat.VertexPosition);
+        var normals = new Vector4[vertexCount];
+        for (var i = 0; i < normals.Length; ++i)
+            normals[i] = Vector4.UnitY;
+        renderingVertexArray.Assign(new VertexBuffer<Vector4>(normals), DirectionalFlat.FaceNormal);
         State.Program = PassThrough.Id;
         presentationVertexArray = new();
         presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
@@ -98,12 +95,9 @@ class MovementTest:GlWindowArb {
         Enable(Capability.DepthTest);
         DirectionalFlat.LightDirection(lightDirection);
         DirectionalFlat.View(camera.LookAtMatrix);
-        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w/h, .1f, 10));
-        for (var z = 0f; z < 5f; z += 1f)
-            for (var x = -5f; x <= 5f; x += 1f) {
-                DirectionalFlat.Model(Matrix4x4.CreateTranslation(x, 0, z));
-                DrawArrays(Primitive.Triangles, 0, 6);
-            }
+        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w / h, 1f, 1000));
+        DirectionalFlat.Model(Matrix4x4.Identity);
+        DrawArrays(Primitive.Triangles, 0, vertexCount);
         State.Program = PassThrough.Id;
         State.Framebuffer = 0;
         State.VertexArray = presentationVertexArray;

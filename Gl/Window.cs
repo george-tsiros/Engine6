@@ -13,7 +13,6 @@ public class Window:BaseWindow {
 
     bool running;
 
-    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
     public Buttons Buttons { get; private set; }
 
     public event EventHandler<Buttons> ButtonDown;
@@ -99,15 +98,12 @@ public class Window:BaseWindow {
             disposable.Dispose();
     }
     private void Move (Vector2i p) {
-        Debug.WriteLine($"{nameof(Move)} {p}");
     }
 
     private void Moving (Rect r) {
-        Debug.WriteLine($"{nameof(Moving)} {r}");
     }
 
     private void WindowPosChanging (WindowPos p) {
-        Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
         if (!p.flags.HasFlag(WindowPosFlags.NoMove))
             rect = new(new(p.left, p.top), rect.Size);
         if (!p.flags.HasFlag(WindowPosFlags.NoSize))
@@ -115,7 +111,6 @@ public class Window:BaseWindow {
     }
 
     private void WindowPosChanged (WindowPos p) {
-        Debug.WriteLine($"{nameof(WindowPosChanging)} {p}");
         if (!p.flags.HasFlag(WindowPosFlags.NoMove))
             rect = new(new(p.left, p.top), rect.Size);
         if (!p.flags.HasFlag(WindowPosFlags.NoSize))
@@ -147,7 +142,9 @@ public class Window:BaseWindow {
                     if (!IsFocused)
                         break;
                     var position = Split(l);
-                    OnMouseMove(CursorLocation = new(position.X, Rect.Height - position.Y - 1));
+                    var p = new Vector2i(position.X, Rect.Height - position.Y - 1);
+                    Debug.WriteLine(p);
+                    OnMouseMove(p);
                 }
                 return 0;
             case WinMessage.SysCommand: {
