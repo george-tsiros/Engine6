@@ -143,13 +143,11 @@ public class Window:BaseWindow {
                         break;
                     var position = Split(l);
                     var p = new Vector2i(position.X, Rect.Height - position.Y - 1);
-                    Debug.WriteLine(p);
                     OnMouseMove(p);
                 }
                 return 0;
             case WinMessage.SysCommand: {
-                    var i = (SysCommand)(int)(w & int.MaxValue);
-                    if (i == SysCommand.Close) {
+                    if ((int)(w & int.MaxValue) == (int)SysCommand.Close) {
                         User32.PostQuitMessage(0);
                         return 0;
                     }
@@ -221,17 +219,6 @@ public class Window:BaseWindow {
             font ??= new("data/ibm_3270.txt");
         set =>
             font = value;
-    }
-
-    private bool cursorVisible = true;
-
-    public bool CursorVisible {
-        get =>
-            cursorVisible;
-        set {
-            if (value != cursorVisible)
-                _ = User32.ShowCursor(cursorVisible = value);
-        }
     }
 
     static (int h, int l) Split (Keys k) =>

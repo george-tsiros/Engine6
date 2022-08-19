@@ -119,7 +119,6 @@ internal class BlitTest:GlWindowArb {
         Disposables.Add(someLines);
         Disposables.Add(quadBuffer);
         Disposables.Add(prf = new("log.bin"));
-        CursorVisible = false;
     }
 
     protected override void Render () {

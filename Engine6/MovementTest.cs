@@ -29,7 +29,7 @@ class MovementTest:GlWindowArb {
     }
 
     Vector4 lightDirection = new(0, -1, 0, 0);
-    Camera camera = new(new(0, 1.8f, 5));
+    Camera camera = new(new(0, 100f, 5));
     VertexArray renderingVertexArray, presentationVertexArray;
     Framebuffer renderingFramebuffer;
     int vertexCount=0;

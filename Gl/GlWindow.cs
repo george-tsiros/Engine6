@@ -26,6 +26,7 @@ public class GlWindow:Window {
         RenderingContext = Opengl.CreateSimpleContext(DeviceContext, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Opengl.MakeCurrent(DeviceContext, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
+        //_ = User32.ShowCursor(false);
     }
 
     protected override void OnKeyUp (Keys k) {
@@ -35,6 +36,16 @@ public class GlWindow:Window {
                 return;
         }
         base.OnKeyUp(k);
+    }
+    bool skipMove;
+    protected override void OnMouseMove (Vector2i p) {
+        if (!skipMove) {
+            skipMove = true;
+            var cs = Rect.Center;
+            _ = User32.SetCursorPos(cs.X, cs.Y);
+            base.OnMouseMove(new(p.X - cs.X, cs.Y - p.Y));
+        } else
+            skipMove = false;
     }
 
     protected override void OnPaint () {

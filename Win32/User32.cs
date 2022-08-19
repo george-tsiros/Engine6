@@ -23,8 +23,8 @@ public static partial class User32 {
         return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    //public static extern int SetCursorPos (int x, int y);
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern int SetCursorPos (int x, int y);
 
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
