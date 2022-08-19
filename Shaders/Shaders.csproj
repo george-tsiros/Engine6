@@ -25,8 +25,8 @@
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
         <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
-          <Private>False</Private>
-          <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+            <Private>False</Private>
+            <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
         </ProjectReference>
     </ItemGroup>
 
@@ -38,10 +38,10 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.frag">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.vert">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -80,16 +80,16 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalFlat.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalFlat.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\VertexIndex.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\VertexIndex.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="unused\drawArrays.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -148,6 +148,7 @@
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="echo ProjectDir = $(ProjectDir)" />
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
