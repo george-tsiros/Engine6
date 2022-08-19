@@ -386,7 +386,7 @@ unsafe public static class Opengl {
             throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
         VersionString = GetString(OpenglString.Version);
         Renderer = GetString(OpenglString.Renderer);
-        var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )? ");
+        var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )?");
         if (!m.Success)
             throw new Exception($"'{VersionString}' not a version string");
         ShaderVersion = Version.Parse(m.Groups[1].Value);
