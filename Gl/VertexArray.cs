@@ -9,7 +9,9 @@ using Linear;
 
 public class VertexArray:OpenglObject {
 
-    public override int Id { get; } = CreateVertexArray();
+    public VertexArray () {
+        Id = CreateVertexArray();
+    }
 
     protected override Action<int> Delete { get; } = DeleteVertexArray;
 
@@ -54,5 +56,4 @@ public class VertexArray:OpenglObject {
         { typeof(Matrix4x4), (16, AttribType.Float, false) },
     };
 
-    public static implicit operator int (VertexArray b) => b.Id;
 }

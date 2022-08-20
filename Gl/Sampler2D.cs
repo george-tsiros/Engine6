@@ -7,14 +7,11 @@ using Linear;
 
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteTexture;
-    public override int Id { get; } = CreateTexture2D();
-    
+
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
     public TextureFormat SizedFormat { get; }
-
-    public static implicit operator int (Sampler2D sampler) => sampler.Id;
 
     public void BindTo (int t) {
         if (Disposed)
@@ -55,6 +52,7 @@ public class Sampler2D:OpenglObject {
     }
 
     public Sampler2D (Vector2i size, TextureFormat sizedFormat) {
+        Id = CreateTexture2D();
         (Size, SizedFormat) = (size, sizedFormat);
         TextureStorage2D(this, 1, SizedFormat, Width, Height);
         TextureBaseLevel(this, 0);

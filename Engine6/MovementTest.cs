@@ -33,6 +33,8 @@ class MovementTest:GlWindowArb {
     VertexArray renderingVertexArray, presentationVertexArray;
     Framebuffer renderingFramebuffer;
     int vertexCount=0;
+    DirectionalFlat directionalFlat;
+    PassThrough passThrough;
     void Load_self (object sender, EventArgs args) {
         renderingFramebuffer = new();
         var size = Rect.Size;
@@ -40,7 +42,8 @@ class MovementTest:GlWindowArb {
         var renderingSurface = new Sampler2D(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         renderingFramebuffer.Attach(renderingSurface, FramebufferAttachment.Color0);
         NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
-        State.Program = DirectionalFlat.Id;
+        directionalFlat = new();
+        State.Program = directionalFlat;
         renderingVertexArray = new();
         var plane = Model.Plane(new(200, 200), new(100, 100));
         vertexCount = 3 * plane.Faces.Count;
@@ -52,16 +55,17 @@ class MovementTest:GlWindowArb {
             vertices[vi++] = new((float)b.X, (float)b.Y, (float)b.Z, 1);
             vertices[vi++] = new((float)c.X, (float)c.Y, (float)c.Z, 1);
         }
-        renderingVertexArray.Assign(new VertexBuffer<Vector4>(vertices), DirectionalFlat.VertexPosition);
+        renderingVertexArray.Assign(new VertexBuffer<Vector4>(vertices), directionalFlat.VertexPosition);
         var normals = new Vector4[vertexCount];
         for (var i = 0; i < normals.Length; ++i)
             normals[i] = Vector4.UnitY;
-        renderingVertexArray.Assign(new VertexBuffer<Vector4>(normals), DirectionalFlat.FaceNormal);
-        State.Program = PassThrough.Id;
+        renderingVertexArray.Assign(new VertexBuffer<Vector4>(normals), directionalFlat.FaceNormal);
+        passThrough = new();
+        State.Program = passThrough;
         presentationVertexArray = new();
-        presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
+        presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
         renderingSurface.BindTo(1);
-        PassThrough.Tex(1);
+        passThrough.Tex(1);
     }
 
     long previousSync;
@@ -85,7 +89,7 @@ class MovementTest:GlWindowArb {
         var dt = Dt;
         if (0f < dt)
             Move(Dt);
-        State.Program = DirectionalFlat.Id;
+        State.Program = directionalFlat;
         State.Framebuffer = renderingFramebuffer;
         State.VertexArray = renderingVertexArray;
         var (w, h) = Rect.Size;
@@ -93,12 +97,12 @@ class MovementTest:GlWindowArb {
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         Enable(Capability.DepthTest);
-        DirectionalFlat.LightDirection(lightDirection);
-        DirectionalFlat.View(camera.LookAtMatrix);
-        DirectionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w / h, 1f, 1000));
-        DirectionalFlat.Model(Matrix4x4.Identity);
+        directionalFlat.LightDirection(lightDirection);
+        directionalFlat.View(camera.LookAtMatrix);
+        directionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w / h, 1f, 1000));
+        directionalFlat.Model(Matrix4x4.Identity);
         DrawArrays(Primitive.Triangles, 0, vertexCount);
-        State.Program = PassThrough.Id;
+        State.Program = passThrough;
         State.Framebuffer = 0;
         State.VertexArray = presentationVertexArray;
         Viewport(0, 0, w, h);

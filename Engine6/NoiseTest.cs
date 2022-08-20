@@ -47,6 +47,7 @@ class NoiseTest:GlWindowArb {
     readonly int rowsPerThread;
     FastNoiseLite[] noises;
     CountdownEvent countdown;
+    PassThrough passThrough;
 
     void ProcArrays (int threadIndex) {
         var ms = FramesRendered;
@@ -74,7 +75,8 @@ class NoiseTest:GlWindowArb {
 
     void Load_self (object sender, EventArgs args) {
         quad = new();
-        quad.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
+        passThrough = new();
+        quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
         tex = new(new(_WIDTH, _HEIGHT), TextureFormat.Rgba8) { Min = MinFilter.Nearest, Mag = MagFilter.Nearest, Wrap = Wrap.ClampToEdge };
         noises = new FastNoiseLite[ThreadCount];
         raster.ClearU32(Color.Black);
@@ -105,10 +107,10 @@ class NoiseTest:GlWindowArb {
         Viewport(new(), Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
-        State.Program = PassThrough.Id;
+        State.Program = passThrough;
         State.VertexArray = quad;
         tex.BindTo(1);
-        PassThrough.Tex(1);
+        passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 

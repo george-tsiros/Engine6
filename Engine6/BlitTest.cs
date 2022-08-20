@@ -2,9 +2,9 @@ namespace Engine6;
 
 using System;
 using System.Numerics;
-using Shaders;
 using System.Diagnostics;
 using Gl;
+using Shaders;
 using Win32;
 using static Gl.Opengl;
 using static Linear.Maths;
@@ -61,6 +61,9 @@ internal class BlitTest:GlWindowArb {
     VertexArray someLines;
     VertexBuffer<Vector4> quadBuffer;
     Perf<FooNum> prf;
+    PassThrough passThrough;
+    DirectionalFlat directionalFlat;
+    Lines lines;
 
     public BlitTest (Model m = null)  {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
@@ -89,15 +92,16 @@ internal class BlitTest:GlWindowArb {
         offscreenFramebuffer.Attach(offscreenRenderingSurface, FramebufferAttachment.Color0);
         NamedFramebufferDrawBuffer(offscreenFramebuffer, DrawBuffer.Color0);
         quad = new();
-        State.Program = PassThrough.Id;
+        passThrough = new();
+        State.Program = passThrough;
         quadBuffer = new(QuadVertices);
-        quad.Assign(quadBuffer, PassThrough.VertexPosition);
+        quad.Assign(quadBuffer, passThrough.VertexPosition);
         softwareRenderSurface = new(size, 4, 1);
         softwareRenderTexture = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         offscreenRenderingSurface.BindTo(1);
-        PassThrough.Tex(1);
-
-        State.Program = DirectionalFlat.Id;
+        passThrough.Tex(1);
+        directionalFlat = new();
+        State.Program = directionalFlat;
         var faceCount = Faces.Length;
         var vertexCount = faceCount * 3;
         var vertices = new Vector4[vertexCount];
@@ -112,7 +116,9 @@ internal class BlitTest:GlWindowArb {
         }
 
         someLines = new();
-        someLines.Assign(new VertexBuffer<Vector2i>(new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) }), Lines.VertexPosition);
+        someLines.Assign(new VertexBuffer<Vector2i>(new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) }), lines.VertexPosition);
+        lines = new();
+
         Disposables.Add(softwareRenderSurface);
         Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
@@ -142,19 +148,19 @@ internal class BlitTest:GlWindowArb {
         prf.Leave();
         State.Framebuffer = 0;
         State.VertexArray = quad;
-        State.Program = PassThrough.Id;
+        State.Program = passThrough;
         Viewport(new(),Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
         State.VertexArray = someLines;
-        State.Program = Lines.Id;
+        State.Program = lines.Id;
         State.DepthTest = false;
         State.CullFace = false;
-        Lines.Color(new(0, 1, 0, 1));
-        Lines.RenderSize(Rect.Size);
-        Lines.Offset(cursorLocation);
+        lines.Color(new(0, 1, 0, 1));
+        lines.RenderSize(Rect.Size);
+        lines.Offset(cursorLocation);
         DrawArrays(Primitive.LineStrip, 0, 3);
 
         prf.Leave();
@@ -225,13 +231,13 @@ internal class BlitTest:GlWindowArb {
 
         softwareRenderTexture.Upload(softwareRenderSurface);
         prf.Leave();
-        State.Program = PassThrough.Id;
+        State.Program = passThrough;
         State.VertexArray = quad;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;
         softwareRenderTexture.BindTo(1);
-        PassThrough.Tex(1);
+        passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
 
     }

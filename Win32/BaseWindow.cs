@@ -1,6 +1,7 @@
 namespace Win32;
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 public abstract class BaseWindow:IDisposable {
@@ -18,17 +19,16 @@ public abstract class BaseWindow:IDisposable {
     }
 
     public IntPtr WindowHandle { get; private set; }
-    public IntPtr DeviceContext { get; private set; }
+    public DeviceContext Dc { get; private set; }
 
     private void Destroy () {
-        if (IntPtr.Zero != DeviceContext) {
-            if (!User32.ReleaseDC(WindowHandle, DeviceContext))
-                throw new WinApiException(nameof(User32.ReleaseDC));
-            DeviceContext = IntPtr.Zero;
+        if (Dc is not null) {
+            Dc.SetHandleAsInvalid();
+            Dc = null;
         }
         if (IntPtr.Zero != WindowHandle) {
             User32.DestroyWindow(WindowHandle);
-                WindowHandle = IntPtr.Zero;
+            WindowHandle = IntPtr.Zero;
         }
     }
 
@@ -37,7 +37,7 @@ public abstract class BaseWindow:IDisposable {
         instance = this;
         var eh = User32.CreateWindow(ClassAtom, SelfHandle);
         Debug.Assert(eh == WindowHandle);
-        DeviceContext = User32.GetDC(WindowHandle);
+        Dc = new(WindowHandle);
     }
 
     public BaseWindow () {

@@ -13,7 +13,7 @@ public class GlWindowArb:GlWindow {
 
     public GlWindowArb (Version shaderVersion = null) {
         shaderVersion ??= Opengl.ShaderVersion;
-        var extendedFormatCount = Opengl.GetPixelFormatCount(DeviceContext, 1, 0, 1);
+        var extendedFormatCount = Opengl.GetPixelFormatCount((IntPtr)Dc, 1, 0, 1);
         var attributeNames = new int[] {
             (int)PixelFormatAttributes.Acceleration,
             (int)PixelFormatAttributes.ColorBits,
@@ -32,7 +32,7 @@ public class GlWindowArb:GlWindow {
         attributeNameValuePairs[6] = (int)ContextAttributes.ContextFlags;
         var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
-            Opengl.GetPixelFormatAttribivARB(DeviceContext, i, 0, attributeNames.Length, attributeNames, attributeValues);
+            Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, 0, attributeNames.Length, attributeNames, attributeValues);
             if ((int)Acceleration.Full == attributeValues[0] && 24 <= attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5] && 0 != attributeValues[6])
                 candidates.Add(i);
         }
@@ -49,8 +49,8 @@ public class GlWindowArb:GlWindow {
                 windowUsed = false;
             }
             try {
-                Gdi32.DescribePixelFormat(DeviceContext, index, ref pfd);
-                Gdi32.SetPixelFormat(DeviceContext, index, ref pfd);
+                Gdi32.DescribePixelFormat((IntPtr)Dc, index, ref pfd);
+                Gdi32.SetPixelFormat((IntPtr)Dc, index, ref pfd);
 
                 windowUsed = true;
 
@@ -62,8 +62,8 @@ public class GlWindowArb:GlWindow {
                 attributeNameValuePairs[5] = shaderVersion?.Minor ?? Opengl.ShaderVersion.Minor;
                 attributeNameValuePairs[7] = (int)(ContextFlags.Debug | ContextFlags.ForwardCompatible);
 
-                var candidateContext = Opengl.CreateContextAttribsARB(DeviceContext, IntPtr.Zero, attributeNameValuePairs);
-                Opengl.MakeCurrent(DeviceContext, candidateContext);
+                var candidateContext = Opengl.CreateContextAttribsARB((IntPtr)Dc, IntPtr.Zero, attributeNameValuePairs);
+                Opengl.MakeCurrent((IntPtr)Dc, candidateContext);
                 RenderingContext = candidateContext;
                 if (profileMask != Opengl.Profile) {
                     continue;
@@ -97,7 +97,7 @@ public class GlWindowArb:GlWindow {
     }
     protected override void Create () {
         if (IntPtr.Zero != Opengl.GetCurrentContext())
-            Opengl.ReleaseCurrent(DeviceContext);
+            Opengl.ReleaseCurrent((IntPtr)Dc);
         if (IntPtr.Zero != RenderingContext)
             Opengl.DeleteContext(RenderingContext);
         RenderingContext = IntPtr.Zero;

@@ -104,15 +104,8 @@ public static partial class User32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     private static extern IntPtr CreateWindowExW (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr GetDC (IntPtr windowHandle);
-
     [DllImport(dll)]
     public static extern nint DefWindowProcW (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
-
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public static extern void PostQuitMessage (int code);

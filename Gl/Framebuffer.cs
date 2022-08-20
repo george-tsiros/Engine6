@@ -5,7 +5,7 @@ using static Opengl;
 
 public class Framebuffer:OpenglObject {
 
-    public override int Id { get; } = CreateFramebuffer();
+    public Framebuffer() => Id = CreateFramebuffer();
     
     protected override Action<int> Delete { get; } = DeleteFramebuffer;
     
@@ -15,5 +15,4 @@ public class Framebuffer:OpenglObject {
 
     public void Attach (Renderbuffer renderbuffer, FramebufferAttachment attachment) => NamedFramebufferRenderbuffer(Id, attachment, renderbuffer.Id);
 
-    public static implicit operator int (Framebuffer fb) => fb.Id;
 }

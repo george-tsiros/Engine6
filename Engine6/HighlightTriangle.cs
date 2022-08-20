@@ -25,6 +25,8 @@ class HighlightTriangle:GlWindowArb {
     Sampler2D vertexId, color0;
     VertexArray quad;
     byte[] Pixels;
+    VertexIndex vertexIndex;
+    PassThrough passThrough;
     void Load_self (object sender, EventArgs args) {
         var size = Rect.Size;
             
@@ -39,7 +41,8 @@ class HighlightTriangle:GlWindowArb {
 
         NamedFramebufferDrawBuffers(fb, DrawBuffer.Color0, DrawBuffer.Color1);
         NamedFramebufferReadBuffer(fb, DrawBuffer.Color1);
-        State.Program = VertexIndex.Id;
+        vertexIndex = new();
+        State.Program = vertexIndex;
 
         vao = new();
         var v = new Vector4[Model.Faces.Count * 3];
@@ -50,18 +53,17 @@ class HighlightTriangle:GlWindowArb {
             v[++j] = new((Vector3)Model.Vertices[face.Z], 1);
         }
 
-        vao.Assign(new VertexBuffer<Vector4>(v), VertexIndex.VertexPosition);
-        VertexIndex.Color0(Vector4.One);
-        VertexIndex.Color1(new(1, 0, 0, 1));
-
-        VertexIndex.Model(Matrix4x4.CreateTranslation(0, 0, -10));
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)size.X / size.Y, 1, 100));
-        VertexIndex.View(Matrix4x4.Identity);
-
-        State.Program = PassThrough.Id;
+        vao.Assign(new VertexBuffer<Vector4>(v), vertexIndex.VertexPosition);
+        vertexIndex.Color0(Vector4.One);
+        vertexIndex.Color1(new(1, 0, 0, 1));
+        vertexIndex.Model(Matrix4x4.CreateTranslation(0, 0, -10));
+        vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)size.X / size.Y, 1, 100));
+        vertexIndex.View(Matrix4x4.Identity);
+        passThrough = new();
+        State.Program = passThrough;
         quad = new();
 
-        quad.Assign(new VertexBuffer<Vector4>(QuadVertices), PassThrough.VertexPosition);
+        quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
         State.SwapInterval = 1;
     }
 
@@ -94,13 +96,13 @@ class HighlightTriangle:GlWindowArb {
         Viewport(new(),Rect.Size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        State.Program = VertexIndex.Id;
+        State.Program = vertexIndex;
         State.VertexArray = vao;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.LessEqual;
         State.CullFace = true;
-        VertexIndex.Tri((int)lastTriangle);
-        VertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)Rect.Width / Rect.Height, 1, 100));
+        vertexIndex.Tri((int)lastTriangle);
+        vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)Rect.Width / Rect.Height, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
 
         if (0 <= CursorLocation.X && CursorLocation.X < Rect.Width && 0 <= CursorLocation.Y && CursorLocation.Y < Rect.Height) {
@@ -111,11 +113,11 @@ class HighlightTriangle:GlWindowArb {
         State.Framebuffer = 0;
         Viewport(Vector2i.Zero, Rect.Size);
         Clear(BufferBit.ColorDepth);
-        State.Program = PassThrough.Id;
+        State.Program = passThrough;
         State.VertexArray = quad;
         State.DepthTest = false;
         State.CullFace = false;
-        PassThrough.Tex(0);
+        passThrough.Tex(0);
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 }

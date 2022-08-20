@@ -1,4 +1,4 @@
-﻿namespace Win32;
+namespace Win32;
 
 using System.Runtime.InteropServices;
 using System;
@@ -17,6 +17,8 @@ public class DeviceContext:SafeHandle {
         WindowHandle = hwnd;
     }
     public override bool IsInvalid => IntPtr.Zero == handle;
+
+    public static explicit operator IntPtr (DeviceContext dc) => !dc.IsInvalid ? dc.handle : throw new InvalidOperationException();
 
     protected override bool ReleaseHandle () => ReleaseDC(WindowHandle, handle);
 }

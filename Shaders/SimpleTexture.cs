@@ -1,41 +1,41 @@
 namespace Shaders;
+
 using Gl;
 using static Gl.Opengl;
 using System.Numerics;
 using Linear;
-public static class SimpleTexture {
+
+public class SimpleTexture:Program {
 #pragma warning disable CS0649
-    public const string VertexSource = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjMiB2ZXJ0ZXhVVjsgaW4gbWF0NCBtb2RlbDsgdW5pZm9ybSBtYXQ0IHZpZXcsIHByb2plY3Rpb247IG91dCB2ZWMyIHV2OyB2b2lkIG1haW4gKCkgeyB1diA9IHZlcnRleFVWOyBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
-    public const string FragmentSource = "aW4gdmVjMiB1djsgdW5pZm9ybSBzYW1wbGVyMkQgdGV4OyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gdGV4dHVyZSh0ZXgsIHV2KTsgfQ==";
+    protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjMiB2ZXJ0ZXhVVjsgaW4gbWF0NCBtb2RlbDsgdW5pZm9ybSBtYXQ0IHZpZXcsIHByb2plY3Rpb247IG91dCB2ZWMyIHV2OyB2b2lkIG1haW4gKCkgeyB1diA9IHZlcnRleFVWOyBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
+    protected override string FragmentSource { get; } = "aW4gdmVjMiB1djsgdW5pZm9ybSBzYW1wbGVyMkQgdGV4OyBvdXQgdmVjNCBvdXQwOyB2b2lkIG1haW4gKCkgeyBvdXQwID0gdGV4dHVyZSh0ZXgsIHV2KTsgfQ==";
 
     //size 1, type 35676
     [GlAttrib("model")]
-    public static int Model { get; }
+    public int Model { get; }
 
     //size 1, type 35666
     [GlAttrib("vertexPosition")]
-    public static int VertexPosition { get; }
+    public int VertexPosition { get; }
 
     //size 1, type 35664
     [GlAttrib("vertexUV")]
-    public static int VertexUV { get; }
+    public int VertexUV { get; }
 
     //size 1, type Matrix4x4
     [GlUniform("projection")]
-    private readonly static int projection;
-    public static void Projection (Matrix4x4 v) => Uniform(projection, v);
+    private readonly int projection;
+    public void Projection (Matrix4x4 v) => Uniform(projection, v);
 
     //size 1, type Matrix4x4
     [GlUniform("view")]
-    private readonly static int view;
-    public static void View (Matrix4x4 v) => Uniform(view, v);
+    private readonly int view;
+    public void View (Matrix4x4 v) => Uniform(view, v);
 
     //size 1, type Sampler2D
     [GlUniform("tex")]
-    private readonly static int tex;
-    public static void Tex (int v) => Uniform(tex, v);
+    private readonly int tex;
+    public void Tex (int v) => Uniform(tex, v);
 
-    public static int Id { get; }
-    static SimpleTexture () => ParsedShader.Prepare(typeof(SimpleTexture));
 #pragma warning restore CS0649
 }

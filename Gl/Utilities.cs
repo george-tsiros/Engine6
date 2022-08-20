@@ -5,10 +5,18 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Numerics;
 public static class Utilities {
-    public static byte[] AssertShorts (byte[] bytes) => Assert(bytes, 1);
-    public static byte[] AssertInts (byte[] bytes) => Assert(bytes, 3);
-    public static byte[] AssertLongs (byte[] bytes) => Assert(bytes, 7);
-    private static byte[] Assert (byte[] bytes, int mask) => (bytes.Length & mask) == 0 ? bytes : throw new ArgumentException($"{bytes.Length} not divisible by {mask + 1}");
+    public static byte[] AssertShorts (byte[] bytes) => 
+        Assert(bytes, 1);
+
+    public static byte[] AssertInts (byte[] bytes) => 
+        Assert(bytes, 3);
+
+    public static byte[] AssertLongs (byte[] bytes) => 
+        Assert(bytes, 7);
+
+    private static byte[] Assert (byte[] bytes, int mask) => 
+        (bytes.Length & mask) == 0 ? bytes : throw new ArgumentException($"{bytes.Length} not divisible by {mask + 1}");
+
     unsafe public static void MemSet (byte[] bytes, byte b) {
         var l = bytes.Length;
         for (var i = 0; i < l; i++)
@@ -46,6 +54,7 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 bytes[i] = 0;
     }
+
     unsafe public static void WipeShorts (byte[] bytes) {
         if ((bytes.Length & 1) != 0)
             throw new Exception();
@@ -54,6 +63,7 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 ((short*)bp)[i] = 0;
     }
+
     unsafe public static void WipeInts (byte[] bytes) {
         if ((bytes.Length & 3) != 0)
             throw new Exception();
@@ -62,6 +72,7 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 ((int*)bp)[i] = 0;
     }
+
     unsafe public static void WipeLongs (byte[] bytes) {
         if ((bytes.Length & 7) != 0)
             throw new Exception();
@@ -70,8 +81,13 @@ public static class Utilities {
             for (var i = 0; i < l; i++)
                 ((long*)bp)[i] = 0;
     }
-    public static string VisualStudioLink (StackFrame sf) => $">{sf.GetFileName()}({sf.GetFileLineNumber()},{sf.GetFileColumnNumber()}):";
-    public static string Method (int skip = 0) => VisualStudioLink(new StackFrame(skip + 1, true));
+
+    public static string VisualStudioLink (StackFrame sf) => 
+        $">{sf.GetFileName()}({sf.GetFileLineNumber()},{sf.GetFileColumnNumber()}):";
+
+    public static string Method (int skip = 0) => 
+        VisualStudioLink(new StackFrame(skip + 1, true));
+
     public static void Trace (string message) {
         var formatted = TraceFormat(message, 1);
         if (Debugger.IsAttached)
@@ -97,20 +113,23 @@ public static class Utilities {
         value = values[index];
     }
 
-    private static string TraceFormat (string message, int skip = 0) => $"{Method(skip + 2)} {message}";
+    private static string TraceFormat (string message, int skip = 0) => 
+        $"{Method(skip + 2)} {message}";
 
-    public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) => type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
+    public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) => 
+        type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
 
-    public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) => (eh = GetBackingField(type, prop, flags)) != null;
+    public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) => 
+        (eh = GetBackingField(type, prop, flags)) != null;
+   
     unsafe public static int ShaderFromString (ShaderType type, string source) {
         var vs = Opengl.CreateShader(type);
         Opengl.ShaderSource(vs, $"#version {Opengl.ShaderVersionString} core\n{source}");
         Opengl.CompileShader(vs);
         var log = Opengl.GetShaderInfoLog(vs);
-        if (log.Length > 0)
-            throw new ApplicationException(log);
-        return vs;
+        return 0 ==log.Length ? vs : throw new ApplicationException(log);
     }
+
     unsafe public static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
@@ -125,7 +144,9 @@ public static class Utilities {
         Opengl.DeleteShader(fragmentShader);
         return program;
     }
+    
     unsafe public delegate void GetInfoLog (int i, int j, ref int k, byte* p);
+    
     unsafe public static void ThrowThing (GetInfoLog f, int name, int length) {
         Span<byte> bytes = stackalloc byte[length + 1];
         fixed (byte* ptr = bytes)

@@ -47,7 +47,8 @@ class ShaderGen {
         chars[0] = char.ToUpper(chars[0]);
         return new string(chars);
     }
-    private static bool IsPrimitive (UniformType type) => type == UniformType.Double || type == UniformType.Float || type == UniformType.Int || type == UniformType.UInt;
+    private static bool IsPrimitive (UniformType type) => 
+        type == UniformType.Double || type == UniformType.Float || type == UniformType.Int || type == UniformType.UInt;
 
     private static string UniformTypeToTypeName (UniformType type) {
         if (IsPrimitive(type))
@@ -57,7 +58,9 @@ class ShaderGen {
         return type.ToString();
     }
 
-    private static bool IsPrimitive (string name) => name == "float" || name == "double" || name == "byte" || name == "char";
+    private static bool IsPrimitive (string name) => 
+        name == "float" || name == "double" || name == "byte" || name == "char";
+
     private static readonly char[] SplitChars = { '\n', '\r', ' ' };
 
     // really horrible
@@ -70,18 +73,20 @@ class ShaderGen {
         var program = ProgramFromStrings(vertexShaderSource, fragmentShaderSource);
 
         f.Write($@"namespace Shaders;
+
 using Gl;
 using static Gl.Opengl;
 using System.Numerics;
 using Linear;
-public static class {className} {{
+
+public class {className}:Program {{
 #pragma warning disable CS0649
 ");
-        f.Write("    public const string VertexSource = \"");
+        f.Write("    protected override string VertexSource { get; } = \"");
         f.Write(Pack(vertexShaderSource));
         f.Write("\";\n");
 
-        f.Write("    public const string FragmentSource = \"");
+        f.Write("    protected override string FragmentSource { get; } = \"");
         f.Write(Pack(fragmentShaderSource));
         f.Write("\";\n");
 
@@ -93,7 +98,7 @@ public static class {className} {{
             f.Write($@"
     //size {x.size}, type {x.type}
     [GlAttrib(""{x.name}"")]
-    public static int {UppercaseFirst(x.name)} {{ get; }}
+    public int {UppercaseFirst(x.name)} {{ get; }}
 ");
         }
 
@@ -107,20 +112,18 @@ public static class {className} {{
             f.Write($@"
     //size {y.size}, type {y.type}
     [GlUniform(""{y.name}"")]
-    private readonly static int {fieldName};
-    public static void {UppercaseFirst(y.name)} ({UniformTypeToTypeName(y.type)} v) => Uniform({fieldName}, v);
+    private readonly int {fieldName};
+    public void {UppercaseFirst(y.name)} ({UniformTypeToTypeName(y.type)} v) => Uniform({fieldName}, v);
 ");
         }
 
         f.Write($@"
-    public static int Id {{ get; }}
-    static {className} () => ParsedShader.Prepare(typeof({className}));
 #pragma warning restore CS0649
 }}");
 
         DeleteProgram(program);
     }
-    private static readonly string dashes = new('-', 100);
+
     [STAThread]
     public static int Main (string[] args) {
         try {
