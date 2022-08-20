@@ -1,7 +1,4 @@
-namespace Gl;
-
-using System;
-using Win32;
+namespace Win32;
 
 readonly struct KeyMessage {
     public short RepeatCount { get; }

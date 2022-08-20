@@ -1,10 +1,9 @@
-namespace Gl;
+namespace Win32;
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Diagnostics;
 
 public class Font {
     public int Height { get; private set; }
@@ -28,21 +27,6 @@ public class Font {
             width += widths[c];
         }
         return width;
-    }
-
-    public Font (string familyName, float size) {
-        EmSize = size;
-        var startInfo = new ProcessStartInfo("bitmaptoraster.exe", $"\"{familyName}\" {size}") {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-        };
-        using (var p = Process.Start(startInfo)) {
-            ReadFrom(p.StandardOutput);
-            p.WaitForExit();
-            if (p.ExitCode != 0)
-                throw new Exception($"failed to create a size {size} {familyName} font file");
-        }
     }
 
     public Font (string filepath) {

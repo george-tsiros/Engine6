@@ -14,15 +14,14 @@ using Linear;
 
 class Boxes:GlWindow {
 
-    public Boxes ()  {
-        Load += Load_self;
+    public Boxes () {
     }
 
-    void Load_self (object sender, EventArgs args) {
+    protected override void Load () {
     }
 
     protected override void Render () {
-        Viewport(new(),Rect.Size);
+        Viewport(new(), Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
         DrawArrays(Primitive.Triangles, 0, 6);
@@ -38,7 +37,6 @@ class NoiseTest:GlWindowArb {
     public NoiseTest () : base() {
         rowsPerThread = _HEIGHT / ThreadCount;
         raster = new(Rect.Size, 4, 1);
-        Load += Load_self;
     }
 
     VertexArray quad;
@@ -73,7 +71,7 @@ class NoiseTest:GlWindowArb {
         var done = countdown.Signal();
     }
 
-    void Load_self (object sender, EventArgs args) {
+    protected override void Load () {
         quad = new();
         passThrough = new();
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);

@@ -1,11 +1,10 @@
 namespace Win32;
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 public abstract class BaseWindow:IDisposable {
-    private const string ClassName = "MYWINDOWCLASS";
+    private const string ClassName = nameof(BaseWindow);
 
     protected static readonly WndProc staticWndProc = StaticWndProc;
     protected static readonly ushort ClassAtom = User32.RegisterWindowClass(staticWndProc, ClassName);
@@ -41,6 +40,8 @@ public abstract class BaseWindow:IDisposable {
     }
 
     public BaseWindow () {
+        if (instance is not null)
+            throw new InvalidOperationException("only one window at a time");
         Create();
     }
 

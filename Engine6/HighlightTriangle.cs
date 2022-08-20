@@ -10,10 +10,9 @@ using static Linear.Maths;
 using Linear;
 
 class HighlightTriangle:GlWindowArb {
-    public HighlightTriangle (Model model)  {
+    public HighlightTriangle (Model model) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
-        Load += Load_self;
         KeyUp += KeyUp_self;
     }
 
@@ -27,9 +26,9 @@ class HighlightTriangle:GlWindowArb {
     byte[] Pixels;
     VertexIndex vertexIndex;
     PassThrough passThrough;
-    void Load_self (object sender, EventArgs args) {
+    protected override void Load () {
         var size = Rect.Size;
-            
+
         Pixels = new byte[size.X * size.Y * sizeof(int)];
         fb = new();
         depthStencil = new(size, RenderbufferFormat.Depth24Stencil8);
@@ -93,7 +92,7 @@ class HighlightTriangle:GlWindowArb {
         State.Framebuffer = fb;
         color0.BindTo(0);
         vertexId.BindTo(1);
-        Viewport(new(),Rect.Size);
+        Viewport(new(), Rect.Size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         State.Program = vertexIndex;

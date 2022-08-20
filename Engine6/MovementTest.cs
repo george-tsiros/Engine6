@@ -21,7 +21,6 @@ class MovementTest:GlWindowArb {
     };
 
     public MovementTest () {
-        Load += Load_self;
         MouseMove += MouseMove_self;
     }
     void MouseMove_self (object sender, Vector2i e) {
@@ -32,10 +31,10 @@ class MovementTest:GlWindowArb {
     Camera camera = new(new(0, 100f, 5));
     VertexArray renderingVertexArray, presentationVertexArray;
     Framebuffer renderingFramebuffer;
-    int vertexCount=0;
+    int vertexCount = 0;
     DirectionalFlat directionalFlat;
     PassThrough passThrough;
-    void Load_self (object sender, EventArgs args) {
+    protected override void Load () {
         renderingFramebuffer = new();
         var size = Rect.Size;
         renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
@@ -43,6 +42,7 @@ class MovementTest:GlWindowArb {
         renderingFramebuffer.Attach(renderingSurface, FramebufferAttachment.Color0);
         NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
         directionalFlat = new();
+        Debug.Assert(0 < directionalFlat);
         State.Program = directionalFlat;
         renderingVertexArray = new();
         var plane = Model.Plane(new(200, 200), new(100, 100));
@@ -61,6 +61,7 @@ class MovementTest:GlWindowArb {
             normals[i] = Vector4.UnitY;
         renderingVertexArray.Assign(new VertexBuffer<Vector4>(normals), directionalFlat.FaceNormal);
         passThrough = new();
+        Debug.Assert(0 < passThrough);
         State.Program = passThrough;
         presentationVertexArray = new();
         presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);

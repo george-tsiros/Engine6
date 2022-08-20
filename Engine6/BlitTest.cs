@@ -65,7 +65,7 @@ internal class BlitTest:GlWindowArb {
     DirectionalFlat directionalFlat;
     Lines lines;
 
-    public BlitTest (Model m = null)  {
+    public BlitTest (Model m = null) {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);
@@ -79,11 +79,10 @@ internal class BlitTest:GlWindowArb {
 
         State.SwapInterval = 1;
         KeyDown += KeyDown_self;
-        Load += Load_self;
         MouseMove += MouseMove_self;
     }
 
-    void Load_self (object sender, EventArgs args) {
+    protected override void Load () {
         var size = Rect.Size;
         offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
         offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
@@ -116,12 +115,13 @@ internal class BlitTest:GlWindowArb {
         }
 
         someLines = new();
-        someLines.Assign(new VertexBuffer<Vector2i>(new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) }), lines.VertexPosition);
         lines = new();
+        someLines.Assign(new VertexBuffer<Vector2i>(new Vector2i[] { new(0, -9), new(0, 0), new(10, 0) }), lines.VertexPosition);
 
         Disposables.Add(softwareRenderSurface);
         Disposables.Add(softwareRenderTexture);
         Disposables.Add(quad);
+        Disposables.Add(lines);
         Disposables.Add(someLines);
         Disposables.Add(quadBuffer);
         Disposables.Add(prf = new("log.bin"));
@@ -149,7 +149,7 @@ internal class BlitTest:GlWindowArb {
         State.Framebuffer = 0;
         State.VertexArray = quad;
         State.Program = passThrough;
-        Viewport(new(),Rect.Size);
+        Viewport(new(), Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         DrawArrays(Primitive.Triangles, 0, 6);
@@ -242,30 +242,14 @@ internal class BlitTest:GlWindowArb {
 
     }
 
-    void AdjustFont (float delta) {
-        var fh = Font.EmSize;
-        var nh = FloatClamp(Font.EmSize + delta, 12, 36);
-        if (fh == nh)
-            return;
-        try {
-            Font = new(Font.FamilyName, nh);
-        } catch { }
-    }
-
     void KeyDown_self (object sender, Keys k) {
         switch (k) {
             case Keys.Space:
                 camera.Location = new();
                 return;
-            case Keys.OemMinus:
-                AdjustFont(-1f);
-                return;
-            case Keys.Oemplus:
-                AdjustFont(+1f);
-                return;
-            //case Keys.M:
-            //    CursorGrabbed = !CursorGrabbed;
-            //    return;
+                //case Keys.M:
+                //    CursorGrabbed = !CursorGrabbed;
+                //    return;
         }
     }
 

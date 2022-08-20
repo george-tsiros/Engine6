@@ -11,6 +11,7 @@ using System.IO;
 using Linear;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
 
@@ -267,7 +268,7 @@ unsafe public static class Opengl {
         Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
         var l = Encoding.ASCII.GetBytes(name, bytes);
         if (l != name.Length)
-            throw new Exception();
+            throw new Exception($"expected {name.Length} characters, not {l}");
         bytes[name.Length] = 0;
         fixed (byte* p = bytes)
             return f(program, p);
@@ -288,7 +289,7 @@ unsafe public static class Opengl {
         var bytes = new byte[source.Length + 1];
         var l = Encoding.ASCII.GetBytes(source, bytes);
         if (source.Length != l)
-            throw new Exception();
+            throw new Exception($"expected {source.Length} characters, not {l}");
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)
             Extensions.glShaderSource(id, 1, &strPtr, null);

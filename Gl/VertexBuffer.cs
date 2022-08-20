@@ -20,11 +20,11 @@ public class VertexBuffer<T>:OpenglObject where T : unmanaged {
 
     private void Check (int sourceOffset, int targetOffset, int count, int dataLength) {
         if (Disposed)
-            throw new ObjectDisposedException(null);
+            throw new ObjectDisposedException(GetType().Name);
         if (sourceOffset + count > dataLength)
-            throw new Exception();
+            throw new ArgumentException("overflow", nameof(sourceOffset));
         if (targetOffset + count > Capacity)
-            throw new Exception();
+            throw new ArgumentException("overflow", nameof(targetOffset));
     }
  
     unsafe public void BufferData (in ReadOnlySpan<T> data, int count, int sourceOffset, int targetOffset) {

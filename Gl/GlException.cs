@@ -19,7 +19,7 @@ public class GlException:Exception {
         }
         if (0 < errors.Count) {
             var strings = errors.ConvertAll(e => Glu.ErrorString((int)e));
-            throw new Exception();
+            throw new Exception(string.Join("\n", strings));
         }
     }
 

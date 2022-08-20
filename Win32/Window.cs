@@ -1,11 +1,8 @@
-namespace Gl;
+namespace Win32;
 
+using Linear;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Win32;
-using Linear;
 
 public class Window:BaseWindow {
 
@@ -30,8 +27,7 @@ public class Window:BaseWindow {
     public event EventHandler<Keys> KeyUp;
     protected virtual void OnKeyUp (Keys k) => KeyUp?.Invoke(this, k);
 
-    public event EventHandler Load;
-    protected virtual void OnLoad () => Load?.Invoke(this, new());
+    protected virtual void Load () { }
 
     public event EventHandler MouseLeave;
     protected virtual void OnMouseLeave () => MouseLeave?.Invoke(this, new());
@@ -72,8 +68,8 @@ public class Window:BaseWindow {
     //    }
     //}
 
-    public virtual void Run () {
-        OnLoad();
+    public void Run () {
+        Load();
         running = true;
         _ = User32.ShowWindow(WindowHandle, CmdShow.Show);
         if (!User32.UpdateWindow(WindowHandle))
@@ -116,7 +112,7 @@ public class Window:BaseWindow {
         if (!p.flags.HasFlag(WindowPosFlags.NoSize))
             rect = new(rect.Location, new(p.width, p.height));
     }
-    
+
     private void Size (Vector2i size) {
         rect = new(rect.Location, size);
     }

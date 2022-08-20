@@ -24,7 +24,7 @@ public static class Utilities {
     }
     unsafe public static void MemSet (byte[] bytes, ushort us) {
         if ((bytes.Length & 1) != 0)
-            throw new Exception();
+            throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(ushort)}", nameof(bytes));
         var l = bytes.Length >> 1;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
@@ -33,7 +33,7 @@ public static class Utilities {
 
     public unsafe static void MemSet (byte[] bytes, uint u32) {
         if ((bytes.Length & 3) != 0)
-            throw new Exception();
+            throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(uint)}", nameof(bytes));
         fixed (byte* bp = bytes) {
             uint* p = (uint*)bp;
             var count = bytes.Length >> 2;
@@ -57,7 +57,7 @@ public static class Utilities {
 
     unsafe public static void WipeShorts (byte[] bytes) {
         if ((bytes.Length & 1) != 0)
-            throw new Exception();
+            throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(ushort)}", nameof(bytes));
         var l = bytes.Length >> 1;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
@@ -66,7 +66,7 @@ public static class Utilities {
 
     unsafe public static void WipeInts (byte[] bytes) {
         if ((bytes.Length & 3) != 0)
-            throw new Exception();
+            throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(uint)}", nameof(bytes));
         var l = bytes.Length >> 2;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)
@@ -75,7 +75,7 @@ public static class Utilities {
 
     unsafe public static void WipeLongs (byte[] bytes) {
         if ((bytes.Length & 7) != 0)
-            throw new Exception();
+            throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(long)}", nameof(bytes));
         var l = bytes.Length >> 4;
         fixed (byte* bp = bytes)
             for (var i = 0; i < l; i++)

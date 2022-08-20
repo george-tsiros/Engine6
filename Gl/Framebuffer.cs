@@ -5,7 +5,8 @@ using static Opengl;
 
 public class Framebuffer:OpenglObject {
 
-    public Framebuffer() => Id = CreateFramebuffer();
+    public Framebuffer() => 
+        Id = CreateFramebuffer();
     
     protected override Action<int> Delete { get; } = DeleteFramebuffer;
     
