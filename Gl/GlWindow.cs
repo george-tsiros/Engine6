@@ -48,7 +48,7 @@ public class GlWindow:Window {
             skipMove = false;
     }
 
-    protected override void OnPaint () {
+    protected override void OnPaint (IntPtr dc, Rect rect) {
         Render();
         Gdi32.SwapBuffers((IntPtr)Dc);
         LastSync = Stopwatch.GetTimestamp();

@@ -36,6 +36,9 @@ public readonly struct Rect {
     public Vector2i Center =>
         new((Left + Right) / 2, (Bottom + Top) / 2);
 
+    public bool IsEmpty =>
+        Left == Right || Bottom == Top;
+
     public override string ToString () =>
         $"({Left},{Top})-({Right},{Bottom})";
 }

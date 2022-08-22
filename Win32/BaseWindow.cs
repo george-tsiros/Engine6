@@ -31,10 +31,12 @@ public abstract class BaseWindow:IDisposable {
         }
     }
 
+    protected virtual WindowStyle Style => WindowStyle.ClipPopup;
+
     protected virtual void Create () {
         Destroy();
         instance = this;
-        var eh = User32.CreateWindow(ClassAtom, SelfHandle);
+        var eh = User32.CreateWindow(ClassAtom, SelfHandle, Style);
         Debug.Assert(eh == WindowHandle);
         Dc = new(WindowHandle);
     }

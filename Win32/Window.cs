@@ -35,8 +35,8 @@ public class Window:BaseWindow {
     public event EventHandler<Vector2i> MouseMove;
     protected virtual void OnMouseMove (Vector2i currentPosition) => MouseMove?.Invoke(this, currentPosition);
 
-    public event EventHandler Paint;
-    protected virtual void OnPaint () => Paint?.Invoke(this, new());
+    public event EventHandler<PaintEventArgs> Paint;
+    protected virtual void OnPaint (IntPtr dc, Rect r) => Paint?.Invoke(this, new(dc, r));
 
     readonly int[] KeyState = new int[256 / 32];
     bool painting;
@@ -69,6 +69,7 @@ public class Window:BaseWindow {
     //}
 
     public void Run () {
+        _ = User32.SetWindowLongPtrA(WindowHandle, -16, IntPtr.Zero);
         Load();
         running = true;
         _ = User32.ShowWindow(WindowHandle, CmdShow.Show);
@@ -199,8 +200,8 @@ public class Window:BaseWindow {
                 if (running && !painting) {
                     var ps = new PaintStruct();
                     painting = true;
-                    _ = User32.BeginPaint(WindowHandle, ref ps);
-                    OnPaint();
+                    var dc = User32.BeginPaint(WindowHandle, ref ps);
+                    OnPaint(dc, ps.paint);
                     User32.EndPaint(WindowHandle, ref ps);
                     painting = false;
                 }

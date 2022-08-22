@@ -2,6 +2,7 @@ namespace Win32;
 
 using System.Runtime.InteropServices;
 using System;
+using System.Text;
 using Linear;
 
 [Flags]
@@ -181,6 +182,24 @@ public static partial class User32 {
     public static bool InvalidateRect (IntPtr handle, [In] ref Rect rect, bool erase) =>
         InvalidateRect(handle, ref rect, erase ? 1 : 0);
 
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    unsafe private static extern int DrawTextExA (IntPtr dc, byte* text, int length, ref Rect rc, int format, IntPtr p);
+
+    unsafe public static int DrawText (IntPtr dc, string text, ref Rect rc, TextFormat format) {
+        var expectedUtf8CharCount = Encoding.UTF8.GetByteCount(text);
+        if (text.Length != expectedUtf8CharCount)
+            throw new ArgumentException("only 7-bit, ascii strings with printable characters", nameof(text));
+        Span<byte> bytes = 1024 < expectedUtf8CharCount ? stackalloc byte[expectedUtf8CharCount] : new byte[expectedUtf8CharCount];
+        var actualUtf8CharCount = Encoding.UTF8.GetBytes(text, bytes);
+        if (expectedUtf8CharCount != actualUtf8CharCount)
+            throw new Exception($"expectedUtf8CharCount != actualUtf8CharCount, {expectedUtf8CharCount} != {actualUtf8CharCount}");
+        foreach (var b in bytes)
+            if (b < ' ' || 0x7f <= b)
+                throw new ArgumentException("only 7-bit, ascii strings with printable characters", nameof(text));
+        fixed (byte* b = bytes)
+            return DrawTextExA(dc, b, actualUtf8CharCount, ref rc, (int)format, IntPtr.Zero);
+
+    }
     /// <summary>
     /// 
     /// </summary>
@@ -217,11 +236,11 @@ public static partial class User32 {
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    //public static extern IntPtr SetWindowLongPtrA (IntPtr hWnd, int nIndex, IntPtr newLong);
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int nIndex, IntPtr value);
 
-    public static IntPtr CreateWindow (ushort atom, IntPtr? moduleHandle = null) {
-        var p = CreateWindowExW(WindowStyleEx.None, new(atom), IntPtr.Zero, WindowStyle.ClipPopup, 0, 0, 1280, 720, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
+    public static IntPtr CreateWindow (ushort atom, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
+        var p = CreateWindowExW(styleEx, new(atom), IntPtr.Zero, style, 0, 0, 1280, 720, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
         return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExW));
     }
 }
