@@ -17,7 +17,7 @@ class Boxes:GlWindow {
     public Boxes () {
     }
 
-    protected override void Load () {
+    protected override void OnLoad () {
     }
 
     protected override void Render () {
@@ -71,7 +71,7 @@ class NoiseTest:GlWindowArb {
         var done = countdown.Signal();
     }
 
-    protected override void Load () {
+    protected override void OnLoad () {
         quad = new();
         passThrough = new();
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);

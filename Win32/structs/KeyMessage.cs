@@ -1,12 +1,12 @@
 namespace Win32;
 
-readonly struct KeyMessage {
-    public short RepeatCount { get; }
-    public Keys Key { get; }
-    public bool WasDown { get; }
+internal  struct KeyMessage {
+    public short repeatCount ;
+    public Keys key ;
+    public bool wasDown;
     public KeyMessage (nuint w, nint l) {
-        RepeatCount = (short)(l & short.MaxValue);
-        Key = (Keys)(byte)(w & byte.MaxValue);
-        WasDown = (l & 0x40000000) != 0;
+        repeatCount = (short)(l & short.MaxValue);
+        key = (Keys)(byte)(w & byte.MaxValue);
+        wasDown = (l & 0x40000000) != 0;
     }
 }

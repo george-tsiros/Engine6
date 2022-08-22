@@ -13,7 +13,6 @@ class HighlightTriangle:GlWindowArb {
     public HighlightTriangle (Model model) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
-        KeyUp += KeyUp_self;
     }
 
     Model Model;
@@ -26,7 +25,7 @@ class HighlightTriangle:GlWindowArb {
     byte[] Pixels;
     VertexIndex vertexIndex;
     PassThrough passThrough;
-    protected override void Load () {
+    protected override void OnLoad () {
         var size = Rect.Size;
 
         Pixels = new byte[size.X * size.Y * sizeof(int)];
@@ -75,7 +74,7 @@ class HighlightTriangle:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    void KeyUp_self (object sender, Keys k) {
+    protected override void OnKeyUp (Keys k) {
         switch (k) {
             case Keys.Up:
                 fovRatio = IntMin(fovRatio + 1, 6);
@@ -85,6 +84,7 @@ class HighlightTriangle:GlWindowArb {
                 break;
         }
     }
+
     Vector2i CursorLocation = new();
     int fovRatio = 4;
     uint lastTriangle = 0;

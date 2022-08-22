@@ -21,7 +21,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindowArb {
+internal class BlitTest:GlWindow{
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
 
     static readonly Vector4[] QuadVertices = {
@@ -78,11 +78,9 @@ internal class BlitTest:GlWindowArb {
         FacesAndDots = new (double, int)[model.Faces.Count];
 
         State.SwapInterval = 1;
-        KeyDown += KeyDown_self;
-        MouseMove += MouseMove_self;
     }
 
-    protected override void Load () {
+    protected override void OnLoad () {
         var size = Rect.Size;
         offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
         offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
@@ -242,7 +240,7 @@ internal class BlitTest:GlWindowArb {
 
     }
 
-    void KeyDown_self (object sender, Keys k) {
+    protected override void OnKeyDown (Keys k) {
         switch (k) {
             case Keys.Space:
                 camera.Location = new();
@@ -253,7 +251,7 @@ internal class BlitTest:GlWindowArb {
         }
     }
 
-    void MouseMove_self (object sender, Vector2i e) {
+    protected override void OnMouseMove (Vector2i e) {
         //if (CursorGrabbed) {
         //    switch (Buttons) {
         //        case Buttons.Left:

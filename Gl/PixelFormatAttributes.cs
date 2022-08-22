@@ -1,6 +1,6 @@
 namespace Gl;
 
-enum PixelFormatAttributes {
+internal enum PixelFormatAttributes {
     PixelFormatCount = 0x2000,
     DrawToWindow = 0x2001,
     DrawToBitmap = 0x2002,

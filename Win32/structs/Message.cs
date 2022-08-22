@@ -8,8 +8,7 @@ public struct Message {
     public IntPtr wparam;
     public IntPtr lparam;
     public IntPtr result;
-    public int time;
+    public uint time;
     public int px;
     public int py;
-    public int lprivate;
 }

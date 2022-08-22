@@ -71,10 +71,11 @@ public class Raster:IDisposable {
             }
         }
     }
-    static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
+
+    private static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
         a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
-    static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
+    private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
     unsafe public void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
         if (Channels != 4)
@@ -170,7 +171,8 @@ public class Raster:IDisposable {
             throw new InvalidOperationException($"{nameof(PixelU32)} only works with 4 channels, not {Channels}");
         PixelU32Internal(p, color.Argb);
     }
-    void PixelU32Internal (Vector2i p, uint c) {
+
+    private void PixelU32Internal (Vector2i p, uint c) {
         if (0 <= p.X && p.X < Width && 0 <= p.Y && p.Y < Height) {
             var i = p.Y * Stride + 4 * p.X;
             Pixels[i] = (byte)(c & 0xff);
@@ -187,7 +189,7 @@ public class Raster:IDisposable {
             PixelU32Internal(a, color.Argb);
         } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
             var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
-            var (x0, x1) = (Math.Clamp(x0unbounded, 0, Width - 1), Math.Clamp(x1unbounded, 0, Width - 1));
+            var (x0, x1) = (Maths.IntClamp(x0unbounded, 0, Width - 1), Maths.IntClamp(x1unbounded, 0, Width - 1));
             fixed (byte* bytes = Pixels) {
                 uint* p = (uint*)bytes;
                 var line = a.Y * Width; // NOT stride
@@ -198,7 +200,7 @@ public class Raster:IDisposable {
             }
         } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
             var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
-            var (y0, y1) = (Math.Clamp(y0unbound, 0, Height - 1), Math.Clamp(y1unbound, 0, Height - 1));
+            var (y0, y1) = (Maths.IntClamp(y0unbound, 0, Height - 1), Maths.IntClamp(y1unbound, 0, Height - 1));
             fixed (byte* bp = Pixels) {
                 var p = (uint*)bp;
                 for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
@@ -210,7 +212,7 @@ public class Raster:IDisposable {
             var dp = p1 - p0;
 
             // for now, clipping is a problem 
-            if (Math.Abs(dp.X) < Math.Abs(dp.Y)) {
+            if (Maths.IntAbs(dp.X) < Maths.IntAbs(dp.Y)) {
                 // tall
 
             } else {

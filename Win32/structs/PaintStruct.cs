@@ -3,10 +3,10 @@ namespace Win32;
 using System;
 
 public unsafe struct PaintStruct {
-    public IntPtr hdc;
-    public IntPtr erase;
-    public Rectangle paint;
-    public IntPtr restore;
-    public IntPtr incUpdate;
-    public fixed byte reserved[22];
+    public IntPtr deviceContext;
+    public int erase;
+    public Rectangle rect;
+    public int restore;
+    public int incUpdate;
+    public fixed byte reserved[32];
 }

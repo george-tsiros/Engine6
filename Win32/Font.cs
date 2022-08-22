@@ -14,8 +14,8 @@ public class Font {
     public string FamilyName { get; private set; }
     public float EmSize { get; private set; }
 
-    int[] widths, offsets;
-    byte[] pixels;
+    private int[] widths, offsets;
+    private byte[] pixels;
 
     public int WidthOf (ReadOnlySpan<char> str) {
         if (str.Length == 0)
@@ -34,7 +34,7 @@ public class Font {
         ReadFrom(f);
     }
 
-    void ReadFrom (StreamReader r) {
+    private void ReadFrom (StreamReader r) {
         FamilyName = r.ReadLine();
         if (FamilyName is null)
             return;

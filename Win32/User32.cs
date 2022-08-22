@@ -5,7 +5,7 @@ using System;
 using System.Text;
 using Linear;
 
-public static partial class User32 {
+public static class User32 {
     private const string dll = nameof(User32) + ".dll";
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
@@ -51,12 +51,12 @@ public static partial class User32 {
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern int RegisterRawInputDevices (ref RawInputDevice raw, uint deviceCount, uint structSize);
 
-    [DllImport(dll, EntryPoint = "RegisterClassExW", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    private static extern ushort RegisterClassExW_ ([In] ref WindowClassExW windowClass);
+    [DllImport(dll, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
+    private static extern ushort RegisterClassExA ([In] ref WindowClassExA windowClass);
 
-    public static ushort RegisterClassExW (ref WindowClassExW windowClass) {
-        var atom = RegisterClassExW_(ref windowClass);
-        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassExW));
+    public static ushort RegisterClass (ref WindowClassExA windowClass) {
+        var atom = RegisterClassExA(ref windowClass);
+        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassExA));
     }
 
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
@@ -103,10 +103,15 @@ public static partial class User32 {
     /// <paramref name="param"/> may be NULL if no additional data is needed.</param>
     /// <returns></returns>
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr CreateWindowExW (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+    private static extern IntPtr CreateWindowExA (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+
+    public static IntPtr CreateWindow (ushort atom, int width = 0, int height = 0, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
+        var p = CreateWindowExA(styleEx, new(atom), IntPtr.Zero, style, 0, 0, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
+        return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExA));
+    }
 
     [DllImport(dll)]
-    public static extern nint DefWindowProcW (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
+    public static extern nint DefWindowProcA (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public static extern void PostQuitMessage (int code);
@@ -123,18 +128,18 @@ public static partial class User32 {
     public static extern bool UpdateWindow (IntPtr handle);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public static extern int GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
+    public static extern int GetMessageA (ref Message m, IntPtr handle, uint min, uint max);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
+    public static extern bool PeekMessageA (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool TranslateMessage (ref Message m);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr DispatchMessageW (ref Message m);
+    public static extern IntPtr DispatchMessageA (ref Message m);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr SetCapture (IntPtr windowHandle);
@@ -156,9 +161,9 @@ public static partial class User32 {
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool SetWindowText (IntPtr windowHandle, string text);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Auto)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PostMessageW (IntPtr handle, uint msg, IntPtr w, IntPtr l);
+    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Ansi)]
+    //[return: MarshalAs(UnmanagedType.Bool)]
+    //public static extern bool PostMessageA (IntPtr handle, uint msg, IntPtr w, IntPtr l);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -177,29 +182,19 @@ public static partial class User32 {
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool InvalidateRect (IntPtr handle, [In] ref Rectangle rect, nint erase);
+    private unsafe static extern bool InvalidateRect (IntPtr handle, Rectangle* rect, nint erase);
 
-    public static bool InvalidateRect (IntPtr handle, [In] ref Rectangle rect, bool erase) =>
-        InvalidateRect(handle, ref rect, erase ? 1 : 0);
-
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    unsafe private static extern int DrawTextExA (IntPtr dc, byte* text, int length, ref Rectangle rc, int format, IntPtr p);
-
-    unsafe public static int DrawText (IntPtr dc, string text, ref Rectangle rc, TextFormat format) {
-        var expectedUtf8CharCount = Encoding.UTF8.GetByteCount(text);
-        if (text.Length != expectedUtf8CharCount)
-            throw new ArgumentException("only 7-bit, ascii strings with printable characters", nameof(text));
-        Span<byte> bytes = 1024 < expectedUtf8CharCount ? stackalloc byte[expectedUtf8CharCount] : new byte[expectedUtf8CharCount];
-        var actualUtf8CharCount = Encoding.UTF8.GetBytes(text, bytes);
-        if (expectedUtf8CharCount != actualUtf8CharCount)
-            throw new Exception($"expectedUtf8CharCount != actualUtf8CharCount, {expectedUtf8CharCount} != {actualUtf8CharCount}");
-        foreach (var b in bytes)
-            if (b < ' ' || 0x7f <= b)
-                throw new ArgumentException("only 7-bit, ascii strings with printable characters", nameof(text));
-        fixed (byte* b = bytes)
-            return DrawTextExA(dc, b, actualUtf8CharCount, ref rc, (int)format, IntPtr.Zero);
-
+    public unsafe static void InvalidateRect (IntPtr handle, [In] in Rectangle rect, bool erase) {
+        fixed (Rectangle* r = &rect)
+            if (!InvalidateRect(handle, r, erase ? 1 : 0))
+                throw new Exception(nameof(User32.InvalidateRect));
     }
+
+    public unsafe static void InvalidateWindow (IntPtr windowHandle) {
+        if (!InvalidateRect(windowHandle, null, 0))
+            throw new Exception(nameof(User32.InvalidateRect));
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -225,22 +220,30 @@ public static partial class User32 {
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
-    public static ushort RegisterWindowClass (WndProc wndProc, string className) {
-        var windowClass = WindowClassExW.Create();
-        windowClass.style = ClassStyle.HRedraw | ClassStyle.VRedraw;
-        windowClass.wndProc = wndProc;
-        windowClass.classname = className;
-        return RegisterClassExW(ref windowClass);
-    }
-
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr SetWindowLongPtrW (IntPtr windowHandle, int nIndex, IntPtr value);
+    private static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int index, IntPtr value);
 
-    public static IntPtr CreateWindow (ushort atom, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowExW(styleEx, new(atom), IntPtr.Zero, style, 0, 0, 1280, 720, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleW(null), IntPtr.Zero);
-        return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExW));
+    private static void SetWindow (IntPtr windowHandle, GWLThing index, IntPtr value) {
+        var before = Kernel32.GetLastError();
+        if (0 != before)
+            throw new WinApiException("pre-existing error", before);
+        var previousValue = SetWindowLongPtrA(windowHandle, (int)index, value);
+        if (IntPtr.Zero == previousValue) {
+            var after = Kernel32.GetLastError();
+            if (0 != after)
+                throw new WinApiException($"{nameof(SetWindowLongPtrA)} failed", after);
+        }
     }
+
+    public static void SetWindow (IntPtr windowHandle, WndProc proc) =>
+        SetWindow(windowHandle, GWLThing.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
+
+    public static void SetWindow (IntPtr windowHandle, WindowStyleEx style) =>
+        SetWindow(windowHandle, GWLThing.ExStyle, (IntPtr)style);
+
+    public static void SetWindow (IntPtr windowHandle, WindowStyle style) =>
+        SetWindow(windowHandle, GWLThing.Style, (IntPtr)style);
 }

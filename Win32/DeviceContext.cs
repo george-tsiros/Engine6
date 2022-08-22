@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 using System;
 
 public class DeviceContext:SafeHandle {
-
-    readonly IntPtr WindowHandle;
+    private readonly IntPtr WindowHandle;
 
     public DeviceContext (IntPtr hwnd): base(User32.GetDC(hwnd), true) {
         WindowHandle = hwnd;

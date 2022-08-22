@@ -21,7 +21,7 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "glGetError", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
     public static extern GlErrorCodes GetError ();
     [DllImport(opengl32, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError = true)]
-    public static extern IntPtr CreateContext (IntPtr dc);
+    private static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr GetProcAddress ([MarshalAs(UnmanagedType.LPStr)] string name);
     [DllImport(opengl32, EntryPoint = "wglGetCurrentDC", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
@@ -61,7 +61,7 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "glFinish", ExactSpelling = true)]
     public static extern void Finish ();
     [DllImport(opengl32, EntryPoint = "glDeleteTextures", ExactSpelling = true)]
-    unsafe static extern void DeleteTextures (int count, int* ints);
+    private static     unsafe extern void DeleteTextures (int count, int* ints);
     [DllImport(opengl32, EntryPoint = "glScissor", ExactSpelling = true)]
     public static extern void Scissor (int x, int y, int width, int height);
     [DllImport(opengl32, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
@@ -331,7 +331,7 @@ unsafe public static class Opengl {
 
     public static string GetProgramInfoLog (int id) {
         int actualLogLength = GetProgram(id, ProgramParameter.InfoLogLength);
-        var bufferLength = Math.Min(1024, actualLogLength);
+        var bufferLength = Maths.IntMin(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             Extensions.glGetProgramInfoLog(id, bufferLength, null, p);
@@ -340,7 +340,7 @@ unsafe public static class Opengl {
 
     public static string GetShaderInfoLog (int id) {
         int actualLogLength = GetShader(id, ShaderParameter.InfoLogLength);
-        var bufferLength = Math.Min(1024, actualLogLength);
+        var bufferLength = Maths.IntMin(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             Extensions.glGetShaderInfoLog(id, bufferLength, null, p);
@@ -422,7 +422,7 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public unsafe static IntPtr CreateSimpleContext (IntPtr dc, Predicate<PixelFormatDescriptor> condition) {
+    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, Predicate<PixelFormatDescriptor> condition) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
@@ -430,7 +430,7 @@ unsafe public static class Opengl {
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
-        var rc = CreateContext(dc);
+        var rc = CreateContext((IntPtr)dc);
         return rc != IntPtr.Zero ? rc : throw new WinApiException("failed wglCreateContext");
     }
     public static ProfileMask Profile { get; private set; } = ProfileMask.Unknown;
@@ -438,10 +438,12 @@ unsafe public static class Opengl {
     public static string ShaderVersionString { get; private set; }
     public static string VersionString { get; private set; }
     public static string Renderer { get; private set; }
-    static readonly List<string> supportedExtensions = new();
+
+    private static readonly List<string> supportedExtensions = new();
     public static bool IsSupported (string extension) => supportedExtensions.Contains(extension);
     public static IReadOnlyCollection<string> SupportedExtensions { get; } = supportedExtensions;
-    unsafe static int FindPixelFormat (IntPtr dc, ref PixelFormatDescriptor pfd, Predicate<PixelFormatDescriptor> condition) {
+
+    private static unsafe int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, Predicate<PixelFormatDescriptor> condition) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");

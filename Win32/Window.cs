@@ -7,39 +7,21 @@ using System.Collections.Generic;
 public class Window:WindowBase {
 
     public bool IsFocused { get; private set; }
-
-    bool running;
-
     public Buttons Buttons { get; private set; }
 
-    public event EventHandler<Buttons> ButtonDown;
-    protected virtual void OnButtonDown (Buttons depressed) => ButtonDown?.Invoke(this, depressed);
+    private readonly int[] KeyState = new int[256 / 32];
+    private bool painting;
 
-    public event EventHandler<Buttons> ButtonUp;
-    protected virtual void OnButtonUp (Buttons released) => ButtonUp?.Invoke(this, released);
-
-    public event EventHandler<bool> FocusChanged;
-    protected virtual void OnFocusChanged (bool isFocused) => FocusChanged?.Invoke(this, isFocused);
-
-    public event EventHandler<Keys> KeyDown;
-    protected virtual void OnKeyDown (Keys k) => KeyDown?.Invoke(this, k);
-
-    public event EventHandler<Keys> KeyUp;
-    protected virtual void OnKeyUp (Keys k) => KeyUp?.Invoke(this, k);
-
-    protected virtual void Load () { }
-
-    public event EventHandler MouseLeave;
-    protected virtual void OnMouseLeave () => MouseLeave?.Invoke(this, new());
-
-    public event EventHandler<Vector2i> MouseMove;
-    protected virtual void OnMouseMove (Vector2i currentPosition) => MouseMove?.Invoke(this, currentPosition);
-
-    public event EventHandler<PaintEventArgs> Paint;
-    protected virtual void OnPaint (IntPtr dc, Rectangle r) => Paint?.Invoke(this, new(dc, r));
-
-    readonly int[] KeyState = new int[256 / 32];
-    bool painting;
+    protected virtual void OnButtonDown (Buttons depressed) { }
+    protected virtual void OnButtonUp (Buttons released) { }
+    protected virtual void OnFocusChanged (bool isFocused) { }
+    protected virtual void OnKeyDown (Keys k) { }
+    protected virtual void OnKeyUp (Keys k) { }
+    protected virtual void OnLoad () { }
+    protected virtual void OnMouseLeave () { }
+    protected virtual void OnMouseMove (Vector2i currentPosition) { }
+    protected virtual void OnPaint (IntPtr dc, in Rectangle r) { }
+    protected virtual void OnIdle () { }
 
     public bool IsKeyDown (Keys key) {
         var (h, l) = Split(key);
@@ -50,69 +32,52 @@ public class Window:WindowBase {
 
     protected void Invalidate () {
         rect = User32.GetClientRect(WindowHandle);
-        if (!User32.InvalidateRect(WindowHandle, ref rect, false))
-            throw new Exception(nameof(User32.InvalidateRect));
+        User32.InvalidateWindow(WindowHandle);
     }
 
-    //protected void Pump () {
-    //    Message m = new();
-    //    if (User.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-    //        var eh = User.GetMessageW(ref m, 0, 0, 0);
-    //        if (-1 == eh)
-    //            Environment.FailFast(null);
-    //        if (0 == eh) {
-    //            running = false;
-    //            return;
-    //        }
-    //        _ = User.DispatchMessageW(ref m);
-    //    }
-    //}
-
     public void Run () {
-        _ = User32.SetWindowLongPtrW(WindowHandle, -16, IntPtr.Zero);
-        Load();
-        running = true;
-        _ = User32.ShowWindow(WindowHandle, CmdShow.Show);
+        OnLoad();
         if (!User32.UpdateWindow(WindowHandle))
             throw new WinApiException(nameof(User32.UpdateWindow));
-
-        Message m = new();
-        while (running) {
-            while (User32.PeekMessageW(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-                var eh = User32.GetMessageW(ref m, IntPtr.Zero, 0, 0);
-                if (-1 == eh)
-                    Environment.FailFast(null);
-                if (0 == eh) {
-                    running = false;
-                    break;
-                }
-                _ = User32.DispatchMessageW(ref m);
-            }
-            if (running && !painting)
-                Invalidate();
-        }
+        _ = User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
+        Loop();
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
-    private void Move (Vector2i p) {
+
+    private void Loop () {
+        for (var m = new Message(); ; ) {
+            while (User32.PeekMessageA(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+                var gotMessage = User32.GetMessageA(ref m, IntPtr.Zero, 0, 0);
+                if (0 == gotMessage)
+                    return;
+                if (-1 == gotMessage)
+                    Environment.FailFast(null);
+                _ = User32.DispatchMessageA(ref m);
+            }
+            OnIdle();
+        }
     }
 
-    private void Moving (Rectangle r) {
-    }
+    //private void Move (Vector2i p) {
+    //}
 
-    private void WindowPosChanging (WindowPos p) {
-        if (!p.flags.HasFlag(WindowPosFlags.NoMove))
-            rect = new(new(p.left, p.top), rect.Size);
-        if (!p.flags.HasFlag(WindowPosFlags.NoSize))
-            rect = new(rect.Location, new(p.width, p.height));
-    }
+    //private void Moving (Rectangle r) {
+    //}
 
-    private void WindowPosChanged (WindowPos p) {
-        if (!p.flags.HasFlag(WindowPosFlags.NoMove))
-            rect = new(new(p.left, p.top), rect.Size);
-        if (!p.flags.HasFlag(WindowPosFlags.NoSize))
-            rect = new(rect.Location, new(p.width, p.height));
-    }
+    //private void WindowPosChanging (WindowPos p) {
+    //    if (!p.flags.HasFlag(WindowPosFlags.NoMove))
+    //        rect = new(new(p.left, p.top), rect.Size);
+    //    if (!p.flags.HasFlag(WindowPosFlags.NoSize))
+    //        rect = new(rect.Location, new(p.width, p.height));
+    //}
+
+    //private void WindowPosChanged (WindowPos p) {
+    //    if (!p.flags.HasFlag(WindowPosFlags.NoMove))
+    //        rect = new(new(p.left, p.top), rect.Size);
+    //    if (!p.flags.HasFlag(WindowPosFlags.NoSize))
+    //        rect = new(rect.Location, new(p.width, p.height));
+    //}
 
     private void Size (Vector2i size) {
         rect = new(rect.Location, size);
@@ -120,21 +85,21 @@ public class Window:WindowBase {
 
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
-            case WinMessage.Move:
-                Move(Split(l));
-                return 0;
-            case WinMessage.Moving:
-                Moving(*(Rectangle*)l);
-                return 0;
-            case WinMessage.WindowPosChanged:
-                WindowPosChanged(*(WindowPos*)l);
-                return 0;
+            //case WinMessage.Move:
+            //    Move(Split(l));
+            //    return 0;
+            //case WinMessage.Moving:
+            //    Moving(*(Rectangle*)l);
+            //    return 0;
+            //case WinMessage.WindowPosChanged:
+            //    WindowPosChanged(*(WindowPos*)l);
+            //    return 0;
             case WinMessage.Size:
                 Size(Split(l));
                 return 0;
-            case WinMessage.WindowPosChanging:
-                WindowPosChanging(*(WindowPos*)l);
-                return 0;
+            //case WinMessage.WindowPosChanging:
+            //    WindowPosChanging(*(WindowPos*)l);
+            //    return 0;
             case WinMessage.MouseMove: {
                     if (!IsFocused)
                         break;
@@ -181,33 +146,36 @@ public class Window:WindowBase {
                 break;
             case WinMessage.KeyDown: {
                     var km = new KeyMessage(w, l);
-                    if (km.WasDown)
+                    if (km.wasDown)
                         break;
-                    var key = km.Key;
+                    var key = km.key;
                     var (hi, lo) = Split(key);
                     KeyState[hi] |= lo;
                     OnKeyDown(key);
                     return 0;
                 }
             case WinMessage.KeyUp: {
-                    var key = new KeyMessage(w, l).Key;
+                    var key = (Keys)(byte)(w & byte.MaxValue);
                     var (hi, lo) = Split(key);
                     KeyState[hi] &= ~lo;
                     OnKeyUp(key);
                     return 0;
                 }
             case WinMessage.Paint:
-                if (running && !painting) {
-                    var ps = new PaintStruct();
-                    painting = true;
-                    var dc = User32.BeginPaint(WindowHandle, ref ps);
-                    OnPaint(dc, ps.paint);
-                    User32.EndPaint(WindowHandle, ref ps);
-                    painting = false;
-                }
+                if (!painting)
+                    try {
+                        var ps = new PaintStruct();
+                        painting = true;
+                        var dc = User32.BeginPaint(WindowHandle, ref ps);
+                        if (!ps.rect.IsEmpty)
+                            OnPaint(dc, ps.rect);
+                        User32.EndPaint(WindowHandle, ref ps);
+                    } finally {
+                        painting = false;
+                    }
                 return 0;
         }
-        return User32.DefWindowProcW(h, m, w, l);
+        return User32.DefWindowProcA(h, m, w, l);
     }
 
     private Font font;
@@ -218,10 +186,10 @@ public class Window:WindowBase {
             font = value;
     }
 
-    static (int h, int l) Split (Keys k) =>
+    private static (int h, int l) Split (Keys k) =>
         ((int)k >> 5, 1 << ((int)k & 31));
 
-    static Vector2i Split (nint l) {
+    private static Vector2i Split (nint l) {
         var i = (int)(l & int.MaxValue);
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }

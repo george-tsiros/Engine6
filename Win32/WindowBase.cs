@@ -9,9 +9,18 @@ public abstract class WindowBase:IDisposable {
     private const string ClassName = nameof(WindowBase);
 
     protected static readonly WndProc staticWndProc = StaticWndProc;
-    protected static readonly ushort ClassAtom = User32.RegisterWindowClass(staticWndProc, ClassName);
-    protected static readonly IntPtr SelfHandle = Kernel32.GetModuleHandleW(null);
+    protected static readonly ushort ClassAtom;
+    protected static readonly IntPtr SelfHandle = Kernel32.GetModuleHandleA(null);
     private static WindowBase instance;
+
+    static WindowBase () {
+        var wc = new WindowClassExA() {
+            style = ClassStyle.VRedraw | ClassStyle.HRedraw,
+            wndProc = staticWndProc,
+            classname = nameof(WindowBase),
+        };
+        ClassAtom = User32.RegisterClass(ref wc);
+    }
 
     private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
         if (WinMessage.NCCREATE == m || WinMessage.Create == m)
@@ -24,13 +33,14 @@ public abstract class WindowBase:IDisposable {
 
     private void Destroy () {
         if (Dc is not null) {
-            Dc.SetHandleAsInvalid();
+            Dc.Close();
             Dc = null;
         }
         if (IntPtr.Zero != WindowHandle) {
             User32.DestroyWindow(WindowHandle);
             WindowHandle = IntPtr.Zero;
         }
+        instance = null;
     }
 
     protected virtual WindowStyle Style => WindowStyle.ClipPopup;
@@ -38,7 +48,7 @@ public abstract class WindowBase:IDisposable {
     protected virtual void Create () {
         Destroy();
         instance = this;
-        var eh = User32.CreateWindow(ClassAtom, SelfHandle, Style);
+        var eh = User32.CreateWindow(ClassAtom, 0, 0, SelfHandle, Style);
         Debug.Assert(eh == WindowHandle);
         Dc = new(WindowHandle);
     }

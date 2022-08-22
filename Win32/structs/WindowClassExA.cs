@@ -3,7 +3,7 @@ namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 
-public unsafe struct WindowClassExW {
+public struct WindowClassExA {
     public uint size;
     public ClassStyle style;
     public WndProc wndProc;
@@ -13,11 +13,12 @@ public unsafe struct WindowClassExW {
     public IntPtr hIcon;
     public IntPtr hCursor;
     public IntPtr hbrBackground;
-    [MarshalAs(UnmanagedType.LPWStr)]
+    [MarshalAs(UnmanagedType.LPStr)]
     public string lpszmenuname;
-    [MarshalAs(UnmanagedType.LPWStr)]
+    [MarshalAs(UnmanagedType.LPStr)]
     public string classname;
     public IntPtr hIconsm;
-    public static WindowClassExW Create () 
-        => new() { size = (uint)Marshal.SizeOf<WindowClassExW>() };
+    public WindowClassExA () {
+        size = (uint)Marshal.SizeOf<WindowClassExA>();
+    }
 }

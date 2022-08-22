@@ -9,6 +9,6 @@ public static class Kernel32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public extern static uint GetLastError ();
 
-    [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-    public extern static IntPtr GetModuleHandleW ([In, MarshalAs(UnmanagedType.LPWStr)] string moduleName);
+    [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Ansi)]
+    public extern static IntPtr GetModuleHandleA ([In, MarshalAs(UnmanagedType.LPStr)] string moduleName);
 }

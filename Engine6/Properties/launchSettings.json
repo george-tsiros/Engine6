@@ -1,1 +1,8 @@
-{ "profiles": { "Engine6": { "commandName": "Project", "commandLineArgs": "640 480 \"ibm 3270\" 16" } } }
+{
+  "profiles": {
+    "Engine6": {
+      "commandName": "Project",
+      "hotReloadEnabled": false
+    }
+  }
+}

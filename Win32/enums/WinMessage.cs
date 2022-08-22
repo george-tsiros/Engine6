@@ -1,6 +1,6 @@
 namespace Win32;
 
-public enum WinMessage:ushort {
+public enum WinMessage:uint {
     /*0000*/ Null = 0x0000,
     /*0001*/ Create = 0x0001,
     /*0002*/ Destroy = 0x0002,

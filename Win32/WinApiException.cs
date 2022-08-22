@@ -3,11 +3,13 @@ namespace Win32;
 using System;
 
 public class WinApiException:Exception {
- 
-    public uint LastError { get; } = Kernel32.GetLastError();
 
-    public WinApiException (string message) : base(message) { }
-    
+    public uint LastError { get; }
+
+    public WinApiException (string message, uint? lastError = null) : base(message) {
+        LastError = lastError ?? Kernel32.GetLastError();
+    }
+
     public override string ToString () =>
         $"win32 says {LastError} '{Message}'";
 }

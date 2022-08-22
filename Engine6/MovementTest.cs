@@ -1,6 +1,5 @@
 namespace Engine6;
 
-using System;
 using System.Numerics;
 using Shaders;
 using Gl;
@@ -20,10 +19,7 @@ class MovementTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    public MovementTest () {
-        MouseMove += MouseMove_self;
-    }
-    void MouseMove_self (object sender, Vector2i e) {
+    protected override void OnMouseMove (Vector2i e) {
         camera.Rotate(.001f * (Vector2)e);
     }
 
@@ -34,7 +30,8 @@ class MovementTest:GlWindowArb {
     int vertexCount = 0;
     DirectionalFlat directionalFlat;
     PassThrough passThrough;
-    protected override void Load () {
+
+    protected override void OnLoad () {
         renderingFramebuffer = new();
         var size = Rect.Size;
         renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);

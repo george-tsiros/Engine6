@@ -2,13 +2,14 @@ namespace Win32;
 
 using Linear;
 using System;
+using System.Runtime.InteropServices;
 
-public readonly struct Rectangle {
+public struct Rectangle {
 
-    public readonly int Left;
-    public readonly int Top;
-    public readonly int Right;
-    public readonly int Bottom;
+    public int Left;
+    public int Top;
+    public int Right;
+    public int Bottom;
 
     public Rectangle (int l, int t, int r, int b) =>
             (Left, Top, Right, Bottom) = (l, t, r, b);
@@ -34,7 +35,7 @@ public readonly struct Rectangle {
         Bottom - Top;
 
     public Rectangle Clip (Rectangle r) =>
-        new(Math.Clamp(Left, r.Left, r.Right), Math.Clamp(Top, r.Bottom, r.Top), Math.Clamp(Right, r.Left, r.Right), Math.Clamp(Bottom, r.Bottom, r.Top));
+        new(Maths.IntClamp(Left, r.Left, r.Right), Maths.IntClamp(Top, r.Bottom, r.Top), Maths.IntClamp(Right, r.Left, r.Right), Maths.IntClamp(Bottom, r.Bottom, r.Top));
 
     public Vector2i Location => 
         new(Left, Top);

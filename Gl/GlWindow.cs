@@ -6,15 +6,14 @@ using Win32;
 using Linear;
 
 public class GlWindow:Window {
-    const PixelFlags RequiredFlags = PixelFlags.None
+    private const PixelFlags RequiredFlags = PixelFlags.None
         | PixelFlags.DrawToWindow
         | PixelFlags.DoubleBuffer
         | PixelFlags.SupportOpengl
         //| PixelFlags.SwapExchange
         //| PixelFlags.SupportComposition
         ;
-
-    const PixelFlags RejectedFlags = PixelFlags.None
+    private const PixelFlags RejectedFlags = PixelFlags.None
         | PixelFlags.GenericAccelerated
         | PixelFlags.GenericFormat
         ;
@@ -23,7 +22,7 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
     public GlWindow () {
-        RenderingContext = Opengl.CreateSimpleContext((IntPtr)Dc, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
+        RenderingContext = Opengl.CreateSimpleContext(Dc, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
         Opengl.MakeCurrent((IntPtr)Dc, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
         //_ = User32.ShowCursor(false);
@@ -35,9 +34,9 @@ public class GlWindow:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
-        base.OnKeyUp(k);
     }
-    bool skipMove;
+
+    private bool skipMove;
     protected override void OnMouseMove (Vector2i p) {
         if (!skipMove) {
             skipMove = true;
@@ -48,7 +47,11 @@ public class GlWindow:Window {
             skipMove = false;
     }
 
-    protected override void OnPaint (IntPtr dc, Rectangle rect) {
+    protected override void OnIdle () {
+        Invalidate();
+    }
+
+    protected override void OnPaint (IntPtr dc, in Rectangle rect) {
         Render();
         Gdi32.SwapBuffers((IntPtr)Dc);
         LastSync = Stopwatch.GetTimestamp();
@@ -60,7 +63,7 @@ public class GlWindow:Window {
         Opengl.Clear(BufferBit.ColorDepth);
     }
 
-    bool disposed = false;
+    private bool disposed = false;
     public override void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;

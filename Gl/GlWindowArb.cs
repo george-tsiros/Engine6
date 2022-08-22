@@ -49,8 +49,8 @@ public class GlWindowArb:GlWindow {
                 windowUsed = false;
             }
             try {
-                Gdi32.DescribePixelFormat((IntPtr)Dc, index, ref pfd);
-                Gdi32.SetPixelFormat((IntPtr)Dc, index, ref pfd);
+                Gdi32.DescribePixelFormat(Dc, index, ref pfd);
+                Gdi32.SetPixelFormat(Dc, index, ref pfd);
 
                 windowUsed = true;
 

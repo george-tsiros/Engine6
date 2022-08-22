@@ -4,87 +4,28 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-public class Dib {
-    public readonly BitmapInfo Info;
-    public readonly IntPtr Bits;
-    public readonly IntPtr Handle;
-    public int Width =>
-        Info.header.Width;
-
-    public int Height =>
-        Info.header.Height;
-
-    public Dib (DeviceContext dc, int w, int h) {
-        Info = new BitmapInfo() {
-            header = new() {
-                Size = Marshal.SizeOf<BitmapInfoHeader>(),
-                Width = w,
-                Height = h,
-                Planes = 1,
-                BitCount = BitCount.ColorBits32,
-                Compression = BitmapCompression.Rgb,
-                SizeImage = 0,
-                XPelsPerMeter = 0,
-                YPelsPerMeter = 0,
-                ClrUsed = 0,
-                ClrImportant = 0,
-            }
-        };
-        Debug.Assert(40 == Info.header.Size);
-        Bits = IntPtr.Zero;
-        Handle = Gdi32.CreateDIBSection((IntPtr)dc, ref Info, 0, ref Bits, IntPtr.Zero, 0);
-    }
-}
-
-public struct BitmapInfo {
-    public BitmapInfoHeader header;
-    public RgbQuad colors;
-}
-
-public struct RgbQuad {
-    public byte Blue, Green, Red, Reserved;
-}
-
-public struct BitmapInfoHeader {
-    /// <summary>The number of bytes required by the structure</summary>
-    public int Size;
-    /// <summary>The width of the bitmap, in pixels</summary>
-    public int Width;
-    /// <summary>The height of the bitmap, in pixels. If positive, the bitmap is a bottom-up DIB and its origin is the lower-left corner. If negative, the bitmap is a top-down DIB and its origin is the upper-left corner</summary>
-    public int Height;
-    /// <summary>const 1</summary>
-    public short Planes;
-    /// <summary> </summary>
-    public BitCount BitCount;
-    /// <summary> </summary>
-    public BitmapCompression Compression;
-    /// <summary>The size, in bytes, of the image. This may be set to zero for BI_RGB bitmaps.</summary>
-    public int SizeImage;
-    /// <summary> </summary>
-    public int XPelsPerMeter;
-    /// <summary> </summary>
-    public int YPelsPerMeter;
-    /// <summary> </summary>
-    public int ClrUsed;
-    /// <summary> </summary>
-    public int ClrImportant;
-}
-
 public static class Gdi32 {
     private const string dll = nameof(Gdi32) + ".dll";
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    internal static extern IntPtr CreateDIBSection ([In] IntPtr hdc, ref BitmapInfo info, int usage, ref IntPtr bits, IntPtr section, uint offset);
+    private unsafe static extern IntPtr CreateDIBSection ([In] IntPtr hdc, BitmapInfo* info, int usage, ref void* bits, IntPtr section, uint offset);
+
+    public unsafe static IntPtr CreateDIBSection (DeviceContext dc, ref BitmapInfo info, ref void* bits) {
+        fixed (BitmapInfo* p = &info) {
+            var dib = CreateDIBSection((IntPtr)dc, p, 0, ref bits, IntPtr.Zero, 0);
+            return IntPtr.Zero != dib && null != bits ? dib : throw new WinApiException(nameof(CreateDIBSection));
+        }
+    }
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GdiFlush ();
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public static extern int StretchDIBits (IntPtr dc, int xDest, int yDest, int wDest, int hDest, int xSrc, int ySrc, int wSrc, int hSrc, IntPtr bits, [In] in BitmapInfo info, int usage, int operation);
+    public unsafe static extern int StretchDIBits (IntPtr dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, BitmapInfo* info, int use, int op);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    internal unsafe static extern IntPtr CreateDIBitmap (IntPtr dc, [In] ref BitmapInfoHeader header, int init, void* bits, [In] ref BitmapInfo info, int usage);
+    internal unsafe static extern IntPtr CreateDIBitmap (IntPtr dc, [In] ref BitmapInfoHeader header, int init, void* bits, BitmapInfo* info, int usage);
 
     /// <summary>
     /// </summary>
@@ -96,13 +37,14 @@ public static class Gdi32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     private unsafe static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, int bytes, PixelFormatDescriptor* ppfd);
 
-    public unsafe static int GetPixelFormatCount (IntPtr hdc) {
-        var count = DescribePixelFormat(hdc, 0, PixelFormatDescriptor.Size, null);
+    public unsafe static int GetPixelFormatCount (DeviceContext hdc) {
+        var count = DescribePixelFormat((IntPtr)hdc, 0, PixelFormatDescriptor.Size, null);
         return count > 0 ? count : throw new WinApiException(nameof(DescribePixelFormat));
     }
-    public unsafe static void DescribePixelFormat (IntPtr hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
+
+    public unsafe static void DescribePixelFormat (DeviceContext hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
         fixed (PixelFormatDescriptor* p = &ppfd)
-            if (0 == DescribePixelFormat(hdc, pixelFormat, PixelFormatDescriptor.Size, p))
+            if (0 == DescribePixelFormat((IntPtr)hdc, pixelFormat, PixelFormatDescriptor.Size, p))
                 throw new WinApiException(nameof(DescribePixelFormat));
     }
     /// <summary>
@@ -115,8 +57,8 @@ public static class Gdi32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetPixelFormat_ (IntPtr dc, int format, ref PixelFormatDescriptor pfd);
 
-    public static void SetPixelFormat (IntPtr dc, int format, ref PixelFormatDescriptor pfd) {
-        if (!SetPixelFormat_(dc, format, ref pfd))
+    public static void SetPixelFormat (DeviceContext dc, int format, ref PixelFormatDescriptor pfd) {
+        if (!SetPixelFormat_((IntPtr)dc, format, ref pfd))
             throw new WinApiException(nameof(SetPixelFormat));
     }
 
