@@ -1,6 +1,6 @@
-using Linear;
-
 namespace Win32;
+
+using Linear;
 
 public readonly struct Rect {
     public readonly int Left;

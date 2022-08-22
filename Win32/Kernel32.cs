@@ -10,5 +10,5 @@ public static class Kernel32 {
     public extern static uint GetLastError ();
 
     [DllImport(dll, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-    public extern static IntPtr GetModuleHandleA (string moduleName);
+    public extern static IntPtr GetModuleHandleW ([In, MarshalAs(UnmanagedType.LPWStr)] string moduleName);
 }

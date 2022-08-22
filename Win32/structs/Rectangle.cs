@@ -1,6 +1,8 @@
 namespace Win32;
+
 using System;
 using Linear;
+
 public readonly struct Rectangle {
     public readonly int Left, Right, Bottom, Top;
     public int Width => Right - Left;

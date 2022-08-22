@@ -45,23 +45,6 @@ public struct RgbQuad {
     public byte Blue, Green, Red, Reserved;
 }
 
-public enum BitCount:short {
-    Unspecified = 0,
-    Monochrome = 1,
-    Colors16 = 4,
-    Colors256 = 8,
-    ColorBits16 = 16,
-    ColorBits24 = 24,
-    ColorBits32 = 32,
-}
-public enum BitmapCompression {
-    Rgb = 0,
-    Rle8,
-    Rle4,
-    BitFields,
-    Jpeg,
-    Png,
-}
 public struct BitmapInfoHeader {
     /// <summary>The number of bytes required by the structure</summary>
     public int Size;

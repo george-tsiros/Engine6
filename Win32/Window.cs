@@ -4,7 +4,7 @@ using Linear;
 using System;
 using System.Collections.Generic;
 
-public class Window:BaseWindow {
+public class Window:WindowBase {
 
     public bool IsFocused { get; private set; }
 
@@ -69,7 +69,7 @@ public class Window:BaseWindow {
     //}
 
     public void Run () {
-        _ = User32.SetWindowLongPtrA(WindowHandle, -16, IntPtr.Zero);
+        _ = User32.SetWindowLongPtrW(WindowHandle, -16, IntPtr.Zero);
         Load();
         running = true;
         _ = User32.ShowWindow(WindowHandle, CmdShow.Show);

@@ -1,7 +1,7 @@
 namespace Win32;
+
 using System;
 using System.Runtime.InteropServices;
-public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
 
 public unsafe struct WindowClassExW {
     public uint size;

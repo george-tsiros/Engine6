@@ -5,15 +5,15 @@ using System;
 using System.Text;
 using Linear;
 
-[Flags]
-public enum PeekRemove:uint {
-    NoRemove,
-    Remove,
-    NoYield,
-}
-
 public static partial class User32 {
     private const string dll = nameof(User32) + ".dll";
+
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    internal static extern IntPtr GetDC (IntPtr windowHandle);
+
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -237,10 +237,10 @@ public static partial class User32 {
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int nIndex, IntPtr value);
+    public static extern IntPtr SetWindowLongPtrW (IntPtr windowHandle, int nIndex, IntPtr value);
 
     public static IntPtr CreateWindow (ushort atom, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowExW(styleEx, new(atom), IntPtr.Zero, style, 0, 0, 1280, 720, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
+        var p = CreateWindowExW(styleEx, new(atom), IntPtr.Zero, style, 0, 0, 1280, 720, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleW(null), IntPtr.Zero);
         return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExW));
     }
 }

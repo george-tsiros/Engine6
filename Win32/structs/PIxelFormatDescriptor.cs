@@ -1,4 +1,5 @@
 namespace Win32;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,10 +37,12 @@ public struct PixelFormatDescriptor {
     public override string ToString () =>
         $"{ToStr(flags)},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
 
-    static readonly ushort _size;
-    static PixelFormatDescriptor () {
-        _size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
-    }
+    //static readonly ushort _size;
+
+    //static PixelFormatDescriptor () {
+    //    _size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
+    //}
+
     public static string ToStr (PixelFlags f) {
         var eh = ToFlags(f, out int unknown);
         var str = string.Join(" | ", eh);
@@ -48,8 +51,10 @@ public struct PixelFormatDescriptor {
         return str;
     }
 
-    public static ushort Size => _size;
-        public static List<T> ToFlags<T> (T value, out int unknown) where T : Enum {
+    public static ushort Size { get; } = 
+        (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
+
+    public static List<T> ToFlags<T> (T value, out int unknown) where T : Enum {
         Debug.Assert(typeof(T).IsEnum);
         if (typeof(T).GetCustomAttribute<FlagsAttribute>() is null)
             throw new ArgumentException();

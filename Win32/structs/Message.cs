@@ -1,4 +1,5 @@
 namespace Win32;
+
 using System;
 
 public struct Message {
