@@ -49,8 +49,8 @@ public abstract class WindowBase:IDisposable {
         Create();
     }
 
-    protected Rect rect;
-    public Rect Rect => rect;
+    protected Rectangle rect;
+    public Rectangle Rect => rect;
 
     protected abstract IntPtr WndProc (IntPtr hWnd, WinMessage msg, nuint w, nint l);
 

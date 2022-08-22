@@ -17,10 +17,10 @@ public static partial class User32 {
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetWindowRect (IntPtr windowHandle, ref Rect rect);
+    private static extern bool GetWindowRect (IntPtr windowHandle, ref Rectangle rect);
 
-    public static Rect GetWindowRect (IntPtr hwnd) {
-        Rect r = new();
+    public static Rectangle GetWindowRect (IntPtr hwnd) {
+        Rectangle r = new();
         return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
@@ -162,10 +162,10 @@ public static partial class User32 {
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetClientRect (IntPtr handle, ref Rect clientRect);
+    private static extern bool GetClientRect (IntPtr handle, ref Rectangle clientRect);
 
-    public static Rect GetClientRect (IntPtr hwnd) {
-        Rect r = new();
+    public static Rectangle GetClientRect (IntPtr hwnd) {
+        Rectangle r = new();
         return GetClientRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetClientRect));
     }
 
@@ -177,15 +177,15 @@ public static partial class User32 {
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool InvalidateRect (IntPtr handle, [In] ref Rect rect, nint erase);
+    private static extern bool InvalidateRect (IntPtr handle, [In] ref Rectangle rect, nint erase);
 
-    public static bool InvalidateRect (IntPtr handle, [In] ref Rect rect, bool erase) =>
+    public static bool InvalidateRect (IntPtr handle, [In] ref Rectangle rect, bool erase) =>
         InvalidateRect(handle, ref rect, erase ? 1 : 0);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    unsafe private static extern int DrawTextExA (IntPtr dc, byte* text, int length, ref Rect rc, int format, IntPtr p);
+    unsafe private static extern int DrawTextExA (IntPtr dc, byte* text, int length, ref Rectangle rc, int format, IntPtr p);
 
-    unsafe public static int DrawText (IntPtr dc, string text, ref Rect rc, TextFormat format) {
+    unsafe public static int DrawText (IntPtr dc, string text, ref Rectangle rc, TextFormat format) {
         var expectedUtf8CharCount = Encoding.UTF8.GetByteCount(text);
         if (text.Length != expectedUtf8CharCount)
             throw new ArgumentException("only 7-bit, ascii strings with printable characters", nameof(text));

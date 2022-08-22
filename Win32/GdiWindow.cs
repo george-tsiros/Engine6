@@ -18,7 +18,7 @@ public class GdiWindow:Window {
         base.OnKeyUp(k);
     }
 
-    protected override void OnPaint (IntPtr dc, Rect rect) {
+    protected override void OnPaint (IntPtr dc, Rectangle rect) {
         _ = Gdi32.StretchDIBits(dc, 0, 0, rect.Width, rect.Height, 0, 0, dib.Width, dib.Height, dib.Bits, in dib.Info, 0, 0xcc0020);
     }
 }

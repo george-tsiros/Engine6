@@ -36,7 +36,7 @@ public class Window:WindowBase {
     protected virtual void OnMouseMove (Vector2i currentPosition) => MouseMove?.Invoke(this, currentPosition);
 
     public event EventHandler<PaintEventArgs> Paint;
-    protected virtual void OnPaint (IntPtr dc, Rect r) => Paint?.Invoke(this, new(dc, r));
+    protected virtual void OnPaint (IntPtr dc, Rectangle r) => Paint?.Invoke(this, new(dc, r));
 
     readonly int[] KeyState = new int[256 / 32];
     bool painting;
@@ -97,7 +97,7 @@ public class Window:WindowBase {
     private void Move (Vector2i p) {
     }
 
-    private void Moving (Rect r) {
+    private void Moving (Rectangle r) {
     }
 
     private void WindowPosChanging (WindowPos p) {
@@ -124,7 +124,7 @@ public class Window:WindowBase {
                 Move(Split(l));
                 return 0;
             case WinMessage.Moving:
-                Moving(*(Rect*)l);
+                Moving(*(Rectangle*)l);
                 return 0;
             case WinMessage.WindowPosChanged:
                 WindowPosChanged(*(WindowPos*)l);
