@@ -59,6 +59,14 @@ public static class User32 {
         return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassExA));
     }
 
+    [DllImport(dll, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
+    private static extern ushort RegisterClassA ([In] ref WindowClassA windowClass);
+
+    public static ushort RegisterClass (ref WindowClassA windowClass) {
+        var atom = RegisterClassA(ref windowClass);
+        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassA));
+    }
+
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool UnregisterClassW ([In] IntPtr className, [In, Optional] IntPtr hInstance);
@@ -123,9 +131,14 @@ public static class User32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "UpdateWindow", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool UpdateWindow (IntPtr handle);
+    private static extern bool UpdateWindow_ (IntPtr handle);
+
+    public static void UpdateWindow (IntPtr windowHandle) {
+        if (!UpdateWindow_(windowHandle))
+            throw new WinApiException(nameof(UpdateWindow));
+    }
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public static extern int GetMessageA (ref Message m, IntPtr handle, uint min, uint max);

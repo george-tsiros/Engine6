@@ -3,8 +3,6 @@ namespace Win32;
 using System;
 using System.Diagnostics;
 
-public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
-
 public abstract class WindowBase:IDisposable {
     private const string ClassName = nameof(WindowBase);
 
@@ -14,7 +12,7 @@ public abstract class WindowBase:IDisposable {
     private static WindowBase instance;
 
     static WindowBase () {
-        var wc = new WindowClassExA() {
+        var wc = new WindowClassA() {
             style = ClassStyle.VRedraw | ClassStyle.HRedraw,
             wndProc = staticWndProc,
             classname = nameof(WindowBase),
@@ -23,7 +21,7 @@ public abstract class WindowBase:IDisposable {
     }
 
     private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
-        if (WinMessage.NCCREATE == m || WinMessage.Create == m)
+        if (WinMessage.NcCreate == m || WinMessage.Create == m)
             instance.WindowHandle = h;
         return instance.WndProc(h, m, w, l);
     }

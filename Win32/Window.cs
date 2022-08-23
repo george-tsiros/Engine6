@@ -4,6 +4,8 @@ using Linear;
 using System;
 using System.Collections.Generic;
 
+public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
+
 public class Window:WindowBase {
 
     public bool IsFocused { get; private set; }
@@ -37,9 +39,8 @@ public class Window:WindowBase {
 
     public void Run () {
         OnLoad();
-        if (!User32.UpdateWindow(WindowHandle))
-            throw new WinApiException(nameof(User32.UpdateWindow));
-        _ = User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
+        User32.UpdateWindow(WindowHandle);
+        _=User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
         Loop();
         foreach (var disposable in Disposables)
             disposable.Dispose();
@@ -59,47 +60,15 @@ public class Window:WindowBase {
         }
     }
 
-    //private void Move (Vector2i p) {
-    //}
-
-    //private void Moving (Rectangle r) {
-    //}
-
-    //private void WindowPosChanging (WindowPos p) {
-    //    if (!p.flags.HasFlag(WindowPosFlags.NoMove))
-    //        rect = new(new(p.left, p.top), rect.Size);
-    //    if (!p.flags.HasFlag(WindowPosFlags.NoSize))
-    //        rect = new(rect.Location, new(p.width, p.height));
-    //}
-
-    //private void WindowPosChanged (WindowPos p) {
-    //    if (!p.flags.HasFlag(WindowPosFlags.NoMove))
-    //        rect = new(new(p.left, p.top), rect.Size);
-    //    if (!p.flags.HasFlag(WindowPosFlags.NoSize))
-    //        rect = new(rect.Location, new(p.width, p.height));
-    //}
-
     private void Size (Vector2i size) {
         rect = new(rect.Location, size);
     }
 
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
-            //case WinMessage.Move:
-            //    Move(Split(l));
-            //    return 0;
-            //case WinMessage.Moving:
-            //    Moving(*(Rectangle*)l);
-            //    return 0;
-            //case WinMessage.WindowPosChanged:
-            //    WindowPosChanged(*(WindowPos*)l);
-            //    return 0;
             case WinMessage.Size:
                 Size(Split(l));
                 return 0;
-            //case WinMessage.WindowPosChanging:
-            //    WindowPosChanging(*(WindowPos*)l);
-            //    return 0;
             case WinMessage.MouseMove: {
                     if (!IsFocused)
                         break;

@@ -19,13 +19,17 @@ public class GdiWindow:Window {
 
     unsafe protected override void OnLoad () {
         dib = new(Dc, Rect.Width, Rect.Height);
-        for (var y = 0; y < dib.Height; ++y)
-            for (var x = 0; x < dib.Width; ++x) {
-                if (x == 0 || y == 0 || x == dib.Width - 1 || y == dib.Height - 1)
-                    dib.Raw[y * dib.Stride + x] = 0xffff00ff;
-                else
-                    dib.Raw[y * dib.Stride + x] = 0xff00ff00;
-            }
+        var pixelCount = dib.Stride * dib.Height;
+
+        for (var i = 0; i < pixelCount; ++i)
+            dib.Raw[i] = 0xff000000;
+        //for (var y = 0; y < dib.Height; ++y)
+        //    for (var x = 0; x < dib.Width; ++x) {
+        //        if (x == 0 || y == 0 || x == dib.Width - 1 || y == dib.Height - 1)
+        //            dib.Raw[y * dib.Stride + x] = 0xffff00ff;
+        //        else
+        //            dib.Raw[y * dib.Stride + x] = 0xff00ff00;
+        //    }
         frameDelay = Stopwatch.Frequency / 10;
         User32.SetWindow(WindowHandle, WindowStyle.Overlapped);
     }
