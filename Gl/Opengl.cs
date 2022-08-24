@@ -8,7 +8,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Win32;
 using System.IO;
-using Linear;
+using Common;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Xml.Linq;

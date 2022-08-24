@@ -1,11 +1,10 @@
 namespace Win32;
 
-internal enum GWLThing { 
+internal enum GWLThing {
     ExStyle = -20,
     Style = -16,
     WndProc = -4,
 }
-
 public enum BitCount:ushort {
     Unspecified = 0,
     Monochrome = 1,

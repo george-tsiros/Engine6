@@ -8,8 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Win32;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 
 public class Model {
     public List<Vector3i> Faces { get; private set; }
@@ -45,7 +45,7 @@ public class Model {
     void Read (StreamReader reader, bool center) {
         Faces = new();
         Vertices = new();
-        foreach (var line in Extra.EnumLines(reader, true)) {
+        foreach (var line in Functions.EnumLines(reader, true)) {
             if (line[0] == '#')
                 continue;
 

@@ -3,7 +3,7 @@ namespace Win32;
 using System.Runtime.InteropServices;
 using System;
 using System.Text;
-using Linear;
+using Common;
 
 public static class User32 {
     private const string dll = nameof(User32) + ".dll";
@@ -104,7 +104,7 @@ public static class User32 {
     /// <param name="parentHandle">A handle to the parent or owner window of the window being created. To create a child window or an owned window, supply a valid window handle. This parameter is optional for pop-up windows.To create a message-only window, supply HWND_MESSAGE or a handle to an existing message-only window.</param>
     /// <param name="menu">A handle to a menu, or specifies a child-window identifier, depending on the window style. For an overlapped or pop-up window, hMenu identifies the menu to be used with the window; it can be NULL if the class menu is to be used. For a child window, hMenu specifies the child-window identifier, an integer value used by a dialog box control to notify its parent about events. The application determines the child-window identifier; it must be unique for all child windows with the same parent window.</param>
     /// <param name="instance">A handle to the instance of the module to be associated with the window.</param>
-    /// <param name="param">Pointer to a value to be passed to the window through the <seealso cref="CreateStruct"/> structure (lpCreateParams member) pointed to by the <paramref name="param"/> of the WM_CREATE message. 
+    /// <param name="param">Pointer to a value to be passed to the window through the <seealso cref="CreateStructA"/> structure (lpCreateParams member) pointed to by the <paramref name="param"/> of the WM_CREATE message. 
     /// This message is sent to the created window by this function before it returns. 
     /// If an application calls CreateWindow to create a MDI client window, <paramref name="param"/> should point to a CLIENTCREATESTRUCT structure. 
     /// If an MDI client window calls this to create an MDI child window, <paramref name="param"/> should point to an MDICREATESTRUCT structure. 
@@ -114,7 +114,7 @@ public static class User32 {
     private static extern IntPtr CreateWindowExA (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
 
     public static IntPtr CreateWindow (ushort atom, int width = 0, int height = 0, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowExA(styleEx, new(atom), IntPtr.Zero, style, 0, 0, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
+        var p = CreateWindowExA(styleEx, new(atom), IntPtr.Zero, style, 100, 100, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
         return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExA));
     }
 

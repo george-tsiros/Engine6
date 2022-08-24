@@ -24,7 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Linear\Linear.csproj" />
+      <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

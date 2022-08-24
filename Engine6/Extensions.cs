@@ -4,8 +4,8 @@ using System;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Numerics;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 
 static class Extensions {
     internal static double NextDouble (this Random self, double min, double max) => (max - min) * self.NextDouble() + min;

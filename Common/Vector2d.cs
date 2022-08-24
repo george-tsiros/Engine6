@@ -1,4 +1,4 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System;
 using System.Numerics;
 using static Maths;

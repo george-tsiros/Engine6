@@ -1489,9 +1489,9 @@ public class FastNoiseLite {
         }
 
         if (mCellularDistanceFunction == CellularDistanceFunction.Euclidean && mCellularReturnType >= CellularReturnType.Distance) {
-            distance0 = Linear.Maths.FloatSqrt(distance0);
+            distance0 = Common.Maths.FloatSqrt(distance0);
 
-            if (mCellularReturnType >= CellularReturnType.Distance2) distance1 = Linear.Maths.FloatSqrt(distance1);
+            if (mCellularReturnType >= CellularReturnType.Distance2) distance1 = Common.Maths.FloatSqrt(distance1);
         }
 
         switch (mCellularReturnType) {
@@ -1623,9 +1623,9 @@ public class FastNoiseLite {
         }
 
         if (mCellularDistanceFunction == CellularDistanceFunction.Euclidean && mCellularReturnType >= CellularReturnType.Distance) {
-            distance0 = Linear.Maths.FloatSqrt(distance0);
+            distance0 = Common.Maths.FloatSqrt(distance0);
 
-            if (mCellularReturnType >= CellularReturnType.Distance2) distance1 = Linear.Maths.FloatSqrt(distance1);
+            if (mCellularReturnType >= CellularReturnType.Distance2) distance1 = Common.Maths.FloatSqrt(distance1);
         }
 
         return mCellularReturnType switch {

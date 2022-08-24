@@ -2,7 +2,7 @@ namespace Gl;
 
 using System;
 using static Opengl;
-using Linear;
+using Common;
 
 public class Renderbuffer:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteRenderbuffer;

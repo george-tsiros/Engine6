@@ -3,7 +3,7 @@ namespace Gl;
 using System;
 using System.Diagnostics;
 using Win32;
-using Linear;
+using Common;
 
 public class GlWindow:Window {
     private const PixelFlags RequiredFlags = PixelFlags.None
@@ -37,7 +37,7 @@ public class GlWindow:Window {
     }
 
     private bool skipMove;
-    protected override void OnMouseMove (Vector2i p) {
+    protected override void OnMouseMove (in Vector2i p) {
         if (!skipMove) {
             skipMove = true;
             var cs = Rect.Center;

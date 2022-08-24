@@ -1,6 +1,8 @@
 namespace BitmapToRaster;
 
 using System;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -18,7 +20,9 @@ class BitmapToRaster {
 
     private static int Main (string[] args) {
         try {
-            if (args.Length == 2 && float.TryParse(args[1], out var emsize)) {
+            if (1 == args.Length && Regex.IsMatch(args[0], @"[-/]fonts")) {
+                Console.WriteLine(string.Join("\n", FontFamily.Families.Select(f => f.Name).Distinct()));
+            } else if (args.Length == 2 && float.TryParse(args[1], out var emsize)) {
                 FontToTextFont(CreateFont(args[0], emsize));
             } else {
                 ImageToRaster(args[0], args[1]);

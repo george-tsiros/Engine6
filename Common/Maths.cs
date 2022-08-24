@@ -1,4 +1,4 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System;
 
 public static class Maths {

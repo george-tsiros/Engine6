@@ -4,8 +4,8 @@ using System.Numerics;
 using Shaders;
 using Gl;
 using static Gl.Opengl;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 using System.Diagnostics;
 using Win32;
 
@@ -19,7 +19,7 @@ class MovementTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    protected override void OnMouseMove (Vector2i e) {
+    protected override void OnMouseMove (in Vector2i e) {
         camera.Rotate(.001f * (Vector2)e);
     }
 

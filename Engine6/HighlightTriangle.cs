@@ -6,8 +6,8 @@ using Shaders;
 using Gl;
 using static Gl.Opengl;
 using Win32;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 
 class HighlightTriangle:GlWindowArb {
     public HighlightTriangle (Model model) {

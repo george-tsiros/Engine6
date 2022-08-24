@@ -1,6 +1,6 @@
 namespace Win32;
 
-using Linear;
+using Common;
 using System;
 using System.Runtime.InteropServices;
 
@@ -13,13 +13,6 @@ public struct Rectangle {
 
     public Rectangle (int l, int t, int r, int b) =>
             (Left, Top, Right, Bottom) = (l, t, r, b);
-
-    public Rectangle (WindowPos w) : this() {
-        Left = w.left;
-        Top = w.top;
-        Right = Left + w.width;
-        Bottom = Top + w.height;
-    }
 
     public Rectangle (Vector2i position, Vector2i size) : this() {
         Left = position.X;

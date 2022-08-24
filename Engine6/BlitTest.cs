@@ -7,8 +7,8 @@ using Gl;
 using Shaders;
 using Win32;
 using static Gl.Opengl;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 
 enum FooNum {
     Frame = 1,
@@ -251,7 +251,7 @@ internal class BlitTest:GlWindow{
         }
     }
 
-    protected override void OnMouseMove (Vector2i e) {
+    protected override void OnMouseMove (in Vector2i e) {
         //if (CursorGrabbed) {
         //    switch (Buttons) {
         //        case Buttons.Left:
@@ -263,7 +263,7 @@ internal class BlitTest:GlWindow{
         var d = e - lastCursorPosition;
         switch (Buttons) {
             case Buttons.Left:
-                theta = Extra.ModuloTwoPi(theta, 0.01 * d.X);
+                theta = Functions.ModuloTwoPi(theta, 0.01 * d.X);
                 phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
                 break;
         }

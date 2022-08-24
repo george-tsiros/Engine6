@@ -3,7 +3,7 @@ namespace Shaders;
 using Gl;
 using static Gl.Opengl;
 using System.Numerics;
-using Linear;
+using Common;
 
 public class DirectionalFlat:Program {
 #pragma warning disable CS0649

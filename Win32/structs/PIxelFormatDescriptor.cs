@@ -44,7 +44,7 @@ public struct PixelFormatDescriptor {
     //}
 
     public static string ToStr (PixelFlags f) {
-        var eh = ToFlags(f, out int unknown);
+        var eh = Common.Functions.ToFlags(f, out int unknown);
         var str = string.Join(" | ", eh);
         if (unknown != 0)
             str += $" | 0x{unknown:x}";
@@ -53,27 +53,5 @@ public struct PixelFormatDescriptor {
 
     public static ushort Size { get; } = 
         (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
-
-    public static List<T> ToFlags<T> (T value, out int unknown) where T : Enum {
-        Debug.Assert(typeof(T).IsEnum);
-        if (typeof(T).GetCustomAttribute<FlagsAttribute>() is null)
-            throw new ArgumentException();
-        var list = new List<T>();
-        var entries = Enum.GetValues(typeof(T)) as T[];
-        var values = Array.ConvertAll(entries, e => (int)(object)e);
-        var v = (int)(object)value;
-        unknown = 0;
-        for (var shift = 0; shift < 31; ++shift) {
-            var i = 1 << shift;
-            if ((i & v) != 0) {
-                var idx = Array.IndexOf(values, i);
-                if (idx < 0)
-                    unknown |= i;
-                else
-                    list.Add(entries[idx]);
-            }
-        }
-        return list;
-    }
 
 }

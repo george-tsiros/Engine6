@@ -3,7 +3,7 @@ namespace Gl;
 using System;
 using static Opengl;
 using Win32;
-using Linear;
+using Common;
 
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } =

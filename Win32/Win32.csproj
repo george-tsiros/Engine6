@@ -18,7 +18,7 @@
     </Target>
 
     <ItemGroup>
-      <ProjectReference Include="..\Linear\Linear.csproj" />
+      <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 
 </Project>

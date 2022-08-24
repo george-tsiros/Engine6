@@ -1,6 +1,6 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System.Numerics;
-using static Linear.Maths;
+using static Common.Maths;
 
 public readonly struct Matrix3x3 {
     public readonly float M11;

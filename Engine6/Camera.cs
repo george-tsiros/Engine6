@@ -1,10 +1,7 @@
 namespace Engine6;
 
-using System;
 using System.Numerics;
-using static Extra;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
 
 sealed class Camera {
     private static bool WasInvalid (ref bool isValid) {

@@ -1,5 +1,6 @@
 namespace Win32;
 
+using Common;
 using System;
 using System.Diagnostics;
 
@@ -46,19 +47,19 @@ public abstract class WindowBase:IDisposable {
     protected virtual void Create () {
         Destroy();
         instance = this;
-        var eh = User32.CreateWindow(ClassAtom, 0, 0, SelfHandle, Style);
+        var eh = User32.CreateWindow(ClassAtom, clientSize.X, clientSize.Y, SelfHandle, Style);
         Debug.Assert(eh == WindowHandle);
         Dc = new(WindowHandle);
     }
-
-    public WindowBase () {
+    readonly Vector2i clientSize;
+    public WindowBase (Vector2i? size = null) {
+        clientSize = size ?? new(640, 480);
         if (instance is not null)
             throw new InvalidOperationException("only one window at a time");
         Create();
     }
 
-    protected Rectangle rect;
-    public Rectangle Rect => rect;
+    protected Rectangle Rect { get; set; }
 
     protected abstract IntPtr WndProc (IntPtr hWnd, WinMessage msg, nuint w, nint l);
 

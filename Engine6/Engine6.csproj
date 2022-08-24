@@ -48,7 +48,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
-        <ProjectReference Include="..\Linear\Linear.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\Shaders\Shaders.csproj" />
     </ItemGroup>
 

@@ -1,4 +1,4 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;

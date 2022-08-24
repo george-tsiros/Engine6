@@ -1,11 +1,33 @@
-namespace Engine6;
-
+﻿namespace Common;
 using System;
-using System.IO;
 using System.Collections.Generic;
-using static Linear.Maths;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using static Common.Maths;
 
-static class Extra {
+public static class Functions {
+    public static List<T> ToFlags<T> (T value, out int unknown) where T : Enum {
+        Debug.Assert(typeof(T).IsEnum);
+        if (typeof(T).GetCustomAttribute<FlagsAttribute>() is null)
+            throw new ArgumentException();
+        var list = new List<T>();
+        var entries = Enum.GetValues(typeof(T)) as T[];
+        var values = Array.ConvertAll(entries, e => (int)(object)e);
+        var v = (int)(object)value;
+        unknown = 0;
+        for (var shift = 0; shift < 31; ++shift) {
+            var i = 1 << shift;
+            if ((i & v) != 0) {
+                var idx = Array.IndexOf(values, i);
+                if (idx < 0)
+                    unknown |= i;
+                else
+                    list.Add(entries[idx]);
+            }
+        }
+        return list;
+    }
 
     public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) {
         while (f.ReadLine() is string line)
@@ -18,7 +40,7 @@ static class Extra {
         a[--offset] = (byte)(d + '0');
     }
 
-    internal static int ToChars (long int64, Span<byte> bytes) {
+    public static int ToChars (long int64, Span<byte> bytes) {
         var isNegative = int64 < 0l;
         if (isNegative)
             int64 = -int64;
@@ -30,8 +52,8 @@ static class Extra {
             bytes[--offset] = (byte)'-';
         return offset;
     }
-    
-    internal static float ModuloTwoPi (ref float angle, float delta) {
+
+    public static float ModuloTwoPi (ref float angle, float delta) {
         angle += delta;
         while (angle < 0)
             angle += fTau;
@@ -39,27 +61,27 @@ static class Extra {
             angle -= fTau;
         return angle;
     }
-    
-    internal static double ModuloTwoPi (double angle, double delta) {
+
+    public static double ModuloTwoPi (double angle, double delta) {
         var d = delta < 0 ? dTau - (-delta % dTau) : (delta % dTau);
         return (angle + d) % dTau;
     }
 
-    internal static (int min, float max) Extrema (int[] ints) {
+    public static (int min, float max) Extrema (int[] ints) {
         var (min, max) = (int.MaxValue, int.MinValue);
         for (var i = 0; i < ints.Length; ++i)
             Extrema(ints[i], ref min, ref max);
         return (min, max);
     }
 
-    internal static void Extrema (int i, ref int min, ref int max) {
+    public static void Extrema (int i, ref int min, ref int max) {
         if (i < min)
             min = i;
         if (max < i)
             max = i;
     }
 
-    internal static (double a, double b) Lin (double min, double max, double from, double to) {
+    public static (double a, double b) Lin (double min, double max, double from, double to) {
         // if 
         // a * min + b = from
         // a * max + b = to
@@ -73,7 +95,7 @@ static class Extra {
 
     }
 
-    internal static (float min, float max) Extrema (float[] ycoords) {
+    public static (float min, float max) Extrema (float[] ycoords) {
         var min = float.MaxValue;
         var max = float.MinValue;
         for (var i = 0; i < ycoords.Length; i++)

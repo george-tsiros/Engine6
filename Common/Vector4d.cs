@@ -1,7 +1,7 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System;
 using System.Numerics;
-using static Linear.Maths;
+using static Common.Maths;
 
 public readonly struct Vector4d {
 

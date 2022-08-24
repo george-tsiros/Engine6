@@ -2,7 +2,7 @@ namespace Gl;
 
 using System;
 using System.Numerics;
-using Linear;
+using Common;
 
 public static class Extensions {
 

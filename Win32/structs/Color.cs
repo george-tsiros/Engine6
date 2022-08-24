@@ -1,4 +1,4 @@
-namespace Gl;
+namespace Win32;
 
 public readonly struct Color {
     public readonly uint Argb;

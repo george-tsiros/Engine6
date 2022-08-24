@@ -8,7 +8,7 @@
 
 **Gl**: anything directly or indirectly related to opengl. 
 
-**Linear**: some extra matrix and vector structs (integer, double, etc)
+**Common**: some extra matrix and vector structs (integer, double, etc) along with functions, types and extensions common to all projects
 
 **Perf**: simplistic viewer for performance logs created with Engine6/Perf.
 

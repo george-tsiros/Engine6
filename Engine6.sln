@@ -54,7 +54,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Win32", "Win32\Win32.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixEol", "FixEol\FixEol.csproj", "{2846B051-CD41-4529-8E7F-A5DDAC3286AF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Linear", "Linear\Linear.csproj", "{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

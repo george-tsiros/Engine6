@@ -7,7 +7,7 @@ using System.IO.Compression;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Win32;
-using Linear;
+using Common;
 
 public class Raster:IDisposable {
     public readonly Vector2i Size;

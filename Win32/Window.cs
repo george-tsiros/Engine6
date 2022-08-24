@@ -1,8 +1,9 @@
 namespace Win32;
 
-using Linear;
+using Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
 
@@ -21,9 +22,53 @@ public class Window:WindowBase {
     protected virtual void OnKeyUp (Keys k) { }
     protected virtual void OnLoad () { }
     protected virtual void OnMouseLeave () { }
-    protected virtual void OnMouseMove (Vector2i currentPosition) { }
+    protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnPaint (IntPtr dc, in Rectangle r) { }
     protected virtual void OnIdle () { }
+    protected virtual void OnMove (in Vector2i topLeft) {
+        Debug.WriteLine(topLeft);
+    }
+
+    protected virtual void OnSize (ResizeType type, in Vector2i clientSize) {
+        Rect = new(Rect.Location, clientSize);
+        Debug.WriteLine($"{type}, {clientSize}");
+    }
+
+    protected virtual void OnActivateApp (bool activated) {
+        Debug.WriteLine($"{nameof(OnActivateApp)} {activated}");
+    }
+
+    protected virtual void OnWindowPosChanged (ref WindowPos windowPos) {
+        var p = windowPos.flags.HasFlag(WindowPosFlags.NoMove) ? Rect.Location : new(windowPos.x, windowPos.y);
+        var s = windowPos.flags.HasFlag(WindowPosFlags.NoSize) ? Rect.Size : new(windowPos.w, windowPos.h);
+        Rect = new(p, s);
+        Debug.WriteLine(windowPos);
+    }
+
+    protected virtual void OnWindowPosChanging (ref WindowPos p) {
+        Debug.WriteLine(p);
+    }
+    
+    protected virtual void OnShowWindow (bool shown, ShowWindow reason) {
+        Debug.WriteLine(shown ? reason.ToString() : "not shown");
+    }
+
+    protected virtual void OnCreate (ref CreateStructA createStruct) {
+        Rect = new(createStruct.x, createStruct.y, createStruct.x + createStruct.w, createStruct.y + createStruct.h);
+        Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
+    }
+
+    protected virtual void OnNcCalcSize (ref CalcSizeParameters p) {
+        //
+    }
+
+    protected virtual void OnNcCreate (ref CreateStructA createStruct) {
+        Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
+    }
+
+    protected virtual void OnGetMinMaxInfo (ref MinMaxInfo minMaxInfo) {
+        Debug.WriteLine($"{minMaxInfo.maxPosition}, {minMaxInfo.maxSize}");
+    }
 
     public bool IsKeyDown (Keys key) {
         var (h, l) = Split(key);
@@ -33,21 +78,19 @@ public class Window:WindowBase {
     protected List<IDisposable> Disposables { get; } = new();
 
     protected void Invalidate () {
-        rect = User32.GetClientRect(WindowHandle);
         User32.InvalidateWindow(WindowHandle);
     }
-
     public void Run () {
         OnLoad();
         User32.UpdateWindow(WindowHandle);
-        _=User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
+        _ = User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
         Loop();
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
 
     private void Loop () {
-        for (var m = new Message(); ; ) {
+        for (var m = new Message(); ;) {
             while (User32.PeekMessageA(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
                 var gotMessage = User32.GetMessageA(ref m, IntPtr.Zero, 0, 0);
                 if (0 == gotMessage)
@@ -60,14 +103,69 @@ public class Window:WindowBase {
         }
     }
 
-    private void Size (Vector2i size) {
-        rect = new(rect.Location, size);
-    }
-
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
-            case WinMessage.Size:
-                Size(Split(l));
+            case WinMessage.Move: {
+                    var location = Split(l);
+                    OnMove(location);
+                }
+                return 0;
+            case WinMessage.EraseBkgnd:
+                return 1;
+            case WinMessage.NcPaint:
+                return 0;
+            case WinMessage.NcActivate:
+                break;
+            case WinMessage.ActivateApp:
+                OnActivateApp(0 != w);
+                return 0;
+            case WinMessage.WindowPosChanged: {
+                    WindowPos* windowPos = (WindowPos*)l;
+                    OnWindowPosChanged(ref *windowPos);
+                    return 0;
+                }
+            case WinMessage.WindowPosChanging: {
+                    WindowPos* windowPos = (WindowPos*)l;
+                    OnWindowPosChanging(ref *windowPos);
+                    return 0;
+                }
+            case WinMessage.ShowWindow:
+                OnShowWindow(0 != w, 0 != w ? (ShowWindow)(int)(l & int.MaxValue) : ShowWindow.None);
+                return 0;
+            case WinMessage.Create:
+                if (0 != l) {
+                    CreateStructA* createStruct = (CreateStructA*)l;
+                    OnCreate(ref *createStruct);
+                    // yes, it is different from NcCreate
+                    return 0;
+                }
+                break;
+            case WinMessage.NcCalcSize:
+                if (0 != w) {
+                    CalcSizeParameters* p = (CalcSizeParameters*)l;
+                    OnNcCalcSize(ref *p);
+                    return 1;
+                }
+                break;
+            case WinMessage.NcCreate:
+                if (0 != l) {
+                    CreateStructA* createStruct = (CreateStructA*)l;
+                    OnNcCreate(ref *createStruct);
+                    return 1;
+                }
+                break;
+            case WinMessage.GetMinMaxInfo:
+                if (0 != l) {
+                    MinMaxInfo* minMaxInfo = (MinMaxInfo*)l;
+                    OnGetMinMaxInfo(ref *minMaxInfo);
+                    return 0;
+                }
+                break;
+            case WinMessage.Size: {
+                    var size = Split(l);
+                    var resizeType = (ResizeType)(int)(w & int.MaxValue);
+                    OnSize(resizeType, size);
+                }
                 return 0;
             case WinMessage.MouseMove: {
                     if (!IsFocused)
@@ -109,10 +207,10 @@ public class Window:WindowBase {
                 break;
             case WinMessage.SetFocus:
                 OnFocusChanged(IsFocused = true);
-                break;
+                return 0;
             case WinMessage.KillFocus:
                 OnFocusChanged(IsFocused = false);
-                break;
+                return 0;
             case WinMessage.KeyDown: {
                     var km = new KeyMessage(w, l);
                     if (km.wasDown)

@@ -8,8 +8,8 @@ using System.Numerics;
 using System;
 using System.Diagnostics;
 using Win32;
-using static Linear.Maths;
-using Linear;
+using static Common.Maths;
+using Common;
 
 
 class Boxes:GlWindow {

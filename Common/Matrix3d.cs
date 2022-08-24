@@ -1,6 +1,6 @@
-﻿namespace Linear;
+﻿namespace Common;
 using System;
-using static Linear.Maths;
+using static Common.Maths;
 
 public readonly struct Matrix3d {
 
