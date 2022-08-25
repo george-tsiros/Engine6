@@ -14,7 +14,8 @@ public class Window:WindowBase {
 
     private readonly int[] KeyState = new int[256 / 32];
     private bool painting;
-
+    private TrackMouseEvent trackMouseStruct;
+    private bool tracking = false;
     protected virtual void OnButtonDown (Buttons depressed) { }
     protected virtual void OnButtonUp (Buttons released) { }
     protected virtual void OnFocusChanged (bool isFocused) { }
@@ -24,7 +25,7 @@ public class Window:WindowBase {
     protected virtual void OnMouseLeave () { }
     protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnPaint (IntPtr dc, in Rectangle r) { }
-    protected virtual void OnIdle () { }
+    //protected virtual void OnIdle () { }
     protected virtual void OnMove (in Vector2i topLeft) {
         Debug.WriteLine(topLeft);
     }
@@ -48,7 +49,7 @@ public class Window:WindowBase {
     protected virtual void OnWindowPosChanging (ref WindowPos p) {
         Debug.WriteLine(p);
     }
-    
+
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) {
         Debug.WriteLine(shown ? reason.ToString() : "not shown");
     }
@@ -80,7 +81,13 @@ public class Window:WindowBase {
     protected void Invalidate () {
         User32.InvalidateWindow(WindowHandle);
     }
+
     public void Run () {
+        trackMouseStruct = new() {
+            size = TrackMouseEvent.Size,
+            flags = TrackMouseFlags.Leave,
+            window = WindowHandle,
+        };
         OnLoad();
         User32.UpdateWindow(WindowHandle);
         _ = User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
@@ -91,18 +98,18 @@ public class Window:WindowBase {
 
     private void Loop () {
         for (var m = new Message(); ;) {
-            while (User32.PeekMessageA(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
-                var gotMessage = User32.GetMessageA(ref m, IntPtr.Zero, 0, 0);
-                if (0 == gotMessage)
-                    return;
-                if (-1 == gotMessage)
-                    Environment.FailFast(null);
-                _ = User32.DispatchMessageA(ref m);
-            }
-            OnIdle();
+            var gotMessage = User32.GetMessageA(ref m, IntPtr.Zero, 0, 0);
+            if (0 == gotMessage)
+                return;
+            if (-1 == gotMessage)
+                Environment.FailFast(null);
+            _ = User32.DispatchMessageA(ref m);
+            //while (User32.PeekMessageA(ref m, WindowHandle, 0, 0, PeekRemove.NoRemove)) {
+            //}
+            //OnIdle();
         }
     }
-
+    Vector2i lastCursorLocation = new(-1, -1);
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Move: {
@@ -170,9 +177,17 @@ public class Window:WindowBase {
             case WinMessage.MouseMove: {
                     if (!IsFocused)
                         break;
+                    if (!tracking) {
+                        User32.TrackMouseEvent(ref trackMouseStruct);
+                        tracking = true;
+                    }
                     var position = Split(l);
                     var p = new Vector2i(position.X, Rect.Height - position.Y - 1);
-                    OnMouseMove(p);
+                    if (p != lastCursorLocation) {
+                        lastCursorLocation = p;
+                        Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseMove {p}");
+                        OnMouseMove(p);
+                    }
                 }
                 return 0;
             case WinMessage.SysCommand: {
@@ -203,8 +218,10 @@ public class Window:WindowBase {
                 }
                 break;
             case WinMessage.MouseLeave:
+                Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseLeave");
+                tracking = false;
                 OnMouseLeave();
-                break;
+                return 0;
             case WinMessage.SetFocus:
                 OnFocusChanged(IsFocused = true);
                 return 0;

@@ -1,11 +1,13 @@
 namespace Win32;
 
+using Common;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 
-unsafe public class Dib {
+unsafe public class Dib:IDisposable {
     private const int MaxBitmapDimension = 8192;
 
     public Dib (DeviceContext dc, int w, int h) {
@@ -34,7 +36,7 @@ unsafe public class Dib {
             throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Handle)");
         if (null == pixels)
             throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Bits)");
-        Raw = (uint*)pixels;
+        raw = (uint*)pixels;
 
         // for now BitCount is fixed and equal to 32
         Stride = Width;
@@ -43,8 +45,8 @@ unsafe public class Dib {
 
     public readonly BitmapInfo Info;
     // AARRGGBB
-    public readonly uint* Raw;
-    public IntPtr Pixels => (IntPtr)Raw;
+    private readonly uint* raw;
+    public uint* Pixels => !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
     public readonly IntPtr Handle;
     public readonly int Width;
     public readonly int Height;
@@ -53,6 +55,8 @@ unsafe public class Dib {
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
     public void DrawString (ReadOnlySpan<char> str, Font font, int x, int y, uint color = ~0u) {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
         var textWidth = font.WidthOf(str);
         if (x < 0 || Width <= x + textWidth)
             return;
@@ -82,21 +86,68 @@ unsafe public class Dib {
         for (var row = 0; row < font.Height; ++row, offset -= Width, source += charWidth) {
             var xpos = x;
             for (var column = 0; xpos < Width && column < charWidth; ++column, ++xpos) {
-                Raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
+                raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
             }
         }
     }
+    
     public void ClearU32 (Color color) {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
         ClearU32Internal(color.Argb);
     }
+
     unsafe private void ClearU32Internal (uint color) {
-        Debug.Assert(((nint)Raw & 1l) == 0);
+        Debug.Assert(((nint)raw & 1l) == 0);
         var ulongCount = pixelCount >> 1;
-        var p = (ulong*)Raw;
+        var p = (ulong*)raw;
         var ul = ((ulong)color << 32) | color;
         for (var i = 0; i < ulongCount; ++i)
             p[i] = ul;
         if ((pixelCount & 1) != 0)
-            Raw[pixelCount - 1] = color;
+            raw[pixelCount - 1] = color;
     }
+
+    public void FillRectU32 (Rectangle r, Color color) {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
+        var clipped = r.Clip(new(Vector2i.Zero, new(Width, Height)));
+        if (clipped.Width <= 0 || clipped.Height <= 0)
+            return;
+        FillRectU32Internal(clipped, color.Argb);
+    }
+
+    unsafe private void FillRectU32Internal (Rectangle clipped, uint color) {
+        var y = clipped.Top;
+        var h = clipped.Height;
+        var w = clipped.Width;
+        var offset = (Height - y - 1) * Width + clipped.Left;
+
+        while (--h >= 0) {
+            var x = offset;
+            for (var i = 0; i < w; ++i)
+                raw[x++] = color;
+            offset -= Width;
+        }
+    }
+    bool disposed;
+    public void Dispose (bool dispose) {
+        if (disposed) 
+            return;
+        if (dispose) {
+            Gdi32.DeleteObject(Handle);
+            disposed = true;
+        }
+    }
+
+    public void Dispose () {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    //private static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
+    //    a.Y == b.Y && b.X < a.X || b.Y < a.Y;
+
+    //private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
+
+
 }

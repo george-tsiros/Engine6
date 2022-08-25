@@ -11,6 +11,14 @@ public static class User32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     internal static extern IntPtr GetDC (IntPtr windowHandle);
 
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern IntPtr LoadCursorA (IntPtr moduleHandle, nuint cursor);
+
+    public static IntPtr LoadCursor (SystemCursor cursor) {
+        var ptr = LoadCursorA(IntPtr.Zero, (nuint)cursor);
+        return IntPtr.Zero != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
+    }
+
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
@@ -26,6 +34,9 @@ public static class User32 {
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern int SetCursorPos (int x, int y);
+
+    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    public static extern IntPtr SetCursor (IntPtr cursor);
 
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
@@ -45,8 +56,13 @@ public static class User32 {
     public static Vector2i ClientToScreen (IntPtr hwnd, Vector2i point) =>
         ClientToScreen(hwnd, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    //public static extern int TrackMouseEvent (ref TrackMouseEvent tme);
+    [DllImport(dll, EntryPoint = "TrackMouseEvent", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern int TrackMouseEvent_ (ref TrackMouseEvent tme);
+
+    public static void TrackMouseEvent (ref TrackMouseEvent tme) {
+        if (0 == TrackMouseEvent_(ref tme))
+            throw new WinApiException(nameof(TrackMouseEvent));
+    }
 
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern int RegisterRawInputDevices (ref RawInputDevice raw, uint deviceCount, uint structSize);

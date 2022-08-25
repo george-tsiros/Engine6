@@ -39,7 +39,7 @@ public static class Gdi32 {
 
     public unsafe static int GetPixelFormatCount (DeviceContext hdc) {
         var count = DescribePixelFormat((IntPtr)hdc, 0, PixelFormatDescriptor.Size, null);
-        return count > 0 ? count : throw new WinApiException(nameof(DescribePixelFormat));
+        return 0 < count ? count : throw new WinApiException(nameof(DescribePixelFormat));
     }
 
     public unsafe static void DescribePixelFormat (DeviceContext hdc, int pixelFormat, ref PixelFormatDescriptor ppfd) {
@@ -70,6 +70,16 @@ public static class Gdi32 {
         if (!SwapBuffers_(dc))
             throw new WinApiException(nameof(SwapBuffers));
     }
+
+    [DllImport(dll, EntryPoint = "DeleteObject", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeleteObject_ (IntPtr handle);
+
+    public static void DeleteObject (IntPtr handle) {
+        if (!DeleteObject_(handle))
+            throw new WinApiException(nameof(DeleteObject));
+    }
+
 
     [DllImport(dll, EntryPoint = "DeleteDC", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]

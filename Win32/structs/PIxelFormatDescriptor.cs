@@ -37,12 +37,6 @@ public struct PixelFormatDescriptor {
     public override string ToString () =>
         $"{ToStr(flags)},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
 
-    //static readonly ushort _size;
-
-    //static PixelFormatDescriptor () {
-    //    _size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
-    //}
-
     public static string ToStr (PixelFlags f) {
         var eh = Common.Functions.ToFlags(f, out int unknown);
         var str = string.Join(" | ", eh);

@@ -47,15 +47,16 @@ public class GlWindow:Window {
             skipMove = false;
     }
 
-    protected override void OnIdle () {
-        Invalidate();
-    }
+    //protected override void OnIdle () {
+    //    Invalidate();
+    //}
 
     protected override void OnPaint (IntPtr dc, in Rectangle rect) {
         Render();
         Gdi32.SwapBuffers((IntPtr)Dc);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
+        Invalidate();
     }
 
     protected virtual void Render () {

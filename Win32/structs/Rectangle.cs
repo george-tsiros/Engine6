@@ -28,7 +28,7 @@ public struct Rectangle {
         Bottom - Top;
 
     public Rectangle Clip (Rectangle r) =>
-        new(Maths.IntClamp(Left, r.Left, r.Right), Maths.IntClamp(Top, r.Bottom, r.Top), Maths.IntClamp(Right, r.Left, r.Right), Maths.IntClamp(Bottom, r.Bottom, r.Top));
+        new(Maths.IntClamp(Left, r.Left, r.Right), Maths.IntClamp(Top, r.Top, r.Bottom), Maths.IntClamp(Right, r.Left, r.Right), Maths.IntClamp(Bottom, r.Top, r.Bottom));
 
     public Vector2i Location => 
         new(Left, Top);
