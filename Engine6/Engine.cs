@@ -6,8 +6,7 @@ namespace Engine6;
 
 class Engine6 {
     static void Main () {
-        Debug.Assert(80 == Marshal.SizeOf<CreateStructA>());
-        new GdiWindow().Run();
+        new BlitTest(new("data/teapot.obj", true),new(1280,720)).Run();
     }
 }
 

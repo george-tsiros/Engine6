@@ -422,11 +422,11 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, Predicate<PixelFormatDescriptor> condition) {
+    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, PixelFlag required, PixelFlag rejected) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        var pfIndex = FindPixelFormat(dc, ref descriptor, condition);
+        var pfIndex = FindPixelFormat(dc, required, rejected, ref descriptor);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
@@ -443,14 +443,14 @@ unsafe public static class Opengl {
     public static bool IsSupported (string extension) => supportedExtensions.Contains(extension);
     public static IReadOnlyCollection<string> SupportedExtensions { get; } = supportedExtensions;
 
-    private static unsafe int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, Predicate<PixelFormatDescriptor> condition) {
+    private static unsafe int FindPixelFormat (DeviceContext dc, PixelFlag required, PixelFlag rejected, ref PixelFormatDescriptor pfd) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");
         var x = 0;
         for (var i = 1; i <= formatCount; i++) {
             Gdi32.DescribePixelFormat(dc, i, ref pfd);
-            if (condition(pfd) && x == 0)
+            if ((pfd.flags & required) == required && (pfd.flags & rejected) == 0 && x == 0)
                 x = i;
         }
 

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum OpenglString {
     Vendor = 0x1F00,

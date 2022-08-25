@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum DebugType {
     Error = Const.DEBUG_TYPE_ERROR,

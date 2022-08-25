@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum WrapCoordinate {
     WrapR = Const.TEXTURE_WRAP_R,

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum DepthFunction {
     Never = Const.NEVER,

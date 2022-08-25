@@ -21,7 +21,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindow{
+internal class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
 
     static readonly Vector4[] QuadVertices = {
@@ -65,7 +65,7 @@ internal class BlitTest:GlWindow{
     DirectionalFlat directionalFlat;
     Lines lines;
 
-    public BlitTest (Model m = null) {
+    public BlitTest (Model m = null, Vector2i? size = null) : base(size) {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);
@@ -127,14 +127,14 @@ internal class BlitTest:GlWindow{
 
     protected override void Render () {
         prf.Enter((int)FooNum.Frame);
-        var dx = IsKeyDown(Keys.C) ? .1f : 0f;
-        if (IsKeyDown(Keys.Z))
+        var dx = IsKeyDown(Key.C) ? .1f : 0f;
+        if (IsKeyDown(Key.Z))
             dx -= .1f;
-        var dy = IsKeyDown(Keys.ShiftKey) ? .1f : 0f;
-        if (IsKeyDown(Keys.ControlKey))
+        var dy = IsKeyDown(Key.ShiftKey) ? .1f : 0f;
+        if (IsKeyDown(Key.ControlKey))
             dy -= .1f;
-        var dz = IsKeyDown(Keys.X) ? .1f : 0f;
-        if (IsKeyDown(Keys.D))
+        var dz = IsKeyDown(Key.X) ? .1f : 0f;
+        if (IsKeyDown(Key.D))
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
         State.Framebuffer = offscreenFramebuffer;
@@ -240,9 +240,9 @@ internal class BlitTest:GlWindow{
 
     }
 
-    protected override void OnKeyDown (Keys k) {
+    protected override void OnKeyDown (Key k) {
         switch (k) {
-            case Keys.Space:
+            case Key.Space:
                 camera.Location = new();
                 return;
                 //case Keys.M:
@@ -262,7 +262,7 @@ internal class BlitTest:GlWindow{
         //} else {
         var d = e - lastCursorPosition;
         switch (Buttons) {
-            case Buttons.Left:
+            case MouseButton.Left:
                 theta = Functions.ModuloTwoPi(theta, 0.01 * d.X);
                 phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
                 break;

@@ -69,18 +69,18 @@ class MovementTest:GlWindowArb {
     long previousSync;
     float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
     void Move (float dt) {
-        var dx = IsKeyDown(Keys.C) ? 1 : 0;
-        if (IsKeyDown(Keys.Z))
+        var dx = IsKeyDown(Key.C) ? 1 : 0;
+        if (IsKeyDown(Key.Z))
             dx -= 1;
         //var dy = IsKeyDown(Keys.ShiftKey) ? 1 : 0;
         //if (IsKeyDown(Keys.ControlKey))
         //    dy -= 1;
-        var dz = IsKeyDown(Keys.X) ? 1 : 0;
-        if (IsKeyDown(Keys.D))
+        var dz = IsKeyDown(Key.X) ? 1 : 0;
+        if (IsKeyDown(Key.D))
             dz -= 1;
         if (0 == dx && 0 == dz)// && 0 == dz)
             return;
-        var velocity = IsKeyDown(Keys.ShiftKey) ? 8f : 5f;
+        var velocity = IsKeyDown(Key.ShiftKey) ? 8f : 5f;
         camera.Walk(velocity * dt * Vector3.Normalize(new(dx, 0, dz)));
     }
     protected override void Render () {

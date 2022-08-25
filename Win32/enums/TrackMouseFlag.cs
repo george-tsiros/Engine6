@@ -2,7 +2,7 @@ namespace Win32;
 using System;
 
 [Flags]
-public enum TrackMouseFlags:uint {
+public enum TrackMouseFlag:uint {
     Hover = 1,
     Leave = 2,
     NonClient = 0x10,

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 using System;
 

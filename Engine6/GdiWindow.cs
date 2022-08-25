@@ -10,13 +10,13 @@ public class GdiWindow:Window {
 
     private Dib dib;
 
-    protected override void OnKeyUp (Keys k) {
+    protected override void OnKeyUp (Key k) {
         switch (k) {
             //case Keys.Space:
             //    dib.ClearU32(Color.Black);
             //    Invalidate();
             //    return;
-            case Keys.Escape:
+            case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
         }
@@ -36,11 +36,11 @@ public class GdiWindow:Window {
     protected unsafe override void OnMouseMove (in Vector2i p) {
     }
 
-    protected override void OnButtonDown (Buttons depressed) {
+    protected override void OnButtonDown (MouseButton depressed) {
     }
 
-    protected override void OnButtonUp (Buttons released) {
-        if (released.HasFlag(Buttons.Left))
+    protected override void OnButtonUp (MouseButton released) {
+        if (released.HasFlag(MouseButton.Left))
             Invalidate();
     }
 

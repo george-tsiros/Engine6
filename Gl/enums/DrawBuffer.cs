@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum DrawBuffer {
     Color0 = Const.COLOR_ATTACHMENT0,

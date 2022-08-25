@@ -6,31 +6,31 @@ using Win32;
 using Common;
 
 public class GlWindow:Window {
-    private const PixelFlags RequiredFlags = PixelFlags.None
-        | PixelFlags.DrawToWindow
-        | PixelFlags.DoubleBuffer
-        | PixelFlags.SupportOpengl
+    private const PixelFlag RequiredFlags = PixelFlag.None
+        | PixelFlag.DrawToWindow
+        | PixelFlag.DoubleBuffer
+        | PixelFlag.SupportOpengl
         //| PixelFlags.SwapExchange
         //| PixelFlags.SupportComposition
         ;
-    private const PixelFlags RejectedFlags = PixelFlags.None
-        | PixelFlags.GenericAccelerated
-        | PixelFlags.GenericFormat
+    private const PixelFlag RejectedFlags = PixelFlag.None
+        | PixelFlag.GenericAccelerated
+        | PixelFlag.GenericFormat
         ;
 
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
-    public GlWindow () {
-        RenderingContext = Opengl.CreateSimpleContext(Dc, x => x.colorBits == 32 && x.depthBits >= 24 && (x.flags & RequiredFlags) == RequiredFlags && (x.flags & RejectedFlags) == 0);
+    public GlWindow (Vector2i? size = null) : base(size) {
+        RenderingContext = Opengl.CreateSimpleContext(Dc, RequiredFlags, RejectedFlags);
         Opengl.MakeCurrent((IntPtr)Dc, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
         //_ = User32.ShowCursor(false);
     }
 
-    protected override void OnKeyUp (Keys k) {
+    protected override void OnKeyUp (Key k) {
         switch (k) {
-            case Keys.Escape:
+            case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
         }

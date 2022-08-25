@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum ShaderParameter {
     ShaderType = Const.SHADER_TYPE,

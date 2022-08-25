@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum DebugSource {
     Api = Const.DEBUG_SOURCE_API,

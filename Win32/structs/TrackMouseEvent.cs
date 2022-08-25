@@ -11,9 +11,9 @@ public struct TrackMouseEvent {
     /// </summary>
     public int size;
     /// <summary>
-    /// The services requested. This is a combination of <seealso cref="TrackMouseFlags"/>.
+    /// The services requested. This is a combination of <seealso cref="TrackMouseFlag"/>.
     /// </summary>
-    public TrackMouseFlags flags;
+    public TrackMouseFlag flags;
     public IntPtr window;
     public uint hoverTime;
     public static int Size =>

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum IntParameter {
     FramebufferBinding = Const.FRAMEBUFFER_BINDING,

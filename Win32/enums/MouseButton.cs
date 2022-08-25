@@ -2,7 +2,7 @@ namespace Win32;
 using System;
 
 [Flags]
-public enum Buttons:ushort {
+public enum MouseButton:ushort {
     None = 0,
     Left = 0x1,
     Right = 0x2,

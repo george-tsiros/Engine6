@@ -8,8 +8,96 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Win32;
 using Common;
+using System.Runtime.InteropServices;
+
+//interface IPixelFormat { }
+
+//struct Red8:IPixelFormat {
+//    public byte red;
+//}
+
+//[StructLayout(LayoutKind.Explicit)]
+//struct Rg8:IPixelFormat {
+//    [FieldOffset(0)] public ushort rg;
+//    [FieldOffset(0)] public byte r;
+//    [FieldOffset(1)] public byte g;
+//}
+
+//struct Rgb8:IPixelFormat {
+//    public byte r, g, b;
+//}
+
+//[StructLayout(LayoutKind.Explicit)]
+//struct Rgba8:IPixelFormat {
+//    [FieldOffset(0)] public uint rgba;
+//    [FieldOffset(0)] public byte r;
+//    [FieldOffset(1)] public byte g;
+//    [FieldOffset(2)] public byte b;
+//    [FieldOffset(3)] public byte a;
+//}
+
+//unsafe class Raster<T>:IDisposable where T : unmanaged, IPixelFormat {
+//    public readonly int Width, Height;
+//    public readonly BitmapInfo Info;
+//    public readonly IntPtr Handle;
+//    public readonly int PixelCount;
+//    public readonly int Stride;
+//    private const int MaxBitmapDimension = 8192;
+//    private readonly T* raw;
+//    private bool disposed;
+//    public Raster (DeviceContext dc, int w, int h) {
+//        if (w < 1 || MaxBitmapDimension < w)
+//            throw new ArgumentOutOfRangeException(nameof(w));
+//        if (h < 1 || MaxBitmapDimension < h)
+//            throw new ArgumentOutOfRangeException(nameof(h));
+//        Info = new() {
+//            header = new() {
+//                size = (uint)Marshal.SizeOf<BitmapInfoHeader>(),
+//                width = Width = w,
+//                height = Height = h,
+//                planes = 1,
+//                bitCount = BitCount.ColorBits32,
+//                compression = BitmapCompression.Rgb,
+//                sizeImage = 0,
+//                xPelsPerMeter = 0,
+//                yPelsPerMeter = 0,
+//                colorsUsed = 0,
+//                colorsImportant = 0,
+//            }
+//        };
+//        void* pixels = null;
+//        Handle = Gdi32.CreateDIBSection(dc, ref Info, ref pixels);
+//        if (IntPtr.Zero == Handle)
+//            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Handle)");
+//        if (null == pixels)
+//            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Bits)");
+//        raw = (T*)pixels;
+
+//        // for now BitCount is fixed and equal to 32
+//        Stride = Width;
+//        PixelCount = Width * Height;
+//    }
+
+//    public Span<T> Pixels => new(raw, Width * Height);
+
+//    protected virtual void Dispose (bool disposing) {
+//        if (disposed)
+//            return;
+
+//        if (disposing) {
+
+//            disposed = true;
+//        }
+//    }
+
+//    public void Dispose () {
+//        Dispose(true);
+//        GC.SuppressFinalize(this);
+//    }
+//}
 
 public class Raster:IDisposable {
+
     public readonly Vector2i Size;
     public int Width => Size.X;
     public int Height => Size.Y;
@@ -211,12 +299,9 @@ public class Raster:IDisposable {
             var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
             var dp = p1 - p0;
 
-            // for now, clipping is a problem 
             if (Maths.IntAbs(dp.X) < Maths.IntAbs(dp.Y)) {
-                // tall
 
             } else {
-                // flat
 
             }
         }
@@ -257,14 +342,14 @@ public class Raster:IDisposable {
             return;
         if (y < 0 || Height <= y + font.Height)
             return;
-        // bottom row starts at i = 0
-        // second row (from bottom) starts at i = width
-        // top row starts at Width * (Height - 1)
-        // row (from bottom)    | y(from top)   | offset (as above)
-        // 0                    | Height - 1    | 0
-        // 1                    | Height - 2    | Width
-        // Height - 1           | 0             | (Height - 1) * Width
-        //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
+        //// bottom row starts at i = 0
+        //// second row (from bottom) starts at i = width
+        //// top row starts at Width * (Height - 1)
+        //// row (from bottom)    | y(from top)   | offset (as above)
+        //// 0                    | Height - 1    | 0
+        //// 1                    | Height - 2    | Width
+        //// Height - 1           | 0             | (Height - 1) * Width
+        ////                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
         foreach (var c in str) {
             if (Width <= x)
                 return;

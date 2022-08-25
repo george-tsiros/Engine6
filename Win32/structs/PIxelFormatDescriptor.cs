@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 public struct PixelFormatDescriptor {
     public ushort size;
     public ushort version;
-    public PixelFlags flags;
+    public PixelFlag flags;
     public byte pixelType;
     public byte colorBits;
     public byte rBits;
@@ -37,7 +37,7 @@ public struct PixelFormatDescriptor {
     public override string ToString () =>
         $"{ToStr(flags)},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
 
-    public static string ToStr (PixelFlags f) {
+    public static string ToStr (PixelFlag f) {
         var eh = Common.Functions.ToFlags(f, out int unknown);
         var str = string.Join(" | ", eh);
         if (unknown != 0)

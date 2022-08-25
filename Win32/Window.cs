@@ -9,69 +9,70 @@ public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lp
 
 public class Window:WindowBase {
 
+    public Window (Vector2i? size = null) : base(size) { }
+
     public bool IsFocused { get; private set; }
-    public Buttons Buttons { get; private set; }
+    public MouseButton Buttons { get; private set; }
 
     private readonly int[] KeyState = new int[256 / 32];
     private bool painting;
     private TrackMouseEvent trackMouseStruct;
     private bool tracking = false;
-    protected virtual void OnButtonDown (Buttons depressed) { }
-    protected virtual void OnButtonUp (Buttons released) { }
+    protected virtual void OnButtonDown (MouseButton depressed) { }
+    protected virtual void OnButtonUp (MouseButton released) { }
     protected virtual void OnFocusChanged (bool isFocused) { }
-    protected virtual void OnKeyDown (Keys k) { }
-    protected virtual void OnKeyUp (Keys k) { }
+    protected virtual void OnKeyDown (Key k) { }
+    protected virtual void OnKeyUp (Key k) { }
     protected virtual void OnLoad () { }
     protected virtual void OnMouseLeave () { }
     protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnPaint (IntPtr dc, in Rectangle r) { }
     //protected virtual void OnIdle () { }
     protected virtual void OnMove (in Vector2i topLeft) {
-        Debug.WriteLine(topLeft);
+        //Debug.WriteLine(topLeft);
     }
 
     protected virtual void OnSize (ResizeType type, in Vector2i clientSize) {
         Rect = new(Rect.Location, clientSize);
-        Debug.WriteLine($"{type}, {clientSize}");
+        //Debug.WriteLine($"{type}, {clientSize}");
     }
 
     protected virtual void OnActivateApp (bool activated) {
-        Debug.WriteLine($"{nameof(OnActivateApp)} {activated}");
+        //Debug.WriteLine($"{nameof(OnActivateApp)} {activated}");
     }
 
     protected virtual void OnWindowPosChanged (ref WindowPos windowPos) {
         var p = windowPos.flags.HasFlag(WindowPosFlags.NoMove) ? Rect.Location : new(windowPos.x, windowPos.y);
         var s = windowPos.flags.HasFlag(WindowPosFlags.NoSize) ? Rect.Size : new(windowPos.w, windowPos.h);
         Rect = new(p, s);
-        Debug.WriteLine(windowPos);
+        //Debug.WriteLine(windowPos);
     }
 
     protected virtual void OnWindowPosChanging (ref WindowPos p) {
-        Debug.WriteLine(p);
+        //Debug.WriteLine(p);
     }
 
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) {
-        Debug.WriteLine(shown ? reason.ToString() : "not shown");
+        //Debug.WriteLine(shown ? reason.ToString() : "not shown");
     }
 
     protected virtual void OnCreate (ref CreateStructA createStruct) {
         Rect = new(createStruct.x, createStruct.y, createStruct.x + createStruct.w, createStruct.y + createStruct.h);
-        Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
+        //Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
     }
 
     protected virtual void OnNcCalcSize (ref CalcSizeParameters p) {
-        //
     }
 
     protected virtual void OnNcCreate (ref CreateStructA createStruct) {
-        Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
+        //Debug.WriteLine($"({createStruct.x},{createStruct.y}), {createStruct.w}x{createStruct.h}, {createStruct.style}, {createStruct.exStyle}");
     }
 
     protected virtual void OnGetMinMaxInfo (ref MinMaxInfo minMaxInfo) {
-        Debug.WriteLine($"{minMaxInfo.maxPosition}, {minMaxInfo.maxSize}");
+        //Debug.WriteLine($"{minMaxInfo.maxPosition}, {minMaxInfo.maxSize}");
     }
 
-    public bool IsKeyDown (Keys key) {
+    public bool IsKeyDown (Key key) {
         var (h, l) = Split(key);
         return (KeyState[h] & l) != 0;
     }
@@ -85,7 +86,7 @@ public class Window:WindowBase {
     public void Run () {
         trackMouseStruct = new() {
             size = TrackMouseEvent.Size,
-            flags = TrackMouseFlags.Leave,
+            flags = TrackMouseFlag.Leave,
             window = WindowHandle,
         };
         OnLoad();
@@ -185,7 +186,7 @@ public class Window:WindowBase {
                     var p = new Vector2i(position.X, Rect.Height - position.Y - 1);
                     if (p != lastCursorLocation) {
                         lastCursorLocation = p;
-                        Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseMove {p}");
+                        //Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseMove {p}");
                         OnMouseMove(p);
                     }
                 }
@@ -201,7 +202,7 @@ public class Window:WindowBase {
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
             case WinMessage.XButtonDown: {
-                    var wAsShort = (Buttons)(ushort.MaxValue & w);
+                    var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
                     OnButtonDown(change);
@@ -211,14 +212,14 @@ public class Window:WindowBase {
             case WinMessage.RButtonUp:
             case WinMessage.MButtonUp:
             case WinMessage.XButtonUp: {
-                    var wAsShort = (Buttons)(ushort.MaxValue & w);
+                    var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
                     OnButtonUp(change);
                 }
                 break;
             case WinMessage.MouseLeave:
-                Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseLeave");
+                //Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseLeave");
                 tracking = false;
                 OnMouseLeave();
                 return 0;
@@ -239,7 +240,7 @@ public class Window:WindowBase {
                     return 0;
                 }
             case WinMessage.KeyUp: {
-                    var key = (Keys)(byte)(w & byte.MaxValue);
+                    var key = (Key)(byte)(w & byte.MaxValue);
                     var (hi, lo) = Split(key);
                     KeyState[hi] &= ~lo;
                     OnKeyUp(key);
@@ -270,7 +271,7 @@ public class Window:WindowBase {
             font = value;
     }
 
-    private static (int h, int l) Split (Keys k) =>
+    private static (int h, int l) Split (Key k) =>
         ((int)k >> 5, 1 << ((int)k & 31));
 
     private static Vector2i Split (nint l) {

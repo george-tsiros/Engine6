@@ -1,6 +1,6 @@
-﻿namespace Gl;
+namespace Gl;
 
-public enum ContextAttributes {
+public enum ContextAttrib {
     MajorVersion = 0x2091,
     MinorVersion = 0x2092,
     LayerPlane = 0x2093,

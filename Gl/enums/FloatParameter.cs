@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum FloatParameter {
     PointSize = Const.POINT_SIZE,

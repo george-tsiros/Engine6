@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum BlendDestinationFactor {
     Zero = 0,

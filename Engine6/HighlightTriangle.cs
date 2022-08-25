@@ -74,12 +74,12 @@ class HighlightTriangle:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    protected override void OnKeyUp (Keys k) {
+    protected override void OnKeyUp (Key k) {
         switch (k) {
-            case Keys.Up:
+            case Key.Up:
                 fovRatio = IntMin(fovRatio + 1, 6);
                 break;
-            case Keys.Down:
+            case Key.Down:
                 fovRatio = IntMax(fovRatio - 1, 2);
                 break;
         }

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum ShaderType {
     Fragment = Const.FRAGMENT_SHADER,

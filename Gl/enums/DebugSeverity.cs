@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum DebugSeverity {
     Low = Const.DEBUG_SEVERITY_LOW,

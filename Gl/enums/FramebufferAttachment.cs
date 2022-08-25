@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum FramebufferAttachment {
     Depth = Const.DEPTH_ATTACHMENT,

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum FramebufferTarget {
     Read = Const.READ_FRAMEBUFFER,

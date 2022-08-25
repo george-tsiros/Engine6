@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum Wrap {
     ClampToEdge = Const.CLAMP_TO_EDGE,

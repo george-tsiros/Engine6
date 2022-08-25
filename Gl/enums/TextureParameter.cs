@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum TextureParameter {
     DepthStencilTextureMode = Const.DEPTH_STENCIL_TEXTURE_MODE,

@@ -1,6 +1,6 @@
 namespace Win32;
 
-public enum Keys:byte {
+public enum Key:byte {
     None = 0x00,
     LButton = 0x01,
     RButton = 0x02,

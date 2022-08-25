@@ -11,7 +11,7 @@ using System.Drawing;
 
 public class GlWindowArb:GlWindow {
 
-    public GlWindowArb (Version shaderVersion = null) {
+    public GlWindowArb (Vector2i? size = null, Version shaderVersion = null) : base(size) {
         shaderVersion ??= Opengl.ShaderVersion;
         var extendedFormatCount = Opengl.GetPixelFormatCount((IntPtr)Dc, 1, 0, 1);
         var attributeNames = new int[] {
@@ -26,10 +26,10 @@ public class GlWindowArb:GlWindow {
 
         var attributeValues = new int[attributeNames.Length];
         var attributeNameValuePairs = new int[attributeNames.Length * 2 + 2 + 8];
-        attributeNameValuePairs[0] = (int)ContextAttributes.ProfileMask;
-        attributeNameValuePairs[2] = (int)ContextAttributes.MajorVersion;
-        attributeNameValuePairs[4] = (int)ContextAttributes.MinorVersion;
-        attributeNameValuePairs[6] = (int)ContextAttributes.ContextFlags;
+        attributeNameValuePairs[0] = (int)ContextAttrib.ProfileMask;
+        attributeNameValuePairs[2] = (int)ContextAttrib.MajorVersion;
+        attributeNameValuePairs[4] = (int)ContextAttrib.MinorVersion;
+        attributeNameValuePairs[6] = (int)ContextAttrib.ContextFlags;
         var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
             Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, 0, attributeNames.Length, attributeNames, attributeValues);
@@ -60,7 +60,7 @@ public class GlWindowArb:GlWindow {
                 attributeNameValuePairs[1] = (int)profileMask;
                 attributeNameValuePairs[3] = shaderVersion?.Major ?? Opengl.ShaderVersion.Major;
                 attributeNameValuePairs[5] = shaderVersion?.Minor ?? Opengl.ShaderVersion.Minor;
-                attributeNameValuePairs[7] = (int)(ContextFlags.Debug | ContextFlags.ForwardCompatible);
+                attributeNameValuePairs[7] = (int)(ContextFlag.Debug | ContextFlag.ForwardCompatible);
 
                 var candidateContext = Opengl.CreateContextAttribsARB((IntPtr)Dc, IntPtr.Zero, attributeNameValuePairs);
                 Opengl.MakeCurrent((IntPtr)Dc, candidateContext);

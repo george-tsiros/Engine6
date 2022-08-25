@@ -2,7 +2,7 @@ namespace Win32;
 
 using System;
 [Flags]
-public enum PixelFlags {
+public enum PixelFlag {
     None = 0,
     DoubleBuffer = 0x00000001,
     Stereo = 0x00000002,

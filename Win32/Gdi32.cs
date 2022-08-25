@@ -4,11 +4,28 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+//struct GdiplusStartupInput { }
+//struct GdiplusStartupOutput { }
+
+//internal static class Gdiplus {
+//    private const string dll = nameof(Gdiplus) + ".dll";
+//    public static void Thing () { }
+//    private static readonly IntPtr GdiPlusToken;
+//    static Gdiplus () {
+//    }
+
+//    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+//    private static extern void GdiplusShutdown (IntPtr token);
+
+//    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+//    private static extern int GdiplusStartup (ref IntPtr token, ref GdiplusStartupInput i, ref GdiplusStartupOutput o);
+//}
+
 public static class Gdi32 {
     private const string dll = nameof(Gdi32) + ".dll";
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private unsafe static extern IntPtr CreateDIBSection ([In] IntPtr hdc, BitmapInfo* info, int usage, ref void* bits, IntPtr section, uint offset);
+    private unsafe static extern IntPtr CreateDIBSection ([In] IntPtr dc, BitmapInfo* info, int use, ref void* p, IntPtr section, uint offset);
 
     public unsafe static IntPtr CreateDIBSection (DeviceContext dc, ref BitmapInfo info, ref void* bits) {
         fixed (BitmapInfo* p = &info) {

@@ -255,7 +255,7 @@ public static class User32 {
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     private static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int index, IntPtr value);
 
-    private static void SetWindow (IntPtr windowHandle, GWLThing index, IntPtr value) {
+    private static void SetWindow (IntPtr windowHandle, SetWindowParameter index, IntPtr value) {
         var before = Kernel32.GetLastError();
         if (0 != before)
             throw new WinApiException("pre-existing error", before);
@@ -268,11 +268,11 @@ public static class User32 {
     }
 
     public static void SetWindow (IntPtr windowHandle, WndProc proc) =>
-        SetWindow(windowHandle, GWLThing.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
+        SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
 
     public static void SetWindow (IntPtr windowHandle, WindowStyleEx style) =>
-        SetWindow(windowHandle, GWLThing.ExStyle, (IntPtr)style);
+        SetWindow(windowHandle, SetWindowParameter.ExStyle, (IntPtr)style);
 
     public static void SetWindow (IntPtr windowHandle, WindowStyle style) =>
-        SetWindow(windowHandle, GWLThing.Style, (IntPtr)style);
+        SetWindow(windowHandle, SetWindowParameter.Style, (IntPtr)style);
 }
