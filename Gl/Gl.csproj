@@ -27,6 +27,10 @@
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="structs\" />
+    </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="..\fixeol\bin\fixeol.exe" />
     </Target>
