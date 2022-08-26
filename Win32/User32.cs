@@ -252,6 +252,12 @@ public static class User32 {
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
+    [DllImport(dll,EntryPoint ="SetWindowPos", ExactSpelling =true,  CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern bool SetWindowPos_ (IntPtr window, IntPtr after, int x, int y, int w, int h, uint flags);
+
+    public static void SetWindowPos (IntPtr window, IntPtr after, int x, int y, int w, int h, WindowPosFlags flags)
+        => SetWindowPos_(window, after, x, y, w, h, (uint)flags);
+
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     private static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int index, IntPtr value);
 

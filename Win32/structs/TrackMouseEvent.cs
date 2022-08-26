@@ -6,13 +6,9 @@ using System.Runtime.InteropServices;
 
 
 public struct TrackMouseEvent {
-    /// <summary>
-    /// size of the <see cref="TrackMouseEvent"/> structure, in bytes. Constant.
-    /// </summary>
+    /// <summary>size of the <see cref="TrackMouseEvent"/> structure, in bytes. Constant.</summary>
     public int size;
-    /// <summary>
-    /// The services requested. This is a combination of <seealso cref="TrackMouseFlag"/>.
-    /// </summary>
+    /// <summary>The services requested. This is a combination of <seealso cref="TrackMouseFlag"/>.</summary>
     public TrackMouseFlag flags;
     public IntPtr window;
     public uint hoverTime;

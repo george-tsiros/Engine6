@@ -1,8 +1,14 @@
+using System.Runtime.InteropServices;
+
 namespace Win32;
 
+[StructLayout(LayoutKind.Explicit)]
 public readonly struct Color {
-    public readonly uint Argb;
+    [FieldOffset(0)] public readonly uint Argb;
 
+    public static implicit operator uint (Color c) => 
+        c.Argb;
+    
     private Color (uint argb) =>
         Argb = argb;
 

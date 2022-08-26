@@ -2,7 +2,7 @@ namespace Win32;
 using System;
 
 [Flags]
-public enum WindowPosFlags {
+public enum WindowPosFlags:uint {
     None = 0x0,
     NoSize = 0x1,
     NoMove = 0x2,
@@ -15,4 +15,6 @@ public enum WindowPosFlags {
     NoCopyBits = 0x100,
     NoOwnerZOrder = 0x200,
     NoSendChanging = 0x400,
+    DeferErase = 0x2000,
+    AsyncWindowPosition = 0x4000,
 }

@@ -68,10 +68,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="data\IBM_3270.txt">
+        <None Update="data\teapot.obj">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="data\teapot.obj">
+        <None Update="data\ubuntu_mono_ligaturized.txt">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

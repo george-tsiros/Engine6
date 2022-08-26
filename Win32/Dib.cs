@@ -2,10 +2,7 @@ namespace Win32;
 
 using Common;
 using System;
-using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Threading.Channels;
 
 unsafe public class Dib:IDisposable {
     private const int MaxBitmapDimension = 8192;
@@ -15,7 +12,7 @@ unsafe public class Dib:IDisposable {
             throw new ArgumentOutOfRangeException(nameof(w));
         if (h < 1 || MaxBitmapDimension < h)
             throw new ArgumentOutOfRangeException(nameof(h));
-        Info = new() {
+        info = new() {
             header = new() {
                 size = (uint)Marshal.SizeOf<BitmapInfoHeader>(),
                 width = Width = w,
@@ -31,19 +28,19 @@ unsafe public class Dib:IDisposable {
             }
         };
         void* pixels = null;
-        Handle = Gdi32.CreateDIBSection(dc, ref Info, ref pixels);
+        Handle = Gdi32.CreateDIBSection(dc, ref info, ref pixels);
         if (IntPtr.Zero == Handle)
             throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Handle)");
         if (null == pixels)
             throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Bits)");
         raw = (uint*)pixels;
 
-        // for now BitCount is fixed and equal to 32
         Stride = Width;
         pixelCount = Width * Height;
     }
 
-    public readonly BitmapInfo Info;
+    BitmapInfo info;
+    public BitmapInfo Info => info;
     // AARRGGBB
     private readonly uint* raw;
     public uint* Pixels => !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
@@ -90,7 +87,7 @@ unsafe public class Dib:IDisposable {
             }
         }
     }
-    
+
     public void ClearU32 (Color color) {
         if (disposed)
             throw new ObjectDisposedException(nameof(Dib));
@@ -98,7 +95,6 @@ unsafe public class Dib:IDisposable {
     }
 
     unsafe private void ClearU32Internal (uint color) {
-        Debug.Assert(((nint)raw & 1l) == 0);
         var ulongCount = pixelCount >> 1;
         var p = (ulong*)raw;
         var ul = ((ulong)color << 32) | color;
@@ -132,7 +128,7 @@ unsafe public class Dib:IDisposable {
     }
     bool disposed;
     public void Dispose (bool dispose) {
-        if (disposed) 
+        if (disposed)
             return;
         if (dispose) {
             Gdi32.DeleteObject(Handle);
@@ -148,6 +144,4 @@ unsafe public class Dib:IDisposable {
     //    a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
     //private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
-
-
 }

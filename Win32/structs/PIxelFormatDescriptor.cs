@@ -35,13 +35,13 @@ public struct PixelFormatDescriptor {
     public uint visibleMask;
     public uint damageMask;
     public override string ToString () =>
-        $"{ToStr(flags)},{pixelType:x2},{rBits}/{gBits}/{bBits}/{aBits},{depthBits},{accRBits}/{accGBits}/{accBBits}/{accABits},{stencilBits},{auxBuffers},{layerType:x2},{layerMask:x2},{visibleMask:x2},{damageMask:x2}";
+        $"pt:{pixelType} clr:{colorBits,2} dpt:{depthBits,2} acc:{accBits,2} stn:{stencilBits,2} {visibleMask:x8} {ToStr(flags)}";
 
     public static string ToStr (PixelFlag f) {
         var eh = Common.Functions.ToFlags(f, out int unknown);
-        var str = string.Join(" | ", eh);
+        var str = string.Join(',', eh);
         if (unknown != 0)
-            str += $" | 0x{unknown:x}";
+            str += $",0x{unknown:x}";
         return str;
     }
 

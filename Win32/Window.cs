@@ -32,11 +32,6 @@ public class Window:WindowBase {
         //Debug.WriteLine(topLeft);
     }
 
-    protected virtual void OnSize (ResizeType type, in Vector2i clientSize) {
-        Rect = new(Rect.Location, clientSize);
-        //Debug.WriteLine($"{type}, {clientSize}");
-    }
-
     protected virtual void OnActivateApp (bool activated) {
         //Debug.WriteLine($"{nameof(OnActivateApp)} {activated}");
     }
@@ -110,7 +105,9 @@ public class Window:WindowBase {
             //OnIdle();
         }
     }
-    Vector2i lastCursorLocation = new(-1, -1);
+
+    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
+
     override unsafe protected nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Move: {
@@ -172,7 +169,6 @@ public class Window:WindowBase {
             case WinMessage.Size: {
                     var size = Split(l);
                     var resizeType = (ResizeType)(int)(w & int.MaxValue);
-                    OnSize(resizeType, size);
                 }
                 return 0;
             case WinMessage.MouseMove: {
@@ -184,8 +180,8 @@ public class Window:WindowBase {
                     }
                     var position = Split(l);
                     var p = new Vector2i(position.X, Rect.Height - position.Y - 1);
-                    if (p != lastCursorLocation) {
-                        lastCursorLocation = p;
+                    if (p != CursorLocation) {
+                        CursorLocation = p;
                         //Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseMove {p}");
                         OnMouseMove(p);
                     }
@@ -266,7 +262,7 @@ public class Window:WindowBase {
     private Font font;
     public Font Font {
         get =>
-            font ??= new("data/ibm_3270.txt");
+            font ??= new("data/ubuntu_mono_ligaturized.txt");
         set =>
             font = value;
     }

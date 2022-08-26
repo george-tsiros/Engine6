@@ -39,7 +39,10 @@ public static class Gdi32 {
     public static extern bool GdiFlush ();
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public unsafe static extern int StretchDIBits (IntPtr dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, BitmapInfo* info, int use, int op);
+    public unsafe static extern int StretchDIBits (IntPtr dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, in BitmapInfo info, int use, int op);
+
+    //[DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    //public unsafe static extern int SetDIBits (IntPtr dc, IntPtr bitmapHandle, uint start, uint count, void* p, in BitmapInfo info, int use);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     internal unsafe static extern IntPtr CreateDIBitmap (IntPtr dc, [In] ref BitmapInfoHeader header, int init, void* bits, BitmapInfo* info, int usage);
