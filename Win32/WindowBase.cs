@@ -2,6 +2,7 @@ namespace Win32;
 
 using Common;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 public abstract class WindowBase:IDisposable {
@@ -61,7 +62,7 @@ public abstract class WindowBase:IDisposable {
 
     protected Rectangle Rect { get; set; }
 
-    protected abstract IntPtr WndProc (IntPtr hWnd, WinMessage msg, nuint w, nint l);
+    protected abstract nint WndProc (IntPtr hWnd, WinMessage msg, nuint w, nint l);
 
     private bool disposed;
 

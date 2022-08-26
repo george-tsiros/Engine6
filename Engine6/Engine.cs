@@ -1,13 +1,14 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Win32;
-
 namespace Engine6;
 
+using System;
+using System.Windows.Forms;
+
 class Engine6 {
+    [STAThread]
     static void Main () {
-        //new BlitTest(new("data/teapot.obj", true),new(1280,720)).Run();
-        new GdiWindow(new(1280,720)).Run();
+        Application.VisualStyleState = System.Windows.Forms.VisualStyles.VisualStyleState.NoneEnabled;
+        //new BlitTest(new(1280,720)).Run();
+        //new HighlightTriangle(new("data/teapot.obj", true), new(800,600)).Run();
     }
 }
 

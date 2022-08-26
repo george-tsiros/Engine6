@@ -1,7 +1,7 @@
-using System;
-
 namespace Win32;
 
+using System;
+using static Common.Functions;
 public struct WindowPos {
     public IntPtr window;
     public IntPtr insertAfter;
@@ -10,5 +10,5 @@ public struct WindowPos {
     public int w;
     public int h;
     public WindowPosFlags flags;
-    public override string ToString () => $"0x{window:x} after 0x{insertAfter:x} @({x},{y}), {w}x{h}, {flags}";
+    public override string ToString () => $"({x},{y}), {w}x{h}, {string.Join(", ", ToFlags(flags))}";
 }

@@ -14,8 +14,8 @@
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject></StartupObject>
-        <UseWindowsForms>false</UseWindowsForms>
-        <TargetFramework>net6.0</TargetFramework>
+        <UseWindowsForms>True</UseWindowsForms>
+        <TargetFramework>net6.0-windows</TargetFramework>
     </PropertyGroup>
 
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

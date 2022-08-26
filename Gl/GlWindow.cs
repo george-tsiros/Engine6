@@ -36,22 +36,22 @@ public class GlWindow:Window {
         }
     }
 
-    private bool skipMove;
-    protected override void OnMouseMove (in Vector2i p) {
-        if (!skipMove) {
-            skipMove = true;
-            var cs = Rect.Center;
-            _ = User32.SetCursorPos(cs.X, cs.Y);
-            base.OnMouseMove(new(p.X - cs.X, cs.Y - p.Y));
-        } else
-            skipMove = false;
-    }
+    //private bool skipMove;
+    //protected override void OnMouseMove (in Vector2i p) {
+    //    if (!skipMove) {
+    //        skipMove = true;
+    //        var cs = Rect.Center;
+    //        _ = User32.SetCursorPos(cs.X, cs.Y);
+    //        base.OnMouseMove(new(p.X - cs.X, cs.Y - p.Y));
+    //    } else
+    //        skipMove = false;
+    //}
 
     //protected override void OnIdle () {
     //    Invalidate();
     //}
 
-    protected override void OnPaint (IntPtr dc, in Rectangle rect) {
+    protected override void OnPaint () {
         Render();
         Gdi32.SwapBuffers((IntPtr)Dc);
         LastSync = Stopwatch.GetTimestamp();

@@ -11,10 +11,14 @@ public static class Maths {
     public static double DoubleMax (double a, double b) => double.Max(a, b);
     public static int IntMin (int a, int b) => int.Min(a, b);
     public static int IntMax (int a, int b) => int.Max(a, b);
+    public static float FloatSqrt (float a) => float.Sqrt(a);
     public static double DoubleSqrt (double a) => double.Sqrt(a);
+    public static int IntAbs (int a) => int.Abs(a);
     public static double DoubleAbs (double a) => double.Abs(a);
     public static double DoubleFloor (double a) => double.Floor(a);
     public static double DoubleRound (double a, int digits) => double.Round(a, digits);
+    public static double DoubleRound (double a) => double.Round(a);
+    public static float FloatRound (float a) => float.Round(a);
     public static (double, double) DoubleSinCos (double angle) => double.SinCos(angle);
     public static double DoubleCos (double angle) => double.Cos(angle);
     public static double DoubleSin (double angle) => double.Sin(angle);

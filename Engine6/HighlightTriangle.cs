@@ -9,8 +9,8 @@ using Win32;
 using static Common.Maths;
 using Common;
 
-class HighlightTriangle:GlWindowArb {
-    public HighlightTriangle (Model model) {
+class HighlightTriangle:GlWindow {
+    public HighlightTriangle (Model model, Vector2i? size = null) : base(size) {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
     }
@@ -78,14 +78,14 @@ class HighlightTriangle:GlWindowArb {
         switch (k) {
             case Key.Up:
                 fovRatio = IntMin(fovRatio + 1, 6);
-                break;
+                return;
             case Key.Down:
                 fovRatio = IntMax(fovRatio - 1, 2);
-                break;
+                return;
         }
+        base.OnKeyUp(k);
     }
 
-    Vector2i CursorLocation = new();
     int fovRatio = 4;
     uint lastTriangle = 0;
     protected override void Render () {

@@ -157,7 +157,10 @@ public static class User32 {
     }
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public static extern int GetMessageA (ref Message m, IntPtr handle, uint min, uint max);
+    private static extern int GetMessageA (ref Message m, IntPtr handle, uint min, uint max);
+
+    public static bool GetMessage (ref Message m) => 
+        0 != GetMessageA(ref m, IntPtr.Zero, 0, 0);
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -252,7 +255,7 @@ public static class User32 {
     //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
-    [DllImport(dll,EntryPoint ="SetWindowPos", ExactSpelling =true,  CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "SetWindowPos", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     private static extern bool SetWindowPos_ (IntPtr window, IntPtr after, int x, int y, int w, int h, uint flags);
 
     public static void SetWindowPos (IntPtr window, IntPtr after, int x, int y, int w, int h, WindowPosFlags flags)

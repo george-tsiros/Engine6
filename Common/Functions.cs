@@ -1,5 +1,6 @@
 ﻿namespace Common;
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,27 +8,59 @@ using System.Reflection;
 using static Common.Maths;
 
 public static class Functions {
-    public static List<T> ToFlags<T> (T value, out int unknown) where T : Enum {
+
+    public static IEnumerable<string> ToFlags<T> (T value) where T : Enum {
         Debug.Assert(typeof(T).IsEnum);
         if (typeof(T).GetCustomAttribute<FlagsAttribute>() is null)
-            throw new ArgumentException();
-        var list = new List<T>();
-        var entries = Enum.GetValues(typeof(T)) as T[];
-        var values = Array.ConvertAll(entries, e => (int)(object)e);
-        var v = (int)(object)value;
-        unknown = 0;
-        for (var shift = 0; shift < 31; ++shift) {
-            var i = 1 << shift;
-            if ((i & v) != 0) {
-                var idx = Array.IndexOf(values, i);
-                if (idx < 0)
-                    unknown |= i;
-                else
-                    list.Add(entries[idx]);
-            }
-        }
-        return list;
+            throw new ArgumentException("must have Flags Attribute", nameof(T));
+        var type = typeof(T).GetEnumUnderlyingType();
+        if (typeof(int) == type)
+            return ToFlagsInt32(value);
+        if (typeof(uint) == type)
+            return ToFlagsUInt32(value);
+        if (typeof(long) == type)
+            return ToFlagsInt64(value);
+        if (typeof(ulong) == type)
+            return ToFlagsUInt64(value);
+        if (typeof(short) == type)
+            return ToFlagsInt16(value);
+        if (typeof(ushort) == type)
+            return ToFlagsUInt16(value);
+        if (typeof(byte) == type)
+            return ToFlagsByte(value);
+        if (typeof(sbyte) == type)
+            return ToFlagsSByte(value);
+        throw new ArgumentException("not supported", nameof(value));
     }
+
+    static IEnumerable<string> ToFlagsInt32<T> (T value) where T : Enum {
+        for (int i32 = (int)(object)value; 0 != i32;) {
+            var mask = 1 << BitOperations.TrailingZeroCount(i32);
+            yield return EnumToStrInt32<T>(mask);
+            i32 &= ~mask;
+        }
+    }
+    
+    static string EnumToStrInt32<T>(int value) where T: Enum =>
+        Enum.IsDefined(typeof(T), value) ? ((T)Enum.ToObject(typeof(T), value)).ToString() : $"0x{value:x}";
+
+    static string EnumToStrUInt32<T>(uint value) where T: Enum =>
+        Enum.IsDefined(typeof(T), value) ? ((T)Enum.ToObject(typeof(T), value)).ToString() : $"0x{value:x}";
+
+    static IEnumerable<string> ToFlagsUInt32<T> (T value) where T : Enum {
+        for (uint u32 = (uint)(object)value; 0 != u32;) {
+            var mask = 1u << BitOperations.TrailingZeroCount(u32);
+            yield return EnumToStrUInt32<T>(mask);
+            u32 &= ~mask;
+        }
+    }
+
+    static IEnumerable<string> ToFlagsInt64<T> (T value) where T : Enum { throw new NotImplementedException(); }
+    static IEnumerable<string> ToFlagsUInt64<T> (T value) where T : Enum { throw new NotImplementedException(); }
+    static IEnumerable<string> ToFlagsInt16<T> (T value) where T : Enum { throw new NotImplementedException(); }
+    static IEnumerable<string> ToFlagsUInt16<T> (T value) where T : Enum { throw new NotImplementedException(); }
+    static IEnumerable<string> ToFlagsByte<T> (T value) where T : Enum { throw new NotImplementedException(); }
+    static IEnumerable<string> ToFlagsSByte<T> (T value) where T : Enum { throw new NotImplementedException(); }
 
     public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) {
         while (f.ReadLine() is string line)

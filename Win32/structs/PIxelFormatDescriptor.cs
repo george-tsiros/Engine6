@@ -1,10 +1,7 @@
 namespace Win32;
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PixelFormatDescriptor {
@@ -30,22 +27,20 @@ public struct PixelFormatDescriptor {
     public byte stencilBits;
     public byte auxBuffers;
     public byte layerType;
+#pragma warning disable IDE0044 // Add readonly modifier
     private byte unused;
+#pragma warning restore IDE0044 // Add readonly modifier
     public uint layerMask;
     public uint visibleMask;
     public uint damageMask;
+
     public override string ToString () =>
-        $"pt:{pixelType} clr:{colorBits,2} dpt:{depthBits,2} acc:{accBits,2} stn:{stencilBits,2} {visibleMask:x8} {ToStr(flags)}";
+        $"{colorBits,2} {depthBits,2} {accBits,2} {stencilBits,2} {visibleMask:x8} {string.Join(", ", Common.Functions.ToFlags(flags))}";
 
-    public static string ToStr (PixelFlag f) {
-        var eh = Common.Functions.ToFlags(f, out int unknown);
-        var str = string.Join(',', eh);
-        if (unknown != 0)
-            str += $",0x{unknown:x}";
-        return str;
-    }
+    public const string Header = 
+        "cl dt ac st    vmask flags";
 
-    public static ushort Size { get; } = 
+    public static ushort Size { get; } =
         (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
 
 }
