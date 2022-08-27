@@ -14,7 +14,7 @@ public class SimpleTexture:Program {
     [GlAttrib("model")]
     public int Model { get; }
 
-    //size 1, type 35666
+    //size 1, type Vector4
     [GlAttrib("vertexPosition")]
     public int VertexPosition { get; }
 

@@ -21,7 +21,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindowArb {
+internal class BlitTest:GlWindow {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
 
     static readonly Vector4[] QuadVertices = {
@@ -90,7 +90,7 @@ internal class BlitTest:GlWindowArb {
         NamedFramebufferDrawBuffer(offscreenFramebuffer, DrawBuffer.Color0);
         quad = new();
         passThrough = new();
-        State.Program = passThrough;
+        UseProgram(passThrough);
         quadBuffer = new(QuadVertices);
         quad.Assign(quadBuffer, passThrough.VertexPosition);
         softwareRenderSurface = new(size, 4, 1);
@@ -98,7 +98,7 @@ internal class BlitTest:GlWindowArb {
         offscreenRenderingSurface.BindTo(1);
         passThrough.Tex(1);
         directionalFlat = new();
-        State.Program = directionalFlat;
+        UseProgram(directionalFlat);
         var faceCount = Faces.Length;
         var vertexCount = faceCount * 3;
         var vertices = new Vector4[vertexCount];
@@ -137,23 +137,23 @@ internal class BlitTest:GlWindowArb {
         if (IsKeyDown(Key.D))
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
-        State.Framebuffer = offscreenFramebuffer;
+        State.FramebufferBinding = offscreenFramebuffer;
         Viewport(new(), Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         prf.Enter((int)FooNum.Software);
         RenderSoftware();
         prf.Leave();
-        State.Framebuffer = 0;
-        State.VertexArray = quad;
-        State.Program = passThrough;
+        State.FramebufferBinding = 0;
+        State.VertexArrayBinding = quad;
+        UseProgram(passThrough);
         Viewport(new(), Rect.Size);
         Clear(BufferBit.ColorDepth);
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
-        State.VertexArray = someLines;
-        State.Program = lines.Id;
+        State.VertexArrayBinding = someLines;
+        UseProgram(lines);
         State.DepthTest = false;
         State.CullFace = false;
         lines.Color(new(0, 1, 0, 1));
@@ -229,8 +229,8 @@ internal class BlitTest:GlWindowArb {
 
         softwareRenderTexture.Upload(softwareRenderSurface);
         prf.Leave();
-        State.Program = passThrough;
-        State.VertexArray = quad;
+        UseProgram(passThrough);
+        State.VertexArrayBinding = quad;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.Always;
         State.CullFace = true;

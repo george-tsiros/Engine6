@@ -38,9 +38,13 @@ public sealed class State {
     public static int SwapInterval {
         get => GetSwapIntervalEXT();
         set {
-            if (value != SwapInterval)
-                if (!SwapIntervalEXT(value) || value != SwapInterval)
+            if (value != SwapInterval) {
+                if (SwapIntervalEXT(value)) {
+                    if (value != SwapInterval)
+                        throw new GlException(SetInt32Failed(nameof(SwapInterval), value));
+                } else
                     throw new GlException(SetInt32Failed(nameof(SwapInterval), value));
+            }
         }
     }
 
@@ -80,59 +84,65 @@ public sealed class State {
         set => MaybeToggle(Capability.CullFace, value);
     }
 
-    public static bool DepthWriteMask {
+    public static bool DepthMask {
         get => 0 != GetIntegerv(IntParameter.DepthMask);
         set {
-            if (value != DepthWriteMask)
+            if (value != DepthMask) {
                 DepthMask(value);
-            if (value != DepthWriteMask)
-                throw new GlException(SetBoolFailed(nameof(IntParameter.DepthMask), value));
+                if (value != DepthMask)
+                    throw new GlException(SetBoolFailed(nameof(IntParameter.DepthMask), value));
+            }
         }
     }
 
     public static DepthFunction DepthFunc {
         get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
         set {
-            if (value != DepthFunc)
+            if (value != DepthFunc) {
                 DepthFunc(value);
-            if (value != DepthFunc)
-                throw new GlException(SetEnumFailed(value));
+                if (value != DepthFunc)
+                    throw new GlException(SetEnumFailed(value));
+            }
         }
     }
-    public static int Framebuffer {
+    public static int FramebufferBinding {
         get => GetIntegerv(IntParameter.FramebufferBinding);
         set {
-            if (value != Framebuffer)
+            if (value != FramebufferBinding) {
                 BindFramebuffer(FramebufferTarget.Framebuffer, value);
-            if (value != Framebuffer)
-                throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), value));
+                if (value != FramebufferBinding)
+                    throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), value));
+            }
         }
     }
-    public static int Program {
-        get => GetIntegerv(IntParameter.CurrentProgram);
-        set {
-            if (value != Program)
-                UseProgram(value);
-            if (value != Program)
-                throw new GlException(SetInt32Failed(nameof(IntParameter.CurrentProgram), value));
-        }
-    }
-    public static int ArrayBuffer {
+    //public static int CurrentProgram {
+    //    get => GetIntegerv(IntParameter.CurrentProgram);
+    //    set {
+    //        if (value != CurrentProgram) {
+    //            UseProgram(value);
+    //            if (value != CurrentProgram)
+    //                throw new GlException(SetInt32Failed(nameof(IntParameter.CurrentProgram), value));
+    //        }
+    //    }
+    //}
+    public static int ArrayBufferBinding {
         get => GetIntegerv(IntParameter.ArrayBufferBinding);
         set {
-            if (value != ArrayBuffer)
+            if (value != ArrayBufferBinding) {
                 BindBuffer(BufferTarget.Array, value);
-            if (value != ArrayBuffer)
-                throw new GlException(SetInt32Failed(nameof(IntParameter.ArrayBufferBinding), value));
+                if (value != ArrayBufferBinding)
+                    throw new GlException(SetInt32Failed(nameof(IntParameter.ArrayBufferBinding), value));
+            }
         }
     }
-    public static int VertexArray {
+    public static int VertexArrayBinding {
         get => GetIntegerv(IntParameter.VertexArrayBinding);
         set {
-            if (value != VertexArray)
+            if (value != VertexArrayBinding) {
                 BindVertexArray(value);
-            if (value != VertexArray)
-                throw new GlException(SetInt32Failed(nameof(IntParameter.VertexArrayBinding), value));
+                if (value != VertexArrayBinding)
+                    throw new GlException(SetInt32Failed(nameof(IntParameter.VertexArrayBinding), value));
+            }
         }
     }
 }

@@ -9,11 +9,19 @@ using Common;
 using System.Diagnostics;
 using System.Drawing;
 
-public class GlWindowArb:GlWindow {
+public class GlWindowArb:Window {
+    protected IntPtr RenderingContext;
+    protected long FramesRendered { get; private set; }
+    protected long LastSync { get; private set; }
 
-    public GlWindowArb (Vector2i? size = null, Version shaderVersion = null) : base(size) {
-        shaderVersion ??= Opengl.ShaderVersion;
-        var extendedFormatCount = Opengl.GetPixelFormatCount((IntPtr)Dc, 1, 0, 1);
+    public GlWindowArb (ContextConfigurationARB? configuration = null, Vector2i? size = null) : base(size) {
+        var config = configuration ?? new() {
+            BasicConfiguration = ContextConfiguration.Default,
+        };
+        var shaderVersion = config.Version ?? Opengl.ShaderVersion;
+
+
+        var extendedFormatCount = Opengl.GetPixelFormatCountARB(Dc);
         var attributeNames = new int[] {
             (int)PixelFormatAttributes.Acceleration,
             (int)PixelFormatAttributes.ColorBits,
@@ -32,7 +40,7 @@ public class GlWindowArb:GlWindow {
         attributeNameValuePairs[6] = (int)ContextAttrib.ContextFlags;
         var candidates = new List<int>();
         for (var i = 1; i <= extendedFormatCount; ++i) {
-            Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, 0, attributeNames.Length, attributeNames, attributeValues);
+            Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, attributeNames, attributeValues);
             if ((int)Acceleration.Full == attributeValues[0] && 24 <= attributeValues[1] && 24 == attributeValues[2] && 0 != attributeValues[3] && 0 != attributeValues[4] && (int)PixelType.Rgba == attributeValues[5] && 0 != attributeValues[6])
                 candidates.Add(i);
         }
@@ -103,4 +111,17 @@ public class GlWindowArb:GlWindow {
         RenderingContext = IntPtr.Zero;
         base.Create();
     }
+    protected override void OnPaint () {
+        Render();
+        Gdi32.SwapBuffers((IntPtr)Dc);
+        LastSync = Stopwatch.GetTimestamp();
+        ++FramesRendered;
+        Invalidate();
+    }
+
+    protected virtual void Render () {
+        Opengl.ClearColor(0.5f, 0.5f, 0.5f, 1f);
+        Opengl.Clear(BufferBit.ColorDepth);
+    }
+
 }

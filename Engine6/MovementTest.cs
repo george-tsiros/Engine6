@@ -40,7 +40,7 @@ class MovementTest:GlWindowArb {
         NamedFramebufferDrawBuffer(renderingFramebuffer, DrawBuffer.Color0);
         directionalFlat = new();
         Debug.Assert(0 < directionalFlat);
-        State.Program = directionalFlat;
+        UseProgram(directionalFlat);
         renderingVertexArray = new();
         var plane = Model.Plane(new(200, 200), new(100, 100));
         vertexCount = 3 * plane.Faces.Count;
@@ -59,7 +59,7 @@ class MovementTest:GlWindowArb {
         renderingVertexArray.Assign(new VertexBuffer<Vector4>(normals), directionalFlat.FaceNormal);
         passThrough = new();
         Debug.Assert(0 < passThrough);
-        State.Program = passThrough;
+        UseProgram(passThrough);
         presentationVertexArray = new();
         presentationVertexArray.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
         renderingSurface.BindTo(1);
@@ -87,9 +87,9 @@ class MovementTest:GlWindowArb {
         var dt = Dt;
         if (0f < dt)
             Move(Dt);
-        State.Program = directionalFlat;
-        State.Framebuffer = renderingFramebuffer;
-        State.VertexArray = renderingVertexArray;
+        UseProgram(directionalFlat);
+        State.FramebufferBinding = renderingFramebuffer;
+        State.VertexArrayBinding = renderingVertexArray;
         var (w, h) = Rect.Size;
         Viewport(0, 0, w, h);
         ClearColor(0, 0, 0, 1);
@@ -100,9 +100,9 @@ class MovementTest:GlWindowArb {
         directionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)w / h, 1f, 1000));
         directionalFlat.Model(Matrix4x4.Identity);
         DrawArrays(Primitive.Triangles, 0, vertexCount);
-        State.Program = passThrough;
-        State.Framebuffer = 0;
-        State.VertexArray = presentationVertexArray;
+        UseProgram(passThrough);
+        State.FramebufferBinding = 0;
+        State.VertexArrayBinding = presentationVertexArray;
         Viewport(0, 0, w, h);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);

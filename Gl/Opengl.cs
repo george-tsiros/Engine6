@@ -21,7 +21,7 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "glGetError", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
     public static extern GlErrorCodes GetError ();
     [DllImport(opengl32, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError = true)]
-    private static extern IntPtr CreateContext (IntPtr dc);
+    public static extern IntPtr CreateContext (IntPtr dc);
     [DllImport(opengl32, EntryPoint = "wglGetProcAddress", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
     public static extern IntPtr GetProcAddress ([MarshalAs(UnmanagedType.LPStr)] string name);
     [DllImport(opengl32, EntryPoint = "wglGetCurrentDC", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
@@ -61,14 +61,14 @@ unsafe public static class Opengl {
     [DllImport(opengl32, EntryPoint = "glFinish", ExactSpelling = true)]
     public static extern void Finish ();
     [DllImport(opengl32, EntryPoint = "glDeleteTextures", ExactSpelling = true)]
-    private static     unsafe extern void DeleteTextures (int count, int* ints);
+    private static unsafe extern void DeleteTextures (int count, int* ints);
     [DllImport(opengl32, EntryPoint = "glScissor", ExactSpelling = true)]
     public static extern void Scissor (int x, int y, int width, int height);
     [DllImport(opengl32, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
     unsafe public static extern void GetIntegerv (int count, int* ints);
     [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
+    public static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
     [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private extern static bool wglDeleteContext (IntPtr hglrc);
@@ -177,23 +177,27 @@ unsafe public static class Opengl {
     public static int GetSwapIntervalEXT () => Extensions.wglGetSwapIntervalEXT();
     public static bool SwapIntervalEXT (int frames) => 0 != Extensions.wglSwapIntervalEXT(frames);
 
-    public static int GetPixelFormatCount (IntPtr dc, int a, int b, int c) {
+    public static int GetPixelFormatCountARB (DeviceContext dc) {
         int pixelFormatCount = (int)PixelFormatAttributes.PixelFormatCount;
         var count = 0;
-        GetPixelFormatAttribivARB(dc, a, b, c, ref pixelFormatCount, ref count);
+        GetPixelFormatAttribivARB((IntPtr)dc, 1, 0, 1, ref pixelFormatCount, ref count);
         return count;
     }
 
-    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, int c, ref int attributes, ref int values) {
+    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int layerPlane, int attributeCount, ref int attributes, ref int values) {
         fixed (int* a = &attributes)
         fixed (int* v = &values)
-            _ = wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v);
+            _ = wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, layerPlane, attributeCount, a, v);
     }
 
-    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int b, int c, int[] attributes, int[] values) {
+    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int[] attributes, int[] values) {
+        if (attributes.Length != values.Length)
+            throw new ArgumentException("unequal array lengths", nameof(attributes));
+        if (0 == attributes.Length)
+            throw new ArgumentException("arrays may not be empty", nameof(attributes));
         fixed (int* a = attributes)
         fixed (int* v = values)
-            if (0 == wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, b, c, a, v))
+            if (0 == wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, 0, attributes.Length, a, v))
                 throw new WinApiException(nameof(wglGetPixelFormatAttribivARB));
     }
 
@@ -395,7 +399,7 @@ unsafe public static class Opengl {
         if (m.Groups[3].Success && Enum.TryParse<ProfileMask>(m.Groups[3].Value, out var profileMask))
             Profile = profileMask;
         else
-            Profile = ProfileMask.Unknown;
+            Profile = ProfileMask.Undefined;
 
         Extensions = new();
         if (ProfileMask.Core == Profile) {
@@ -422,18 +426,18 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, PixelFlag required, PixelFlag rejected) {
+    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration? configuration = null) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        var pfIndex = FindPixelFormat(dc, required, rejected, ref descriptor);
+        var pfIndex = FindPixelFormat(dc, ref descriptor, configuration ?? ContextConfiguration.Default);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
         var rc = CreateContext((IntPtr)dc);
         return rc != IntPtr.Zero ? rc : throw new WinApiException("failed wglCreateContext");
     }
-    public static ProfileMask Profile { get; private set; } = ProfileMask.Unknown;
+    public static ProfileMask Profile { get; private set; } = ProfileMask.Undefined;
     public static Version ShaderVersion { get; private set; }
     public static string ShaderVersionString { get; private set; }
     public static string VersionString { get; private set; }
@@ -443,14 +447,26 @@ unsafe public static class Opengl {
     public static bool IsSupported (string extension) => supportedExtensions.Contains(extension);
     public static IReadOnlyCollection<string> SupportedExtensions { get; } = supportedExtensions;
 
-    private static unsafe int FindPixelFormat (DeviceContext dc, PixelFlag required, PixelFlag rejected, ref PixelFormatDescriptor pfd) {
+    const PixelFlag RequiredFlags = PixelFlag.SupportOpengl | PixelFlag.DrawToWindow;
+    const PixelFlag RejectedFlags = PixelFlag.GenericAccelerated | PixelFlag.GenericFormat;
+
+    private static unsafe int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, ContextConfiguration configuration) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");
+
+        var requireDoubleBuffer = configuration.DoubleBuffer is bool _0 && _0 ? PixelFlag.DoubleBuffer : PixelFlag.None;
+        var rejectDoubleBuffer = configuration.DoubleBuffer is bool _1 && !_1 ? PixelFlag.DoubleBuffer : PixelFlag.None;
+        var requireComposited = configuration.Composited is bool _2 && _2 ? PixelFlag.SupportComposition : PixelFlag.None;
+        var rejectComposited = configuration.Composited is bool _3 && !_3 ? PixelFlag.SupportComposition : PixelFlag.None;
+        var required = RequiredFlags | requireDoubleBuffer | requireComposited;
+        var rejected = RejectedFlags | rejectDoubleBuffer | rejectComposited;
+        var colorBits = configuration.ColorBits ?? 32;
+        var depthBits = configuration.DepthBits ?? 24;
         var x = 0;
-        for (var i = 1; i <= formatCount; i++) {
+        for (var i = 1; i <= formatCount && 0 == x; i++) {
             Gdi32.DescribePixelFormat(dc, i, ref pfd);
-            if ((pfd.flags & required) == required && (pfd.flags & rejected) == 0 && x == 0)
+            if (pfd.colorBits == colorBits && pfd.depthBits == depthBits && required == (pfd.flags & required) && 0 == (pfd.flags & rejected))
                 x = i;
         }
 

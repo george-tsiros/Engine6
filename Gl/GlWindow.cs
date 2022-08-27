@@ -6,23 +6,12 @@ using Win32;
 using Common;
 
 public class GlWindow:Window {
-    private const PixelFlag RequiredFlags = PixelFlag.None
-        | PixelFlag.DrawToWindow
-        | PixelFlag.DoubleBuffer
-        | PixelFlag.SupportOpengl
-        //| PixelFlags.SwapExchange
-        //| PixelFlags.SupportComposition
-        ;
-    private const PixelFlag RejectedFlags = PixelFlag.None
-        | PixelFlag.GenericAccelerated
-        | PixelFlag.GenericFormat
-        ;
 
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
-    public GlWindow (Vector2i? size = null) : base(size) {
-        RenderingContext = Opengl.CreateSimpleContext(Dc, RequiredFlags, RejectedFlags);
+    public GlWindow (Vector2i? size = null,ContextConfiguration? configuration = null) : base(size) {
+        RenderingContext = Opengl.CreateSimpleContext(Dc, configuration);
         Opengl.MakeCurrent((IntPtr)Dc, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
         //_ = User32.ShowCursor(false);

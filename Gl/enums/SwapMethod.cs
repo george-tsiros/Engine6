@@ -1,3 +1,3 @@
 namespace Gl;
 
-internal enum SwapMethod { Exchange = 0x2028, Copy = 0x2029, Undefined = 0x202a, };
+public enum SwapMethod { Swap = 0x2028, Copy = 0x2029, Undefined = 0x202a, };

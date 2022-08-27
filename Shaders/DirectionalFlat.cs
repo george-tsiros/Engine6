@@ -10,11 +10,11 @@ public class DirectionalFlat:Program {
     protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjNCBmYWNlTm9ybWFsOyB1bmlmb3JtIHZlYzQgbGlnaHREaXJlY3Rpb247IHVuaWZvcm0gbWF0NCBtb2RlbCwgdmlldywgcHJvamVjdGlvbjsgb3V0IHZlYzQgY29sb3I7IHZvaWQgbWFpbiAoKSB7IGZsb2F0IGxpZ2h0SW50ZW5zaXR5ID0gZG90KG5vcm1hbGl6ZShtb2RlbCAqIGZhY2VOb3JtYWwpLnh5eiwgLWxpZ2h0RGlyZWN0aW9uLnh5eik7IGNvbG9yID0gdmVjNChsaWdodEludGVuc2l0eSwgbGlnaHRJbnRlbnNpdHksIGxpZ2h0SW50ZW5zaXR5LCAxKTsgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uICogdmlldyAqIG1vZGVsICogdmVydGV4UG9zaXRpb247IH0=";
     protected override string FragmentSource { get; } = "aW4gdmVjNCBjb2xvcjsgb3V0IHZlYzQgb3V0MDsgdm9pZCBtYWluICgpIHsgb3V0MCA9IGNvbG9yOyB9";
 
-    //size 1, type 35666
+    //size 1, type Vector4
     [GlAttrib("faceNormal")]
     public int FaceNormal { get; }
 
-    //size 1, type 35666
+    //size 1, type Vector4
     [GlAttrib("vertexPosition")]
     public int VertexPosition { get; }
 

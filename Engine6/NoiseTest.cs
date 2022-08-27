@@ -11,23 +11,6 @@ using Win32;
 using static Common.Maths;
 using Common;
 
-
-class Boxes:GlWindow {
-
-    public Boxes () {
-    }
-
-    protected override void OnLoad () {
-    }
-
-    protected override void Render () {
-        Viewport(new(), Rect.Size);
-        ClearColor(0f, 0f, 0f, 1f);
-        Clear(BufferBit.ColorDepth);
-        DrawArrays(Primitive.Triangles, 0, 6);
-    }
-}
-
 class NoiseTest:GlWindowArb {
 
     const int _WIDTH = 256, _HEIGHT = 256;
@@ -105,8 +88,8 @@ class NoiseTest:GlWindowArb {
         Viewport(new(), Rect.Size);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
-        State.Program = passThrough;
-        State.VertexArray = quad;
+        UseProgram(passThrough);
+        State.VertexArrayBinding = quad;
         tex.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);

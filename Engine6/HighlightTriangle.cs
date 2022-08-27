@@ -40,7 +40,7 @@ class HighlightTriangle:GlWindow {
         NamedFramebufferDrawBuffers(fb, DrawBuffer.Color0, DrawBuffer.Color1);
         NamedFramebufferReadBuffer(fb, DrawBuffer.Color1);
         vertexIndex = new();
-        State.Program = vertexIndex;
+        UseProgram(vertexIndex);
 
         vao = new();
         var v = new Vector4[Model.Faces.Count * 3];
@@ -58,7 +58,7 @@ class HighlightTriangle:GlWindow {
         vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 4, (float)size.X / size.Y, 1, 100));
         vertexIndex.View(Matrix4x4.Identity);
         passThrough = new();
-        State.Program = passThrough;
+        UseProgram(passThrough);
         quad = new();
 
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
@@ -89,14 +89,14 @@ class HighlightTriangle:GlWindow {
     int fovRatio = 4;
     uint lastTriangle = 0;
     protected override void Render () {
-        State.Framebuffer = fb;
+        State.FramebufferBinding = fb;
         color0.BindTo(0);
         vertexId.BindTo(1);
         Viewport(new(), Rect.Size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        State.Program = vertexIndex;
-        State.VertexArray = vao;
+        UseProgram(vertexIndex);
+        State.VertexArrayBinding = vao;
         State.DepthTest = true;
         State.DepthFunc = DepthFunction.LessEqual;
         State.CullFace = true;
@@ -109,11 +109,11 @@ class HighlightTriangle:GlWindow {
             lastTriangle = p / 3;
         }
 
-        State.Framebuffer = 0;
+        State.FramebufferBinding = 0;
         Viewport(Vector2i.Zero, Rect.Size);
         Clear(BufferBit.ColorDepth);
-        State.Program = passThrough;
-        State.VertexArray = quad;
+        UseProgram(passThrough);
+        State.VertexArrayBinding = quad;
         State.DepthTest = false;
         State.CullFace = false;
         passThrough.Tex(0);

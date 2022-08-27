@@ -92,28 +92,28 @@ public class {className}:Program {{
 
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {
-            var x = GetActiveAttrib(program, i);
-            if (x.name.StartsWith("gl_"))
+            var (size, type, name) = GetActiveAttrib(program, i);
+            if (name.StartsWith("gl_"))
                 continue;
             f.Write($@"
-    //size {x.size}, type {x.type}
-    [GlAttrib(""{x.name}"")]
-    public int {UppercaseFirst(x.name)} {{ get; }}
+    //size {size}, type {type}
+    [GlAttrib(""{name}"")]
+    public int {UppercaseFirst(name)} {{ get; }}
 ");
         }
 
         int uniformCount = GetProgram(program, ProgramParameter.ActiveUniforms);
         for (var i = 0; i < uniformCount; ++i) {
-            var y = GetActiveUniform(program, i);
-            if (y.name.StartsWith("gl_"))
+            var (size, type, name) = GetActiveUniform(program, i);
+            if (name.StartsWith("gl_"))
                 continue;
-            var fieldName = IsPrimitive(y.name) ? "@" + y.name : y.name;
-            var rawTypeName = y.type.ToString();
+            var fieldName = IsPrimitive(name) ? "@" + name : name;
+            var rawTypeName = type.ToString();
             f.Write($@"
-    //size {y.size}, type {y.type}
-    [GlUniform(""{y.name}"")]
+    //size {size}, type {type}
+    [GlUniform(""{name}"")]
     private readonly int {fieldName};
-    public void {UppercaseFirst(y.name)} ({UniformTypeToTypeName(y.type)} v) => Uniform({fieldName}, v);
+    public void {UppercaseFirst(name)} ({UniformTypeToTypeName(type)} v) => Uniform({fieldName}, v);
 ");
         }
 

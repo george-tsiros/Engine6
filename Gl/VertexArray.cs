@@ -18,7 +18,7 @@ public class VertexArray:OpenglObject {
     public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged => Assign(this, buffer, location, divisor);
 
     private static void Assign<T> (int vao, VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
-        State.VertexArray = vao;
+        State.VertexArrayBinding = vao;
         BindBuffer(BufferTarget.Array, buffer);
         Attrib<T>(vao, location, divisor);
     }
