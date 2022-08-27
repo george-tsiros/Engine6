@@ -61,6 +61,47 @@ unsafe class Engine6 {
         (int)PixelFormatAttributes.UnderlayCount,
     };
 
+    static readonly Type[] EnumTypes = {
+        typeof(Acceleration),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        typeof(PixelType),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        typeof(SwapMethod),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+    };
+
     static int[] Values = new int[Names.Length];
 
     static void TestPixelFormat (int pixelFormatIndex, TextWriter w) {
@@ -80,16 +121,20 @@ unsafe class Engine6 {
                 var fptr = Opengl.GetProcAddress(nameof(wglGetPixelFormatAttribivARB));
                 if (IntPtr.Zero == fptr)
                     throw new WinApiException("GetProcAddress");
-                w.Write(pixelFormatIndex);
+                w.Write("{0,-18}", pixelFormatIndex);
                 wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int>)fptr;
                 int value = 0;
                 int* v = &value;
                 fixed (int* names = Names)
                     for (var i = 0; i < Names.Length; ++i)
-                        if (0 != wglGetPixelFormatAttribivARB(dcPtr, pixelFormatIndex, 0, 1, names + i, v))
-                            w.Write("{0,18}", *v);
-                        else
-                            w.Write("{0,18}", '-');
+                        if (0 != wglGetPixelFormatAttribivARB(dcPtr, pixelFormatIndex, 0, 1, names + i, v)) {
+                            if (EnumTypes[i] is Type t) {
+                                w.Write("{0,-18}", Enum.ToObject(t, *v));
+                            } else {
+                                w.Write("{0,-18}", *v);
+                            }
+                        } else
+                            w.Write("{0,-18}", '-');
                 w.WriteLine();
                 Console.WriteLine($"{pixelFormatIndex}: {pfd}");
             } finally {
@@ -105,9 +150,9 @@ unsafe class Engine6 {
     static void Main () {
         var pixelFormatCount = GetPixelFormatCount();
         using var w = new StreamWriter("pf.txt", false, Encoding.ASCII) { NewLine = "\n" };
-        w.Write("Index");
+        w.Write("{0,-18}", "Index");
         for (var i = 0; i < Names.Length; ++i)
-            w.Write("{0,18}",(PixelFormatAttributes) Names[i]);
+            w.Write("{0,-18}", (PixelFormatAttributes)Names[i]);
         w.WriteLine();
         for (var i = 1; i <= pixelFormatCount; ++i)
             try {
