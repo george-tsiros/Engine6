@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -18,7 +18,7 @@
         <TargetFramework>net7.0-windows</TargetFramework>
     </PropertyGroup>
 
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DefineConstants>DEBUG;TRACE;</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
@@ -43,7 +43,7 @@
 
     <ItemGroup>
       <!--<PackageReference Include="BepuPhysics" Version="2.5.0-beta.6" />-->
-      <PackageReference Include="NAudio.Wasapi" Version="2.1.0" />
+      <!--<PackageReference Include="NAudio.Wasapi" Version="2.1.0" />-->
     </ItemGroup>
 
     <ItemGroup>
