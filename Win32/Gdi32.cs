@@ -67,6 +67,16 @@ public static class Gdi32 {
             if (0 == DescribePixelFormat((IntPtr)hdc, pixelFormat, PixelFormatDescriptor.Size, p))
                 throw new WinApiException(nameof(DescribePixelFormat));
     }
+
+    [DllImport(dll, EntryPoint = "GetPixelFormat", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern int GetPixelFormat_ (IntPtr dc);
+
+    public static int GetPixelFormat (DeviceContext dc) {
+        var pf = GetPixelFormat_((IntPtr)dc);
+        return 0 != pf ? pf : throw new WinApiException(nameof(GetPixelFormat));
+    }
+
+
     /// <summary>
     /// </summary>
     /// <param name="dc"></param>

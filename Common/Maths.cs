@@ -53,5 +53,31 @@ public static class Maths {
     public static double DoubleClamp (double value, double min, double max) => Math.Clamp(value, min, max);
     public static (int quotient, int remainder) IntDivRem (int a, int b) => Math.DivRem(a, b);
     public static (long quotient, long remainder) LongDivRem (long a, long b) => Math.DivRem(a, b);
+#elif NET5_0
+    public const double dTau = 2 * Math.PI;
+    public const float fTau = (float)(2 * Math.PI);
+    public const double dPi = Math.PI;
+    public const float fPi = (float)Math.PI;
+    public static double DoubleMin (double a, double b) => Math.Min(a, b);
+    public static double DoubleMax (double a, double b) => Math.Max(a, b);
+    public static int IntMin (int a, int b) => Math.Min(a, b);
+    public static int IntMax (int a, int b) => Math.Max(a, b);
+    public static float FloatSqrt (float a) => (float)Math.Sqrt(a);
+    public static double DoubleSqrt (double a) => Math.Sqrt(a);
+    public static int IntAbs (int a) => Math.Abs(a);
+    public static double DoubleAbs (double a) => Math.Abs(a);
+    public static double DoubleFloor (double a) => Math.Floor(a);
+    public static double DoubleRound (double a, int digits) => Math.Round(a, digits);
+    public static double DoubleRound (double a) => Math.Round(a);
+    public static float FloatRound (float a) => (float)Math.Round(a);
+    public static (double, double) DoubleSinCos (double angle) => (Math.Sin(angle),Math.Cos(angle));
+    public static double DoubleCos (double angle) => Math.Cos(angle);
+    public static double DoubleSin (double angle) => Math.Sin(angle);
+    public static double DoubleTan (double angle) => Math.Tan(angle);
+    public static int IntClamp (int value, int min, int max) => Math.Clamp(value, min, max);
+    public static float FloatClamp (float value, float min, float max) => Math.Clamp(value, min, max);
+    public static double DoubleClamp (double value, double min, double max) => Math.Clamp(value, min, max);
+    public static (int quotient, int remainder) IntDivRem (int a, int b) => (Math.DivRem(a, b, out var r), r);
+    public static (long quotient, long remainder) LongDivRem (long a, long b) => (Math.DivRem(a, b, out var r), r);
 #endif
 }

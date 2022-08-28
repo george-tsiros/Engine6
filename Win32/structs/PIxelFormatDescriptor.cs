@@ -35,10 +35,10 @@ public struct PixelFormatDescriptor {
     public uint damageMask;
 
     public override string ToString () =>
-        $"{colorBits,2} {depthBits,2} {accBits,2} {stencilBits,2} {visibleMask:x8} {string.Join(", ", Common.Functions.ToFlags(flags))}";
+        $"{colorBits,2} {depthBits,2} {stencilBits,2} {visibleMask:x8} {string.Join(", ", Common.Functions.ToFlags(flags))}";
 
     public const string Header = 
-        "cl dt ac st    vmask flags";
+        "cl dt st    vmask flags";
 
     public static ushort Size { get; } =
         (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
