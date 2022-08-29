@@ -2,17 +2,18 @@ namespace Gl;
 
 using System;
 using System.Diagnostics;
-using Win32;
 using Common;
+using Win32;
+using static Opengl;
 
 public class GlWindow:Window {
 
     protected IntPtr RenderingContext;
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
-    public GlWindow (Vector2i? size = null,ContextConfiguration? configuration = null) : base(size) {
-        var config = configuration ?? ContextConfiguration.Default;
-        RenderingContext = Opengl.CreateSimpleContext(Dc, config);
+
+    public GlWindow (ContextConfiguration? configuration = null, Vector2i? size = null) : base(size) {
+        RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
         LastSync = Stopwatch.GetTimestamp();
     }
 
@@ -22,6 +23,7 @@ public class GlWindow:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
+        base.OnKeyUp(k);
     }
 
     protected override void OnPaint () {
@@ -33,16 +35,16 @@ public class GlWindow:Window {
     }
 
     protected virtual void Render () {
-        Opengl.ClearColor(0.5f, 0.5f, 0.5f, 1f);
-        Opengl.Clear(BufferBit.ColorDepth);
+        ClearColor(0.5f, 0.5f, 0.5f, 1f);
+        Clear(BufferBit.ColorDepth);
     }
 
     private bool disposed = false;
     public override void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
-            Opengl.ReleaseCurrent(Dc);
-            Opengl.DeleteContext(RenderingContext);
+            ReleaseCurrent(Dc);
+            DeleteContext(RenderingContext);
             Dispose();
         }
     }

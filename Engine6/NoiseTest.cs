@@ -6,10 +6,12 @@ using static Gl.Opengl;
 using Shaders;
 using System.Numerics;
 using System;
+using System.IO;
 using System.Diagnostics;
 using Win32;
 using static Common.Maths;
 using Common;
+using System.Text;
 
 class NoiseTest:GlWindowArb {
 
@@ -17,7 +19,7 @@ class NoiseTest:GlWindowArb {
     const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     const int ThreadCount = 4;
 
-    public NoiseTest () : base() {
+    public NoiseTest () : base(null, new(_WIDTH, _HEIGHT)) {
         rowsPerThread = _HEIGHT / ThreadCount;
         raster = new(Rect.Size, 4, 1);
     }
@@ -98,7 +100,7 @@ class NoiseTest:GlWindowArb {
     void StartThreads () {
         countdown.Reset(ThreadCount);
         for (var i = 0; i < ThreadCount; ++i) {
-            var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, true);
+            var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, false);
             if (!ok)
                 throw new ApplicationException();
         }

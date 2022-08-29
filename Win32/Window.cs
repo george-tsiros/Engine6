@@ -29,6 +29,7 @@ public class Window:IDisposable {
     protected virtual void OnActivateApp (bool activated) { }
     protected virtual void OnButtonDown (MouseButton depressed) { }
     protected virtual void OnButtonUp (MouseButton released) { }
+    protected virtual void OnClosed () { }
     protected virtual void OnFocusChanged (bool isFocused) { }
     protected virtual void OnGetMinMaxInfo (ref MinMaxInfo minMaxInfo) { }
     protected virtual void OnIdle () { }
@@ -71,6 +72,7 @@ public class Window:IDisposable {
         var m = new Message();
         while (User32.GetMessage(ref m))
             _ = User32.DispatchMessageA(ref m);
+        OnClosed();
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }

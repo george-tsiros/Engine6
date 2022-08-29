@@ -18,13 +18,27 @@ class MovementTest:GlWindowArb {
         new(+1f, +1f, 0, 1),
         new(-1f, +1f, 0, 1),
     };
-
+    Vector2i lastCursorPosition = new(-1, -1);
+    protected override void OnButtonUp (MouseButton released) {
+        if (released.HasFlag(MouseButton.Right))
+            lastCursorPosition = new(-1, -1);
+        else
+            base.OnButtonUp(released);
+    }
     protected override void OnMouseMove (in Vector2i e) {
-        camera.Rotate(.001f * (Vector2)e);
+        if (Buttons.HasFlag(MouseButton.Right)) {
+            if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
+                var delta = lastCursorPosition - e;
+                camera.Rotate(-.001f * (Vector2)delta);
+            }
+            lastCursorPosition = e;
+            return;
+        }
+        base.OnMouseMove(e);
     }
 
     Vector4 lightDirection = new(0, -1, 0, 0);
-    Camera camera = new(new(0, 100f, 5));
+    Camera camera = new(new(0, 20f, 5));
     VertexArray renderingVertexArray, presentationVertexArray;
     Framebuffer renderingFramebuffer;
     int vertexCount = 0;
@@ -92,7 +106,7 @@ class MovementTest:GlWindowArb {
         State.VertexArrayBinding = renderingVertexArray;
         var (w, h) = Rect.Size;
         Viewport(0, 0, w, h);
-        ClearColor(0, 0, 0, 1);
+        ClearColor(0.2f, 0.2f, 0.2f, 1);
         Clear(BufferBit.ColorDepth);
         Enable(Capability.DepthTest);
         directionalFlat.LightDirection(lightDirection);

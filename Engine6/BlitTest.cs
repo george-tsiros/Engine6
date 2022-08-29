@@ -21,7 +21,7 @@ enum FooNum {
     TextureUpload,
 }
 
-internal class BlitTest:GlWindow {
+public class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
 
     static readonly Vector4[] QuadVertices = {
@@ -65,7 +65,7 @@ internal class BlitTest:GlWindow {
     DirectionalFlat directionalFlat;
     Lines lines;
 
-    public BlitTest (Model m = null, Vector2i? size = null) : base(size) {
+    public BlitTest (Model m = null, Vector2i? size = null) : base(size: size) {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);

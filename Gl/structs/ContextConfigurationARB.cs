@@ -8,6 +8,8 @@ public readonly struct ContextConfigurationARB {
     public ProfileMask? Profile { get; init; }
     public ContextFlag? Flags { get; init; }
     public static readonly ContextConfigurationARB Default = new() { 
-        BasicConfiguration = ContextConfiguration.Default,
+        BasicConfiguration = ContextConfiguration.Default, 
+        Flags = ContextFlag.Debug | ContextFlag.ForwardCompatible, 
+        Profile = ProfileMask.Core 
     };
 }

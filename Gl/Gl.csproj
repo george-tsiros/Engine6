@@ -14,12 +14,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DefineConstants>DEBUG;TRACE;__USE_STATE__;__USE_POINTERS__</DefineConstants>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>TRACE;__USE_STATE__;__USE_POINTERS__</DefineConstants>
+        <DefineConstants>TRACE</DefineConstants>
         <Optimize>true</Optimize>
     </PropertyGroup>
 

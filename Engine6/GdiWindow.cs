@@ -1,12 +1,8 @@
 namespace Engine6;
 
-using Common;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+using Common;
 using Win32;
-
 
 public class GdiWindow:Window {
 
