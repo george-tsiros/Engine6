@@ -44,9 +44,9 @@ public class GlWindowArb:Window {
         if (config.Profile is ProfileMask _7) {
             nameValuePairs.Add(ContextAttrib.ProfileMask, (int)_7);
         }
-        if (config.SwapMethod is SwapMethod _8) {
-            nameValuePairs.Add(ContextAttrib.SwapMethod, (int)_8);
-        }
+        //if (config.SwapMethod is SwapMethod _8) {
+        //    nameValuePairs.Add(ContextAttrib.SwapMethod, (int)_8);
+        //}
         if (config.Version is Version _9) {
             nameValuePairs.Add(ContextAttrib.MajorVersion, _9.Major);
             nameValuePairs.Add(ContextAttrib.MinorVersion, _9.Minor);
@@ -56,24 +56,24 @@ public class GlWindowArb:Window {
         var names = Array.ConvertAll(keys, k => (int)k);
         var values = new int[names.Length];
 
-        foreach (var i in pfdIndices) {
-            nativeWindow.Dispose();
-            nativeWindow = new(WndProc, new(640, 480));
-            Gdi32.DescribePixelFormat(Dc, i, ref pfd);
-            Gdi32.SetPixelFormat(Dc, i, ref pfd);
-            var ctx = Opengl.CreateContext((IntPtr)Dc);
-            try {
-                Debug.Assert(IntPtr.Zero != ctx);
-                Opengl.MakeCurrent(Dc, ctx);
-                try {
-                    Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, names, values);
-                } finally {
-                    Opengl.ReleaseCurrent(Dc);
-                }
-            } finally {
-                Opengl.DeleteContext(ctx);
-            }
-        }
+        //foreach (var i in pfdIndices) {
+        //    nativeWindow.Dispose();
+        //    nativeWindow = new(WndProc, new(640, 480));
+        //    Gdi32.DescribePixelFormat(Dc, i, ref pfd);
+        //    Gdi32.SetPixelFormat(Dc, i, ref pfd);
+        //    var ctx = Opengl.CreateContext((IntPtr)Dc);
+        //    try {
+        //        Debug.Assert(IntPtr.Zero != ctx);
+        //        Opengl.MakeCurrent(Dc, ctx);
+        //        try {
+        //            Opengl.GetPixelFormatAttribivARB((IntPtr)Dc, i, names, values);
+        //        } finally {
+        //            Opengl.ReleaseCurrent(Dc);
+        //        }
+        //    } finally {
+        //        Opengl.DeleteContext(ctx);
+        //    }
+        //}
         //if (config.BasicConfiguration is ContextConfiguration basicConfig) {
         //    if (basicConfig.ColorBits is int colorBits)
         //        nameValuePairs.Add((PixelFormatAttrib.ColorBits, colorBits));

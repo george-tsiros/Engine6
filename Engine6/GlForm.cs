@@ -12,18 +12,20 @@ using System.Numerics;
 
 public class GlForm:Form {
 
-    public GlForm (ContextConfiguration? configuration = null) {
+    public GlForm () {
         foreach (var style in Enum.GetValues<ControlStyles>())
             Debug.WriteLine($"{style}: {GetStyle(style)}");
         SetStyle(ControlStyles.UserPaint | ControlStyles.Opaque | ControlStyles.ResizeRedraw | ControlStyles.AllPaintingInWmPaint, true);
         Dc = new(Handle);
-        ctx = CreateSimpleContext(Dc, configuration);
-        MakeCurrent(Dc, ctx);
+
+        //var config = new ContextConfigurationARB { BasicConfiguration = new() { DoubleBuffer = true }, Profile=ProfileMask.Core };
+        //ctx = CreateContextARB(Dc, config);
+        ctx = CreateSimpleContext(Dc, new() { DoubleBuffer=true, SwapMethod=SwapMethod.Swap });
         va = new();
         p = new SolidColor();
         UseProgram(p);
         va.Assign(new VertexBuffer<Vector4>(Quad), p.VertexPosition, 0);
-        p.Color(new(1, 1, 1, 1));
+        p.Color(new(1, .5f, 1, 1));
         p.Model(Matrix4x4.Identity);
         p.Projection(Matrix4x4.Identity);
         p.View(Matrix4x4.Identity);
@@ -75,8 +77,10 @@ public class GlForm:Form {
         State.DepthFunc = DepthFunction.GreaterEqual;
         State.VertexArrayBinding = va;
         DrawArrays(Primitive.Triangles, 0, 6);
+        GlException.Assert();
 
         Gdi32.SwapBuffers(Dc);
+        GlException.Assert();
         Invalidate();
     }
 }

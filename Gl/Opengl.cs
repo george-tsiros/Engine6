@@ -68,7 +68,7 @@ unsafe public static class Opengl {
     unsafe public static extern void GetIntegerv (int count, int* ints);
     [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
+    private static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
     [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private extern static bool wglDeleteContext (IntPtr hglrc);
@@ -377,9 +377,7 @@ unsafe public static class Opengl {
         return str;
     }
 
-    public static void MakeCurrent (DeviceContext deviceContext, IntPtr renderingContext) {
-        if (IntPtr.Zero == renderingContext)
-            throw new ArgumentException("may not be zero, use ReleaseCurrent to release a context", nameof(renderingContext));
+    private static void MakeCurrent (DeviceContext deviceContext, IntPtr renderingContext) {
         if (!wglMakeCurrent((IntPtr)deviceContext, renderingContext))
             throw new WinApiException(nameof(wglMakeCurrent));
 
@@ -394,15 +392,15 @@ unsafe public static class Opengl {
         var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )?");
         if (!m.Success)
             throw new Exception($"'{VersionString}' not a version string");
-        ShaderVersion = Version.Parse(m.Groups[1].Value);
-        ShaderVersionString = $"{ShaderVersion.Major}{ShaderVersion.Minor}0";
+        ContextVersion = Version.Parse(m.Groups[1].Value);
+        ShaderVersionString = $"{ContextVersion.Major}{ContextVersion.Minor}0";
         if (m.Groups[3].Success && Enum.TryParse<ProfileMask>(m.Groups[3].Value, out var profileMask))
             Profile = profileMask;
         else
             Profile = ProfileMask.Undefined;
 
         Extensions = new();
-        if (ProfileMask.Core == Profile) {
+        if (LegacyOpenglVersion < ContextVersion) {
             int count = GetIntegerv(IntParameter.NumExtensions);
             for (var i = 0; i < count; ++i) {
                 var p = Extensions.glGetStringi((int)OpenglString.Extensions, i);
@@ -414,7 +412,7 @@ unsafe public static class Opengl {
             supportedExtensions.AddRange(GetString(OpenglString.Extensions).Split(' '));
         };
     }
-
+    static readonly Version LegacyOpenglVersion = new(3, 0, 0);
     public static void DeleteContext (IntPtr renderingContext) {
         if (!wglDeleteContext(renderingContext))
             throw new WinApiException(nameof(wglDeleteContext));
@@ -426,19 +424,48 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration? configuration = null) {
+    public static IntPtr CreateContextARB (DeviceContext dc, ContextConfigurationARB configuration) {
+        var ctx = CreateSimpleContext(dc, configuration.BasicConfiguration);
+        var version = configuration.Version ?? ContextVersion;
+        var contextFlags = configuration.Flags ?? ContextFlag.Debug;
+        var profileMask = configuration.Profile ?? ProfileMask.Core;
+        var nameValuePairs = new int[] {
+            (int)ContextAttrib.MajorVersion, version.Major,
+            (int)ContextAttrib.MinorVersion, version.Minor,
+            (int)ContextAttrib.ContextFlags, (int) contextFlags,
+            (int)ContextAttrib.ProfileMask, (int)profileMask,
+            0, 0,
+        };
+        var ctxARB = CreateContextAttribsARB(dc, nameValuePairs);
+        MakeCurrent(dc, ctxARB);
+        DeleteContext(ctx);
+        return ctxARB;
+    }
+    private static unsafe IntPtr CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
+        if (attribs.Length < 2 || attribs[^1] != 0 || attribs[^2] != 0)
+            throw new ArgumentException("must have at least 2 arguments", nameof(attribs));
+        fixed (int* p = attribs) {
+            var ctxARB = wglCreateContextAttribsARB((IntPtr)dc, 0, p);
+            return 0 != ctxARB ? ctxARB : throw new WinApiException(nameof(wglCreateContextAttribsARB));
+        }
+    }
+
+    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
         if (GetCurrentContext() != IntPtr.Zero)
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        var pfIndex = FindPixelFormat(dc, ref descriptor, configuration ?? ContextConfiguration.Default);
+        var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
         var rc = CreateContext((IntPtr)dc);
-        return rc != IntPtr.Zero ? rc : throw new WinApiException("failed wglCreateContext");
+        if (0==rc)
+            throw new WinApiException("failed wglCreateContext");
+        MakeCurrent(dc, rc);
+        return rc;
     }
     public static ProfileMask Profile { get; private set; } = ProfileMask.Undefined;
-    public static Version ShaderVersion { get; private set; }
+    public static Version ContextVersion { get; private set; }
     public static string ShaderVersionString { get; private set; }
     public static string VersionString { get; private set; }
     public static string Renderer { get; private set; }
@@ -459,14 +486,20 @@ unsafe public static class Opengl {
         var rejectDoubleBuffer = configuration.DoubleBuffer is bool _1 && !_1 ? PixelFlag.DoubleBuffer : PixelFlag.None;
         var requireComposited = configuration.Composited is bool _2 && _2 ? PixelFlag.SupportComposition : PixelFlag.None;
         var rejectComposited = configuration.Composited is bool _3 && !_3 ? PixelFlag.SupportComposition : PixelFlag.None;
-        var required = RequiredFlags | requireDoubleBuffer | requireComposited;
-        var rejected = RejectedFlags | rejectDoubleBuffer | rejectComposited;
+        var (requireSwapMethod, rejectSwapMethod) = configuration.SwapMethod switch {
+            SwapMethod.Copy => (PixelFlag.SwapCopy, PixelFlag.SwapExchange),
+            SwapMethod.Swap => (PixelFlag.SwapExchange, PixelFlag.SwapCopy),
+            SwapMethod.Undefined => (PixelFlag.None, PixelFlag.SwapExchange | PixelFlag.SwapCopy),
+            _ => (PixelFlag.None, PixelFlag.None)
+        };
+        var required = RequiredFlags | requireDoubleBuffer | requireComposited | requireSwapMethod;
+        var rejected = RejectedFlags | rejectDoubleBuffer | rejectComposited | rejectSwapMethod;
         var colorBits = configuration.ColorBits ?? 32;
         var depthBits = configuration.DepthBits ?? 24;
         var x = 0;
         for (var i = 1; i <= formatCount && 0 == x; i++) {
             Gdi32.DescribePixelFormat(dc, i, ref pfd);
-            if (pfd.colorBits == colorBits && pfd.depthBits == depthBits && required == (pfd.flags & required) && 0 == (pfd.flags & rejected))
+            if (colorBits == pfd.colorBits && depthBits <= pfd.depthBits && required == (pfd.flags & required) && 0 == (pfd.flags & rejected))
                 x = i;
         }
 

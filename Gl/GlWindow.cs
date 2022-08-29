@@ -11,8 +11,8 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
     public GlWindow (Vector2i? size = null,ContextConfiguration? configuration = null) : base(size) {
-        RenderingContext = Opengl.CreateSimpleContext(Dc, configuration);
-        Opengl.MakeCurrent(Dc, RenderingContext);
+        var config = configuration ?? ContextConfiguration.Default;
+        RenderingContext = Opengl.CreateSimpleContext(Dc, config);
         LastSync = Stopwatch.GetTimestamp();
     }
 
