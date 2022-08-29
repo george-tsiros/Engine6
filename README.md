@@ -4,7 +4,7 @@
 
 **Engine6**: sixth iteration of the toy engine. `GlWindow` is the main class, so to speak. `FastNoiseLite` is [FastNoiseLite](https://github.com/Auburn/FastNoiseLite). Recently added GlWindowArb which extends GlWindow to use the "newer"/"extended" opengl context creation method. 
 
-**FixEol**: this converts all CR-LF line endings to LF line endings with extreme prejudice before every build.
+**FixEol**: this converts all CR-LF line endings to LF line endings with extreme prejudice after every build.
 
 **Gl**: anything directly or indirectly related to opengl. 
 

@@ -12,9 +12,8 @@ public class GlWindow:Window {
     protected long LastSync { get; private set; }
     public GlWindow (Vector2i? size = null,ContextConfiguration? configuration = null) : base(size) {
         RenderingContext = Opengl.CreateSimpleContext(Dc, configuration);
-        Opengl.MakeCurrent((IntPtr)Dc, RenderingContext);
+        Opengl.MakeCurrent(Dc, RenderingContext);
         LastSync = Stopwatch.GetTimestamp();
-        //_ = User32.ShowCursor(false);
     }
 
     protected override void OnKeyUp (Key k) {
@@ -25,24 +24,9 @@ public class GlWindow:Window {
         }
     }
 
-    //private bool skipMove;
-    //protected override void OnMouseMove (in Vector2i p) {
-    //    if (!skipMove) {
-    //        skipMove = true;
-    //        var cs = Rect.Center;
-    //        _ = User32.SetCursorPos(cs.X, cs.Y);
-    //        base.OnMouseMove(new(p.X - cs.X, cs.Y - p.Y));
-    //    } else
-    //        skipMove = false;
-    //}
-
-    //protected override void OnIdle () {
-    //    Invalidate();
-    //}
-
     protected override void OnPaint () {
         Render();
-        Gdi32.SwapBuffers((IntPtr)Dc);
+        Gdi32.SwapBuffers(Dc);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
         Invalidate();
@@ -57,7 +41,7 @@ public class GlWindow:Window {
     public override void Dispose (bool dispose) {
         if (dispose && !disposed) {
             disposed = true;
-            Opengl.ReleaseCurrent((IntPtr)Dc);
+            Opengl.ReleaseCurrent(Dc);
             Opengl.DeleteContext(RenderingContext);
             Dispose();
         }

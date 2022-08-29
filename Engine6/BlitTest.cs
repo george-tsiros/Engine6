@@ -249,6 +249,7 @@ internal class BlitTest:GlWindow {
                 //    CursorGrabbed = !CursorGrabbed;
                 //    return;
         }
+        base.OnKeyDown(k);
     }
 
     protected override void OnMouseMove (in Vector2i e) {

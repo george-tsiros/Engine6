@@ -15,16 +15,17 @@ unsafe class Engine6 {
         return Gdi32.GetPixelFormatCount(dc);
     }
 
+
     //private static delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB_Type;
     private static delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
 
     static readonly int[] Names = {
-        (int)PixelFormatAttributes.ColorBits,
-        (int)PixelFormatAttributes.DepthBits,
-        (int)PixelFormatAttributes.StencilBits,
-        (int)PixelFormatAttributes.DoubleBuffer,
-        (int)PixelFormatAttributes.PixelType,
-        (int)PixelFormatAttributes.SwapMethod,
+        (int)PixelFormatAttrib.ColorBits,
+        (int)PixelFormatAttrib.DepthBits,
+        (int)PixelFormatAttrib.StencilBits,
+        (int)PixelFormatAttrib.DoubleBuffer,
+        (int)PixelFormatAttrib.PixelType,
+        (int)PixelFormatAttrib.SwapMethod,
     };
 
     static readonly Type[] Conversions = {
@@ -43,7 +44,6 @@ unsafe class Engine6 {
         using var dc = new DeviceContext(f.Handle);
         var dcPtr = (IntPtr)dc;
         var requestedPfd = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
-        Gdi32.DescribePixelFormat(dc, requestedPixelFormatIndex, ref requestedPfd);
         Gdi32.DescribePixelFormat(dc, requestedPixelFormatIndex, ref requestedPfd);
         Gdi32.SetPixelFormat(dc, requestedPixelFormatIndex, ref requestedPfd);
         var actualPixelFormatIndex = Gdi32.GetPixelFormat(dc);
@@ -85,27 +85,29 @@ unsafe class Engine6 {
 
     [STAThread]
     static void Main () {
-        var pixelFormatCount = GetPixelFormatCount();
-        using var w = new StreamWriter("pf.txt", false, Encoding.ASCII) { NewLine = "\n" };
-        w.Write("Index");
-        for (var i = 0; i < Names.Length; ++i)
-            w.Write(",{0}", (PixelFormatAttributes)Names[i]);
-        w.WriteLine();
-        for (var i = 1; i <= pixelFormatCount; ++i)
-            try {
-                TestPixelFormat(i, w);
-            } catch (WinApiException e) {
-                Console.WriteLine($"{i}: {e}");
-            } catch (GlException e) {
-                Console.WriteLine($"{i}: {e}");
-            } catch (Exception e) { 
-                Console.WriteLine($"{i}: {e}");
-            }
-        Console.WriteLine("done");
-        //_ = Console.ReadLine();
-        //Debug.WriteLine(f.DialogResult);
-        //Debug.WriteLine(f.PixelFormatDescriptor);
-        //Debug.WriteLine(f.Index);
+        using var f = new NoiseTest();
+        f.Run();
+        //using var f = new GdiWindow();
+        //f.Run();
+        //var pixelFormatCount = GetPixelFormatCount();
+        //using var w = new StreamWriter("pf.txt", false, Encoding.ASCII) { NewLine = "\n" };
+        //w.Write("Index");
+        //for (var i = 0; i < Names.Length; ++i)
+        //    w.Write(",{0}", (PixelFormatAttrib)Names[i]);
+        //w.WriteLine();
+        //for (var i = 1; i <= pixelFormatCount; ++i)
+        //    try {
+        //        TestPixelFormat(i, w);
+        //    } catch (WinApiException e) {
+        //        Console.WriteLine($"{i}: {e}");
+        //    } catch (GlException e) {
+        //        Console.WriteLine($"{i}: {e}");
+        //    } catch (Exception e) {
+        //        Console.WriteLine($"{i}: {e}");
+        //    }
+        //Console.WriteLine(f.DialogResult);
+        //Console.WriteLine(f.PixelFormatDescriptor);
+        //Console.WriteLine(f.Index);
         //new BlitTest(new(1280,720)).Run();
         //new HighlightTriangle(new("data/teapot.obj", true), new(800,600)).Run();
     }

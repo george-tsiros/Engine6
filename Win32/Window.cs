@@ -7,12 +7,19 @@ using System.Diagnostics;
 
 public delegate nint WndProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
 
-public class Window:WindowBase {
+public class Window:IDisposable {
 
-    public Window (Vector2i? size = null) : base(size) { }
+    protected Win32Window nativeWindow;
+    public DeviceContext Dc { get; private set; }
+    readonly Vector2i clientSize;
+    public Window (Vector2i? size = null) {
+        nativeWindow = new(WndProc, clientSize = size ?? new(640, 480)) { };
+    }
 
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
+
+    protected Rectangle Rect { get; set; }
 
     private readonly int[] KeyState = new int[256 / 32];
     private bool painting;
@@ -22,10 +29,6 @@ public class Window:WindowBase {
     protected virtual void OnActivateApp (bool activated) { }
     protected virtual void OnButtonDown (MouseButton depressed) { }
     protected virtual void OnButtonUp (MouseButton released) { }
-    protected virtual void OnCreate (ref CreateStructA createStruct) {
-        Rect = new(createStruct.x, createStruct.y, createStruct.x + createStruct.w, createStruct.y + createStruct.h);
-    }
-
     protected virtual void OnFocusChanged (bool isFocused) { }
     protected virtual void OnGetMinMaxInfo (ref MinMaxInfo minMaxInfo) { }
     protected virtual void OnIdle () { }
@@ -39,9 +42,7 @@ public class Window:WindowBase {
     protected virtual void OnNcCreate (ref CreateStructA createStruct) { }
     protected virtual void OnPaint () { }
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
-    protected virtual void OnWindowPosChanged (ref WindowPos windowPos) {
-    }
-
+    protected virtual void OnWindowPosChanged (ref WindowPos windowPos) { }
     protected virtual void OnWindowPosChanging (ref WindowPos p) { }
 
     public bool IsKeyDown (Key key) {
@@ -54,7 +55,7 @@ public class Window:WindowBase {
     protected void Invalidate () {
         if (!invalidated) {
             invalidated = true;
-            User32.InvalidateWindow(WindowHandle);
+            User32.InvalidateWindow(nativeWindow.WindowHandle);
         }
     }
 
@@ -62,11 +63,11 @@ public class Window:WindowBase {
         trackMouseStruct = new() {
             size = TrackMouseEvent.Size,
             flags = TrackMouseFlag.Leave,
-            window = WindowHandle,
+            window = nativeWindow.WindowHandle,
         };
         OnLoad();
-        User32.UpdateWindow(WindowHandle);
-        _ = User32.ShowWindow(WindowHandle, CmdShow.ShowNormal);
+        User32.UpdateWindow(nativeWindow.WindowHandle);
+        _ = User32.ShowWindow(nativeWindow.WindowHandle, CmdShow.ShowNormal);
         var m = new Message();
         while (User32.GetMessage(ref m))
             _ = User32.DispatchMessageA(ref m);
@@ -76,7 +77,7 @@ public class Window:WindowBase {
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
 
-    override unsafe protected nint WndProc (IntPtr h, WinMessage m, nuint w, nint l) {
+    protected unsafe nint WndProc (IntPtr h, WinMessage m, nuint w, nint l) {
         //Debug.WriteLine(m);
         switch (m) {
             case WinMessage.Move: {
@@ -111,8 +112,9 @@ public class Window:WindowBase {
                 return 0;
             case WinMessage.Create:
                 if (0 != l) {
-                    CreateStructA* createStruct = (CreateStructA*)l;
-                    OnCreate(ref *createStruct);
+                    CreateStructA createStruct = *(CreateStructA*)l;
+                    Rect = new(createStruct.x, createStruct.y, createStruct.x + createStruct.w, createStruct.y + createStruct.h);
+                    Dc = new(h);
                     // yes, it is different from NcCreate
                     return 0;
                 }
@@ -218,10 +220,10 @@ public class Window:WindowBase {
                     try {
                         var ps = new PaintStruct();
                         painting = true;
-                        var dc = User32.BeginPaint(WindowHandle, ref ps);
+                        var dc = User32.BeginPaint(h, ref ps);
                         if (!ps.rect.IsEmpty)
                             OnPaint();
-                        User32.EndPaint(WindowHandle, ref ps);
+                        User32.EndPaint(h, ref ps);
                         invalidated = false;
                     } finally {
                         painting = false;
@@ -245,5 +247,19 @@ public class Window:WindowBase {
     protected static Vector2i Split (nint l) {
         var i = (int)(l & int.MaxValue);
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
+    }
+    private bool disposed;
+
+    public void Dispose () {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public virtual void Dispose (bool dispose) {
+        if (dispose && !disposed) {
+            disposed = true;
+            Dc.Close();
+            nativeWindow.Dispose();
+        }
     }
 }

@@ -1,4 +1,5 @@
 namespace Engine6;
+
 using System.Windows.Forms;
 using System;
 using Win32;
@@ -11,16 +12,16 @@ using System.Numerics;
 
 public class GlForm:Form {
 
-
-    public GlForm (ContextConfiguration? configuration =null) {
+    public GlForm (ContextConfiguration? configuration = null) {
         foreach (var style in Enum.GetValues<ControlStyles>())
             Debug.WriteLine($"{style}: {GetStyle(style)}");
         SetStyle(ControlStyles.UserPaint | ControlStyles.Opaque | ControlStyles.ResizeRedraw | ControlStyles.AllPaintingInWmPaint, true);
         Dc = new(Handle);
         ctx = CreateSimpleContext(Dc, configuration);
-        MakeCurrent((IntPtr)Dc, ctx);
+        MakeCurrent(Dc, ctx);
         va = new();
         p = new SolidColor();
+        UseProgram(p);
         va.Assign(new VertexBuffer<Vector4>(Quad), p.VertexPosition, 0);
         p.Color(new(1, 1, 1, 1));
         p.Model(Matrix4x4.Identity);
@@ -32,7 +33,7 @@ public class GlForm:Form {
     void Closing_self (object sender, CancelEventArgs args) {
         va.Dispose();
         p.Dispose();
-        ReleaseCurrent((IntPtr)Dc);
+        ReleaseCurrent(Dc);
         ctx = IntPtr.Zero;
         Dc.Close();
         Dc = null;
@@ -69,11 +70,13 @@ public class GlForm:Form {
         ClearColor(0, 0.5f, 0, 1);
         Clear(BufferBit.ColorDepth);
         UseProgram(p);
+        State.CullFace = true;
+        State.DepthTest = true;
+        State.DepthFunc = DepthFunction.GreaterEqual;
         State.VertexArrayBinding = va;
         DrawArrays(Primitive.Triangles, 0, 6);
-        var dc = e.Graphics.GetHdc();
-        Gdi32.SwapBuffers(dc);
-        e.Graphics.ReleaseHdc(dc);
+
+        Gdi32.SwapBuffers(Dc);
         Invalidate();
     }
 }

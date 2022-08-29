@@ -96,8 +96,8 @@ public static class Gdi32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SwapBuffers_ (IntPtr dc);
 
-    public static void SwapBuffers (IntPtr dc) {
-        if (!SwapBuffers_(dc))
+    public static void SwapBuffers (DeviceContext dc) {
+        if (!SwapBuffers_((IntPtr)dc))
             throw new WinApiException(nameof(SwapBuffers));
     }
 

@@ -178,7 +178,7 @@ unsafe public static class Opengl {
     public static bool SwapIntervalEXT (int frames) => 0 != Extensions.wglSwapIntervalEXT(frames);
 
     public static int GetPixelFormatCountARB (DeviceContext dc) {
-        int pixelFormatCount = (int)PixelFormatAttributes.PixelFormatCount;
+        int pixelFormatCount = (int)PixelFormatAttrib.PixelFormatCount;
         var count = 0;
         GetPixelFormatAttribivARB((IntPtr)dc, 1, 0, 1, ref pixelFormatCount, ref count);
         return count;
@@ -356,10 +356,10 @@ unsafe public static class Opengl {
         GetIntegerv((int)p, &i);
         return i;
     }
-    public static void ReleaseCurrent (IntPtr deviceContext) {
+    public static void ReleaseCurrent (DeviceContext deviceContext) {
         if (IntPtr.Zero == GetCurrentContext())
             throw new Exception("no current context");
-        if (!wglMakeCurrent(deviceContext, IntPtr.Zero))
+        if (!wglMakeCurrent((IntPtr)deviceContext, IntPtr.Zero))
             throw new WinApiException(nameof(wglMakeCurrent));
         Extensions = null;
         supportedExtensions.Clear();
@@ -377,10 +377,10 @@ unsafe public static class Opengl {
         return str;
     }
 
-    public static void MakeCurrent (IntPtr deviceContext, IntPtr renderingContext) {
+    public static void MakeCurrent (DeviceContext deviceContext, IntPtr renderingContext) {
         if (IntPtr.Zero == renderingContext)
             throw new ArgumentException("may not be zero, use ReleaseCurrent to release a context", nameof(renderingContext));
-        if (!wglMakeCurrent(deviceContext, renderingContext))
+        if (!wglMakeCurrent((IntPtr)deviceContext, renderingContext))
             throw new WinApiException(nameof(wglMakeCurrent));
 
         wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int>)GetProcAddress(nameof(wglGetPixelFormatAttribivARB));

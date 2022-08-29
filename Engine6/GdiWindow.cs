@@ -9,7 +9,6 @@ using Win32;
 
 
 public class GdiWindow:Window {
-    protected override WindowStyle Style => WindowStyle.ClipPopup;
 
     private const WindowPosFlags SelfMoveFlags = WindowPosFlags.NoSize | WindowPosFlags.NoSendChanging | WindowPosFlags.NoRedraw | WindowPosFlags.NoZOrder;
     private Vector2i lastCursorLocation = new(-1, -1);
@@ -21,16 +20,18 @@ public class GdiWindow:Window {
         switch (k) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
-                break;
-            default:
                 return;
         }
-        Invalidate();
+        base.OnKeyUp(k);
     }
 
     protected override void OnButtonDown (MouseButton depressed) {
-        if (depressed.HasFlag(MouseButton.Right))
+        switch (depressed) {
+            case MouseButton.Right:
             lastCursorLocation = CursorLocation;
+                return;
+        }
+        base.OnButtonDown(depressed);
     }
 
     bool changingWindowPosition;
@@ -38,13 +39,13 @@ public class GdiWindow:Window {
         var d = p - lastCursorLocation;
         if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
             changingWindowPosition = true;
-            User32.SetWindowPos(WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
+            User32.SetWindowPos(nativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
             changingWindowPosition = false;
         }
     }
 
     protected override void OnLoad () {
-        User32.SetWindow(WindowHandle, WindowStyle.Overlapped);
+        User32.SetWindow(nativeWindow.WindowHandle, WindowStyle.Overlapped);
         dib = new(Dc, Rect.Width, Rect.Height);
     }
 
