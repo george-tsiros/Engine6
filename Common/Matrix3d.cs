@@ -1,4 +1,4 @@
-﻿namespace Common;
+namespace Common;
 using System;
 using static Common.Maths;
 

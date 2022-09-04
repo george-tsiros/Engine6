@@ -16,15 +16,16 @@ public class Win32Window:IDisposable {
 
     static Win32Window () {
         var wc = new WindowClassW() {
-            style = ClassStyle.VRedraw | ClassStyle.HRedraw,
+            style = ClassStyle.None,
             wndProc = staticWndProc,
+            hCursor = User32.LoadCursor(SystemCursor.Arrow),
             classname = nameof(Win32Window),
         };
         ClassAtom = User32.RegisterClass(ref wc);
     }
 
     public IntPtr WindowHandle { get; private set; }
-    public WindowStyle Style { get; init; } = WindowStyle.ClipPopup;
+    public WindowStyle Style { get; init; } = WindowStyle.OverlappedWindow;
     private readonly WndProc WndProc;
 
     public Win32Window (WndProc proc, Vector2i size) {
@@ -32,7 +33,6 @@ public class Win32Window:IDisposable {
         creating = this;
         var eh = User32.CreateWindow(ClassAtom, size.X, size.Y, SelfHandle, Style);
         Debug.Assert(eh == WindowHandle);
-
     }
 
     private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {

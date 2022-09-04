@@ -62,7 +62,7 @@ class HighlightTriangle:GlWindow {
         quad = new();
 
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
-        State.SwapInterval = 1;
+        SetSwapInterval(1);
     }
 
     static readonly Vector4[] QuadVertices = {
@@ -83,20 +83,19 @@ class HighlightTriangle:GlWindow {
                 fovRatio = IntMax(fovRatio - 1, 2);
                 return;
         }
-        base.OnKeyUp(k);
     }
 
     int fovRatio = 4;
     uint lastTriangle = 0;
     protected override void Render () {
-        State.FramebufferBinding = fb;
+        BindFramebuffer(fb);
         color0.BindTo(0);
         vertexId.BindTo(1);
         Viewport(new(), Rect.Size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         UseProgram(vertexIndex);
-        State.VertexArrayBinding = vao;
+        BindVertexArray(vao);
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
@@ -109,11 +108,11 @@ class HighlightTriangle:GlWindow {
             lastTriangle = p / 3;
         }
 
-        State.FramebufferBinding = 0;
+        BindDefaultFramebuffer();
         Viewport(Vector2i.Zero, Rect.Size);
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);
-        State.VertexArrayBinding = quad;
+        BindVertexArray(quad);
         Disable(Capability.DepthTest);
         Disable(Capability.CullFace);
         passThrough.Tex(0);

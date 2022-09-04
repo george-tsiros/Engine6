@@ -9,25 +9,25 @@ public static class User32 {
     private const string dll = nameof(User32) + ".dll";
 
     [DllImport(dll, SetLastError = true)]
-    internal static extern IntPtr GetDC (IntPtr windowHandle);
+    internal static extern nint GetDC (nint windowHandle);
 
     [DllImport(dll, EntryPoint = "LoadCursorW", ExactSpelling = true, SetLastError = true)]
-    private static extern IntPtr LoadCursor (IntPtr moduleHandle, nuint cursor);
+    private static extern nint LoadCursor (nint moduleHandle, nint cursor);
 
-    public static IntPtr LoadCursor (SystemCursor cursor) {
-        var ptr = LoadCursor(IntPtr.Zero, (nuint)cursor);
-        return IntPtr.Zero != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
+    public static nint LoadCursor (SystemCursor cursor) {
+        var ptr = LoadCursor(0, (nint)cursor);
+        return 0 != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
     }
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
+    internal static extern bool ReleaseDC (nint hwnd, nint dc);
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetWindowRect (IntPtr windowHandle, ref Rectangle rect);
+    private static extern bool GetWindowRect (nint windowHandle, ref Rectangle rect);
 
-    public static Rectangle GetWindowRect (IntPtr hwnd) {
+    public static Rectangle GetWindowRect (nint hwnd) {
         Rectangle r = new();
         return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
@@ -36,7 +36,7 @@ public static class User32 {
     public static extern int SetCursorPos (int x, int y);
 
     [DllImport(dll, SetLastError = true)]
-    public static extern IntPtr SetCursor (IntPtr cursor);
+    public static extern nint SetCursor (nint cursor);
 
     //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
@@ -44,16 +44,16 @@ public static class User32 {
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ScreenToClient (IntPtr windowHandle, [In, Out] ref Vector2i position);
+    private static extern bool ScreenToClient (nint windowHandle, [In, Out] ref Vector2i position);
 
-    public static Vector2i ScreenToClient (IntPtr hwnd, Vector2i point) =>
+    public static Vector2i ScreenToClient (nint hwnd, Vector2i point) =>
         ScreenToClient(hwnd, ref point) ? point : throw new WinApiException(nameof(ScreenToClient));
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ClientToScreen (IntPtr windowHandle, [In, Out] ref Vector2i position);
+    private static extern bool ClientToScreen (nint windowHandle, [In, Out] ref Vector2i position);
 
-    public static Vector2i ClientToScreen (IntPtr hwnd, Vector2i point) =>
+    public static Vector2i ClientToScreen (nint hwnd, Vector2i point) =>
         ClientToScreen(hwnd, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
 
     [DllImport(dll, EntryPoint = "TrackMouseEvent", ExactSpelling = true, SetLastError = true)]
@@ -85,26 +85,26 @@ public static class User32 {
 
     //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
-    //public static extern bool UnregisterClassW ([In] IntPtr className, [In, Optional] IntPtr hInstance);
+    //public static extern bool UnregisterClassW ([In] nint className, [In, Optional] nint hInstance);
 
     //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
-    //public static extern bool DestroyCursor ([In] IntPtr cursor);
+    //public static extern bool DestroyCursor ([In] nint cursor);
 
     [DllImport(dll, EntryPoint = "DestroyWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool DestroyWindow_ (IntPtr windowHandle);
+    private static extern bool DestroyWindow_ (nint windowHandle);
 
-    public static void DestroyWindow (IntPtr hwnd) {
+    public static void DestroyWindow (nint hwnd) {
         if (!DestroyWindow_(hwnd))
             throw new WinApiException(nameof(DestroyWindow));
     }
 
     //[DllImport(dll, SetLastError = true)]
-    //public static extern IntPtr LoadImageA (IntPtr instance, [MarshalAs(UnmanagedType.LPStr)] string name, uint type, int cx, int cy, uint load);
+    //public static extern nint LoadImageA (nint instance, [MarshalAs(UnmanagedType.LPStr)] string name, uint type, int cx, int cy, uint load);
 
     //[DllImport(dll, SetLastError = true)]
-    //unsafe public static extern IntPtr CreateCursor (IntPtr instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
+    //unsafe public static extern nint CreateCursor (nint instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
 
     /// <summary>
     /// ?
@@ -127,102 +127,102 @@ public static class User32 {
     /// <paramref name="param"/> may be NULL if no additional data is needed.</param>
     /// <returns></returns>
     [DllImport(dll, EntryPoint = "CreateWindowExW", ExactSpelling = true, SetLastError = true)]
-    private static extern IntPtr CreateWindowEx (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+    private static extern nint CreateWindowEx (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
 
-    public static IntPtr CreateWindow (ushort atom, int width = 0, int height = 0, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowEx(styleEx, new(atom), IntPtr.Zero, style, 100, 100, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandle(null), IntPtr.Zero);
-        return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowEx));
+    public static nint CreateWindow (ushort atom, int width = 0, int height = 0, nint? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
+        var p = CreateWindowEx(styleEx, new(atom), 0, style, 100, 100, width, height, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
+        return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
 
     [DllImport(dll, EntryPoint = "DefWindowProcW", ExactSpelling = true, CharSet = CharSet.Unicode)]
-    public static extern nint DefWindowProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
+    public static extern nint DefWindowProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
     [DllImport(dll)]
     public static extern void PostQuitMessage (int code);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ShowWindow (IntPtr handle, CmdShow cmdShow);
+    public static extern bool ShowWindow (nint handle, CmdShow cmdShow);
 
     [DllImport(dll)]
     public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);
 
     [DllImport(dll, EntryPoint = "UpdateWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UpdateWindow_ (IntPtr handle);
+    private static extern bool UpdateWindow_ (nint handle);
 
-    public static void UpdateWindow (IntPtr windowHandle) {
+    public static void UpdateWindow (nint windowHandle) {
         if (!UpdateWindow_(windowHandle))
             throw new WinApiException(nameof(UpdateWindow));
     }
 
     [DllImport(dll)]
-    private static extern int GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
+    private static extern int GetMessageW (ref Message m, nint handle, uint min, uint max);
 
     public static bool GetMessage (ref Message m) =>
-        0 != GetMessageW(ref m, IntPtr.Zero, 0, 0);
+        0 != GetMessageW(ref m, 0, 0, 0);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
+    public static extern bool PeekMessageW (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool TranslateMessage (ref Message m);
 
     [DllImport(dll, EntryPoint = "DispatchMessageW", ExactSpelling = true)]
-    public static extern IntPtr DispatchMessage (ref Message m);
+    public static extern nint DispatchMessage (ref Message m);
 
     [DllImport(dll, SetLastError = true)]
-    public static extern IntPtr SetCapture (IntPtr windowHandle);
+    public static extern nint SetCapture (nint windowHandle);
 
     [DllImport(dll, SetLastError = true)]
     public static extern void ReleaseCapture ();
 
     [DllImport(dll, SetLastError = true)]
-    public static extern IntPtr GetCapture ();
+    public static extern nint GetCapture ();
 
     [DllImport(dll, SetLastError = true)]
-    internal static extern int MessageBox (IntPtr hWnd, string text, string caption, uint type);
+    internal static extern int MessageBox (nint hWnd, string text, string caption, uint type);
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool MoveWindow (IntPtr windowHandle, int x, int y, int w, int h, bool repaint);
+    public static extern bool MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint);
 
     //[DllImport(dll, SetLastError = true, CharSet = CharSet.Auto)]
     //[return: MarshalAs(UnmanagedType.Bool)]
-    //public static extern bool SetWindowText (IntPtr windowHandle, string text);
+    //public static extern bool SetWindowText (nint windowHandle, string text);
 
     //[DllImport(dll, SetLastError = true, CharSet = CharSet.Ansi)]
     //[return: MarshalAs(UnmanagedType.Bool)]
-    //public static extern bool PostMessageA (IntPtr handle, uint msg, IntPtr w, IntPtr l);
+    //public static extern bool PostMessageA (nint handle, uint msg, nint w, nint l);
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetClientRect (IntPtr handle, ref Rectangle clientRect);
+    private static extern bool GetClientRect (nint handle, ref Rectangle clientRect);
 
-    public static Rectangle GetClientRect (IntPtr hwnd) {
+    public static Rectangle GetClientRect (nint hwnd) {
         Rectangle r = new();
         return GetClientRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetClientRect));
     }
 
     [DllImport(dll)]
-    public static extern IntPtr BeginPaint (IntPtr hWnd, [In, Out] ref PaintStruct paint);
+    public static extern nint BeginPaint (nint hWnd, [In, Out] ref PaintStruct paint);
 
     [DllImport(dll)]
-    public static extern void EndPaint (IntPtr hWnd, [In] ref PaintStruct paint);
+    public static extern void EndPaint (nint hWnd, [In] ref PaintStruct paint);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private unsafe static extern bool InvalidateRect (IntPtr handle, Rectangle* rect, nint erase);
+    private unsafe static extern bool InvalidateRect (nint handle, Rectangle* rect, nint erase);
 
-    public unsafe static void InvalidateRect (IntPtr handle, [In] in Rectangle rect, bool erase) {
+    public unsafe static void InvalidateRect (nint handle, [In] in Rectangle rect, bool erase) {
         fixed (Rectangle* r = &rect)
             if (!InvalidateRect(handle, r, erase ? 1 : 0))
                 throw new Exception(nameof(User32.InvalidateRect));
     }
 
-    public unsafe static void InvalidateWindow (IntPtr windowHandle) {
+    public unsafe static void InvalidateWindow (nint windowHandle) {
         if (!InvalidateRect(windowHandle, null, 0))
             throw new Exception(nameof(User32.InvalidateRect));
     }
@@ -241,7 +241,7 @@ public static class User32 {
     /// In both of these cases, <paramref name="size"/> is set to the minimum size required for the <paramref name="data"/> buffer.</returns>
 
     //[DllImport(dll, SetLastError = true)]
-    //unsafe public static extern int GetRawInputDeviceInfoW (IntPtr device, RawInputDeviceCommand command, void* data, uint* size);
+    //unsafe public static extern int GetRawInputDeviceInfoW (nint device, RawInputDeviceCommand command, void* data, uint* size);
 
     /// <param name="devices">An array of <see cref="RawInputDeviceList"/> structures for the devices attached to the system.If null, the number of devices are returned in <paramref name="count"/>.</param>
     /// <param name="count">If <paramref name="devices"/> is null, the function populates this variable with the number of devices attached to the system; otherwise, this variable specifies the number of <see cref="RawInputDeviceList"/> structures that can be contained in the buffer to which <paramref name="devices"/> points. If this value is less than the number of devices attached to the system, the function returns the actual number of devices in this variable and fails with ERROR_INSUFFICIENT_BUFFER.</param>
@@ -253,35 +253,35 @@ public static class User32 {
     //public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
     //[DllImport(dll, SetLastError = true)]
-    //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
+    //public static extern nint GetWindowLongPtrA (nint hWnd, int nIndex);
 
     [DllImport(dll, EntryPoint = "SetWindowPos", ExactSpelling = true, SetLastError = true)]
-    private static extern bool SetWindowPos_ (IntPtr window, IntPtr after, int x, int y, int w, int h, uint flags);
+    private static extern bool SetWindowPos_ (nint window, nint after, int x, int y, int w, int h, uint flags);
 
-    public static void SetWindowPos (IntPtr window, IntPtr after, int x, int y, int w, int h, WindowPosFlags flags)
+    public static void SetWindowPos (nint window, nint after, int x, int y, int w, int h, WindowPosFlags flags)
         => SetWindowPos_(window, after, x, y, w, h, (uint)flags);
 
     [DllImport(dll, SetLastError = true)]
-    private static extern IntPtr SetWindowLongPtrW (IntPtr windowHandle, int index, IntPtr value);
+    private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
 
-    private static void SetWindow (IntPtr windowHandle, SetWindowParameter index, IntPtr value) {
+    private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
         var before = Kernel32.GetLastError();
         if (0 != before)
             throw new WinApiException("pre-existing error", before);
         var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
-        if (IntPtr.Zero == previousValue) {
+        if (0 == previousValue) {
             var after = Kernel32.GetLastError();
             if (0 != after)
                 throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
         }
     }
 
-    public static void SetWindow (IntPtr windowHandle, WndProc proc) =>
+    public static void SetWindow (nint windowHandle, WndProc proc) =>
         SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
 
-    public static void SetWindow (IntPtr windowHandle, WindowStyleEx style) =>
-        SetWindow(windowHandle, SetWindowParameter.ExStyle, (IntPtr)style);
+    public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
+        SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
 
-    public static void SetWindow (IntPtr windowHandle, WindowStyle style) =>
-        SetWindow(windowHandle, SetWindowParameter.Style, (IntPtr)style);
+    public static void SetWindow (nint windowHandle, WindowStyle style) =>
+        SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
 }

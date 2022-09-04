@@ -3,6 +3,7 @@ using System;
 
 [Flags]
 public enum ClassStyle:uint {
+    None = 0,
     VRedraw = 1 << 0,
     HRedraw = 1 << 1,
     DoubleClicks = 1 << 3,

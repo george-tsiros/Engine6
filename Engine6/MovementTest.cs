@@ -18,13 +18,25 @@ class MovementTest:GlWindowArb {
         new(+1f, +1f, 0, 1),
         new(-1f, +1f, 0, 1),
     };
-    Vector2i lastCursorPosition = new(-1, -1);
-    protected override void OnButtonUp (MouseButton released) {
+
+    private Vector2i lastCursorPosition = new(-1, -1);
+    private Vector4 lightDirection = new(0, -1, 0, 0);
+    private Camera camera = new(new(0, 20f, 5));
+    private VertexArray renderingVertexArray;
+    private VertexArray presentationVertexArray;
+    private Framebuffer renderingFramebuffer;
+    private int vertexCount = 0;
+    private DirectionalFlat directionalFlat;
+    private PassThrough passThrough;
+    private long previousSync;
+
+    private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
+
+    protected override void OnButtonUp (MouseButton released, PointShort p) {
         if (released.HasFlag(MouseButton.Right))
             lastCursorPosition = new(-1, -1);
-        else
-            base.OnButtonUp(released);
     }
+
     protected override void OnMouseMove (in Vector2i e) {
         if (Buttons.HasFlag(MouseButton.Right)) {
             if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
@@ -34,16 +46,7 @@ class MovementTest:GlWindowArb {
             lastCursorPosition = e;
             return;
         }
-        base.OnMouseMove(e);
     }
-
-    Vector4 lightDirection = new(0, -1, 0, 0);
-    Camera camera = new(new(0, 20f, 5));
-    VertexArray renderingVertexArray, presentationVertexArray;
-    Framebuffer renderingFramebuffer;
-    int vertexCount = 0;
-    DirectionalFlat directionalFlat;
-    PassThrough passThrough;
 
     protected override void OnLoad () {
         renderingFramebuffer = new();
@@ -80,8 +83,6 @@ class MovementTest:GlWindowArb {
         passThrough.Tex(1);
     }
 
-    long previousSync;
-    float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
     void Move (float dt) {
         var dx = IsKeyDown(Key.C) ? 1 : 0;
         if (IsKeyDown(Key.Z))
@@ -97,13 +98,14 @@ class MovementTest:GlWindowArb {
         var velocity = IsKeyDown(Key.ShiftKey) ? 8f : 5f;
         camera.Walk(velocity * dt * Vector3.Normalize(new(dx, 0, dz)));
     }
+
     protected override void Render () {
         var dt = Dt;
         if (0f < dt)
             Move(Dt);
         UseProgram(directionalFlat);
-        State.FramebufferBinding = renderingFramebuffer;
-        State.VertexArrayBinding = renderingVertexArray;
+        BindFramebuffer(renderingFramebuffer);
+        BindVertexArray(renderingVertexArray);
         var (w, h) = Rect.Size;
         Viewport(0, 0, w, h);
         ClearColor(0.2f, 0.2f, 0.2f, 1);
@@ -115,8 +117,8 @@ class MovementTest:GlWindowArb {
         directionalFlat.Model(Matrix4x4.Identity);
         DrawArrays(Primitive.Triangles, 0, vertexCount);
         UseProgram(passThrough);
-        State.FramebufferBinding = 0;
-        State.VertexArrayBinding = presentationVertexArray;
+        BindDefaultFramebuffer();
+        BindVertexArray(presentationVertexArray);
         Viewport(0, 0, w, h);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);

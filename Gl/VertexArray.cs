@@ -17,13 +17,13 @@ public class VertexArray:OpenglObject {
 
     public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged => Assign(this, buffer, location, divisor);
 
-    private static void Assign<T> (int vao, VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
-        State.VertexArrayBinding = vao;
+    private static void Assign<T> (VertexArray vao, VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
+        BindVertexArray(vao);
         BindBuffer(BufferTarget.Array, buffer);
         Attrib<T>(vao, location, divisor);
     }
 
-    private static void Attrib<T> (int vao, int location, int divisor) where T : unmanaged {
+    private static void Attrib<T> (VertexArray vao, int location, int divisor) where T : unmanaged {
         var (size, type, isInteger) = SizeAndTypeOf(typeof(T));
         if (size > 4)
             for (var i = 0; i < 4; ++i)
@@ -32,7 +32,7 @@ public class VertexArray:OpenglObject {
             Attrib(vao, location, size, type, 0, 0, divisor, isInteger);
     }
 
-    private static void Attrib (int id, int location, int size, AttribType type, int stride, int offset, int divisor, bool isInteger) {
+    private static void Attrib (VertexArray id, int location, int size, AttribType type, int stride, int offset, int divisor, bool isInteger) {
         EnableVertexArrayAttrib(id, location);
         if (isInteger)
             VertexAttribIPointer(location, size, type, stride, offset);

@@ -7,6 +7,6 @@ public enum MouseButton:ushort {
     Left = 0x1,
     Right = 0x2,
     Middle = 0x10,
-    ButtonX1 = 0x20,
-    ButtonX2 = 0x40,
+    X1 = 0x20,
+    X2 = 0x40,
 }

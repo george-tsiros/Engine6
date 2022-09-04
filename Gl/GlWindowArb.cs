@@ -23,7 +23,6 @@ public class GlWindowArb:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
-        base.OnKeyUp(k);
     }
 
     protected override void OnPaint () {
@@ -49,13 +48,12 @@ public class GlWindowArb:Window {
         }
     }
     private Vector2i lastCursorLocation = new(-1, -1);
-    protected override void OnButtonDown (MouseButton depressed) {
+    protected override void OnButtonDown (MouseButton depressed, PointShort p) {
         switch (depressed) {
             case MouseButton.Right:
             lastCursorLocation = CursorLocation;
                 return;
         }
-        base.OnButtonDown(depressed);
     }
 
     bool changingWindowPosition;
@@ -64,7 +62,7 @@ public class GlWindowArb:Window {
         var d = p - lastCursorLocation;
         if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
             changingWindowPosition = true;
-            User32.SetWindowPos(nativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
+            User32.SetWindowPos(NativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
             changingWindowPosition = false;
         }
     }

@@ -22,7 +22,7 @@ public class Sampler2D:OpenglObject {
     public void BindTo (int t) {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
-        State.ActiveTexture = t;
+        ActiveTexture(t);
         BindTexture(Const.TEXTURE_2D, Id);
     }
 

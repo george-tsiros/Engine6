@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -146,8 +146,9 @@
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="rd /s/q $(outdir)" />
+        <Exec Command="md $(outdir)" />
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

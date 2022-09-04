@@ -83,6 +83,10 @@
         </None>
     </ItemGroup>
 
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="rd /s/q $(outdir)" />
+        <Exec Command="md $(outdir)" />
+    </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="..\fixeol\bin\fixeol.exe" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />

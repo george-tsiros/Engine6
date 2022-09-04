@@ -77,7 +77,7 @@ public class BlitTest:GlWindowArb {
         FaceZ = new double[model.Faces.Count];
         FacesAndDots = new (double, int)[model.Faces.Count];
 
-        State.SwapInterval = 1;
+        SetSwapInterval(1);
     }
 
     protected override void OnLoad () {
@@ -137,27 +137,28 @@ public class BlitTest:GlWindowArb {
         if (IsKeyDown(Key.D))
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
-        State.FramebufferBinding = offscreenFramebuffer;
-        Viewport(new(), Rect.Size);
+        BindFramebuffer(offscreenFramebuffer);
+        var size = Rect.Size;
+        Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
 
         prf.Enter((int)FooNum.Software);
         RenderSoftware();
         prf.Leave();
-        State.FramebufferBinding = 0;
-        State.VertexArrayBinding = quad;
+        BindDefaultFramebuffer();
+        BindVertexArray(quad);
         UseProgram(passThrough);
-        Viewport(new(), Rect.Size);
+        Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
-        State.VertexArrayBinding = someLines;
+       BindVertexArray(someLines);
         UseProgram(lines);
         Disable(Capability.DepthTest);
         Disable(Capability.CullFace);
         lines.Color(new(0, 1, 0, 1));
-        lines.RenderSize(Rect.Size);
+        lines.RenderSize(size);
         lines.Offset(cursorLocation);
         DrawArrays(Primitive.LineStrip, 0, 3);
 
@@ -175,14 +176,15 @@ public class BlitTest:GlWindowArb {
         var vertexCount = Vertices.Length;
         var model = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(-camera.Location);
-        var projection = Matrix4d.Project(dPi / 4, (double)Rect.Width / Rect.Height, 1, 100);
+        var r = Rect;
+        var projection = Matrix4d.Project(dPi / 4, (double)r.Width / r.Height, 1, 100);
         for (var i = 0; i < vertexCount; ++i) {
             var modelSpace = Vertices[i] * model;
             ModelSpace[i] = modelSpace.Xyz();
             var projected = modelSpace * translation * projection;
             var n = projected.Xyz() / projected.W;
             ClipSpace[i] = n;
-            ScreenSpace[i] = NormalizedToScreen(n, Rect.Size);
+            ScreenSpace[i] = NormalizedToScreen(n, r.Size);
         }
         prf.Leave();
         prf.Enter((int)FooNum.Visibility);
@@ -216,13 +218,12 @@ public class BlitTest:GlWindowArb {
             for (var i = 0; i < drawn; ++i) {
                 var (d, idx) = FacesAndDots[i];
                 var intensity = IntClamp((int)DoubleFloor(d * 256), byte.MinValue, byte.MaxValue);
+                var color = Color.FromRgb(intensity, intensity, intensity);
                 var (a, b, c) = Faces[idx];
-                softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], Color.FromRgb(intensity, intensity, intensity));
+                softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], color);
             }
         }
         softwareRenderSurface.DrawString(VersionString, Font, 0, textRow += Font.Height);
-        softwareRenderSurface.DrawString(IsSupported("GL_ARB_clip_control").ToString(), Font, 0, textRow += Font.Height);
-        softwareRenderSurface.DrawString(syncs[1 + State.SwapInterval], Font, 0, textRow += Font.Height);
 
         prf.Leave();
         prf.Enter((int)FooNum.TextureUpload);
@@ -230,7 +231,7 @@ public class BlitTest:GlWindowArb {
         softwareRenderTexture.Upload(softwareRenderSurface);
         prf.Leave();
         UseProgram(passThrough);
-        State.VertexArrayBinding = quad;
+        BindVertexArray(quad);
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.Always);
         Enable(Capability.CullFace);
@@ -249,7 +250,6 @@ public class BlitTest:GlWindowArb {
                 //    CursorGrabbed = !CursorGrabbed;
                 //    return;
         }
-        base.OnKeyDown(k);
     }
 
     protected override void OnMouseMove (in Vector2i e) {

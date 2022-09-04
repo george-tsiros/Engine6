@@ -11,4 +11,11 @@
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <TargetFramework>net7.0</TargetFramework>
     </PropertyGroup>
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="rd /s/q $(outdir)" />
+        <Exec Command="md $(outdir)" />
+    </Target>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="..\fixeol\bin\fixeol.exe" />
+    </Target>
 </Project>

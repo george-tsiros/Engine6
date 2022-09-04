@@ -71,7 +71,7 @@ class NoiseTest:GlWindowArb {
         var ahndle = GetTextureHandleARB(sampler);
         MakeTextureHandleResidentARB(ahndle);
         GlException.Assert();
-        State.SwapInterval = 1;
+        SetSwapInterval(1);
     }
 
     static readonly Vector4[] QuadVertices = {
@@ -91,7 +91,7 @@ class NoiseTest:GlWindowArb {
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);
-        State.VertexArrayBinding = quad;
+        BindVertexArray(quad);
         tex.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);

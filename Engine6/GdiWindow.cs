@@ -29,16 +29,14 @@ public class GdiWindow:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
-        base.OnKeyUp(k);
     }
 
-    protected override void OnButtonDown (MouseButton depressed) {
+    protected override void OnButtonDown (MouseButton depressed, PointShort p) {
         switch (depressed) {
             case MouseButton.Right:
             lastCursorLocation = CursorLocation;
                 return;
         }
-        base.OnButtonDown(depressed);
     }
 
     bool changingWindowPosition;
@@ -46,13 +44,13 @@ public class GdiWindow:Window {
         var d = p - lastCursorLocation;
         if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
             changingWindowPosition = true;
-            User32.SetWindowPos(nativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
+            User32.SetWindowPos(NativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
             changingWindowPosition = false;
         }
     }
 
     protected override void OnLoad () {
-        User32.SetWindow(nativeWindow.WindowHandle, WindowStyle.Overlapped);
+        User32.SetWindow(NativeWindow.WindowHandle, WindowStyle.Overlapped);
         dib = new(Dc, Rect.Width, Rect.Height);
     }
 

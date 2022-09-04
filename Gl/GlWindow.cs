@@ -23,7 +23,6 @@ public class GlWindow:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
-        base.OnKeyUp(k);
     }
 
     protected override void OnPaint () {
