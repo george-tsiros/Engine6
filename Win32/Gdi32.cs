@@ -55,7 +55,7 @@ public static class Gdi32 {
     /// <param name="ppfd">the function sets the members of the PIXELFORMATDESCRIPTOR structure pointed to by ppfd according to the specified pixel format.</param>
     /// <returns>If the function succeeds, the return value is the maximum pixel format index of the device context.If the function fails, the return value is zero. To get extended error information, call <see cref="Kernel32.GetLastError"/>.</returns>
     [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public unsafe static extern int DescribePixelFormat (IntPtr hdc, int pixelFormat, int bytes, PixelFormatDescriptor* ppfd);
+    internal static unsafe extern int DescribePixelFormat (nint dc, int iPixelFormat, uint bytes, PixelFormatDescriptor* p);
 
     public unsafe static int GetPixelFormatCount (DeviceContext hdc) {
         var count = DescribePixelFormat((IntPtr)hdc, 0, 0, null);

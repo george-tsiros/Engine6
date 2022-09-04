@@ -3,7 +3,7 @@ namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 
-public struct WindowClassA {
+public struct WindowClassW {
     public ClassStyle style;
     public WndProc wndProc;
     public int cbClsExtra;
@@ -12,8 +12,8 @@ public struct WindowClassA {
     public IntPtr hIcon;
     public IntPtr hCursor;
     public IntPtr hbrBackground;
-    [MarshalAs(UnmanagedType.LPStr)]
+    [MarshalAs(UnmanagedType.LPWStr)]
     public string lpszmenuname;
-    [MarshalAs(UnmanagedType.LPStr)]
+    [MarshalAs(UnmanagedType.LPWStr)]
     public string classname;
 }

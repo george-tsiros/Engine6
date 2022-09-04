@@ -8,22 +8,22 @@ using Common;
 public static class User32 {
     private const string dll = nameof(User32) + ".dll";
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     internal static extern IntPtr GetDC (IntPtr windowHandle);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr LoadCursorA (IntPtr moduleHandle, nuint cursor);
+    [DllImport(dll, EntryPoint = "LoadCursorW", ExactSpelling = true, SetLastError = true)]
+    private static extern IntPtr LoadCursor (IntPtr moduleHandle, nuint cursor);
 
     public static IntPtr LoadCursor (SystemCursor cursor) {
-        var ptr = LoadCursorA(IntPtr.Zero, (nuint)cursor);
+        var ptr = LoadCursor(IntPtr.Zero, (nuint)cursor);
         return IntPtr.Zero != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
     }
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseDC (IntPtr hwnd, IntPtr dc);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetWindowRect (IntPtr windowHandle, ref Rectangle rect);
 
@@ -32,31 +32,31 @@ public static class User32 {
         return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     public static extern int SetCursorPos (int x, int y);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     public static extern IntPtr SetCursor (IntPtr cursor);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool GetCursorPos ([Out] out Vector2i position);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ScreenToClient (IntPtr windowHandle, [In, Out] ref Vector2i position);
 
     public static Vector2i ScreenToClient (IntPtr hwnd, Vector2i point) =>
         ScreenToClient(hwnd, ref point) ? point : throw new WinApiException(nameof(ScreenToClient));
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ClientToScreen (IntPtr windowHandle, [In, Out] ref Vector2i position);
 
     public static Vector2i ClientToScreen (IntPtr hwnd, Vector2i point) =>
         ClientToScreen(hwnd, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
 
-    [DllImport(dll, EntryPoint = "TrackMouseEvent", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "TrackMouseEvent", ExactSpelling = true, SetLastError = true)]
     private static extern int TrackMouseEvent_ (ref TrackMouseEvent tme);
 
     public static void TrackMouseEvent (ref TrackMouseEvent tme) {
@@ -64,34 +64,34 @@ public static class User32 {
             throw new WinApiException(nameof(TrackMouseEvent));
     }
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //public static extern int RegisterRawInputDevices (ref RawInputDevice raw, uint deviceCount, uint structSize);
 
-    [DllImport(dll, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    private static extern ushort RegisterClassExA ([In] ref WindowClassExA windowClass);
+    [DllImport(dll, EntryPoint = "RegisterClassExW", ExactSpelling = true, CharSet = CharSet.Unicode)]
+    private static extern ushort RegisterClassEx (ref WindowClassExW windowClass);
 
-    public static ushort RegisterClass (ref WindowClassExA windowClass) {
-        var atom = RegisterClassExA(ref windowClass);
-        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassExA));
+    public static ushort RegisterClass (ref WindowClassExW windowClass) {
+        var atom = RegisterClassEx(ref windowClass);
+        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassEx));
     }
 
-    [DllImport(dll, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    private static extern ushort RegisterClassA ([In] ref WindowClassA windowClass);
+    [DllImport(dll, EntryPoint = "RegisterClassW", ExactSpelling = true, CharSet = CharSet.Unicode)]
+    private static extern ushort RegisterClassW_ (ref WindowClassW windowClass);
 
-    public static ushort RegisterClass (ref WindowClassA windowClass) {
-        var atom = RegisterClassA(ref windowClass);
-        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassA));
+    public static ushort RegisterClass (ref WindowClassW windowClass) {
+        var atom = RegisterClassW_(ref windowClass);
+        return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassW_));
     }
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool UnregisterClassW ([In] IntPtr className, [In, Optional] IntPtr hInstance);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool DestroyCursor ([In] IntPtr cursor);
 
-    [DllImport(dll, EntryPoint = "DestroyWindow", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "DestroyWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DestroyWindow_ (IntPtr windowHandle);
 
@@ -100,10 +100,10 @@ public static class User32 {
             throw new WinApiException(nameof(DestroyWindow));
     }
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //public static extern IntPtr LoadImageA (IntPtr instance, [MarshalAs(UnmanagedType.LPStr)] string name, uint type, int cx, int cy, uint load);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //unsafe public static extern IntPtr CreateCursor (IntPtr instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
 
     /// <summary>
@@ -120,34 +120,34 @@ public static class User32 {
     /// <param name="parentHandle">A handle to the parent or owner window of the window being created. To create a child window or an owned window, supply a valid window handle. This parameter is optional for pop-up windows.To create a message-only window, supply HWND_MESSAGE or a handle to an existing message-only window.</param>
     /// <param name="menu">A handle to a menu, or specifies a child-window identifier, depending on the window style. For an overlapped or pop-up window, hMenu identifies the menu to be used with the window; it can be NULL if the class menu is to be used. For a child window, hMenu specifies the child-window identifier, an integer value used by a dialog box control to notify its parent about events. The application determines the child-window identifier; it must be unique for all child windows with the same parent window.</param>
     /// <param name="instance">A handle to the instance of the module to be associated with the window.</param>
-    /// <param name="param">Pointer to a value to be passed to the window through the <seealso cref="CreateStructA"/> structure (lpCreateParams member) pointed to by the <paramref name="param"/> of the WM_CREATE message. 
+    /// <param name="param">Pointer to a value to be passed to the window through the <seealso cref="CreateStructW"/> structure (lpCreateParams member) pointed to by the <paramref name="param"/> of the WM_CREATE message. 
     /// This message is sent to the created window by this function before it returns. 
     /// If an application calls CreateWindow to create a MDI client window, <paramref name="param"/> should point to a CLIENTCREATESTRUCT structure. 
     /// If an MDI client window calls this to create an MDI child window, <paramref name="param"/> should point to an MDICREATESTRUCT structure. 
     /// <paramref name="param"/> may be NULL if no additional data is needed.</param>
     /// <returns></returns>
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr CreateWindowExA (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
+    [DllImport(dll, EntryPoint = "CreateWindowExW", ExactSpelling = true, SetLastError = true)]
+    private static extern IntPtr CreateWindowEx (WindowStyleEx exStyle, IntPtr classNameOrAtom, IntPtr title, WindowStyle style, int x, int y, int width, int height, IntPtr parentHandle, IntPtr menu, IntPtr instance, IntPtr param);
 
     public static IntPtr CreateWindow (ushort atom, int width = 0, int height = 0, IntPtr? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowExA(styleEx, new(atom), IntPtr.Zero, style, 100, 100, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandleA(null), IntPtr.Zero);
-        return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowExA));
+        var p = CreateWindowEx(styleEx, new(atom), IntPtr.Zero, style, 100, 100, width, height, IntPtr.Zero, IntPtr.Zero, moduleHandle ?? Kernel32.GetModuleHandle(null), IntPtr.Zero);
+        return IntPtr.Zero != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
 
-    [DllImport(dll)]
-    public static extern nint DefWindowProcA (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
+    [DllImport(dll, EntryPoint = "DefWindowProcW", ExactSpelling = true, CharSet = CharSet.Unicode)]
+    public static extern nint DefWindowProc (IntPtr hWnd, WinMessage msg, nuint wparam, nint lparam);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     public static extern void PostQuitMessage (int code);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ShowWindow (IntPtr handle, CmdShow cmdShow);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);
 
-    [DllImport(dll, EntryPoint = "UpdateWindow", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "UpdateWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UpdateWindow_ (IntPtr handle);
 
@@ -156,48 +156,48 @@ public static class User32 {
             throw new WinApiException(nameof(UpdateWindow));
     }
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    private static extern int GetMessageA (ref Message m, IntPtr handle, uint min, uint max);
+    [DllImport(dll)]
+    private static extern int GetMessageW (ref Message m, IntPtr handle, uint min, uint max);
 
-    public static bool GetMessage (ref Message m) => 
-        0 != GetMessageA(ref m, IntPtr.Zero, 0, 0);
+    public static bool GetMessage (ref Message m) =>
+        0 != GetMessageW(ref m, IntPtr.Zero, 0, 0);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageA (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
+    public static extern bool PeekMessageW (ref Message m, IntPtr handle, uint min, uint max, PeekRemove remove);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool TranslateMessage (ref Message m);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr DispatchMessageA (ref Message m);
+    [DllImport(dll, EntryPoint = "DispatchMessageW", ExactSpelling = true)]
+    public static extern IntPtr DispatchMessage (ref Message m);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     public static extern IntPtr SetCapture (IntPtr windowHandle);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     public static extern void ReleaseCapture ();
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     public static extern IntPtr GetCapture ();
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     internal static extern int MessageBox (IntPtr hWnd, string text, string caption, uint type);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool MoveWindow (IntPtr windowHandle, int x, int y, int w, int h, bool repaint);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Auto)]
+    //[DllImport(dll, SetLastError = true, CharSet = CharSet.Auto)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool SetWindowText (IntPtr windowHandle, string text);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Ansi)]
+    //[DllImport(dll, SetLastError = true, CharSet = CharSet.Ansi)]
     //[return: MarshalAs(UnmanagedType.Bool)]
     //public static extern bool PostMessageA (IntPtr handle, uint msg, IntPtr w, IntPtr l);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetClientRect (IntPtr handle, ref Rectangle clientRect);
 
@@ -206,13 +206,13 @@ public static class User32 {
         return GetClientRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetClientRect));
     }
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     public static extern IntPtr BeginPaint (IntPtr hWnd, [In, Out] ref PaintStruct paint);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     public static extern void EndPaint (IntPtr hWnd, [In] ref PaintStruct paint);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool InvalidateRect (IntPtr handle, Rectangle* rect, nint erase);
 
@@ -240,7 +240,7 @@ public static class User32 {
     /// If <paramref name="data"/> is null, the function returns a value of zero. 
     /// In both of these cases, <paramref name="size"/> is set to the minimum size required for the <paramref name="data"/> buffer.</returns>
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //unsafe public static extern int GetRawInputDeviceInfoW (IntPtr device, RawInputDeviceCommand command, void* data, uint* size);
 
     /// <param name="devices">An array of <see cref="RawInputDeviceList"/> structures for the devices attached to the system.If null, the number of devices are returned in <paramref name="count"/>.</param>
@@ -249,30 +249,30 @@ public static class User32 {
     /// <returns>If the function is successful, the return value is the number of devices stored in the buffer pointed to by <paramref name="devices"/>. On any other error, the function returns (UINT) -1 and GetLastError returns the error indication.</returns>
     /// <remarks>The devices returned from this function are the mouse, the keyboard, and other Human Interface Device (HID) devices.To get more detailed information about the attached devices, call GetRawInputDeviceInfo using the <see cref="RawInputDeviceList.device"/> from <see cref="RawInputDeviceList"/>.</remarks>
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //public static extern uint GetRawInputDeviceList (ref RawInputDeviceList devices, ref uint count, uint size);
 
-    //[DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    //[DllImport(dll, SetLastError = true)]
     //public static extern IntPtr GetWindowLongPtrA (IntPtr hWnd, int nIndex);
 
-    [DllImport(dll, EntryPoint = "SetWindowPos", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "SetWindowPos", ExactSpelling = true, SetLastError = true)]
     private static extern bool SetWindowPos_ (IntPtr window, IntPtr after, int x, int y, int w, int h, uint flags);
 
     public static void SetWindowPos (IntPtr window, IntPtr after, int x, int y, int w, int h, WindowPosFlags flags)
         => SetWindowPos_(window, after, x, y, w, h, (uint)flags);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr SetWindowLongPtrA (IntPtr windowHandle, int index, IntPtr value);
+    [DllImport(dll, SetLastError = true)]
+    private static extern IntPtr SetWindowLongPtrW (IntPtr windowHandle, int index, IntPtr value);
 
     private static void SetWindow (IntPtr windowHandle, SetWindowParameter index, IntPtr value) {
         var before = Kernel32.GetLastError();
         if (0 != before)
             throw new WinApiException("pre-existing error", before);
-        var previousValue = SetWindowLongPtrA(windowHandle, (int)index, value);
+        var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
         if (IntPtr.Zero == previousValue) {
             var after = Kernel32.GetLastError();
             if (0 != after)
-                throw new WinApiException($"{nameof(SetWindowLongPtrA)} failed", after);
+                throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
         }
     }
 

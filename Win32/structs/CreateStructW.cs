@@ -2,7 +2,7 @@ namespace Win32;
 
 using System;
 
-public struct CreateStructA {
+public struct CreateStructW {
     public IntPtr lpCreateParams;
     public IntPtr instance;
     public IntPtr menu;

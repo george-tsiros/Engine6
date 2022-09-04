@@ -40,7 +40,7 @@ public class Window:IDisposable {
     protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnMove (in Vector2i topLeft) { }
     protected virtual void OnNcCalcSize (ref CalcSizeParameters p) { }
-    protected virtual void OnNcCreate (ref CreateStructA createStruct) { }
+    protected virtual void OnNcCreate (ref CreateStructW createStruct) { }
     protected virtual void OnPaint () { }
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
     protected virtual void OnWindowPosChanged (ref WindowPos windowPos) { }
@@ -71,7 +71,7 @@ public class Window:IDisposable {
         _ = User32.ShowWindow(nativeWindow.WindowHandle, CmdShow.ShowNormal);
         var m = new Message();
         while (User32.GetMessage(ref m))
-            _ = User32.DispatchMessageA(ref m);
+            _ = User32.DispatchMessage(ref m);
         OnClosed();
         foreach (var disposable in Disposables)
             disposable.Dispose();
@@ -114,7 +114,7 @@ public class Window:IDisposable {
                 return 0;
             case WinMessage.Create:
                 if (0 != l) {
-                    CreateStructA createStruct = *(CreateStructA*)l;
+                    CreateStructW createStruct = *(CreateStructW*)l;
                     Rect = new(createStruct.x, createStruct.y, createStruct.x + createStruct.w, createStruct.y + createStruct.h);
                     Dc = new(h);
                     // yes, it is different from NcCreate
@@ -130,7 +130,7 @@ public class Window:IDisposable {
                 break;
             case WinMessage.NcCreate:
                 if (0 != l) {
-                    CreateStructA* createStruct = (CreateStructA*)l;
+                    CreateStructW* createStruct = (CreateStructW*)l;
                     OnNcCreate(ref *createStruct);
                     return 1;
                 }
@@ -232,7 +232,7 @@ public class Window:IDisposable {
                     }
                 return 0;
         }
-        return User32.DefWindowProcA(h, m, w, l);
+        return User32.DefWindowProc(h, m, w, l);
     }
 
     private Font font;

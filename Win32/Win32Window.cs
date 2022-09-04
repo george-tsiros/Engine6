@@ -8,15 +8,14 @@ using System.Diagnostics;
 public class Win32Window:IDisposable {
     private const string ClassName = nameof(Win32Window);
 
-    private static readonly Dictionary<nint, Win32Window> Windows = new();
-
+    private static readonly Dictionary<nint,Win32Window> Windows=new();
     private static readonly WndProc staticWndProc = StaticWndProc;
     private static readonly ushort ClassAtom;
-    private static readonly IntPtr SelfHandle = Kernel32.GetModuleHandleA(null);
+    private static readonly IntPtr SelfHandle = Kernel32.GetModuleHandle(null);
     private static Win32Window creating;
 
     static Win32Window () {
-        var wc = new WindowClassA() {
+        var wc = new WindowClassW() {
             style = ClassStyle.VRedraw | ClassStyle.HRedraw,
             wndProc = staticWndProc,
             classname = nameof(Win32Window),

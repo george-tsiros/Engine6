@@ -31,8 +31,8 @@ public class GlForm:Form {
         p.Model(Matrix4x4.Identity);
         p.Projection(Matrix4x4.Identity);
         p.View(Matrix4x4.Identity);
-        State.CullFace = true;
-        State.DepthTest = false;
+        Enable(Capability.CullFace);
+        Disable(Capability.DepthTest);
         Closing += Closing_self;
     }
 
@@ -67,7 +67,7 @@ public class GlForm:Form {
         base.OnKeyDown(args);
     }
 
-    protected override void OnKeyUp (KeyEventArgs args) {}
+    protected override void OnKeyUp (KeyEventArgs args) { }
     static double Mean (double[] x) {
         var sum = 0.0;
         for (var i = x.Length; 0 <= --i;)
@@ -88,7 +88,7 @@ public class GlForm:Form {
         Gdi32.SwapBuffers(Dc);
         var now = Stopwatch.GetTimestamp();
         if (0 < lastSync) {
-            q[qi]= TicksToSeconds( now-lastSync);
+            q[qi] = TicksToSeconds(now - lastSync);
             if (10 == ++qi) {
                 ready = true;
                 qi = 0;
@@ -97,6 +97,6 @@ public class GlForm:Form {
         lastSync = now;
         Invalidate();
         if (ready)
-            Text = (1.0/Mean(q)).ToString();
+            Text = (1.0 / Mean(q)).ToString();
     }
 }

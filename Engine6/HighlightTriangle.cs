@@ -97,9 +97,9 @@ class HighlightTriangle:GlWindow {
         Clear(BufferBit.ColorDepth);
         UseProgram(vertexIndex);
         State.VertexArrayBinding = vao;
-        State.DepthTest = true;
-        State.DepthFunc = DepthFunction.LessEqual;
-        State.CullFace = true;
+        Enable(Capability.DepthTest);
+        DepthFunc(DepthFunction.LessEqual);
+        Enable(Capability.CullFace);
         vertexIndex.Tri((int)lastTriangle);
         vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)Rect.Width / Rect.Height, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
@@ -114,8 +114,8 @@ class HighlightTriangle:GlWindow {
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);
         State.VertexArrayBinding = quad;
-        State.DepthTest = false;
-        State.CullFace = false;
+        Disable(Capability.DepthTest);
+        Disable(Capability.CullFace);
         passThrough.Tex(0);
         DrawArrays(Primitive.Triangles, 0, 6);
     }

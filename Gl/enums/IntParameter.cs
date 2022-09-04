@@ -1,6 +1,6 @@
 namespace Gl;
 
-public enum IntParameter {
+public enum IntParameter:uint {
     FramebufferBinding = Const.FRAMEBUFFER_BINDING,
     DepthFunc = Const.DEPTH_FUNC,
     DepthMask = Const.DEPTH_WRITEMASK,

@@ -3,8 +3,8 @@ namespace Win32;
 using System;
 using System.Runtime.InteropServices;
 
-public struct WindowClassExA {
-    public uint size = (uint)Marshal.SizeOf<WindowClassExA>();
+public struct WindowClassExW {
+    public uint size = (uint)Marshal.SizeOf<WindowClassExW>();
     public ClassStyle style = ClassStyle.HRedraw | ClassStyle.VRedraw;
     public WndProc wndProc = null;
     public int cbClsExtra = 0;
@@ -13,10 +13,10 @@ public struct WindowClassExA {
     public IntPtr hIcon = IntPtr.Zero;
     public IntPtr hCursor = IntPtr.Zero;
     public IntPtr hbrBackground = IntPtr.Zero;
-    [MarshalAs(UnmanagedType.LPStr)]
+    [MarshalAs(UnmanagedType.LPWStr)]
     public string lpszmenuname = null;
-    [MarshalAs(UnmanagedType.LPStr)]
+    [MarshalAs(UnmanagedType.LPWStr)]
     public string classname = null;
     public IntPtr hIconsm = IntPtr.Zero;
-    public WindowClassExA () { }
+    public WindowClassExW () { }
 }

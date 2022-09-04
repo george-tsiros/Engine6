@@ -154,8 +154,8 @@ public class BlitTest:GlWindowArb {
 
         State.VertexArrayBinding = someLines;
         UseProgram(lines);
-        State.DepthTest = false;
-        State.CullFace = false;
+        Disable(Capability.DepthTest);
+        Disable(Capability.CullFace);
         lines.Color(new(0, 1, 0, 1));
         lines.RenderSize(Rect.Size);
         lines.Offset(cursorLocation);
@@ -231,9 +231,9 @@ public class BlitTest:GlWindowArb {
         prf.Leave();
         UseProgram(passThrough);
         State.VertexArrayBinding = quad;
-        State.DepthTest = true;
-        State.DepthFunc = DepthFunction.Always;
-        State.CullFace = true;
+        Enable(Capability.DepthTest);
+        DepthFunc(DepthFunction.Always);
+        Enable(Capability.CullFace);
         softwareRenderTexture.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);

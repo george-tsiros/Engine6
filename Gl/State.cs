@@ -23,17 +23,17 @@ public sealed class State {
         debugProc = DebugProc;
     }
 
-    private static void MaybeToggle (Capability cap, bool requested) {
-        if (requested != IsEnabled(cap)) {
-            if (requested)
-                Enable(cap);
-            else
-                Disable(cap);
-        }
-        if (requested != IsEnabled(cap)) {
-            throw new GlException(SetBoolFailed(cap.ToString(), requested));
-        }
-    }
+    //private static void MaybeToggle (Capability cap, bool requested) {
+    //    if (requested != IsEnabled(cap)) {
+    //        if (requested)
+    //            Enable(cap);
+    //        else
+    //            Disable(cap);
+    //    }
+    //    if (requested != IsEnabled(cap)) {
+    //        throw new GlException(SetBoolFailed(cap.ToString(), requested));
+    //    }
+    //}
 
     public static int SwapInterval {
         get => GetSwapIntervalEXT();
@@ -56,55 +56,55 @@ public sealed class State {
         }
     }
 
-    public static bool Blend {
-        get => IsEnabled(Capability.Blend);
-        set => MaybeToggle(Capability.Blend, value);
-    }
-    public static bool DepthTest {
-        get => IsEnabled(Capability.DepthTest);
-        set => MaybeToggle(Capability.DepthTest, value);
-    }
-    public static bool LineSmooth {
-        get => IsEnabled(Capability.LineSmooth);
-        set => MaybeToggle(Capability.LineSmooth, value);
-    }
-    public static bool Dither {
-        get => IsEnabled(Capability.Dither);
-        set => MaybeToggle(Capability.Dither, value);
-    }
-    public static bool DebugOutput {
-        get => IsEnabled(Capability.DebugOutput);
-        set {
-            MaybeToggle(Capability.DebugOutput, value);
-            DebugMessageCallback(value ? debugProc : null, IntPtr.Zero);
-        }
-    }
-    public static bool CullFace {
-        get => IsEnabled(Capability.CullFace);
-        set => MaybeToggle(Capability.CullFace, value);
-    }
+    //public static bool Blend {
+    //    get => IsEnabled(Capability.Blend);
+    //    set => MaybeToggle(Capability.Blend, value);
+    //}
+    //public static bool DepthTest {
+    //    get => IsEnabled(Capability.DepthTest);
+    //    set => MaybeToggle(Capability.DepthTest, value);
+    //}
+    //public static bool LineSmooth {
+    //    get => IsEnabled(Capability.LineSmooth);
+    //    set => MaybeToggle(Capability.LineSmooth, value);
+    //}
+    //public static bool Dither {
+    //    get => IsEnabled(Capability.Dither);
+    //    set => MaybeToggle(Capability.Dither, value);
+    //}
+    //public static bool DebugOutput {
+    //    get => IsEnabled(Capability.DebugOutput);
+    //    set {
+    //        MaybeToggle(Capability.DebugOutput, value);
+    //        DebugMessageCallback(value ? debugProc : null, IntPtr.Zero);
+    //    }
+    //}
+    //public static bool CullFace {
+    //    get => IsEnabled(Capability.CullFace);
+    //    set => MaybeToggle(Capability.CullFace, value);
+    //}
 
-    public static bool DepthMask {
-        get => 0 != GetIntegerv(IntParameter.DepthMask);
-        set {
-            if (value != DepthMask) {
-                DepthMask(value);
-                if (value != DepthMask)
-                    throw new GlException(SetBoolFailed(nameof(IntParameter.DepthMask), value));
-            }
-        }
-    }
+    //public static bool DepthMask {
+    //    get => 0 != GetIntegerv(IntParameter.DepthMask);
+    //    set {
+    //        if (value != DepthMask) {
+    //            DepthMask(value);
+    //            if (value != DepthMask)
+    //                throw new GlException(SetBoolFailed(nameof(IntParameter.DepthMask), value));
+    //        }
+    //    }
+    //}
 
-    public static DepthFunction DepthFunc {
-        get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
-        set {
-            if (value != DepthFunc) {
-                DepthFunc(value);
-                if (value != DepthFunc)
-                    throw new GlException(SetEnumFailed(value));
-            }
-        }
-    }
+    //public static DepthFunction DepthFunc {
+    //    get => (DepthFunction)GetIntegerv(IntParameter.DepthFunc);
+    //    set {
+    //        if (value != DepthFunc) {
+    //            DepthFunc(value);
+    //            if (value != DepthFunc)
+    //                throw new GlException(SetEnumFailed(value));
+    //        }
+    //    }
+    //}
     public static int FramebufferBinding {
         get => GetIntegerv(IntParameter.FramebufferBinding);
         set {

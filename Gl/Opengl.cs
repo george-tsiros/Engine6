@@ -18,58 +18,58 @@ public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int 
 unsafe public static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
 
-    [DllImport(opengl32, EntryPoint = "glGetError", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    public static extern GlErrorCodes GetError ();
-    [DllImport(opengl32, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError = true)]
-    public static extern IntPtr CreateContext (IntPtr dc);
-    [DllImport(opengl32, EntryPoint = "wglGetProcAddress", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr GetProcAddress ([MarshalAs(UnmanagedType.LPStr)] string name);
-    [DllImport(opengl32, EntryPoint = "wglGetCurrentDC", ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr GetCurrentDC ();
-    [DllImport(opengl32, EntryPoint = "wglGetCurrentContext", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    public static extern IntPtr GetCurrentContext ();
-    [DllImport(opengl32, EntryPoint = "glGetFloatv", ExactSpelling = true)]
-    public static extern void GetFloatv (int name, float* v);
-    [DllImport(opengl32, EntryPoint = "glClear", ExactSpelling = true)]
-    public static extern void Clear (BufferBit mask);
-    [DllImport(opengl32, EntryPoint = "glClearColor", ExactSpelling = true)]
-    public static extern void ClearColor (float r, float g, float b, float a);
-    [DllImport(opengl32, ExactSpelling = true)]
-    private static extern byte glIsEnabled (Capability cap);
-    [DllImport(opengl32, EntryPoint = "glEnable", ExactSpelling = true)]
-    public static extern void Enable (Capability cap);
-    [DllImport(opengl32, EntryPoint = "glDrawArrays", ExactSpelling = true)]
-    public static extern void DrawArrays (Primitive mode, int first, int count);
-    [DllImport(opengl32, EntryPoint = "glDepthMask", ExactSpelling = true)]
-    public static extern void DepthMask (bool enable);
-    [DllImport(opengl32, EntryPoint = "glDisable", ExactSpelling = true)]
-    public static extern void Disable (Capability cap);
-    [DllImport(opengl32, EntryPoint = "glBindTexture", ExactSpelling = true)]
-    public static extern void BindTexture (int target, int texture);
-    [DllImport(opengl32, EntryPoint = "glViewport", ExactSpelling = true)]
-    public static extern void Viewport (int x, int y, int w, int h);
-    [DllImport(opengl32, EntryPoint = "glBlendFunc", ExactSpelling = true)]
-    public static extern void BlendFunc (BlendSourceFactor sfactor, BlendDestinationFactor dfactor);
-    [DllImport(opengl32, EntryPoint = "glDepthFunc", ExactSpelling = true)]
-    public static extern void DepthFunc (DepthFunction f);
-    [DllImport(opengl32, EntryPoint = "glFlush", ExactSpelling = true)]
-    public static extern void Flush ();
-    [DllImport(opengl32, EntryPoint = "glPointSize", ExactSpelling = true, SetLastError = true)]
-    public static extern void PointSize (float size);
-    [DllImport(opengl32, EntryPoint = "glGetString", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern IntPtr GetString (int name);
-    [DllImport(opengl32, EntryPoint = "glFinish", ExactSpelling = true)]
-    public static extern void Finish ();
-    [DllImport(opengl32, EntryPoint = "glDeleteTextures", ExactSpelling = true)]
-    private static unsafe extern void DeleteTextures (int count, int* ints);
-    [DllImport(opengl32, EntryPoint = "glScissor", ExactSpelling = true)]
-    public static extern void Scissor (int x, int y, int width, int height);
-    [DllImport(opengl32, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
-    unsafe public static extern void GetIntegerv (int count, int* ints);
-    [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
+    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+    private static extern uint glGetError ();
+    [DllImport(opengl32, SetLastError = true)]
+    private static extern IntPtr wglCreateContext (IntPtr dc);
+    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern IntPtr wglGetProcAddress (string name);
+    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+    private static extern IntPtr wglGetCurrentDC ();
+    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    private static extern IntPtr wglGetCurrentContext ();
+    [DllImport(opengl32)]
+    private static extern void glGetFloatv (int name, float* v);
+    //[DllImport(opengl32)]
+    //private static extern void glClear (BufferBit mask);
+    //[DllImport(opengl32)]
+    //private static extern void glClearColor (float r, float g, float b, float a);
+    //[DllImport(opengl32)]
+    //private static extern byte glIsEnabled (Capability cap);
+    //[DllImport(opengl32)]
+    //private static extern void glEnable (Capability cap);
+    [DllImport(opengl32)]
+    private static extern void glDrawArrays (Primitive mode, int first, int count);
+    [DllImport(opengl32)]
+    private static extern void glDepthMask (bool enable);
+    //[DllImport(opengl32)]
+    //private static extern void glDisable (Capability cap);
+    //[DllImport(opengl32)]
+    //private static extern void glBindTexture (int target, int texture);
+    [DllImport(opengl32)]
+    private static extern void glViewport (int x, int y, int w, int h);
+    [DllImport(opengl32)]
+    private static extern void glBlendFunc (BlendSourceFactor sfactor, BlendDestinationFactor dfactor);
+    [DllImport(opengl32)]
+    private static extern void glDepthFunc (int f);
+    [DllImport(opengl32)]
+    private static extern void glFlush ();
+    [DllImport(opengl32, SetLastError = true)]
+    private static extern void glPointSize (float size);
+    [DllImport(opengl32, CallingConvention = CallingConvention.StdCall)]
+    private static extern IntPtr glGetString (int name);
+    [DllImport(opengl32)]
+    private static extern void glFinish ();
+    [DllImport(opengl32)]
+    private static extern void glDeleteTextures (int count, int* ints);
+    [DllImport(opengl32)]
+    private static extern void glScissor (int x, int y, int width, int height);
+    //[DllImport(opengl32)]
+    //private static extern void glGetIntegerv (int count, int* ints);
+    [DllImport(opengl32, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
-    [DllImport(opengl32, ExactSpelling = true, SetLastError = true)]
+    [DllImport(opengl32, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private extern static bool wglDeleteContext (IntPtr hglrc);
     private static GlExtensions Extensions;
@@ -79,34 +79,45 @@ unsafe public static class Opengl {
     //}
 
     private class GlExtensions {
+        //private static readonly IntPtr opengl32dll = Kernel32.GetModuleHandle(opengl32);
+        private static IntPtr opengl32dll;
         internal GlExtensions () {
             foreach (var f in typeof(GlExtensions).GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
-                if (f.IsInitOnly && (IntPtr)f.GetValue(this) == IntPtr.Zero) {
-                    var ptr = GetProcAddress(f.Name);
-                    if (IntPtr.Zero != ptr)
-                        f.SetValue(this, ptr);
-                    else
-                        Debug.WriteLine($"{f.Name} not available");
+                if (f.IsInitOnly && 0 == (nint)f.GetValue(this)) {
+                    var extPtr = wglGetProcAddress(f.Name);
+                    if (0 != extPtr)
+                        f.SetValue(this, extPtr);
+                    else {
+                        if (0 == opengl32dll)
+                            if (!Kernel32.GetModuleHandleEx(2, opengl32, ref opengl32dll) || 0 == opengl32dll)
+                                throw new WinApiException("Kernel32.GetModuleHandle(opengl32)");
+
+                        var glPtr = Kernel32.GetProcAddress(opengl32dll, f.Name);
+                        if (0 != glPtr)
+                            f.SetValue(this, glPtr);
+                        else
+                            Debug.WriteLine($"failed to find {f.Name}");
+                    }
                 }
         }
 #pragma warning disable CS0649
         internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateFramebuffers;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, void*, void> glReadnPixels;
-        internal readonly delegate* unmanaged[Stdcall]<int, DrawBuffer, void> glNamedFramebufferReadBuffer;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferReadBuffer;
         internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glCreateRenderbuffers;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int> glCheckNamedFramebufferStatus;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferTexture;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedRenderbufferStorage;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glNamedFramebufferRenderbuffer;
-        internal readonly delegate* unmanaged[Stdcall]<int, DrawBuffer, void> glNamedFramebufferDrawBuffer;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, DrawBuffer[], void> glNamedFramebufferDrawBuffers;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferDrawBuffer;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int*, void> glNamedFramebufferDrawBuffers;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glActiveTexture;
         internal readonly delegate* unmanaged[Stdcall]<int, byte*, int> glGetAttribLocation;
         internal readonly delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformLocation;
         internal readonly delegate* unmanaged[Stdcall]<int> glCreateProgram;
-        internal readonly delegate* unmanaged[Stdcall]<ShaderType, int> glCreateShader;
+        internal readonly delegate* unmanaged[Stdcall]<int, int> glCreateShader;
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glAttachShader;
-        internal readonly delegate* unmanaged[Stdcall]<BufferTarget, int, void> glBindBuffer;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, void> glBindBuffer;
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glBindFramebuffer;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glBindVertexArray;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glCompileShader;
@@ -122,31 +133,32 @@ unsafe public static class Opengl {
         internal readonly delegate* unmanaged[Stdcall]<DebugProc, IntPtr, void> glDebugMessageCallback;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glDeleteShader;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glDeleteProgram;
-        internal readonly delegate* unmanaged[Stdcall]<Primitive, int, int, int, void> glDrawArraysInstanced;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, void> glDrawArrays;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glDrawArraysInstanced;
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glEnableVertexArrayAttrib;
-        internal readonly delegate* unmanaged[Stdcall]<int, ProgramParameter, int*, void> glGetProgramiv;
-        internal readonly delegate* unmanaged[Stdcall]<int, ShaderParameter, int*, void> glGetShaderiv;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int*, void> glGetProgramiv;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int*, void> glGetShaderiv;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int*, byte*, void> glGetProgramInfoLog;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int*, byte*, void> glGetShaderInfoLog;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, UniformType*, byte*, void> glGetActiveUniform;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, AttribType*, byte*, void> glGetActiveAttrib;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, int*, byte*, void> glGetActiveUniform;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, int*, byte*, void> glGetActiveAttrib;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glLinkProgram;
         internal readonly delegate* unmanaged[Stdcall]<int, long, IntPtr, int, void> glNamedBufferStorage;
         internal readonly delegate* unmanaged[Stdcall]<int, long, long, void*, void> glNamedBufferSubData;
         internal readonly delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glShaderSource;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, void> glTextureParameteri;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, TextureFormat, int, int, void> glTextureStorage2D;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, int, void> glTextureStorage2D;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void*, void> glTextureSubImage2D;
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glUniform1i;
         internal readonly delegate* unmanaged[Stdcall]<int, float, void> glUniform1f;
         internal readonly delegate* unmanaged[Stdcall]<int, float, float, void> glUniform2f;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, void> glUniform2i;
         internal readonly delegate* unmanaged[Stdcall]<int, float, float, float, float, void> glUniform4f;
-        internal readonly delegate* unmanaged[Stdcall]<int, long, bool, Matrix4x4, void> glUniformMatrix4fv;
+        internal readonly delegate* unmanaged[Stdcall]<int, long, byte, Matrix4x4, void> glUniformMatrix4fv;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glUseProgram;
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glVertexAttribDivisor;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, AttribType, bool, int, long, void> glVertexAttribPointer;
-        internal readonly delegate* unmanaged[Stdcall]<int, int, AttribType, int, long, void> glVertexAttribIPointer;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, byte, int, long, void> glVertexAttribPointer;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, long, void> glVertexAttribIPointer;
         internal readonly delegate* unmanaged[Stdcall]<IntPtr> wglGetExtensionsStringEXT;
         internal readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr> wglGetExtensionsStringARB;
         internal readonly delegate* unmanaged[Stdcall]<int, int> wglSwapIntervalEXT;
@@ -154,17 +166,17 @@ unsafe public static class Opengl {
         internal readonly delegate* unmanaged[Stdcall]<int, int, byte*> glGetStringi;
         //internal readonly delegate* unmanaged[Stdcall]<int, int> glCheckFramebufferStatus;
         //internal readonly delegate* unmanaged[Stdcall]<int, void> glDepthFunc;
-        //internal readonly delegate* unmanaged[Stdcall]<Capability, bool> glIsEnabled;
+        internal readonly delegate* unmanaged[Stdcall]<int, byte> glIsEnabled;
         //internal readonly delegate* unmanaged[Stdcall]<int, int, void> glBindRenderbuffer;
-        //internal readonly delegate* unmanaged[Stdcall]<int, int, void> glBindTexture;
-        //internal readonly delegate* unmanaged[Stdcall]<BufferBit, void> glClear;
-        //internal readonly delegate* unmanaged[Stdcall]<float, float, float, float, void> glClearColor;
+        internal readonly delegate* unmanaged[Stdcall]<int, int, void> glBindTexture;
+        internal readonly delegate* unmanaged[Stdcall]<int, void> glClear;
+        internal readonly delegate* unmanaged[Stdcall]<float, float, float, float, void> glClearColor;
         //internal readonly delegate* unmanaged[Stdcall]<DepthFunction, void> glDepthFunc;
         //internal readonly delegate* unmanaged[Stdcall]<Primitive, int, int, void> glDrawArrays;
-        //internal readonly delegate* unmanaged[Stdcall]<Capability, void> glEnable;
-        //internal readonly delegate* unmanaged[Stdcall]<Capability, void> glDisable;
+        internal readonly delegate* unmanaged[Stdcall]<int, void> glEnable;
+        internal readonly delegate* unmanaged[Stdcall]<int, void> glDisable;
         //internal readonly delegate* unmanaged[Stdcall]<bool, void> glDepthMask;
-        //internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glGetIntegerv;
+        internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glGetIntegerv;
         //internal readonly delegate* unmanaged[Stdcall]<int, float*, void> glGetFloatv;
         //internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glScissor;
 
@@ -212,33 +224,49 @@ unsafe public static class Opengl {
         fixed (uint* p = &pixel)
             Extensions.glReadnPixels(x, y, width, height, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
     }
+    public static void DepthFunc (DepthFunction function) => glDepthFunc((int)function);
+    public static GlErrorCodes GetError () => (GlErrorCodes)glGetError();
+    public static IntPtr GetCurrentContext () => wglGetCurrentContext();
+    public static void Viewport (Vector2i position, Vector2i size) => glViewport(position.X, position.Y, size.X, size.Y);
+    public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
+    public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);
     //public static void ReadnPixels (int x, int y, int width, int height, int format, int type, int bufSize, void* data) => Extensions.glReadnPixels(x, y, width, height, format, type, bufSize, data);
-    public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => Extensions.glNamedFramebufferReadBuffer(framebuffer, mode);
-    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, attachment);
-    public static void NamedFramebufferDrawBuffers (int framebuffer, params DrawBuffer[] attachments) => Extensions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, attachments);
+    public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => Extensions.glNamedFramebufferReadBuffer(framebuffer, (int)mode);
+    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, (int)attachment);
+    public static void NamedFramebufferDrawBuffers (int framebuffer, params DrawBuffer[] attachments) {
+        if (0 == attachments.Length)
+            throw new InvalidOperationException("must have at least one attachment");
+        fixed (DrawBuffer* db = attachments) {
+            int* p = (int*)db;
+            Extensions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, p);
+        }
+    }
     public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => Extensions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
     public static void NamedFramebufferTexture (int framebuffer, FramebufferAttachment attachment, int texture) => Extensions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
     public static FramebufferStatus CheckNamedFramebufferStatus (int framebuffer, FramebufferTarget target) => (FramebufferStatus)Extensions.glCheckNamedFramebufferStatus(framebuffer, (int)target);
     //public static int CheckFramebufferStatus (FramebufferTarget target) => Extensions.glCheckFramebufferStatus((int)target);
-    public static bool IsEnabled (Capability cap) => 0 != glIsEnabled(cap);
+    public static void Enable (Capability cap) => Extensions.glEnable((int)cap);
+    public static void Disable (Capability cap) => Extensions.glDisable((int)cap);
+    public static bool IsEnabled (Capability cap) => 0 != Extensions.glIsEnabled((int)cap);
     public static void ActiveTexture (int i) => Extensions.glActiveTexture(i);
     public static void AttachShader (int p, int s) => Extensions.glAttachShader(p, s);
-    public static void BindBuffer (BufferTarget target, int buffer) => Extensions.glBindBuffer(target, buffer);
+    public static void BindBuffer (BufferTarget target, int buffer) => Extensions.glBindBuffer((int)target, buffer);
     public static void BindFramebuffer (FramebufferTarget target, int buffer) => Extensions.glBindFramebuffer((int)target, buffer);
     //public static void BindRenderbuffer (int buffer) => Extensions.glBindRenderbuffer(Const.RENDERBUFFER, buffer);
     public static void BindVertexArray (int vao) => Extensions.glBindVertexArray(vao);
     public static void CompileShader (int s) => Extensions.glCompileShader(s);
     public static int CreateProgram () => Extensions.glCreateProgram();
-    public static int CreateShader (ShaderType shaderType) => Extensions.glCreateShader(shaderType);
+    public static int CreateShader (ShaderType shaderType) => Extensions.glCreateShader((int)shaderType);
     public static void DebugMessageCallback (DebugProc proc, IntPtr userParam) => Extensions.glDebugMessageCallback(proc, userParam);
     public static void DeleteProgram (int program) => Extensions.glDeleteProgram(program);
     public static void DeleteShader (int shader) => Extensions.glDeleteShader(shader);
-    public static void DeleteTexture (int texture) => DeleteTextures(1, &texture);
+    public static void DeleteTexture (int texture) => glDeleteTextures(1, &texture);
     public static void DeleteBuffer (int i) => Extensions.glDeleteBuffers(1, &i);
     public static void DeleteRenderbuffer (int i) => Extensions.glDeleteRenderbuffers(1, &i);
     public static void DeleteFramebuffer (int i) => Extensions.glDeleteFramebuffers(1, &i);
     public static void DeleteVertexArray (int vao) => Extensions.glDeleteVertexArrays(1, &vao);
-    public static void DrawArraysInstanced (Primitive mode, int firstIndex, int indicesPerInstance, int instancesCount) => Extensions.glDrawArraysInstanced(mode, firstIndex, indicesPerInstance, instancesCount);
+    public static void DrawArrays (Primitive mode, int first, int count) => Extensions.glDrawArrays((int)mode, first, count);
+    public static void DrawArraysInstanced (Primitive mode, int firstIndex, int indicesPerInstance, int instancesCount) => Extensions.glDrawArraysInstanced((int)mode, firstIndex, indicesPerInstance, instancesCount);
     public static void EnableVertexArrayAttrib (int id, int i) => Extensions.glEnableVertexArrayAttrib(id, i);
     public static void LinkProgram (int p) => Extensions.glLinkProgram(p);
     public static void NamedRenderbufferStorage (int renderbuffer, RenderbufferFormat format, int width, int height) => Extensions.glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
@@ -249,25 +277,25 @@ unsafe public static class Opengl {
     public static void TextureFilter (int texture, MagFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
     public static void TextureFilter (int texture, MinFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
     public static void TextureMaxLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAX_LEVEL, level);
-    public static void TextureStorage2D (int texture, int levels, TextureFormat sizedFormat, int width, int height) => Extensions.glTextureStorage2D(texture, levels, sizedFormat, width, height);
+    public static void TextureStorage2D (int texture, int levels, TextureFormat sizedFormat, int width, int height) => Extensions.glTextureStorage2D(texture, levels, (int)sizedFormat, width, height);
     public static void TextureSubImage2D (int texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, int type, void* pixels) => Extensions.glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
     public static void TextureWrap (int texture, WrapCoordinate c, Wrap w) => Extensions.glTextureParameteri(texture, (int)c, (int)w);
     public static void Uniform (int uniform, float f) => Extensions.glUniform1f(uniform, f);
     public static void Uniform (int uniform, int i) => Extensions.glUniform1i(uniform, i);
-    public static void Uniform (int uniform, Matrix4x4 m) => Extensions.glUniformMatrix4fv(uniform, 1, false, m);
+    public static void Uniform (int uniform, Matrix4x4 m) => Extensions.glUniformMatrix4fv(uniform, 1, 0, m);
     public static void Uniform (int uniform, Vector2 v) => Extensions.glUniform2f(uniform, v.X, v.Y);
     public static void Uniform (int uniform, Vector2i v) => Extensions.glUniform2i(uniform, v.X, v.Y);
     public static void Uniform (int uniform, Vector4 v) => Extensions.glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
     public static void UseProgram (int p) => Extensions.glUseProgram(p);
     public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);
-    public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, type, normalized, stride, ptr);
-    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => Extensions.glVertexAttribIPointer(index, size, type, stride, ptr);
-    public static void Viewport (Vector2i position, Vector2i size) => Viewport(position.X, position.Y, size.X, size.Y);
-    public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
-    public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);
+    public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, ptr);
+    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => Extensions.glVertexAttribIPointer(index, size, (int)type, stride, ptr);
     public static long GetTextureHandleARB (int texture) => Extensions.glGetTextureHandleARB(texture);
     public static void MakeTextureHandleResidentARB (long textureHandle) => Extensions.glMakeTextureHandleResidentARB(textureHandle);
-
+    public static void ClearColor (float r, float g, float b, float a) => Extensions.glClearColor(r, g, b, a);
+    public static void Clear (BufferBit what) => Extensions.glClear((int)what);
+    public static void BindTexture (int type, int id) => Extensions.glBindTexture(type, id);
+    public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     private static int GetLocation (int program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
         var l = Encoding.ASCII.GetBytes(name, bytes);
@@ -301,36 +329,36 @@ unsafe public static class Opengl {
 
     public static int GetProgram (int id, ProgramParameter p) { // I wish I could join this with GetShader
         int i;
-        Extensions.glGetProgramiv(id, p, &i);
+        Extensions.glGetProgramiv(id, (int)p, &i);
         return i;
     }
 
     public static int GetShader (int id, ShaderParameter p) {
         int i;
-        Extensions.glGetShaderiv(id, p, &i);
+        Extensions.glGetShaderiv(id, (int)p, &i);
         return i;
     }
 
     public static (int size, AttribType type, string name) GetActiveAttrib (int id, int index) {
         var maxLength = GetProgram(id, ProgramParameter.ActiveAttributeMaxLength);
         int length, size;
-        AttribType type;
+        int type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
             Extensions.glGetActiveAttrib(id, index, maxLength, &length, &size, &type, p);
         var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
-        return (size, type, n);
+        return (size, (AttribType)type, n);
     }
 
     public static (int size, UniformType type, string name) GetActiveUniform (int id, int index) {
         var maxLength = GetProgram(id, ProgramParameter.ActiveUniformMaxLength);
         int length, size;
-        UniformType type;
+        int type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
             Extensions.glGetActiveUniform(id, index, maxLength, &length, &size, &type, p);
         var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
-        return (size, type, n);
+        return (size, (UniformType)type, n);
     }
 
     public static string GetProgramInfoLog (int id) {
@@ -351,13 +379,13 @@ unsafe public static class Opengl {
         return Encoding.ASCII.GetString(bytes);
     }
 
-    unsafe public static int GetIntegerv (IntParameter p) {
+    public static int GetIntegerv (IntParameter p) {
         int i;
-        GetIntegerv((int)p, &i);
+        Extensions.glGetIntegerv((int)p, &i);
         return i;
     }
     public static void ReleaseCurrent (DeviceContext deviceContext) {
-        if (IntPtr.Zero == GetCurrentContext())
+        if (IntPtr.Zero == wglGetCurrentContext())
             throw new Exception("no current context");
         if (!wglMakeCurrent((IntPtr)deviceContext, IntPtr.Zero))
             throw new WinApiException(nameof(wglMakeCurrent));
@@ -367,7 +395,7 @@ unsafe public static class Opengl {
 
     private static string GetString (OpenglString name) {
         GlException.Assert();
-        var ptr = GetString((int)name);
+        var ptr = glGetString((int)name);
         GlException.Assert();
         if (IntPtr.Zero == ptr)
             throw new Exception("glGetString returned IntPtr.Zero");
@@ -381,10 +409,10 @@ unsafe public static class Opengl {
         if (!wglMakeCurrent((IntPtr)deviceContext, renderingContext))
             throw new WinApiException(nameof(wglMakeCurrent));
 
-        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int>)GetProcAddress(nameof(wglGetPixelFormatAttribivARB));
+        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int>)wglGetProcAddress(nameof(wglGetPixelFormatAttribivARB));
         if (wglGetPixelFormatAttribivARB is null)
             throw new Exception($"{nameof(wglGetPixelFormatAttribivARB)} is null");
-        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr>)GetProcAddress(nameof(wglCreateContextAttribsARB));
+        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr>)wglGetProcAddress(nameof(wglCreateContextAttribsARB));
         if (wglCreateContextAttribsARB is null)
             throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
         VersionString = GetString(OpenglString.Version);
@@ -441,7 +469,7 @@ unsafe public static class Opengl {
         DeleteContext(ctx);
         return ctxARB;
     }
-    private static unsafe IntPtr CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
+    private static IntPtr CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
         if (attribs.Length < 2 || attribs[^1] != 0 || attribs[^2] != 0)
             throw new ArgumentException("must have at least 2 arguments", nameof(attribs));
         fixed (int* p = attribs) {
@@ -450,16 +478,16 @@ unsafe public static class Opengl {
         }
     }
 
-    public unsafe static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
-        if (GetCurrentContext() != IntPtr.Zero)
+    public static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
+        if (0 != wglGetCurrentContext())
             throw new WinApiException("context already exists");
-        var descriptor = new PixelFormatDescriptor { size = PixelFormatDescriptor.Size, version = 1 };
+        var descriptor = new PixelFormatDescriptor();
         var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
-        var rc = CreateContext((IntPtr)dc);
-        if (0==rc)
+        var rc = wglCreateContext((IntPtr)dc);
+        if (0 == rc)
             throw new WinApiException("failed wglCreateContext");
         MakeCurrent(dc, rc);
         return rc;
@@ -477,7 +505,7 @@ unsafe public static class Opengl {
     const PixelFlag RequiredFlags = PixelFlag.SupportOpengl | PixelFlag.DrawToWindow;
     const PixelFlag RejectedFlags = PixelFlag.GenericAccelerated | PixelFlag.GenericFormat;
 
-    private static unsafe int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, ContextConfiguration configuration) {
+    private static int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, ContextConfiguration configuration) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);
         if (formatCount == 0)
             throw new WinApiException("formatCount == 0");

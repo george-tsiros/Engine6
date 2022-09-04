@@ -1,6 +1,7 @@
 namespace Engine6;
 
 using System;
+using System.Diagnostics;
 using Common;
 using Win32;
 
@@ -10,7 +11,17 @@ public class GdiWindow:Window {
     private Vector2i lastCursorLocation = new(-1, -1);
     private Dib dib;
 
-    public GdiWindow (Vector2i? size = null) : base(size) { }
+    public GdiWindow (Vector2i? size = null) : base(size) {
+        var count = Gdi32.GetPixelFormatCount(Dc);
+        PixelFormatDescriptor pfd = new() {
+            size= PixelFormatDescriptor.Size,
+            version = 1,
+        };
+        for (var i = 1; i <= count; ++i) {
+            Gdi32.DescribePixelFormat(Dc, i, ref pfd);
+            Debug.WriteLine(pfd);
+        }
+    }
 
     protected override void OnKeyUp (Key k) {
         switch (k) {

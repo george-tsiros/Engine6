@@ -5,8 +5,8 @@ using System.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PixelFormatDescriptor {
-    public ushort size;
-    public ushort version;
+    public ushort size = Size;
+    public ushort version = 1;
     public PixelFlag flags;
     public byte pixelType;
     public byte colorBits;
@@ -33,14 +33,13 @@ public struct PixelFormatDescriptor {
     public uint layerMask;
     public uint visibleMask;
     public uint damageMask;
-
+    public PixelFormatDescriptor () { }
     public override string ToString () =>
         $"{colorBits,2} {depthBits,2} {stencilBits,2} {visibleMask:x8} {string.Join(", ", Common.Functions.ToFlags(flags))}";
 
-    public const string Header = 
+    public const string Header =
         "cl dt st    vmask flags";
 
-    public static ushort Size { get; } =
-        (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
+    public static readonly ushort Size = (ushort)Marshal.SizeOf<PixelFormatDescriptor>();
 
 }
