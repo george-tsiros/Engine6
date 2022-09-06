@@ -9,21 +9,36 @@ using System.Diagnostics;
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
 public abstract class Window:IDisposable {
+    private const string ClassName = nameof(Window);
+    private static readonly Dictionary<nint, Window> Windows = new();
+    static readonly ushort Atom;
+    protected readonly nint Handle;
 
-    protected readonly Win32Window NativeWindow;
+    static Window () { 
+            var wc = new WindowClassW() {
+            style = ClassStyle.None,
+            wndProc = staticWndProc,
+            hCursor = User32.LoadCursor(SystemCursor.Arrow),
+            classname = nameof(Window),
+        };
+    }
+        private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
+        if (WinMessage.Create == m)
+            Windows.Add(creating.WindowHandle = h, creating);
+        return creating.WndProc(h, m, w, l);
+    }
+
     public DeviceContext Dc { get; private set; }
-    private readonly Vector2i clientSize;
-    public Window (Vector2i? size = null) {
-        NativeWindow = new(WndProc, clientSize = size ?? new(640, 480)) { };
+
+    public Window () {
     }
 
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
 
-    protected Rectangle Rect => User32.GetClientRect(NativeWindow.WindowHandle);
+    protected Rectangle Rect => User32.GetClientRect(Handle);
 
     private readonly int[] KeyState = new int[256 / 32];
-    private bool painting;
     private TrackMouseEvent trackMouseStruct;
     private bool tracking = false;
 
@@ -64,40 +79,34 @@ public abstract class Window:IDisposable {
     protected void Invalidate () {
         if (!invalidated) {
             invalidated = true;
-            User32.InvalidateWindow(NativeWindow.WindowHandle);
+            User32.InvalidateWindow(Handle);
         }
     }
-
+    private bool idling = false;
     public void Run () {
         trackMouseStruct = new() {
             size = TrackMouseEvent.Size,
             flags = TrackMouseFlag.Leave,
-            window = NativeWindow.WindowHandle,
+            window = Handle,
         };
         OnLoad();
-        User32.UpdateWindow(NativeWindow.WindowHandle);
-        _ = User32.ShowWindow(NativeWindow.WindowHandle, CmdShow.ShowNormal);
+        User32.UpdateWindow(Handle);
+        _ = User32.ShowWindow(Handle, CmdShow.ShowNormal);
         var m = new Message();
-        while (User32.GetMessage(ref m))
-            _ = User32.DispatchMessage(ref m);
+        while (WinMessage.Quit != m.msg) {
+            OnIdle();
+            while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
+                if (User32.GetMessage(ref m))
+                    _ = User32.DispatchMessage(ref m);
+        }
         OnClosed();
         foreach (var disposable in Disposables)
             disposable.Dispose();
-        Debug.WriteLine(string.Join('\n', UniqueMessages.Select(x => $"{x.Item1} => {x.Item2}")));
     }
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
 
-    private static readonly HashSet<(WinMessage, nint)> UniqueMessages = new();
-
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
-        var x = NotWndProc(h, m, w, l);
-        if (Enum.IsDefined<WinMessage>(m))
-            _ = UniqueMessages.Add((m, x));
-        return x;
-    }
-
-    protected unsafe nint NotWndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Create:
                 Dc = new(h);
@@ -224,19 +233,13 @@ public abstract class Window:IDisposable {
                     OnKeyUp(key);
                     return 0;
                 }
-            case WinMessage.Paint:
-                if (!painting)
-                    try {
-                        var ps = new PaintStruct();
-                        painting = true;
-                        var dc = User32.BeginPaint(h, ref ps);
-                        if (!ps.rect.IsEmpty)
-                            OnPaint();
-                        User32.EndPaint(h, ref ps);
-                        invalidated = false;
-                    } finally {
-                        painting = false;
-                    }
+            case WinMessage.Paint: {
+                    var ps = new PaintStruct();
+                    var dc = User32.BeginPaint(h, ref ps);
+                    if (!ps.rect.IsEmpty)
+                        OnPaint();
+                    User32.EndPaint(h, ref ps);
+                }
                 return 0;
         }
         return User32.DefWindowProc(h, m, w, l);
@@ -294,7 +297,6 @@ WindowPosChanging => 0
         if (dispose && !disposed) {
             disposed = true;
             Dc.Close();
-            NativeWindow.Dispose();
         }
     }
 }

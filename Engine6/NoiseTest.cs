@@ -19,7 +19,7 @@ class NoiseTest:GlWindowArb {
     const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     const int ThreadCount = 4;
 
-    public NoiseTest () : base(null, new(_WIDTH, _HEIGHT)) {
+    public NoiseTest () : base(null) {
         rowsPerThread = _HEIGHT / ThreadCount;
         raster = new(Rect.Size, 4, 1);
     }

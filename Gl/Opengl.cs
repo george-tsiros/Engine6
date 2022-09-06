@@ -13,109 +13,50 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, IntPtr message, IntPtr userParam);
+#pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
+public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
 
 unsafe public static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
-    /*
-glBindTexture found in opengl32.dll at 0x7ffbcc554b40
-glBindTexture found in opengl32.dll at 0x7ffbcc554b40
-glClear found in opengl32.dll at 0x7ffbcc554d00
-glClear found in opengl32.dll at 0x7ffbcc554d00
-glClearColor found in opengl32.dll at 0x7ffbcc554e00
-glClearColor found in opengl32.dll at 0x7ffbcc554e00
-glDisable found in opengl32.dll at 0x7ffbcc555ea0
-glDisable found in opengl32.dll at 0x7ffbcc555ea0
-glDrawArrays found in opengl32.dll at 0x7ffbcc555f00
-glDrawArrays found in opengl32.dll at 0x7ffbcc555f00
-glEnable found in opengl32.dll at 0x7ffbcc556150
-glEnable found in opengl32.dll at 0x7ffbcc556150
-glGetIntegerv found in opengl32.dll at 0x7ffbcc556de0
-glGetIntegerv found in opengl32.dll at 0x7ffbcc556de0
-glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
-glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
-*/
-    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+
+    [DllImport(opengl32)]
     private static extern uint glGetError ();
     [DllImport(opengl32, SetLastError = true)]
-    private static extern IntPtr wglCreateContext (IntPtr dc);
-    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr wglGetProcAddress (string name);
-    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
-    private static extern IntPtr wglGetCurrentDC ();
-    [DllImport(opengl32, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
-    private static extern IntPtr wglGetCurrentContext ();
+    private static extern nint wglCreateContext (nint dc);
+    [DllImport(opengl32, SetLastError = true, CharSet = CharSet.Ansi)]
+    private static extern nint wglGetProcAddress (string name);
+    [DllImport(opengl32)]
+    private static extern nint wglGetCurrentDC ();
+    [DllImport(opengl32, SetLastError = true)]
+    private static extern nint wglGetCurrentContext ();
     [DllImport(opengl32, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool wglMakeCurrent (IntPtr dc, IntPtr hglrc);
+    private static extern bool wglMakeCurrent (nint dc, nint hglrc);
     [DllImport(opengl32, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private extern static bool wglDeleteContext (IntPtr hglrc);
-    //[DllImport(opengl32)]
-    //private static extern void glGetFloatv (int name, float* v);
-    //[DllImport(opengl32)]
-    //private static extern void glClear (BufferBit mask);
-    //[DllImport(opengl32)]
-    //private static extern void glClearColor (float r, float g, float b, float a);
-    //[DllImport(opengl32)]
-    //private static extern byte glIsEnabled (Capability cap);
-    //[DllImport(opengl32)]
-    //private static extern void glEnable (Capability cap);
-    //[DllImport(opengl32)]
-    //private static extern void glDrawArrays (Primitive mode, int first, int count);
-    //[DllImport(opengl32)]
-    //private static extern void glDepthMask (bool enable);
-    //[DllImport(opengl32)]
-    //private static extern void glDisable (Capability cap);
-    //[DllImport(opengl32)]
-    //private static extern void glBindTexture (int target, int texture);
-    //[DllImport(opengl32)]
-    //private static extern void glViewport (int x, int y, int w, int h);
-    //[DllImport(opengl32)]
-    //private static extern void glBlendFunc (BlendSourceFactor sfactor, BlendDestinationFactor dfactor);
-    //[DllImport(opengl32)]
-    //private static extern void glDepthFunc (int f);
-    //[DllImport(opengl32)]
-    //private static extern void glFlush ();
-    //[DllImport(opengl32, SetLastError = true)]
-    //private static extern void glPointSize (float size);
-    //[DllImport(opengl32, CallingConvention = CallingConvention.StdCall)]
-    //private static extern IntPtr glGetString (int name);
-    //[DllImport(opengl32)]
-    //private static extern void glFinish ();
-    //[DllImport(opengl32)]
-    //private static extern void glDeleteTextures (int count, int* ints);
-    //[DllImport(opengl32)]
-    //private static extern void glScissor (int x, int y, int width, int height);
-    //[DllImport(opengl32)]
-    //private static extern void glGetIntegerv (int count, int* ints);
+    private extern static bool wglDeleteContext (nint hglrc);
+
     private static GlExtensions Extensions;
 
-    //private class EarlierOpengl { 
-    //        internal EarlierOpengl 
-    //}
-
     private class GlExtensions {
-        //private static readonly IntPtr opengl32dll = Kernel32.GetModuleHandle(opengl32);
-        private static IntPtr opengl32dll;
+        private static nint opengl32dll;
+
         internal GlExtensions () {
             foreach (var f in typeof(GlExtensions).GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
                 if (f.IsInitOnly && 0 == (nint)f.GetValue(this)) {
                     var extPtr = wglGetProcAddress(f.Name);
-                    if (0 != extPtr)
+                    if (0 != extPtr) {
                         f.SetValue(this, extPtr);
-                    else {
-                        if (0 == opengl32dll)
-                            if (!Kernel32.GetModuleHandleEx(2, opengl32, ref opengl32dll) || 0 == opengl32dll)
-                                throw new WinApiException($"failed to get handle of {opengl32}");
-
-                        var glPtr = Kernel32.GetProcAddress(opengl32dll, f.Name);
-                        if (0 != glPtr) {
-                            Debug.WriteLine($"{f.Name} found in {opengl32} at 0x{glPtr:x}");
-                            f.SetValue(this, glPtr);
-                        } else
-                            throw new WinApiException($"failed to get address of {f.Name}");
+                        continue;
                     }
+                    if (0 == opengl32dll)
+                        if (!Kernel32.GetModuleHandleEx(2, opengl32, ref opengl32dll) || 0 == opengl32dll)
+                            throw new WinApiException($"failed to get handle of {opengl32}");
+
+                    var glPtr = Kernel32.GetProcAddress(opengl32dll, f.Name);
+                    if (0 == glPtr)
+                        throw new WinApiException($"failed to get address of {f.Name}");
+                    f.SetValue(this, glPtr);
                 }
         }
 #pragma warning disable CS0649
@@ -150,7 +91,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteVertexArrays;
         internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glDeleteFramebuffers;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int*, void> glCreateTextures;
-        internal readonly delegate* unmanaged[Stdcall]<DebugProc, IntPtr, void> glDebugMessageCallback;
+        internal readonly delegate* unmanaged[Stdcall]<DebugProc, nint, void> glDebugMessageCallback;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glDeleteShader;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glDeleteProgram;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, void> glDrawArrays;
@@ -163,7 +104,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, int*, byte*, void> glGetActiveUniform;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int*, int*, int*, byte*, void> glGetActiveAttrib;
         internal readonly delegate* unmanaged[Stdcall]<int, void> glLinkProgram;
-        internal readonly delegate* unmanaged[Stdcall]<int, long, IntPtr, int, void> glNamedBufferStorage;
+        internal readonly delegate* unmanaged[Stdcall]<int, long, nint, int, void> glNamedBufferStorage;
         internal readonly delegate* unmanaged[Stdcall]<int, long, long, void*, void> glNamedBufferSubData;
         internal readonly delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glShaderSource;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, void> glTextureParameteri;
@@ -179,8 +120,8 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         internal readonly delegate* unmanaged[Stdcall]<int, int, void> glVertexAttribDivisor;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, byte, int, long, void> glVertexAttribPointer;
         internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, long, void> glVertexAttribIPointer;
-        internal readonly delegate* unmanaged[Stdcall]<IntPtr> wglGetExtensionsStringEXT;
-        internal readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr> wglGetExtensionsStringARB;
+        internal readonly delegate* unmanaged[Stdcall]<nint> wglGetExtensionsStringEXT;
+        internal readonly delegate* unmanaged[Stdcall]<nint, nint> wglGetExtensionsStringARB;
         internal readonly delegate* unmanaged[Stdcall]<int, int> wglSwapIntervalEXT;
         internal readonly delegate* unmanaged[Stdcall]<int> wglGetSwapIntervalEXT;
         internal readonly delegate* unmanaged[Stdcall]<int, int, byte*> glGetStringi;
@@ -203,12 +144,12 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
 #pragma warning restore CS0649
     }
 
-    private static delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr> wglCreateContextAttribsARB;
-    private static delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
+    private static delegate* unmanaged[Stdcall]<nint, nint, int*, nint> wglCreateContextAttribsARB;
+    private static delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
 
     private static int GetSwapIntervalEXT () => Extensions.wglGetSwapIntervalEXT();
     private static bool SwapIntervalEXT (int frames) => 0 != Extensions.wglSwapIntervalEXT(frames);
-    
+
     public static void SetSwapInterval (int value) {
         if (value != GetSwapIntervalEXT()) {
             if (!SwapIntervalEXT(value))
@@ -217,21 +158,21 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
                 throw new GlException(SetInt32Failed(nameof(SwapIntervalEXT), value));
         }
     }
-    
+
     public static int GetPixelFormatCountARB (DeviceContext dc) {
         int pixelFormatCount = (int)PixelFormatAttrib.PixelFormatCount;
         var count = 0;
-        GetPixelFormatAttribivARB((IntPtr)dc, 1, 0, 1, ref pixelFormatCount, ref count);
+        GetPixelFormatAttribivARB((nint)dc, 1, 0, 1, ref pixelFormatCount, ref count);
         return count;
     }
 
-    private static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int layerPlane, int attributeCount, ref int attributes, ref int values) {
+    private static void GetPixelFormatAttribivARB (nint deviceContext, int pixelFormatIndex, int layerPlane, int attributeCount, ref int attributes, ref int values) {
         fixed (int* a = &attributes)
         fixed (int* v = &values)
             _ = wglGetPixelFormatAttribivARB(deviceContext, pixelFormatIndex, layerPlane, attributeCount, a, v);
     }
 
-    public static void GetPixelFormatAttribivARB (IntPtr deviceContext, int pixelFormatIndex, int[] attributes, int[] values) {
+    public static void GetPixelFormatAttribivARB (nint deviceContext, int pixelFormatIndex, int[] attributes, int[] values) {
         if (attributes.Length != values.Length)
             throw new ArgumentException("unequal array lengths", nameof(attributes));
         if (0 == attributes.Length)
@@ -242,10 +183,10 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
                 throw new WinApiException(nameof(wglGetPixelFormatAttribivARB));
     }
 
-    public static IntPtr CreateContextAttribsARB (IntPtr dc, IntPtr sharedContext, ReadOnlySpan<int> attribs) {
+    public static nint CreateContextAttribsARB (nint dc, nint sharedContext, ReadOnlySpan<int> attribs) {
         fixed (int* p = attribs) {
             var context = wglCreateContextAttribsARB(dc, sharedContext, p);
-            return IntPtr.Zero != context ? context : throw new WinApiException(nameof(wglCreateContextAttribsARB));
+            return 0 != context ? context : throw new WinApiException(nameof(wglCreateContextAttribsARB));
         }
     }
 
@@ -255,7 +196,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
     }
     public static void DepthFunc (DepthFunction function) => Extensions.glDepthFunc((int)function);
     public static GlErrorCodes GetError () => (GlErrorCodes)glGetError();
-    public static IntPtr GetCurrentContext () => wglGetCurrentContext();
+    public static nint GetCurrentContext () => wglGetCurrentContext();
     public static void Viewport (Vector2i position, Vector2i size) => Extensions.glViewport(position.X, position.Y, size.X, size.Y);
     public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
     public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);
@@ -311,7 +252,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
     public static void CompileShader (int s) => Extensions.glCompileShader(s);
     public static int CreateProgram () => Extensions.glCreateProgram();
     public static int CreateShader (ShaderType shaderType) => Extensions.glCreateShader((int)shaderType);
-    public static void DebugMessageCallback (DebugProc proc, IntPtr userParam) => Extensions.glDebugMessageCallback(proc, userParam);
+    public static void DebugMessageCallback (DebugProc proc, nint userParam) => Extensions.glDebugMessageCallback(proc, userParam);
     public static void DeleteProgram (int program) => Extensions.glDeleteProgram(program);
     public static void DeleteShader (int shader) => Extensions.glDeleteShader(shader);
     public static void DeleteTexture (int texture) => Extensions.glDeleteTextures(1, &texture);
@@ -324,7 +265,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
     public static void EnableVertexArrayAttrib (int id, int i) => Extensions.glEnableVertexArrayAttrib(id, i);
     public static void LinkProgram (int p) => Extensions.glLinkProgram(p);
     public static void NamedRenderbufferStorage (int renderbuffer, RenderbufferFormat format, int width, int height) => Extensions.glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
-    public static void NamedBufferStorage (int buffer, long size, IntPtr data, int flags) => Extensions.glNamedBufferStorage(buffer, size, data, flags);
+    public static void NamedBufferStorage (int buffer, long size, nint data, int flags) => Extensions.glNamedBufferStorage(buffer, size, data, flags);
     public static void NamedBufferSubData (int buffer, long offset, long size, void* data) => Extensions.glNamedBufferSubData(buffer, offset, size, data);
     //public static void Scissor (int x, int y, int width, int height) => Extensions.glScissor(x, y, width, height);
     public static void TextureBaseLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
@@ -439,9 +380,9 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         return i;
     }
     public static void ReleaseCurrent (DeviceContext deviceContext) {
-        if (IntPtr.Zero == wglGetCurrentContext())
+        if (0 == wglGetCurrentContext())
             throw new Exception("no current context");
-        if (!wglMakeCurrent((IntPtr)deviceContext, IntPtr.Zero))
+        if (!wglMakeCurrent((nint)deviceContext, 0))
             throw new WinApiException(nameof(wglMakeCurrent));
         Extensions = null;
         supportedExtensions.Clear();
@@ -459,14 +400,14 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         return str;
     }
 
-    private static void MakeCurrent (DeviceContext deviceContext, IntPtr renderingContext) {
-        if (!wglMakeCurrent((IntPtr)deviceContext, renderingContext))
+    private static void MakeCurrent (DeviceContext deviceContext, nint renderingContext) {
+        if (!wglMakeCurrent((nint)deviceContext, renderingContext))
             throw new WinApiException(nameof(wglMakeCurrent));
 
-        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<IntPtr, int, int, int, int*, int*, int>)wglGetProcAddress(nameof(wglGetPixelFormatAttribivARB));
+        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int>)wglGetProcAddress(nameof(wglGetPixelFormatAttribivARB));
         if (wglGetPixelFormatAttribivARB is null)
             throw new Exception($"{nameof(wglGetPixelFormatAttribivARB)} is null");
-        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int*, IntPtr>)wglGetProcAddress(nameof(wglCreateContextAttribsARB));
+        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<nint, nint, int*, nint>)wglGetProcAddress(nameof(wglCreateContextAttribsARB));
         if (wglCreateContextAttribsARB is null)
             throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
 
@@ -490,14 +431,14 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
                 var p = Extensions.glGetStringi((int)OpenglString.Extensions, i);
                 if (null == p)
                     throw new Exception($"failed to get ptr to extension string at index {i}");
-                supportedExtensions.Add(Marshal.PtrToStringAnsi((IntPtr)p));
+                supportedExtensions.Add(Marshal.PtrToStringAnsi((nint)p));
             }
         } else {
             supportedExtensions.AddRange(GetString(OpenglString.Extensions).Split(' '));
         };
     }
     static readonly Version LegacyOpenglVersion = new(3, 0, 0);
-    public static void DeleteContext (IntPtr renderingContext) {
+    public static void DeleteContext (nint renderingContext) {
         if (!wglDeleteContext(renderingContext))
             throw new WinApiException(nameof(wglDeleteContext));
     }
@@ -508,7 +449,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         return i;
     }
 
-    public static IntPtr CreateContextARB (DeviceContext dc, ContextConfigurationARB configuration) {
+    public static nint CreateContextARB (DeviceContext dc, ContextConfigurationARB configuration) {
         var ctx = CreateSimpleContext(dc, configuration.BasicConfiguration);
         var version = configuration.Version ?? ContextVersion;
         var contextFlags = configuration.Flags ?? ContextFlag.Debug;
@@ -525,16 +466,16 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         DeleteContext(ctx);
         return ctxARB;
     }
-    private static IntPtr CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
+    private static nint CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
         if (attribs.Length < 2 || attribs[^1] != 0 || attribs[^2] != 0)
             throw new ArgumentException("must have at least 2 arguments", nameof(attribs));
         fixed (int* p = attribs) {
-            var ctxARB = wglCreateContextAttribsARB((IntPtr)dc, 0, p);
+            var ctxARB = wglCreateContextAttribsARB((nint)dc, 0, p);
             return 0 != ctxARB ? ctxARB : throw new WinApiException(nameof(wglCreateContextAttribsARB));
         }
     }
 
-    public static IntPtr CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
+    public static nint CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
         if (0 != wglGetCurrentContext())
             throw new WinApiException("context already exists");
         var descriptor = new PixelFormatDescriptor();
@@ -542,7 +483,7 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
         if (0 == pfIndex)
             throw new Exception("no pixelformat found");
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
-        var rc = wglCreateContext((IntPtr)dc);
+        var rc = wglCreateContext((nint)dc);
         if (0 == rc)
             throw new WinApiException("failed wglCreateContext");
         MakeCurrent(dc, rc);
@@ -595,3 +536,4 @@ glIsEnabled found in opengl32.dll at 0x7ffbcc557cc0
 
 
 }
+#pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments

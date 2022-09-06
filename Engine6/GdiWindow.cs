@@ -11,7 +11,7 @@ public class GdiWindow:Window {
     private Vector2i lastCursorLocation = new(-1, -1);
     private Dib dib;
 
-    public GdiWindow (Vector2i? size = null) : base(size) {
+    public GdiWindow () : base() {
         var count = Gdi32.GetPixelFormatCount(Dc);
         PixelFormatDescriptor pfd = new() {
             size= PixelFormatDescriptor.Size,
@@ -44,26 +44,26 @@ public class GdiWindow:Window {
         var d = p - lastCursorLocation;
         if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
             changingWindowPosition = true;
-            User32.SetWindowPos(NativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
+            User32.SetWindowPos(Handle.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
             changingWindowPosition = false;
         }
     }
 
     protected override void OnLoad () {
-        User32.SetWindow(NativeWindow.WindowHandle, WindowStyle.Overlapped);
-        dib = new(Dc, Rect.Width, Rect.Height);
+        User32.SetWindow(Handle.WindowHandle, WindowStyle.Overlapped);
     }
 
     protected unsafe override void OnPaint () {
-        if (dib is null)
-            return;
+        var r = Rect;
+        if (dib is null || dib.Width != r.Width || dib.Height != r.Height)
+            dib = new(Dc, r.Width, r.Height);
         dib.ClearU32(Color.Black);
         var y = -Font.Height;
-        dib.DrawString(Rect.ToString(), Font, 0, y += Font.Height, Color.Cyan);
-        Blit(Dc, Rect, dib);
+        dib.DrawString(r.ToString(), Font, 0, y += Font.Height, Color.Cyan);
+        Blit(Dc, r, dib);
     }
 
-    private unsafe static void Blit (DeviceContext dc, Rectangle rect, Dib dib) {
+    private unsafe static void Blit (DeviceContext dc,in Rectangle rect, Dib dib) {
         if (rect.Width != dib.Width || rect.Height != dib.Height)
             throw new ArgumentOutOfRangeException(nameof(dib), "not same size");
         _ = Gdi32.StretchDIBits((IntPtr)dc, 0, 0, rect.Width, rect.Height, 0, 0, dib.Width, dib.Height, dib.Pixels, dib.Info, 0, 0xcc0020);

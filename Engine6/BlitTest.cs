@@ -65,7 +65,7 @@ public class BlitTest:GlWindowArb {
     DirectionalFlat directionalFlat;
     Lines lines;
 
-    public BlitTest (Model m = null, Vector2i? size = null) : base(size: size) {
+    public BlitTest (Model m = null, Vector2i? size = null) : base() {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
         const string TeapotFilepath = @"data\teapot.obj";
         var model = m ?? new Model(TeapotFilepath);

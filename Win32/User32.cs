@@ -162,9 +162,9 @@ public static class User32 {
     public static bool GetMessage (ref Message m) =>
         0 != GetMessageW(ref m, 0, 0, 0);
 
-    [DllImport(dll)]
+    [DllImport(dll, EntryPoint = "PeekMessageW", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessageW (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
+    public static extern bool PeekMessage (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -189,9 +189,9 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint);
 
-    //[DllImport(dll, SetLastError = true, CharSet = CharSet.Auto)]
-    //[return: MarshalAs(UnmanagedType.Bool)]
-    //public static extern bool SetWindowText (nint windowHandle, string text);
+    [DllImport(dll, SetLastError = true, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetWindowTextW (nint windowHandle, string text);
 
     //[DllImport(dll, SetLastError = true, CharSet = CharSet.Ansi)]
     //[return: MarshalAs(UnmanagedType.Bool)]

@@ -1,3 +1,4 @@
+/*
 namespace Win32;
 
 using Common;
@@ -56,3 +57,4 @@ public class Win32Window:IDisposable {
         }
     }
 }
+*/

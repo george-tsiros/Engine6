@@ -12,7 +12,7 @@ public class GlWindowArb:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
 
-    public GlWindowArb (ContextConfigurationARB? configuration = null, Vector2i? size = null) : base(size) {
+    public GlWindowArb (ContextConfigurationARB? configuration = null) : base() {
         RenderingContext = CreateContextARB(Dc, configuration ?? ContextConfigurationARB.Default);
         LastSync = Stopwatch.GetTimestamp();
     }
@@ -62,7 +62,7 @@ public class GlWindowArb:Window {
         var d = p - lastCursorLocation;
         if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
             changingWindowPosition = true;
-            User32.SetWindowPos(NativeWindow.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
+            User32.SetWindowPos(Handle.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
             changingWindowPosition = false;
         }
     }

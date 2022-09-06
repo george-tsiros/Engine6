@@ -10,7 +10,7 @@ using static Common.Maths;
 using Common;
 
 class HighlightTriangle:GlWindow {
-    public HighlightTriangle (Model model, Vector2i? size = null) : base(size: size) {
+    public HighlightTriangle (Model model) : base() {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
     }

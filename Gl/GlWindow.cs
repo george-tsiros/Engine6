@@ -12,7 +12,7 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
 
-    public GlWindow (ContextConfiguration? configuration = null, Vector2i? size = null) : base(size) {
+    public GlWindow (ContextConfiguration? configuration = null) : base() {
         RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
         LastSync = Stopwatch.GetTimestamp();
     }
