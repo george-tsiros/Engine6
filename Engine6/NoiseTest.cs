@@ -21,7 +21,7 @@ class NoiseTest:GlWindowArb {
 
     public NoiseTest () : base(null) {
         rowsPerThread = _HEIGHT / ThreadCount;
-        raster = new(Rect.Size, 4, 1);
+        raster = new(Size, 4, 1);
     }
 
     VertexArray quad;
@@ -87,7 +87,7 @@ class NoiseTest:GlWindowArb {
         countdown.Wait();
         tex.Upload(raster);
         StartThreads();
-        Viewport(new(), Rect.Size);
+        Viewport(new(), Size);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);

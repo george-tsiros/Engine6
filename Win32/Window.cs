@@ -2,41 +2,53 @@ namespace Win32;
 
 using Common;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
 public abstract class Window:IDisposable {
-    private const string ClassName = nameof(Window);
-    private static readonly Dictionary<nint, Window> Windows = new();
-    static readonly ushort Atom;
-    protected readonly nint Handle;
 
-    static Window () { 
-            var wc = new WindowClassW() {
+    static Window () {
+        var wc = new WindowClassW() {
             style = ClassStyle.None,
             wndProc = staticWndProc,
             hCursor = User32.LoadCursor(SystemCursor.Arrow),
             classname = nameof(Window),
         };
+        Atom = User32.RegisterClass(ref wc);
     }
-        private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
-        if (WinMessage.Create == m)
-            Windows.Add(creating.WindowHandle = h, creating);
-        return creating.WndProc(h, m, w, l);
+
+    private const string ClassName = nameof(Window);
+    private static readonly Dictionary<nint, Window> Windows = new();
+    private static readonly ushort Atom;
+    private static readonly WndProc staticWndProc = StaticWndProc;
+    private static Window creating;
+
+    protected nint Handle { get; private set; }
+
+    private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
+        if (WinMessage.Create == m) {
+            Windows.Add(creating.Handle = h, creating);
+            return creating.WndProc(h, m, w, l);
+        } else if (Windows.TryGetValue(h, out var window))
+            return window.WndProc(h/*wat*/, m, w, l);
+        else
+            return User32.DefWindowProc(h, m, w, l);
     }
 
     public DeviceContext Dc { get; private set; }
 
-    public Window () {
+    public Window (WindowStyle style = WindowStyle.OverlappedWindow) {
+        creating = this;
+        var h = User32.CreateWindow(Atom, style, WindowStyleEx.None);
+        Debug.Assert(h == Handle);
     }
 
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
 
-    protected Rectangle Rect => User32.GetClientRect(Handle);
+    protected Vector2i Size => User32.GetClientAreaSize(Handle);
 
     private readonly int[] KeyState = new int[256 / 32];
     private TrackMouseEvent trackMouseStruct;
@@ -245,31 +257,6 @@ public abstract class Window:IDisposable {
         return User32.DefWindowProc(h, m, w, l);
     }
 
-
-
-    /*
-Activate => 0
-ActivateApp => 0
-EraseBkgnd => 0
-GETICON => 0
-ImeNotify => 0
-ImeSetContext => 0
-KillFocus => 0
-MouseMove => 0
-Move => 0
-NcActivate => 1
-NcCalcSize => 0
-NcCreate => 1
-NCHITTEST => 1
-NcPaint => 0
-Paint => 0
-SETCURSOR => 0
-SetFocus => 0
-ShowWindow => 0
-Size => 0
-WindowPosChanged => 0
-WindowPosChanging => 0
-*/
     private Font font;
     public Font Font {
         get =>
@@ -288,15 +275,12 @@ WindowPosChanging => 0
 
     private bool disposed;
 
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public virtual void Dispose (bool dispose) {
-        if (dispose && !disposed) {
+    public virtual void Dispose () {
+        if (!disposed) {
             disposed = true;
             Dc.Close();
+            _ = Windows.Remove(Handle);
+            User32.DestroyWindow(Handle);
         }
     }
 }

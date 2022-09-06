@@ -39,12 +39,12 @@ public class GlWindowArb:Window {
     }
 
     private bool disposed = false;
-    public override void Dispose (bool dispose) {
-        if (dispose && !disposed) {
+    public override void Dispose () {
+        if (!disposed) {
             disposed = true;
             ReleaseCurrent(Dc);
             DeleteContext(RenderingContext);
-            Dispose();
+            base.Dispose();
         }
     }
     private Vector2i lastCursorLocation = new(-1, -1);
@@ -53,17 +53,6 @@ public class GlWindowArb:Window {
             case MouseButton.Right:
             lastCursorLocation = CursorLocation;
                 return;
-        }
-    }
-
-    bool changingWindowPosition;
-    protected override void OnMouseMove (in Vector2i p) {
-        const WindowPosFlags SelfMoveFlags = WindowPosFlags.NoSize | WindowPosFlags.NoSendChanging | WindowPosFlags.NoRedraw | WindowPosFlags.NoZOrder;
-        var d = p - lastCursorLocation;
-        if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
-            changingWindowPosition = true;
-            User32.SetWindowPos(Handle.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
-            changingWindowPosition = false;
         }
     }
 }

@@ -81,7 +81,7 @@ public class BlitTest:GlWindowArb {
     }
 
     protected override void OnLoad () {
-        var size = Rect.Size;
+        var size = Size;
         offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
         offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         offscreenFramebuffer = new();
@@ -138,7 +138,7 @@ public class BlitTest:GlWindowArb {
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
         BindFramebuffer(offscreenFramebuffer);
-        var size = Rect.Size;
+        var size = Size;
         Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
 
@@ -176,15 +176,15 @@ public class BlitTest:GlWindowArb {
         var vertexCount = Vertices.Length;
         var model = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(-camera.Location);
-        var r = Rect;
-        var projection = Matrix4d.Project(dPi / 4, (double)r.Width / r.Height, 1, 100);
+        var r = Size;
+        var projection = Matrix4d.Project(dPi / 4, (double)r.X / r.Y, 1, 100);
         for (var i = 0; i < vertexCount; ++i) {
             var modelSpace = Vertices[i] * model;
             ModelSpace[i] = modelSpace.Xyz();
             var projected = modelSpace * translation * projection;
             var n = projected.Xyz() / projected.W;
             ClipSpace[i] = n;
-            ScreenSpace[i] = NormalizedToScreen(n, r.Size);
+            ScreenSpace[i] = NormalizedToScreen(n, r);
         }
         prf.Leave();
         prf.Enter((int)FooNum.Visibility);

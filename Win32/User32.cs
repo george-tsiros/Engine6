@@ -128,9 +128,10 @@ public static class User32 {
     /// <returns></returns>
     [DllImport(dll, EntryPoint = "CreateWindowExW", ExactSpelling = true, SetLastError = true)]
     private static extern nint CreateWindowEx (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
-
-    public static nint CreateWindow (ushort atom, int width = 0, int height = 0, nint? moduleHandle = null, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None) {
-        var p = CreateWindowEx(styleEx, new(atom), 0, style, 100, 100, width, height, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
+    private const int CwDefault = unchecked((int)0x80000000);
+    public static nint CreateWindow (ushort atom, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None, Vector2i? size = null, nint? moduleHandle = null) {
+        var (w, h) = size is Vector2i s ? (s.X, s.Y) : (CwDefault, CwDefault);
+        var p = CreateWindowEx(styleEx, new(atom), 0, style, CwDefault, CwDefault, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
         return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
 
@@ -201,9 +202,11 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetClientRect (nint handle, ref Rectangle clientRect);
 
-    public static Rectangle GetClientRect (nint hwnd) {
+    public static Vector2i GetClientAreaSize (nint hwnd) {
         Rectangle r = new();
-        return GetClientRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetClientRect));
+        if (GetClientRect(hwnd, ref r))
+            return r.Size;
+        throw new WinApiException(nameof(GetClientRect));
     }
 
     [DllImport(dll)]

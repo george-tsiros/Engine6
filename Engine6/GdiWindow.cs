@@ -39,28 +39,20 @@ public class GdiWindow:Window {
         }
     }
 
-    bool changingWindowPosition;
-    protected override void OnMouseMove (in Vector2i p) {
-        var d = p - lastCursorLocation;
-        if (!changingWindowPosition && Buttons.HasFlag(MouseButton.Right)) {
-            changingWindowPosition = true;
-            User32.SetWindowPos(Handle.WindowHandle, IntPtr.Zero, Rect.Left + d.X, Rect.Top + d.Y, 0, 0, SelfMoveFlags);
-            changingWindowPosition = false;
-        }
-    }
-
     protected override void OnLoad () {
-        User32.SetWindow(Handle.WindowHandle, WindowStyle.Overlapped);
+        User32.SetWindow(Handle, WindowStyle.Overlapped);
     }
 
     protected unsafe override void OnPaint () {
-        var r = Rect;
-        if (dib is null || dib.Width != r.Width || dib.Height != r.Height)
-            dib = new(Dc, r.Width, r.Height);
+        var size = Size;
+        if (dib is null || dib.Width != size.X || dib.Height != size.Y) {
+            dib?.Dispose();
+            dib = new(Dc, size.X, size.Y);
+        }
         dib.ClearU32(Color.Black);
         var y = -Font.Height;
-        dib.DrawString(r.ToString(), Font, 0, y += Font.Height, Color.Cyan);
-        Blit(Dc, r, dib);
+        dib.DrawString(size.ToString(), Font, 0, y += Font.Height, Color.Cyan);
+        Blit(Dc, new(new(),size), dib);
     }
 
     private unsafe static void Blit (DeviceContext dc,in Rectangle rect, Dib dib) {

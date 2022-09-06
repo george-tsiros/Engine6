@@ -39,12 +39,12 @@ public class GlWindow:Window {
     }
 
     private bool disposed = false;
-    public override void Dispose (bool dispose) {
-        if (dispose && !disposed) {
+    public override void Dispose () {
+        if (!disposed) {
             disposed = true;
             ReleaseCurrent(Dc);
             DeleteContext(RenderingContext);
-            Dispose();
+            base.Dispose();
         }
     }
 }
