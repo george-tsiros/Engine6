@@ -43,7 +43,7 @@ public class GdiWindow:Window {
         User32.SetWindow(Handle, WindowStyle.Overlapped);
     }
 
-    protected unsafe override void OnPaint () {
+    protected unsafe override void OnPaint (in Rectangle r) {
         var size = Size;
         if (dib is null || dib.Width != size.X || dib.Height != size.Y) {
             dib?.Dispose();

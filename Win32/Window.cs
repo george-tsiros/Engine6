@@ -76,7 +76,7 @@ public abstract class Window:IDisposable {
     protected virtual void OnSize (SizeType type, Vector2i size) { }
     protected virtual unsafe void OnSizing (SizingEdge edge, Rectangle* r) { }
     //protected virtual unsafe void OnCreate (CreateStructW* cs) {    }
-    protected virtual void OnPaint () { }
+    protected virtual void OnPaint (in Rectangle r) { }
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
     protected virtual unsafe void OnWindowPosChanged (WindowPos* p) { }
     protected virtual unsafe void OnWindowPosChanging (WindowPos* p) { }
@@ -94,7 +94,7 @@ public abstract class Window:IDisposable {
             User32.InvalidateWindow(Handle);
         }
     }
-    private bool idling = false;
+
     public void Run () {
         trackMouseStruct = new() {
             size = TrackMouseEvent.Size,
@@ -249,7 +249,7 @@ public abstract class Window:IDisposable {
                     var ps = new PaintStruct();
                     var dc = User32.BeginPaint(h, ref ps);
                     if (!ps.rect.IsEmpty)
-                        OnPaint();
+                        OnPaint(ps.rect);
                     User32.EndPaint(h, ref ps);
                 }
                 return 0;
