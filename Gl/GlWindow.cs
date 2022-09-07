@@ -2,7 +2,6 @@ namespace Gl;
 
 using System;
 using System.Diagnostics;
-using Common;
 using Win32;
 using static Opengl;
 
@@ -12,7 +11,7 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
 
-    public GlWindow (ContextConfiguration? configuration = null) : base() {
+    public GlWindow (ContextConfiguration? configuration = null, WindowStyle? style = null) : base(style) {
         RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
         LastSync = Stopwatch.GetTimestamp();
     }
@@ -24,6 +23,7 @@ public class GlWindow:Window {
                 return;
         }
     }
+
     protected override void OnIdle () {
         Invalidate();
     }

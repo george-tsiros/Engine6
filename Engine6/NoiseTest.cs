@@ -14,41 +14,42 @@ using Common;
 using System.Text;
 
 internal class NoiseTest:GlWindowArb {
-    private const int _WIDTH = 256, _HEIGHT = 256;
+    private const int _WIDTH = 128, _HEIGHT = _WIDTH;
     private const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     private const int ThreadCount = 4;
+    private const int rowsPerThread = _HEIGHT / ThreadCount;
 
-    public NoiseTest () : base() {
-        rowsPerThread = _HEIGHT / ThreadCount;
+    public NoiseTest (WindowStyle? style = null) : base(style: style) {
+        ClientSize = new(_WIDTH, _HEIGHT);
     }
 
     private VertexArray quad;
     private Sampler2D tex;
     private Raster raster;
-    private readonly int rowsPerThread;
     private FastNoiseLite[] noises;
     private CountdownEvent countdown;
     private PassThrough passThrough;
 
-    private void ProcArrays (int threadIndex) {
-        var ms = FramesRendered;
+    record struct Work (int ThreadIndex, float Millis, FastNoiseLite Noise, Raster Raster, CountdownEvent Countdown);
+
+    private static void ProcArrays (Work work) {
+        var (threadIndex, millis, noise, raster, countdown) = work;
         var start = rowsPerThread * threadIndex;
         var end = start + rowsPerThread;
         var offset = 4 * _WIDTH * start;
-        var noise = noises[threadIndex];
         for (var y = start; y < end; ++y) {
             var yscaled = _YSCALE * y;
-            var yscaleddelayed = yscaled + ms;
+            var yscaleddelayed = yscaled + millis;
             var yscaledshifted = yscaled + _YSCALE * _HEIGHT;
             for (var x = 0; x < _WIDTH; ++x, offset += 2) {
                 var xscaled = _XSCALE * x;
 
-                var b = .5f + .5f * noise.GetNoise(xscaled + ms, yscaled);
+                var b = .5f + .5f * noise.GetNoise(xscaled + millis, yscaled);
                 var g = .5f + .5f * noise.GetNoise(xscaled + _XSCALE * _WIDTH, yscaleddelayed);
                 var r = .5f + .5f * noise.GetNoise(xscaled, yscaledshifted);
-                raster.Pixels[offset] /*  */ = (byte)(127.5f * b + 127.5f);
-                raster.Pixels[++offset] /**/ = (byte)(127.5f * g + 127.5f);
-                raster.Pixels[++offset] /**/ = (byte)(127.5f * r + 127.5f);
+                raster.Pixels[offset] /*  */ = (byte)((int)(127.5f * b + 127.5f) & 0xF0);
+                raster.Pixels[++offset] /**/ = (byte)((int)(127.5f * g + 127.5f) & 0xF0);
+                raster.Pixels[++offset] /**/ = (byte)((int)(127.5f * r + 127.5f) & 0xF0);
             }
         }
         var done = countdown.Signal();
@@ -65,12 +66,9 @@ internal class NoiseTest:GlWindowArb {
         for (var i = 0; i < ThreadCount; ++i)
             noises[i] = new FastNoiseLite(123);
         countdown = new(ThreadCount);
-        StartThreads();
-        var sampler = new Sampler2D(new(512, 512), TextureFormat.Rgba8);
-        var ahndle = GetTextureHandleARB(sampler);
-        MakeTextureHandleResidentARB(ahndle);
-        GlException.Assert();
         SetSwapInterval(1);
+        Disable(Capability.DepthTest);
+        StartThreads();
     }
 
     private static readonly Vector4[] QuadVertices = {
@@ -98,8 +96,9 @@ internal class NoiseTest:GlWindowArb {
 
     private void StartThreads () {
         countdown.Reset(ThreadCount);
+        var ms = FramesRendered / 3f;
         for (var i = 0; i < ThreadCount; ++i) {
-            var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, false);
+            var ok = ThreadPool.QueueUserWorkItem(ProcArrays, new Work(i, ms, noises[i], raster, countdown), false);
             if (!ok)
                 throw new ApplicationException();
         }

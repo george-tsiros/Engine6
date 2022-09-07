@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
@@ -15,7 +16,9 @@ public abstract class Program:OpenglObject {
     public Program () {
         if (IntPtr.Zero == Opengl.GetCurrentContext())
             throw new InvalidOperationException("no current context");
+
         Id = Utilities.ProgramFromStrings(Unpack(VertexSource), Unpack(FragmentSource));
+        Debug.Assert(0 < Id);
         var type = GetType();
         foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             if (prop.GetCustomAttribute<GlAttribAttribute>(false) is GlAttribAttribute attr) {

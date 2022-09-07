@@ -2,7 +2,6 @@ namespace Gl;
 
 using System;
 using System.Diagnostics;
-using Common;
 using Win32;
 using static Opengl;
 
@@ -12,7 +11,7 @@ public class GlWindowArb:Window {
     protected long FramesRendered { get; private set; }
     protected long LastSync { get; private set; }
 
-    public GlWindowArb (ContextConfigurationARB? configuration = null) : base() {
+    public GlWindowArb (ContextConfigurationARB? configuration = null, WindowStyle? style = null) : base(style) {
         RenderingContext = CreateContextARB(Dc, configuration ?? ContextConfigurationARB.Default);
         LastSync = Stopwatch.GetTimestamp();
     }
@@ -24,6 +23,7 @@ public class GlWindowArb:Window {
                 return;
         }
     }
+
     protected override void OnIdle () {
         Invalidate();
     }
@@ -33,6 +33,7 @@ public class GlWindowArb:Window {
         Gdi32.SwapBuffers(Dc);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
+        _ = User32.SetWindowTextW(Handle, FramesRendered.ToString());
     }
 
     protected virtual void Render () {

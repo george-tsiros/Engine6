@@ -10,12 +10,13 @@ using System.Text.RegularExpressions;
 using Win32;
 using static Common.Maths;
 using Common;
+using System.Numerics;
 
 public class Model {
     public List<Vector3i> Faces { get; private set; }
-    public List<Vector3d> Vertices { get; private set; }
-    public Vector3d Min { get; private set; }
-    public Vector3d Max { get; private set; }
+    public List<Vector3> Vertices { get; private set; }
+    public Vector3 Min { get; private set; }
+    public Vector3 Max { get; private set; }
     protected static readonly char[] space = { ' ' };
     protected static readonly IFormatProvider AllowDot = CultureInfo.InvariantCulture;
 
@@ -41,7 +42,8 @@ public class Model {
     static readonly Regex FaceRegex = new(@"^(\d+)(/(\d+)?)*$");
 
     static int FromFace (string part) => int.Parse(FaceRegex.Match(part).Groups[1].Value);
-
+    static readonly Vector3 Vector3MaxValue = new(float.MaxValue, float.MaxValue, float.MaxValue);
+    static readonly Vector3 Vector3MinValue = new(float.MinValue, float.MinValue, float.MinValue);
     void Read (StreamReader reader, bool center) {
         Faces = new();
         Vertices = new();
@@ -62,13 +64,13 @@ public class Model {
                 case "v":
                     if (parts.Length != 4)
                         throw new ArgumentException($"line '{line}' invalid");
-                    Vertices.Add(new(double.Parse(parts[1]), double.Parse(parts[2]), double.Parse(parts[3])));
+                    Vertices.Add(new(float.Parse(parts[1]), float.Parse(parts[2]), float.Parse(parts[3])));
                     break;
             }
         }
-        (Min, Max) = (Vector3d.MaxValue, Vector3d.MinValue);
+        (Min, Max) = (Vector3MaxValue, Vector3MinValue);
         foreach (var v in Vertices)
-            (Min, Max) = (Vector3d.Min(Min, v), Vector3d.Max(Max, v));
+            (Min, Max) = (Vector3.Min(Min, v), Vector3.Max(Max, v));
 
         if (center) {
             // Center of bounding volume
@@ -90,23 +92,23 @@ public class Model {
         Faces = new() { new(0, 1, 2), new(0, 2, 3), },
     };
 
-    public static Model Sphere (int nTheta, int nPhi, double radius) {
+    public static Model Sphere (int nTheta, int nPhi, float radius) {
         int vertexCount = 2 + nTheta * (nPhi - 1);
         int triangleCount = 2 * (nPhi - 1) * nTheta;
-        var dTheta = 2 * dPi / nTheta;
-        var dPhi = dPi / nPhi;
-        var phi = dPhi;
+        var dTheta = 2 * fPi / nTheta;
+        var fPhi = fPi / nPhi;
+        var phi = fPhi;
         var model = new Model() { Vertices = new(), Faces = new() };
-        model.Vertices.Add(radius * Vector3d.UnitY);
+        model.Vertices.Add(radius * Vector3.UnitY);
 
-        for (int vi = 1; vi < nPhi; ++vi, phi += dPhi) {
-            var (sin, cos) = DoubleSinCos(phi);
-            double theta = 0d;
+        for (int vi = 1; vi < nPhi; ++vi, phi += fPhi) {
+            var (sin, cos) = FloatSinCos(phi);
+            var theta = 0f;
             for (var hi = 0; hi < nTheta; ++hi, theta += dTheta)
-                model.Vertices.Add(new(radius * sin * DoubleCos(theta), radius * cos, radius * sin * DoubleSin(theta)));
+                model.Vertices.Add(new(radius * sin * FloatCos(theta), radius * cos, radius * sin * FloatSin(theta)));
         }
 
-        model.Vertices.Add(-radius * Vector3d.UnitY);
+        model.Vertices.Add(-radius * Vector3.UnitY);
 
         var faceIndex = 0;
         for (var i = 1; i <= nTheta; ++i, ++faceIndex)
@@ -171,7 +173,7 @@ public class Model {
         }
     };
 
-    public static Model Plane (Vector2d size, Vector2i divisions) {
+    public static Model Plane (Vector2 size, Vector2i divisions) {
         if (size.X < float.Epsilon || size.Y < float.Epsilon)
             throw new ArgumentException($"size must be at least {float.Epsilon} in both dimensions", nameof(size));
         if (divisions.X < 1 || divisions.Y < 1)
@@ -180,7 +182,7 @@ public class Model {
         // 2 subd -> 3 vert
         // total vert = (subd.X+1)*(subd.Y+1)
         var vertexCount = (divisions.X + 1) * (divisions.Y + 1);
-        var vertices = new Vector3d[vertexCount];
+        var vertices = new Vector3[vertexCount];
         var dx = size.X / divisions.X;
         var dy = size.Y / divisions.Y;
 

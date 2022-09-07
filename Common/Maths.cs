@@ -20,9 +20,13 @@ public static class Maths {
     public static double DoubleRound (double a) => double.Round(a);
     public static float FloatRound (float a) => float.Round(a);
     public static (double, double) DoubleSinCos (double angle) => double.SinCos(angle);
+    public static (float, float) FloatSinCos (float angle) => float.SinCos(angle);
     public static double DoubleCos (double angle) => double.Cos(angle);
     public static double DoubleSin (double angle) => double.Sin(angle);
     public static double DoubleTan (double angle) => double.Tan(angle);
+    public static float FloatCos (float angle) => float.Cos(angle);
+    public static float FloatSin (float angle) => float.Sin(angle);
+    public static float FloatTan (float angle) => float.Tan(angle);
     public static int IntClamp (int value, int min, int max) => int.Clamp(value, min, max);
     public static float FloatClamp (float value, float min, float max) => float.Clamp(value, min, max);
     public static double DoubleClamp (double value, double min, double max) => double.Clamp(value, min, max);

@@ -130,8 +130,8 @@ public static class User32 {
     private static extern nint CreateWindowEx (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
     private const int CwDefault = unchecked((int)0x80000000);
     public static nint CreateWindow (ushort atom, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None, Vector2i? size = null, nint? moduleHandle = null) {
-        var (w, h) = size is Vector2i s ? (s.X, s.Y) : (CwDefault, CwDefault);
-        var p = CreateWindowEx(styleEx, new(atom), 0, style, CwDefault, CwDefault, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
+        var (w, h) = size is Vector2i s ? (s.X, s.Y) : (640, 480);
+        var p = CreateWindowEx(styleEx, new(atom), 0, style, 10, 10, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
         return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
 
@@ -186,9 +186,14 @@ public static class User32 {
     [DllImport(dll, SetLastError = true)]
     internal static extern int MessageBox (nint hWnd, string text, string caption, uint type);
 
-    [DllImport(dll, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "MoveWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint);
+    private static extern bool MoveWindow_ (nint windowHandle, int x, int y, int w, int h, bool repaint);
+
+    public static void MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint) {
+        if (!MoveWindow_(windowHandle, x, y, w, h, repaint))
+            throw new WinApiException(nameof(MoveWindow));
+    }
 
     [DllImport(dll, SetLastError = true, CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -219,7 +224,7 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool InvalidateRect (nint handle, Rectangle* rect, nint erase);
 
-    public unsafe static void InvalidateRect (nint handle, [In] in Rectangle rect, bool erase) {
+    public unsafe static void InvalidateRect (nint handle, in Rectangle rect, bool erase) {
         fixed (Rectangle* r = &rect)
             if (!InvalidateRect(handle, r, erase ? 1 : 0))
                 throw new Exception(nameof(User32.InvalidateRect));
@@ -258,33 +263,27 @@ public static class User32 {
     //[DllImport(dll, SetLastError = true)]
     //public static extern nint GetWindowLongPtrA (nint hWnd, int nIndex);
 
-    [DllImport(dll, EntryPoint = "SetWindowPos", ExactSpelling = true, SetLastError = true)]
-    private static extern bool SetWindowPos_ (nint window, nint after, int x, int y, int w, int h, uint flags);
+    //[DllImport(dll, SetLastError = true)]
+    //private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
 
-    public static void SetWindowPos (nint window, nint after, int x, int y, int w, int h, WindowPosFlags flags)
-        => SetWindowPos_(window, after, x, y, w, h, (uint)flags);
+    //private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
+    //    var before = Kernel32.GetLastError();
+    //    if (0 != before)
+    //        throw new WinApiException("pre-existing error", before);
+    //    var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
+    //    if (0 == previousValue) {
+    //        var after = Kernel32.GetLastError();
+    //        if (0 != after)
+    //            throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
+    //    }
+    //}
 
-    [DllImport(dll, SetLastError = true)]
-    private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
+    //public static void SetWindow (nint windowHandle, WndProc proc) =>
+    //    SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
 
-    private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
-        var before = Kernel32.GetLastError();
-        if (0 != before)
-            throw new WinApiException("pre-existing error", before);
-        var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
-        if (0 == previousValue) {
-            var after = Kernel32.GetLastError();
-            if (0 != after)
-                throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
-        }
-    }
+    //public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
+    //    SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
 
-    public static void SetWindow (nint windowHandle, WndProc proc) =>
-        SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
-
-    public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
-        SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
-
-    public static void SetWindow (nint windowHandle, WindowStyle style) =>
-        SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
+    //public static void SetWindow (nint windowHandle, WindowStyle style) =>
+    //    SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
 }

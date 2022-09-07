@@ -46,6 +46,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>pushd .. &amp;&amp; ..\fixeol\bin\fixeol.exe &amp;&amp; popd</PostBuildEvent>
+    <PreBuildEvent>pushd .. &amp;&amp; rd /s/q bin &amp;&amp; md bin &amp;&amp; ..\fixeol\bin\fixeol.exe &amp;&amp; popd</PreBuildEvent>
   </PropertyGroup>
 </Project>

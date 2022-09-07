@@ -49,34 +49,40 @@ public abstract class Window:IDisposable {
 
     public DeviceContext Dc { get; private set; }
 
-    public Window () {
+    public Window (WindowStyle? style = null) {
         creating = this;
-        var h = User32.CreateWindow(Atom, WindowStyle.OverlappedWindow);
+        var h = User32.CreateWindow(Atom, style ?? WindowStyle.OverlappedWindow);
         Debug.Assert(h == Handle);
     }
 
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
 
-    protected WindowStyle Style {
-        get =>
-            throw new NotImplementedException();
-        set =>
-            User32.SetWindow(Handle, value);
-    }
+    //protected WindowStyle Style {
+    //    get =>
+    //        throw new NotImplementedException();
+    //    set =>
+    //        User32.SetWindow(Handle, value);
+    //}
 
     protected Rectangle Rect {
-        get => 
+        get =>
             User32.GetWindowRect(Handle);
-        set => 
+        set =>
             throw new NotImplementedException();
     }
 
     protected Vector2i ClientSize {
         get =>
             User32.GetClientAreaSize(Handle);
-        set =>
-            throw new NotImplementedException();
+        set {
+            var clientSize = ClientSize;
+            if (value != clientSize) {
+                var r = Rect;
+                var (w, h) = value + r.Size - clientSize;
+                User32.MoveWindow(Handle, r.Left, r.Top, w, h, false);
+            }
+        }
     }
 
     private readonly int[] KeyState = new int[256 / 32];
@@ -95,20 +101,20 @@ public abstract class Window:IDisposable {
     protected virtual void OnEnterSizeMove () { }
     protected virtual void OnExitSizeMove () { }
     protected virtual void OnFocusChanged (bool isFocused) { }
-    protected virtual unsafe void OnGetMinMaxInfo (MinMaxInfo* x) { }
+    protected virtual void OnGetMinMaxInfo (ref MinMaxInfo x) { }
     protected virtual void OnKeyDown (Key k) { }
     protected virtual void OnKeyUp (Key k) { }
     //protected virtual void OnMouseLeave () { }
     protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnMove (in Vector2i clientRelativePosition) { }
-    protected virtual unsafe void OnMoving (Rectangle* topLeft) { }
+    protected virtual void OnMoving (ref Rectangle topLeft) { }
     protected virtual void OnSize (SizeType type, Vector2i size) { }
-    protected virtual unsafe void OnSizing (SizingEdge edge, Rectangle* r) { }
+    protected virtual void OnSizing (SizingEdge edge, ref Rectangle r) { }
     //protected virtual unsafe void OnCreate (CreateStructW* cs) {    }
     protected virtual void OnPaint (in Rectangle r) { }
     protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
-    protected virtual unsafe void OnWindowPosChanged (WindowPos* p) { }
-    protected virtual unsafe void OnWindowPosChanging (WindowPos* p) { }
+    protected virtual void OnWindowPosChanged (ref WindowPos p) { }
+    protected virtual void OnWindowPosChanging (ref WindowPos p) { }
 
     public bool IsKeyDown (Key key) {
         var (h, l) = FindIndex(key);
@@ -159,7 +165,8 @@ public abstract class Window:IDisposable {
                 return 0;
             case WinMessage.Sizing:
                 if (0 != l) {
-                    OnSizing((SizingEdge)(w & int.MaxValue), (Rectangle*)l);
+                    var r = (Rectangle*)l;
+                    OnSizing((SizingEdge)(w & int.MaxValue), ref *r);
                     return 0;
                 }
                 break;
@@ -168,19 +175,14 @@ public abstract class Window:IDisposable {
                 return 0;
             case WinMessage.Moving:
                 if (0 != l) {
-                    OnMoving((Rectangle*)l);
+                    var r = (Rectangle*)l;
+                    OnMoving(ref *r);
                     return 0;
                 }
                 break;
             case WinMessage.ShowWindow:
                 OnShowWindow(0 != w, (ShowWindow)(int)(l & int.MaxValue));
                 return 0;
-            case WinMessage.WindowPosChanging:
-                if (0 != l) {
-                    OnWindowPosChanging((WindowPos*)l);
-                    return 0;
-                }
-                break;
             case WinMessage.ActivateApp:
                 OnActivateApp(0 != w);
                 return 0;
@@ -198,15 +200,24 @@ public abstract class Window:IDisposable {
                 return 0;
             case WinMessage.EraseBkgnd:
                 return 1;
+            case WinMessage.WindowPosChanging:
+                if (0 != l) {
+                    var p = (WindowPos*)l;
+                    OnWindowPosChanging(ref *p);
+                    return 0;
+                }
+                break;
             case WinMessage.WindowPosChanged:
                 if (0 != l) {
-                    OnWindowPosChanged((WindowPos*)l);
+                    var p = (WindowPos*)l;
+                    OnWindowPosChanged(ref *p);
                     return 0;
                 }
                 break;
             case WinMessage.GetMinMaxInfo:
                 if (0 != l) {
-                    OnGetMinMaxInfo((MinMaxInfo*)l);
+                    var p = (MinMaxInfo*)l;
+                    OnGetMinMaxInfo(ref *p);
                     return 0;
                 }
                 break;
@@ -278,9 +289,10 @@ public abstract class Window:IDisposable {
             case WinMessage.Paint: {
                     var ps = new PaintStruct();
                     var dc = User32.BeginPaint(h, ref ps);
-                    if (!ps.rect.IsEmpty)
+                    //if (!ps.rect.IsEmpty)
                         OnPaint(ps.rect);
                     User32.EndPaint(h, ref ps);
+                    invalidated = false;
                 }
                 return 0;
         }
