@@ -28,7 +28,7 @@ public class GlWindowArb:Window {
         Invalidate();
     }
 
-    protected override void OnPaint () {
+    protected override void OnPaint (in Rectangle r) {
         Render();
         Gdi32.SwapBuffers(Dc);
         LastSync = Stopwatch.GetTimestamp();
