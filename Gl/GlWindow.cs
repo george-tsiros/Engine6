@@ -24,13 +24,15 @@ public class GlWindow:Window {
                 return;
         }
     }
+    protected override void OnIdle () {
+        Invalidate();
+    }
 
     protected override void OnPaint () {
         Render();
         Gdi32.SwapBuffers(Dc);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
-        Invalidate();
     }
 
     protected virtual void Render () {

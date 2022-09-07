@@ -9,7 +9,7 @@ using Win32;
 using static Common.Maths;
 using Common;
 
-class HighlightTriangle:GlWindow {
+class HighlightTriangle:GlWindowArb {
     public HighlightTriangle (Model model) : base() {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
@@ -26,7 +26,7 @@ class HighlightTriangle:GlWindow {
     VertexIndex vertexIndex;
     PassThrough passThrough;
     protected override void OnLoad () {
-        var size = Size;
+        var size = ClientSize;
 
         Pixels = new byte[size.X * size.Y * sizeof(int)];
         fb = new();
@@ -91,7 +91,7 @@ class HighlightTriangle:GlWindow {
         BindFramebuffer(fb);
         color0.BindTo(0);
         vertexId.BindTo(1);
-        Viewport(new(), Size);
+        Viewport(new(), ClientSize);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         UseProgram(vertexIndex);
@@ -100,16 +100,16 @@ class HighlightTriangle:GlWindow {
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
         vertexIndex.Tri((int)lastTriangle);
-        vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)Size.X / Size.Y, 1, 100));
+        vertexIndex.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / fovRatio, (float)ClientSize.X / ClientSize.Y, 1, 100));
         DrawArrays(Primitive.Triangles, 0, VertexCount);
 
-        if (0 <= CursorLocation.X && CursorLocation.X < Size.X && 0 <= CursorLocation.Y && CursorLocation.Y < Size.Y) {
+        if (0 <= CursorLocation.X && CursorLocation.X < ClientSize.X && 0 <= CursorLocation.Y && CursorLocation.Y < ClientSize.Y) {
             ReadOnePixel(CursorLocation.X, CursorLocation.Y, 1, 1, out var p);
             lastTriangle = p / 3;
         }
 
         BindDefaultFramebuffer();
-        Viewport(Vector2i.Zero, Size);
+        Viewport(Vector2i.Zero, ClientSize);
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);
         BindVertexArray(quad);

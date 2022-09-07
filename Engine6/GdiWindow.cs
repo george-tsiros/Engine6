@@ -44,7 +44,7 @@ public class GdiWindow:Window {
     }
 
     protected unsafe override void OnPaint () {
-        var size = Size;
+        var size = ClientSize;
         if (dib is null || dib.Width != size.X || dib.Height != size.Y) {
             dib?.Dispose();
             dib = new(Dc, size.X, size.Y);

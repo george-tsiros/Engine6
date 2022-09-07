@@ -49,8 +49,9 @@ class MovementTest:GlWindowArb {
     }
 
     protected override void OnLoad () {
+        Style = WindowStyle.Overlapped;
         renderingFramebuffer = new();
-        var size = Size;
+        var size = ClientSize;
         renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
         var renderingSurface = new Sampler2D(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         renderingFramebuffer.Attach(renderingSurface, FramebufferAttachment.Color0);
@@ -106,7 +107,7 @@ class MovementTest:GlWindowArb {
         UseProgram(directionalFlat);
         BindFramebuffer(renderingFramebuffer);
         BindVertexArray(renderingVertexArray);
-        var (w, h) = Size;
+        var (w, h) = ClientSize;
         Viewport(0, 0, w, h);
         ClearColor(0.2f, 0.2f, 0.2f, 1);
         Clear(BufferBit.ColorDepth);

@@ -24,13 +24,15 @@ public class GlWindowArb:Window {
                 return;
         }
     }
+    protected override void OnIdle () {
+        Invalidate();
+    }
 
     protected override void OnPaint () {
         Render();
         Gdi32.SwapBuffers(Dc);
         LastSync = Stopwatch.GetTimestamp();
         ++FramesRendered;
-        Invalidate();
     }
 
     protected virtual void Render () {
@@ -45,14 +47,6 @@ public class GlWindowArb:Window {
             ReleaseCurrent(Dc);
             DeleteContext(RenderingContext);
             base.Dispose();
-        }
-    }
-    private Vector2i lastCursorLocation = new(-1, -1);
-    protected override void OnButtonDown (MouseButton depressed, PointShort p) {
-        switch (depressed) {
-            case MouseButton.Right:
-            lastCursorLocation = CursorLocation;
-                return;
         }
     }
 }

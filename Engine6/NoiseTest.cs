@@ -13,26 +13,24 @@ using static Common.Maths;
 using Common;
 using System.Text;
 
-class NoiseTest:GlWindowArb {
+internal class NoiseTest:GlWindowArb {
+    private const int _WIDTH = 256, _HEIGHT = 256;
+    private const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
+    private const int ThreadCount = 4;
 
-    const int _WIDTH = 256, _HEIGHT = 256;
-    const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
-    const int ThreadCount = 4;
-
-    public NoiseTest () : base(null) {
+    public NoiseTest () : base() {
         rowsPerThread = _HEIGHT / ThreadCount;
-        raster = new(Size, 4, 1);
     }
 
-    VertexArray quad;
-    Sampler2D tex;
-    Raster raster;
-    readonly int rowsPerThread;
-    FastNoiseLite[] noises;
-    CountdownEvent countdown;
-    PassThrough passThrough;
+    private VertexArray quad;
+    private Sampler2D tex;
+    private Raster raster;
+    private readonly int rowsPerThread;
+    private FastNoiseLite[] noises;
+    private CountdownEvent countdown;
+    private PassThrough passThrough;
 
-    void ProcArrays (int threadIndex) {
+    private void ProcArrays (int threadIndex) {
         var ms = FramesRendered;
         var start = rowsPerThread * threadIndex;
         var end = start + rowsPerThread;
@@ -62,6 +60,7 @@ class NoiseTest:GlWindowArb {
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);
         tex = new(new(_WIDTH, _HEIGHT), TextureFormat.Rgba8) { Min = MinFilter.Nearest, Mag = MagFilter.Nearest, Wrap = Wrap.ClampToEdge };
         noises = new FastNoiseLite[ThreadCount];
+        raster = new(ClientSize, 4, 1);
         raster.ClearU32(Color.Black);
         for (var i = 0; i < ThreadCount; ++i)
             noises[i] = new FastNoiseLite(123);
@@ -74,7 +73,7 @@ class NoiseTest:GlWindowArb {
         SetSwapInterval(1);
     }
 
-    static readonly Vector4[] QuadVertices = {
+    private static readonly Vector4[] QuadVertices = {
         new(-1f, -1f, 0, 1),
         new(+1f, -1f, 0, 1),
         new(+1f, +1f, 0, 1),
@@ -87,7 +86,7 @@ class NoiseTest:GlWindowArb {
         countdown.Wait();
         tex.Upload(raster);
         StartThreads();
-        Viewport(new(), Size);
+        Viewport(new(), ClientSize);
         ClearColor(0f, 0f, 0f, 1f);
         Clear(BufferBit.ColorDepth);
         UseProgram(passThrough);
@@ -97,7 +96,7 @@ class NoiseTest:GlWindowArb {
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 
-    void StartThreads () {
+    private void StartThreads () {
         countdown.Reset(ThreadCount);
         for (var i = 0; i < ThreadCount; ++i) {
             var ok = ThreadPool.QueueUserWorkItem(ProcArrays, i, false);

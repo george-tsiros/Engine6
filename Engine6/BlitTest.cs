@@ -10,17 +10,6 @@ using static Gl.Opengl;
 using static Common.Maths;
 using Common;
 
-enum FooNum {
-    Frame = 1,
-    Software,
-    Hardware,
-    Clear,
-    Geometry,
-    Visibility,
-    Rasterization,
-    TextureUpload,
-}
-
 public class BlitTest:GlWindowArb {
     static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
 
@@ -60,7 +49,6 @@ public class BlitTest:GlWindowArb {
 
     VertexArray someLines;
     VertexBuffer<Vector4> quadBuffer;
-    Perf<FooNum> prf;
     PassThrough passThrough;
     DirectionalFlat directionalFlat;
     Lines lines;
@@ -81,7 +69,7 @@ public class BlitTest:GlWindowArb {
     }
 
     protected override void OnLoad () {
-        var size = Size;
+        var size = ClientSize;
         offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
         offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };
         offscreenFramebuffer = new();
@@ -122,11 +110,9 @@ public class BlitTest:GlWindowArb {
         Disposables.Add(lines);
         Disposables.Add(someLines);
         Disposables.Add(quadBuffer);
-        Disposables.Add(prf = new("log.bin"));
     }
 
     protected override void Render () {
-        prf.Enter((int)FooNum.Frame);
         var dx = IsKeyDown(Key.C) ? .1f : 0f;
         if (IsKeyDown(Key.Z))
             dx -= .1f;
@@ -138,13 +124,11 @@ public class BlitTest:GlWindowArb {
             dz -= .1f;
         camera.Location += new Vector3(dx, dy, dz);
         BindFramebuffer(offscreenFramebuffer);
-        var size = Size;
+        var size = ClientSize;
         Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
 
-        prf.Enter((int)FooNum.Software);
         RenderSoftware();
-        prf.Leave();
         BindDefaultFramebuffer();
         BindVertexArray(quad);
         UseProgram(passThrough);
@@ -162,21 +146,17 @@ public class BlitTest:GlWindowArb {
         lines.Offset(cursorLocation);
         DrawArrays(Primitive.LineStrip, 0, 3);
 
-        prf.Leave();
     }
     Vector2i cursorLocation = new(-1, -1);
 
     void RenderSoftware () {
         var textRow = -Font.Height;
-        prf.Enter((int)FooNum.Clear);
         softwareRenderSurface.ClearU32(Color.Black);
-        prf.Leave();
-        prf.Enter((int)FooNum.Geometry);
         var faceCount = Faces.Length;
         var vertexCount = Vertices.Length;
         var model = Matrix4d.RotationY(theta) * Matrix4d.RotationX(-phi);
         var translation = Matrix4d.Translate(-camera.Location);
-        var r = Size;
+        var r = ClientSize;
         var projection = Matrix4d.Project(dPi / 4, (double)r.X / r.Y, 1, 100);
         for (var i = 0; i < vertexCount; ++i) {
             var modelSpace = Vertices[i] * model;
@@ -186,8 +166,7 @@ public class BlitTest:GlWindowArb {
             ClipSpace[i] = n;
             ScreenSpace[i] = NormalizedToScreen(n, r);
         }
-        prf.Leave();
-        prf.Enter((int)FooNum.Visibility);
+
         var drawn = 0;
         for (var i = 0; i < faceCount; ++i) {
             var (a, b, c) = Faces[i];
@@ -209,8 +188,7 @@ public class BlitTest:GlWindowArb {
             FacesAndDots[drawn] = ((float)Vector3d.Dot(Vector3d.Normalize(cross), -lightDirection), i);
             ++drawn;
         }
-        prf.Leave();
-        prf.Enter((int)FooNum.Rasterization);
+
         if (drawn > 0) {
             if (drawn > 1)
                 Array.Sort(FaceZ, FacesAndDots, 0, drawn);
@@ -225,11 +203,8 @@ public class BlitTest:GlWindowArb {
         }
         softwareRenderSurface.DrawString(VersionString, Font, 0, textRow += Font.Height);
 
-        prf.Leave();
-        prf.Enter((int)FooNum.TextureUpload);
-
         softwareRenderTexture.Upload(softwareRenderSurface);
-        prf.Leave();
+
         UseProgram(passThrough);
         BindVertexArray(quad);
         Enable(Capability.DepthTest);
@@ -238,7 +213,6 @@ public class BlitTest:GlWindowArb {
         softwareRenderTexture.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
-
     }
 
     protected override void OnKeyDown (Key k) {
@@ -253,14 +227,7 @@ public class BlitTest:GlWindowArb {
     }
 
     protected override void OnMouseMove (in Vector2i e) {
-        //if (CursorGrabbed) {
-        //    switch (Buttons) {
-        //        case Buttons.Left:
-        //            theta = Extra.ModuloTwoPi(theta, 0.01 * e.X);
-        //            phi = DoubleClamp(phi - 0.01 * e.Y, -dPi / 2, dPi / 2);
-        //            break;
-        //    }
-        //} else {
+
         var d = e - lastCursorPosition;
         switch (Buttons) {
             case MouseButton.Left:
@@ -268,7 +235,6 @@ public class BlitTest:GlWindowArb {
                 phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
                 break;
         }
-        //}
         lastCursorPosition = e;
     }
 }

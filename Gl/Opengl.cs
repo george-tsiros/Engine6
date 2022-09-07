@@ -36,13 +36,13 @@ unsafe public static class Opengl {
     [return: MarshalAs(UnmanagedType.Bool)]
     private extern static bool wglDeleteContext (nint hglrc);
 
-    private static GlExtensions Extensions;
+    private static GlFunctions functions;
 
-    private class GlExtensions {
+    private class GlFunctions {
         private static nint opengl32dll;
 
-        internal GlExtensions () {
-            foreach (var f in typeof(GlExtensions).GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+        internal GlFunctions () {
+            foreach (var f in typeof(GlFunctions).GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
                 if (f.IsInitOnly && 0 == (nint)f.GetValue(this)) {
                     var extPtr = wglGetProcAddress(f.Name);
                     if (0 != extPtr) {
@@ -147,8 +147,8 @@ unsafe public static class Opengl {
     private static delegate* unmanaged[Stdcall]<nint, nint, int*, nint> wglCreateContextAttribsARB;
     private static delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
 
-    private static int GetSwapIntervalEXT () => Extensions.wglGetSwapIntervalEXT();
-    private static bool SwapIntervalEXT (int frames) => 0 != Extensions.wglSwapIntervalEXT(frames);
+    private static int GetSwapIntervalEXT () => functions.wglGetSwapIntervalEXT();
+    private static bool SwapIntervalEXT (int frames) => 0 != functions.wglSwapIntervalEXT(frames);
 
     public static void SetSwapInterval (int value) {
         if (value != GetSwapIntervalEXT()) {
@@ -192,41 +192,41 @@ unsafe public static class Opengl {
 
     public static void ReadOnePixel (int x, int y, int width, int height, out uint pixel) {
         fixed (uint* p = &pixel)
-            Extensions.glReadnPixels(x, y, width, height, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
+            functions.glReadnPixels(x, y, width, height, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
     }
-    public static void DepthFunc (DepthFunction function) => Extensions.glDepthFunc((int)function);
+    public static void DepthFunc (DepthFunction function) => functions.glDepthFunc((int)function);
     public static GlErrorCodes GetError () => (GlErrorCodes)glGetError();
     public static nint GetCurrentContext () => wglGetCurrentContext();
-    public static void Viewport (Vector2i position, Vector2i size) => Extensions.glViewport(position.X, position.Y, size.X, size.Y);
-    public static int GetAttribLocation (int program, string name) => GetLocation(program, name, Extensions.glGetAttribLocation);
-    public static int GetUniformLocation (int program, string name) => GetLocation(program, name, Extensions.glGetUniformLocation);
+    public static void Viewport (Vector2i position, Vector2i size) => functions.glViewport(position.X, position.Y, size.X, size.Y);
+    public static int GetAttribLocation (int program, string name) => GetLocation(program, name, functions.glGetAttribLocation);
+    public static int GetUniformLocation (int program, string name) => GetLocation(program, name, functions.glGetUniformLocation);
     //public static void ReadnPixels (int x, int y, int width, int height, int format, int type, int bufSize, void* data) => Extensions.glReadnPixels(x, y, width, height, format, type, bufSize, data);
-    public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => Extensions.glNamedFramebufferReadBuffer(framebuffer, (int)mode);
-    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => Extensions.glNamedFramebufferDrawBuffer(framebuffer, (int)attachment);
+    public static void NamedFramebufferReadBuffer (int framebuffer, DrawBuffer mode) => functions.glNamedFramebufferReadBuffer(framebuffer, (int)mode);
+    public static void NamedFramebufferDrawBuffer (int framebuffer, DrawBuffer attachment) => functions.glNamedFramebufferDrawBuffer(framebuffer, (int)attachment);
     public static void NamedFramebufferDrawBuffers (int framebuffer, params DrawBuffer[] attachments) {
         if (0 == attachments.Length)
             throw new InvalidOperationException("must have at least one attachment");
         fixed (DrawBuffer* db = attachments) {
             int* p = (int*)db;
-            Extensions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, p);
+            functions.glNamedFramebufferDrawBuffers(framebuffer, attachments.Length, p);
         }
     }
-    public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => Extensions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
-    public static void NamedFramebufferTexture (int framebuffer, FramebufferAttachment attachment, int texture) => Extensions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
-    public static FramebufferStatus CheckNamedFramebufferStatus (int framebuffer, FramebufferTarget target) => (FramebufferStatus)Extensions.glCheckNamedFramebufferStatus(framebuffer, (int)target);
+    public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => functions.glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
+    public static void NamedFramebufferTexture (int framebuffer, FramebufferAttachment attachment, int texture) => functions.glNamedFramebufferTexture(framebuffer, (int)attachment, texture, 0);
+    public static FramebufferStatus CheckNamedFramebufferStatus (int framebuffer, FramebufferTarget target) => (FramebufferStatus)functions.glCheckNamedFramebufferStatus(framebuffer, (int)target);
     //public static int CheckFramebufferStatus (FramebufferTarget target) => Extensions.glCheckFramebufferStatus((int)target);
-    public static void Enable (Capability cap) => Extensions.glEnable((int)cap);
-    public static void Disable (Capability cap) => Extensions.glDisable((int)cap);
-    public static bool IsEnabled (Capability cap) => 0 != Extensions.glIsEnabled((int)cap);
+    public static void Enable (Capability cap) => functions.glEnable((int)cap);
+    public static void Disable (Capability cap) => functions.glDisable((int)cap);
+    public static bool IsEnabled (Capability cap) => 0 != functions.glIsEnabled((int)cap);
     public static void ActiveTexture (int i) {
         if (i != GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0)
-            Extensions.glActiveTexture(Const.TEXTURE0 + i);
+            functions.glActiveTexture(Const.TEXTURE0 + i);
     }
-    public static void AttachShader (int p, int s) => Extensions.glAttachShader(p, s);
-    public static void BindBuffer (BufferTarget target, int buffer) => Extensions.glBindBuffer((int)target, buffer);
+    public static void AttachShader (int p, int s) => functions.glAttachShader(p, s);
+    public static void BindBuffer (BufferTarget target, int buffer) => functions.glBindBuffer((int)target, buffer);
     public static void BindDefaultFramebuffer () {
         if (0 != GetIntegerv(IntParameter.FramebufferBinding)) {
-            Extensions.glBindFramebuffer((int)FramebufferTarget.Framebuffer, 0);
+            functions.glBindFramebuffer((int)FramebufferTarget.Framebuffer, 0);
             if (0 != GetIntegerv(IntParameter.FramebufferBinding))
                 throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), 0));
         }
@@ -234,7 +234,7 @@ unsafe public static class Opengl {
     }
     public static void BindFramebuffer (Framebuffer buffer) {
         if (buffer != GetIntegerv(IntParameter.FramebufferBinding)) {
-            Extensions.glBindFramebuffer((int)FramebufferTarget.Framebuffer, buffer);
+            functions.glBindFramebuffer((int)FramebufferTarget.Framebuffer, buffer);
             if (buffer != GetIntegerv(IntParameter.FramebufferBinding))
                 throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), buffer));
         }
@@ -243,54 +243,54 @@ unsafe public static class Opengl {
     //public static void BindRenderbuffer (int buffer) => Extensions.glBindRenderbuffer(Const.RENDERBUFFER, buffer);
     public static void BindVertexArray (VertexArray value) {
         if (value != GetIntegerv(IntParameter.VertexArrayBinding)) {
-            Extensions.glBindVertexArray(value);
+            functions.glBindVertexArray(value);
             if (value != GetIntegerv(IntParameter.VertexArrayBinding))
                 throw new GlException(SetInt32Failed(nameof(IntParameter.VertexArrayBinding), value));
         }
     }
 
-    public static void CompileShader (int s) => Extensions.glCompileShader(s);
-    public static int CreateProgram () => Extensions.glCreateProgram();
-    public static int CreateShader (ShaderType shaderType) => Extensions.glCreateShader((int)shaderType);
-    public static void DebugMessageCallback (DebugProc proc, nint userParam) => Extensions.glDebugMessageCallback(proc, userParam);
-    public static void DeleteProgram (int program) => Extensions.glDeleteProgram(program);
-    public static void DeleteShader (int shader) => Extensions.glDeleteShader(shader);
-    public static void DeleteTexture (int texture) => Extensions.glDeleteTextures(1, &texture);
-    public static void DeleteBuffer (int i) => Extensions.glDeleteBuffers(1, &i);
-    public static void DeleteRenderbuffer (int i) => Extensions.glDeleteRenderbuffers(1, &i);
-    public static void DeleteFramebuffer (int i) => Extensions.glDeleteFramebuffers(1, &i);
-    public static void DeleteVertexArray (int vao) => Extensions.glDeleteVertexArrays(1, &vao);
-    public static void DrawArrays (Primitive mode, int first, int count) => Extensions.glDrawArrays((int)mode, first, count);
-    public static void DrawArraysInstanced (Primitive mode, int firstIndex, int indicesPerInstance, int instancesCount) => Extensions.glDrawArraysInstanced((int)mode, firstIndex, indicesPerInstance, instancesCount);
-    public static void EnableVertexArrayAttrib (int id, int i) => Extensions.glEnableVertexArrayAttrib(id, i);
-    public static void LinkProgram (int p) => Extensions.glLinkProgram(p);
-    public static void NamedRenderbufferStorage (int renderbuffer, RenderbufferFormat format, int width, int height) => Extensions.glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
-    public static void NamedBufferStorage (int buffer, long size, nint data, int flags) => Extensions.glNamedBufferStorage(buffer, size, data, flags);
-    public static void NamedBufferSubData (int buffer, long offset, long size, void* data) => Extensions.glNamedBufferSubData(buffer, offset, size, data);
+    public static void CompileShader (int s) => functions.glCompileShader(s);
+    public static int CreateProgram () => functions.glCreateProgram();
+    public static int CreateShader (ShaderType shaderType) => functions.glCreateShader((int)shaderType);
+    public static void DebugMessageCallback (DebugProc proc, nint userParam) => functions.glDebugMessageCallback(proc, userParam);
+    public static void DeleteProgram (int program) => functions.glDeleteProgram(program);
+    public static void DeleteShader (int shader) => functions.glDeleteShader(shader);
+    public static void DeleteTexture (int texture) => functions.glDeleteTextures(1, &texture);
+    public static void DeleteBuffer (int i) => functions.glDeleteBuffers(1, &i);
+    public static void DeleteRenderbuffer (int i) => functions.glDeleteRenderbuffers(1, &i);
+    public static void DeleteFramebuffer (int i) => functions.glDeleteFramebuffers(1, &i);
+    public static void DeleteVertexArray (int vao) => functions.glDeleteVertexArrays(1, &vao);
+    public static void DrawArrays (Primitive mode, int first, int count) => functions.glDrawArrays((int)mode, first, count);
+    public static void DrawArraysInstanced (Primitive mode, int firstIndex, int indicesPerInstance, int instancesCount) => functions.glDrawArraysInstanced((int)mode, firstIndex, indicesPerInstance, instancesCount);
+    public static void EnableVertexArrayAttrib (int id, int i) => functions.glEnableVertexArrayAttrib(id, i);
+    public static void LinkProgram (int p) => functions.glLinkProgram(p);
+    public static void NamedRenderbufferStorage (int renderbuffer, RenderbufferFormat format, int width, int height) => functions.glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
+    public static void NamedBufferStorage (int buffer, long size, nint data, int flags) => functions.glNamedBufferStorage(buffer, size, data, flags);
+    public static void NamedBufferSubData (int buffer, long offset, long size, void* data) => functions.glNamedBufferSubData(buffer, offset, size, data);
     //public static void Scissor (int x, int y, int width, int height) => Extensions.glScissor(x, y, width, height);
-    public static void TextureBaseLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
-    public static void TextureFilter (int texture, MagFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
-    public static void TextureFilter (int texture, MinFilter filter) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
-    public static void TextureMaxLevel (int texture, int level) => Extensions.glTextureParameteri(texture, Const.TEXTURE_MAX_LEVEL, level);
-    public static void TextureStorage2D (int texture, int levels, TextureFormat sizedFormat, int width, int height) => Extensions.glTextureStorage2D(texture, levels, (int)sizedFormat, width, height);
-    public static void TextureSubImage2D (int texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, int type, void* pixels) => Extensions.glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
-    public static void TextureWrap (int texture, WrapCoordinate c, Wrap w) => Extensions.glTextureParameteri(texture, (int)c, (int)w);
-    public static void Uniform (int uniform, float f) => Extensions.glUniform1f(uniform, f);
-    public static void Uniform (int uniform, int i) => Extensions.glUniform1i(uniform, i);
-    public static void Uniform (int uniform, Matrix4x4 m) => Extensions.glUniformMatrix4fv(uniform, 1, 0, m);
-    public static void Uniform (int uniform, Vector2 v) => Extensions.glUniform2f(uniform, v.X, v.Y);
-    public static void Uniform (int uniform, Vector2i v) => Extensions.glUniform2i(uniform, v.X, v.Y);
-    public static void Uniform (int uniform, Vector4 v) => Extensions.glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
-    public static void UseProgram (int p) => Extensions.glUseProgram(p);
-    public static void VertexAttribDivisor (int index, int divisor) => Extensions.glVertexAttribDivisor(index, divisor);
-    public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => Extensions.glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, ptr);
-    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => Extensions.glVertexAttribIPointer(index, size, (int)type, stride, ptr);
-    public static long GetTextureHandleARB (int texture) => Extensions.glGetTextureHandleARB(texture);
-    public static void MakeTextureHandleResidentARB (long textureHandle) => Extensions.glMakeTextureHandleResidentARB(textureHandle);
-    public static void ClearColor (float r, float g, float b, float a) => Extensions.glClearColor(r, g, b, a);
-    public static void Clear (BufferBit what) => Extensions.glClear((int)what);
-    public static void BindTexture (int type, int id) => Extensions.glBindTexture(type, id);
-    public static void Viewport (int x, int y, int w, int h) => Extensions.glViewport(x, y, w, h);
+    public static void TextureBaseLevel (int texture, int level) => functions.glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
+    public static void TextureFilter (int texture, MagFilter filter) => functions.glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
+    public static void TextureFilter (int texture, MinFilter filter) => functions.glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
+    public static void TextureMaxLevel (int texture, int level) => functions.glTextureParameteri(texture, Const.TEXTURE_MAX_LEVEL, level);
+    public static void TextureStorage2D (int texture, int levels, TextureFormat sizedFormat, int width, int height) => functions.glTextureStorage2D(texture, levels, (int)sizedFormat, width, height);
+    public static void TextureSubImage2D (int texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, int type, void* pixels) => functions.glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
+    public static void TextureWrap (int texture, WrapCoordinate c, Wrap w) => functions.glTextureParameteri(texture, (int)c, (int)w);
+    public static void Uniform (int uniform, float f) => functions.glUniform1f(uniform, f);
+    public static void Uniform (int uniform, int i) => functions.glUniform1i(uniform, i);
+    public static void Uniform (int uniform, Matrix4x4 m) => functions.glUniformMatrix4fv(uniform, 1, 0, m);
+    public static void Uniform (int uniform, Vector2 v) => functions.glUniform2f(uniform, v.X, v.Y);
+    public static void Uniform (int uniform, Vector2i v) => functions.glUniform2i(uniform, v.X, v.Y);
+    public static void Uniform (int uniform, Vector4 v) => functions.glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
+    public static void UseProgram (int p) => functions.glUseProgram(p);
+    public static void VertexAttribDivisor (int index, int divisor) => functions.glVertexAttribDivisor(index, divisor);
+    public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => functions.glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, ptr);
+    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => functions.glVertexAttribIPointer(index, size, (int)type, stride, ptr);
+    public static long GetTextureHandleARB (int texture) => functions.glGetTextureHandleARB(texture);
+    public static void MakeTextureHandleResidentARB (long textureHandle) => functions.glMakeTextureHandleResidentARB(textureHandle);
+    public static void ClearColor (float r, float g, float b, float a) => functions.glClearColor(r, g, b, a);
+    public static void Clear (BufferBit what) => functions.glClear((int)what);
+    public static void BindTexture (int type, int id) => functions.glBindTexture(type, id);
+    public static void Viewport (int x, int y, int w, int h) => functions.glViewport(x, y, w, h);
     private static int GetLocation (int program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
         var l = Encoding.ASCII.GetBytes(name, bytes);
@@ -301,10 +301,10 @@ unsafe public static class Opengl {
             return f(program, p);
     }
 
-    public static int CreateBuffer () => Create(Extensions.glCreateBuffers);
-    public static int CreateVertexArray () => Create(Extensions.glCreateVertexArrays);
-    public static int CreateFramebuffer () => Create(Extensions.glCreateFramebuffers);
-    public static int CreateRenderbuffer () => Create(Extensions.glCreateRenderbuffers);
+    public static int CreateBuffer () => Create(functions.glCreateBuffers);
+    public static int CreateVertexArray () => Create(functions.glCreateVertexArrays);
+    public static int CreateFramebuffer () => Create(functions.glCreateFramebuffers);
+    public static int CreateRenderbuffer () => Create(functions.glCreateRenderbuffers);
 
     private static int Create (delegate* unmanaged[Stdcall]<int, int*, void> f) {
         int i;
@@ -319,18 +319,18 @@ unsafe public static class Opengl {
             throw new Exception($"expected {source.Length} characters, not {l}");
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)
-            Extensions.glShaderSource(id, 1, &strPtr, null);
+            functions.glShaderSource(id, 1, &strPtr, null);
     }
 
     public static int GetProgram (int id, ProgramParameter p) { // I wish I could join this with GetShader
         int i;
-        Extensions.glGetProgramiv(id, (int)p, &i);
+        functions.glGetProgramiv(id, (int)p, &i);
         return i;
     }
 
     public static int GetShader (int id, ShaderParameter p) {
         int i;
-        Extensions.glGetShaderiv(id, (int)p, &i);
+        functions.glGetShaderiv(id, (int)p, &i);
         return i;
     }
 
@@ -340,7 +340,7 @@ unsafe public static class Opengl {
         int type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
-            Extensions.glGetActiveAttrib(id, index, maxLength, &length, &size, &type, p);
+            functions.glGetActiveAttrib(id, index, maxLength, &length, &size, &type, p);
         var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
         return (size, (AttribType)type, n);
     }
@@ -351,7 +351,7 @@ unsafe public static class Opengl {
         int type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
-            Extensions.glGetActiveUniform(id, index, maxLength, &length, &size, &type, p);
+            functions.glGetActiveUniform(id, index, maxLength, &length, &size, &type, p);
         var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
         return (size, (UniformType)type, n);
     }
@@ -361,7 +361,7 @@ unsafe public static class Opengl {
         var bufferLength = Maths.IntMin(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
-            Extensions.glGetProgramInfoLog(id, bufferLength, null, p);
+            functions.glGetProgramInfoLog(id, bufferLength, null, p);
         return Encoding.ASCII.GetString(bytes);
     }
 
@@ -370,13 +370,13 @@ unsafe public static class Opengl {
         var bufferLength = Maths.IntMin(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
-            Extensions.glGetShaderInfoLog(id, bufferLength, null, p);
+            functions.glGetShaderInfoLog(id, bufferLength, null, p);
         return Encoding.ASCII.GetString(bytes);
     }
 
     public static int GetIntegerv (IntParameter p) {
         int i;
-        Extensions.glGetIntegerv((int)p, &i);
+        functions.glGetIntegerv((int)p, &i);
         return i;
     }
     public static void ReleaseCurrent (DeviceContext deviceContext) {
@@ -384,13 +384,13 @@ unsafe public static class Opengl {
             throw new Exception("no current context");
         if (!wglMakeCurrent((nint)deviceContext, 0))
             throw new WinApiException(nameof(wglMakeCurrent));
-        Extensions = null;
+        functions = null;
         supportedExtensions.Clear();
     }
 
     private static string GetString (OpenglString name) {
         GlException.Assert();
-        var ptr = Extensions.glGetString((int)name);
+        var ptr = functions.glGetString((int)name);
         GlException.Assert();
         if (0 == ptr)
             throw new Exception("glGetString returned 0");
@@ -411,7 +411,7 @@ unsafe public static class Opengl {
         if (wglCreateContextAttribsARB is null)
             throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
 
-        Extensions = new();
+        functions = new();
 
         VersionString = GetString(OpenglString.Version);
         Renderer = GetString(OpenglString.Renderer);
@@ -428,7 +428,7 @@ unsafe public static class Opengl {
         if (LegacyOpenglVersion < ContextVersion) {
             int count = GetIntegerv(IntParameter.NumExtensions);
             for (var i = 0; i < count; ++i) {
-                var p = Extensions.glGetStringi((int)OpenglString.Extensions, i);
+                var p = functions.glGetStringi((int)OpenglString.Extensions, i);
                 if (null == p)
                     throw new Exception($"failed to get ptr to extension string at index {i}");
                 supportedExtensions.Add(Marshal.PtrToStringAnsi((nint)p));
@@ -445,7 +445,7 @@ unsafe public static class Opengl {
 
     public static int CreateTexture2D () {
         int i;
-        Extensions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
+        functions.glCreateTextures(Const.TEXTURE_2D, 1, &i);
         return i;
     }
 
