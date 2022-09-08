@@ -11,9 +11,8 @@ using static Common.Maths;
 using Common;
 
 public class BlitTest:GlWindowArb {
-    static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
-
-    static readonly Vector4[] QuadVertices = {
+    private static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
+    private static readonly Vector4[] QuadVertices = {
         new(-1f, -1f, 0, 1),
         new(+1f, -1f, 0, 1),
         new(+1f, +1f, 0, 1),
@@ -22,36 +21,34 @@ public class BlitTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    static Vector2i NormalizedToScreen (in Vector3d n, in Vector2i size) =>
+    private static Vector2i NormalizedToScreen (in Vector3d n, in Vector2i size) =>
         new((int)((n.X + 1) * 0.5 * size.X), (int)((n.Y + 1) * 0.5 * size.Y));
 
-    static bool IsInside (in Vector3d v) =>
+    private static bool IsInside (in Vector3d v) =>
         -1 < v.Z && v.Z < 1;
 
-    Camera camera = new(new(0, 0, 20));
-    readonly Vector3i[] Faces;
-    readonly Vector4d[] Vertices;
-    Vector2i lastCursorPosition = new(-1, -1);
-    double phi = 0, theta = 0;
-    readonly Vector3d lightDirection = Vector3d.Normalize(-Vector3d.One);
-
-    Raster softwareRenderSurface;
-    Sampler2D softwareRenderTexture;
-    VertexArray quad;
-    Framebuffer offscreenFramebuffer;
-    Sampler2D offscreenRenderingSurface;
-    Renderbuffer offscreenDepthbuffer;
-    Vector3d[] ClipSpace;
-    Vector2i[] ScreenSpace;
-    Vector3d[] ModelSpace;
-    double[] FaceZ;
-    (double depth, int index)[] FacesAndDots;
-
-    VertexArray someLines;
-    VertexBuffer<Vector4> quadBuffer;
-    PassThrough passThrough;
-    DirectionalFlat directionalFlat;
-    Lines lines;
+    private ICamera camera = new Camera(new(0, 0, 20));
+    private readonly Vector3i[] Faces;
+    private readonly Vector4d[] Vertices;
+    private Vector2i lastCursorPosition = new(-1, -1);
+    private double phi = 0, theta = 0;
+    private readonly Vector3d lightDirection = Vector3d.Normalize(-Vector3d.One);
+    private Raster softwareRenderSurface;
+    private Sampler2D softwareRenderTexture;
+    private VertexArray quad;
+    private Framebuffer offscreenFramebuffer;
+    private Sampler2D offscreenRenderingSurface;
+    private Renderbuffer offscreenDepthbuffer;
+    private Vector3d[] ClipSpace;
+    private Vector2i[] ScreenSpace;
+    private Vector3d[] ModelSpace;
+    private double[] FaceZ;
+    private (double depth, int index)[] FacesAndDots;
+    private VertexArray someLines;
+    private VertexBuffer<Vector4> quadBuffer;
+    private PassThrough passThrough;
+    private DirectionalFlat directionalFlat;
+    private Lines lines;
 
     public BlitTest (Model m = null, Vector2i? size = null) : base() {
         Debug.Assert(Stopwatch.Frequency == 10_000_000);
@@ -137,7 +134,7 @@ public class BlitTest:GlWindowArb {
 
         DrawArrays(Primitive.Triangles, 0, 6);
 
-       BindVertexArray(someLines);
+        BindVertexArray(someLines);
         UseProgram(lines);
         Disable(Capability.DepthTest);
         Disable(Capability.CullFace);
@@ -147,9 +144,10 @@ public class BlitTest:GlWindowArb {
         DrawArrays(Primitive.LineStrip, 0, 3);
 
     }
-    Vector2i cursorLocation = new(-1, -1);
 
-    void RenderSoftware () {
+    private Vector2i cursorLocation = new(-1, -1);
+
+    private void RenderSoftware () {
         var textRow = -Font.Height;
         softwareRenderSurface.ClearU32(Color.Black);
         var faceCount = Faces.Length;

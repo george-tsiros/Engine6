@@ -5,9 +5,11 @@ using System;
 using System.Runtime.InteropServices;
 
 unsafe public class Dib:IDisposable {
+
     private const int MaxBitmapDimension = 8192;
 
-    public Dib (DeviceContext dc, int w, int h) {
+    public Dib (DeviceContext dc, Vector2i size) {
+        var (w, h) = size;
         if (w < 1 || MaxBitmapDimension < w)
             throw new ArgumentOutOfRangeException(nameof(w));
         if (h < 1 || MaxBitmapDimension < h)

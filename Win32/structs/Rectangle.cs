@@ -43,5 +43,5 @@ public struct Rectangle {
         Left == Right || Bottom == Top;
 
     public override string ToString () =>
-        $"({Left},{Top})-({Right},{Bottom})";
+        $"[{Location}, {Width} x {Height}]";
 }

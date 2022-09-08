@@ -21,7 +21,7 @@ class MovementTest:GlWindowArb {
 
     private Vector2i lastCursorPosition = new(-1, -1);
     private Vector4 lightDirection = new(0, -1, 0, 0);
-    private Camera camera = new(new(0, 0, EarthRadius + 100e3f));
+    private ICamera camera = new Camera(new(0, 0, EarthRadius + 100e3f));
     private VertexArray renderingVertexArray;
     private VertexArray presentationVertexArray;
     private Framebuffer renderingFramebuffer;

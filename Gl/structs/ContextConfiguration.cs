@@ -6,5 +6,5 @@ public readonly struct ContextConfiguration {
     public bool? DoubleBuffer { get; init; }
     public bool? Composited { get; init; }
     public SwapMethod? SwapMethod { get; init; }
-    public static readonly ContextConfiguration Default = new() { ColorBits = 32, DepthBits = 32, DoubleBuffer=true, SwapMethod = Gl.SwapMethod.Undefined };
+    public static readonly ContextConfiguration Default = new() { ColorBits = 32, DepthBits = 24, DoubleBuffer=true, };
 }

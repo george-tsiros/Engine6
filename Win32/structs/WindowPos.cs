@@ -10,5 +10,5 @@ public struct WindowPos {
     public int w;
     public int h;
     public WindowPosFlags flags;
-    public override string ToString () => $"({x},{y}), {w}x{h}, {string.Join(", ", ToFlags(flags))}";
+    public override string ToString () => $"{x}, {y}, {w} x {h}, {string.Join(", ", ToFlags(flags))}";
 }
