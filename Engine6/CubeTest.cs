@@ -9,9 +9,6 @@ using static Gl.Opengl;
 class CubeTest:GlWindowArb {
 
     protected override void OnInput (int dx, int dy) {
-        // x != 0, y == 0 => rotation along Z axis (roll, like elite)
-        // x == 0, y != 0 => rotation along X axis (pitch)
-        // so if both != 0 , the axis of rotation is a linear combination of UnitX + UnitZ
         if (0 != dx)
             q *= Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -.001f * dx);
 
