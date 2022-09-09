@@ -21,7 +21,7 @@ class MovementTest:GlWindowArb {
 
     private Vector2i lastCursorPosition = new(-1, -1);
     private Vector4 lightDirection = new(0, -1, 0, 0);
-    private ICamera camera = new Camera(new(0, 0, EarthRadius + 100e3f));
+    private ICamera camera;// = new Camera(new(0, 0, EarthRadius + 100e3f));
     private VertexArray renderingVertexArray;
     private VertexArray presentationVertexArray;
     private Framebuffer renderingFramebuffer;
@@ -42,7 +42,7 @@ class MovementTest:GlWindowArb {
         if (Buttons.HasFlag(MouseButton.Right)) {
             if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
                 var delta = lastCursorPosition - e;
-                camera.Rotate(-.001f * (Vector2)delta);
+                camera.Rotate(-.001f * delta.Y, -.001f * delta.X, 0);
             }
             lastCursorPosition = e;
             return;
@@ -64,7 +64,8 @@ class MovementTest:GlWindowArb {
         Debug.Assert(0 < directionalFlat);
         UseProgram(directionalFlat);
         renderingVertexArray = new();
-        var model = Model.Sphere(200, 100, EarthRadius);
+        var model = new Model("data/teapot.obj", true);// Model.Sphere(200, 100, EarthRadius);
+        camera = new Camera(new(0, 0, 2 * model.Max.Y));
         vertexCount = 3 * model.Faces.Count;
         var vertices = new Vector4[vertexCount];
         var vi = 0;
@@ -113,8 +114,9 @@ class MovementTest:GlWindowArb {
             dz -= 1;
         if (0 == dx && 0 == dy && 0 == dz)
             return;
-        var velocity = goFast ? 100f : 5f;
-        camera.Walk(velocity * dt * Vector3.Normalize(new(dx, dy, dz)));
+        var velocity = goFast ? 10f : 1f;
+        var (x, y, z) = velocity * dt * Vector3.Normalize(new(dx, dy, dz));
+        camera.Walk(x, y, z);
     }
 
     protected override void Render () {
@@ -132,15 +134,15 @@ class MovementTest:GlWindowArb {
         Enable(Capability.DepthTest);
         directionalFlat.LightDirection(lightDirection);
         directionalFlat.View(camera.LookAtMatrix);
-        directionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, 1e3f, 100e6f));
+        directionalFlat.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, .1f, 100f));
         directionalFlat.Model(Matrix4x4.Identity);
         DrawArrays(Primitive.Triangles, 0, vertexCount);
         UseProgram(passThrough);
         BindDefaultFramebuffer();
         BindVertexArray(presentationVertexArray);
         Viewport(new(), size);
-        ClearColor(0, 0, 0, 1);
-        Clear(BufferBit.ColorDepth);
+        //ClearColor(0, 0, 0, 1);
+        //Clear(BufferBit.ColorDepth);
         Disable(Capability.DepthTest);
         DrawArrays(Primitive.Triangles, 0, 6);
         previousSync = LastSync;

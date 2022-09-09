@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 class Program {
     static readonly string[] extensions = ".cs,.txt,.cap,.json,.vert,.frag,.csproj".Split(',');
 
-    static bool HasKnownExtension(string f) =>
+    static bool HasKnownExtension (string f) =>
         Array.Exists(extensions, e => string.Equals(Path.GetExtension(f), e, StringComparison.OrdinalIgnoreCase));
 
     static bool IsNotInOutputDir (string f) =>
@@ -20,11 +20,11 @@ class Program {
         const int BufferLength = 4096;
         var buffer = new byte[BufferLength];
         using var r = File.OpenRead(f);
-        while (r.Position< r.Length) {
+        while (r.Position < r.Length) {
             var read = r.Read(buffer, 0, BufferLength);
             if (0 == read)
                 return false;
-            if (0 <= Array.IndexOf(buffer, '\r', 0, read))
+            if (0 <= Array.IndexOf(buffer, (byte)'\r', 0, read))
                 return true;
         }
         return false;
@@ -36,6 +36,7 @@ class Program {
         Parallel.ForEach(Array.FindAll(Directory.GetFiles(".", "*.*", SearchOption.AllDirectories), NeedsFix), Fix);
 
     static void Fix (string filepath) {
+        Console.WriteLine($"WARNING: {filepath}");
         var lines = File.ReadAllLines(filepath);
         using var f = new StreamWriter(filepath, false, Encoding.ASCII) { NewLine = "\n" };
         foreach (var line in lines)

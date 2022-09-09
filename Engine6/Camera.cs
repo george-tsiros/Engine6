@@ -1,21 +1,31 @@
 namespace Engine6;
 
+using System;
 using System.Numerics;
 using static Common.Maths;
 
 interface ICamera {
-    Vector3 Location { get; set; }
+    Vector3 Location { get; }
     Matrix4x4 LookAtMatrix { get; }
-    void Walk (Vector3 d);
-    void Rotate (Vector2 d);
-
+    /// <summary>forward is -Z, +Z is backward, right is +X, up is +Y</summary>
+    void Walk (float dx, float dy, float dz);
+    /// <summary>forward is -Z, +Z is backward, right is +X, up is +Y</summary>
+    void Rotate (float aboutX, float aboutY, float aboutZ);
 }
 
 sealed class QCamera:ICamera {
-    public Vector3 Location { get; set; }
-    public QCamera () { }
-    private Quaternion orientation;
+    public Vector3 Location { get; private set; }
+    public QCamera (Vector3 location) {
+        Location = location;
+    }
 
+    private Quaternion orientation;
+    public Matrix4x4 LookAtMatrix =>
+        throw new NotImplementedException();
+    public void Rotate (float aboutX, float aboutY, float aboutZ) =>
+        throw new NotImplementedException();
+    public void Walk (float dx, float dy, float dz) =>
+        throw new NotImplementedException();
 }
 
 sealed class Camera:ICamera {
@@ -56,14 +66,14 @@ sealed class Camera:ICamera {
         return Matrix4x4.CreateLookAt(location, location + forward, up);
     }
 
-    public void Walk (Vector3 d) =>
-        Location += Vector3.Transform(d, Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw));
+    public void Walk (float dx, float dy, float dz) =>
+        Location += Vector3.Transform(new(dx, dy, dz), Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw));
 
-    public void Rotate (Vector2 v) {
-        if (v.X != 0 || v.Y != 0) {
+    public void Rotate (float aboutX, float aboutY, float aboutZ) {
+        if (aboutX != 0 || aboutY != 0) {
             lookAtIsValid = false;
-            yaw = (yaw - v.X) % fTau;
-            pitch = FloatClamp(pitch + v.Y, -.4f * fPi, .4f * fPi);
+            yaw = (yaw - aboutY) % fTau;
+            pitch = FloatClamp(pitch + aboutX, -.4f * fPi, .4f * fPi);
         }
     }
 }

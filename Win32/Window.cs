@@ -58,13 +58,6 @@ public abstract class Window:IDisposable {
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
 
-    //protected WindowStyle Style {
-    //    get =>
-    //        throw new NotImplementedException();
-    //    set =>
-    //        User32.SetWindow(Handle, value);
-    //}
-
     protected Rectangle Rect {
         get =>
             User32.GetWindowRect(Handle);
@@ -154,6 +147,9 @@ public abstract class Window:IDisposable {
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
 
+    private void CaptureCursor () { Debug.WriteLine("CaptureCursor"); }
+    private void ReleaseCursor () { Debug.WriteLine("ReleaseCursor"); }
+
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Create:
@@ -233,13 +229,6 @@ public abstract class Window:IDisposable {
                         OnMouseMove(CursorLocation = p);
                 }
                 return 0;
-            //    case WinMessage.SysCommand: {
-            //            if ((int)(w & int.MaxValue) == (int)SysCommand.Close) {
-            //                User32.PostQuitMessage(0);
-            //                return 0;
-            //            }
-            //        }
-            //        break;
             case WinMessage.LButtonDown:
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
@@ -260,15 +249,12 @@ public abstract class Window:IDisposable {
                     OnButtonUp(change, new(l));
                 }
                 break;
-            //    case WinMessage.MouseLeave:
-            //        //Debug.WriteLine($"{DateTime.Now:mm:ss.fff}MouseLeave");
-            //        tracking = false;
-            //        OnMouseLeave();
-            //        return 0;
             case WinMessage.SetFocus:
+                CaptureCursor();
                 OnFocusChanged(IsFocused = true);
                 return 0;
             case WinMessage.KillFocus:
+                ReleaseCursor();
                 OnFocusChanged(IsFocused = false);
                 return 0;
             case WinMessage.KeyDown:

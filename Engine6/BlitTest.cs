@@ -119,7 +119,7 @@ public class BlitTest:GlWindowArb {
         var dz = IsKeyDown(Key.X) ? .1f : 0f;
         if (IsKeyDown(Key.D))
             dz -= .1f;
-        camera.Location += new Vector3(dx, dy, dz);
+        camera.Walk(dx, dy, dz);
         BindFramebuffer(offscreenFramebuffer);
         var size = ClientSize;
         Viewport(new(), size);
@@ -211,17 +211,6 @@ public class BlitTest:GlWindowArb {
         softwareRenderTexture.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
-    }
-
-    protected override void OnKeyDown (Key k) {
-        switch (k) {
-            case Key.Space:
-                camera.Location = new();
-                return;
-                //case Keys.M:
-                //    CursorGrabbed = !CursorGrabbed;
-                //    return;
-        }
     }
 
     protected override void OnMouseMove (in Vector2i e) {
