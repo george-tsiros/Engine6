@@ -99,6 +99,7 @@ public abstract class Window:IDisposable {
     protected virtual void OnKeyUp (Key k) { }
     //protected virtual void OnMouseLeave () { }
     protected virtual void OnMouseMove (in Vector2i currentPosition) { }
+    protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnMove (in Vector2i clientRelativePosition) { }
     protected virtual void OnMoving (ref Rectangle topLeft) { }
     protected virtual void OnSize (SizeType type, Vector2i size) { }
@@ -147,9 +148,15 @@ public abstract class Window:IDisposable {
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
 
-    private void CaptureCursor () { Debug.WriteLine("CaptureCursor"); }
-    private void ReleaseCursor () { Debug.WriteLine("ReleaseCursor"); }
-
+    private void CaptureCursor () { 
+        Debug.WriteLine("CaptureCursor"); 
+    }
+    
+    private void ReleaseCursor () { 
+        Debug.WriteLine("ReleaseCursor"); 
+    }
+    
+    private bool deviceRegistered = false;
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Create:
@@ -281,6 +288,13 @@ public abstract class Window:IDisposable {
                     invalidated = false;
                 }
                 return 0;
+            case WinMessage.Input:
+                Debug.Assert(deviceRegistered);
+                var data = new RawMouse();
+                if (User32.GetRawInputData(l, ref data)) {
+                    OnInput(data.lastX, data.lastY);
+                }
+                break;
         }
         return User32.DefWindowProc(h, m, w, l);
     }

@@ -64,9 +64,36 @@ public static class User32 {
             throw new WinApiException(nameof(TrackMouseEvent));
     }
 
-    //[DllImport(dll, SetLastError = true)]
-    //public static extern int RegisterRawInputDevices (ref RawInputDevice raw, uint deviceCount, uint structSize);
+    [DllImport(dll, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static unsafe extern bool RegisterRawInputDevices (RawInputDevice* devices, uint count, uint structSize);
 
+    public static unsafe void RegisterMouseRaw (nint windowHandle) {
+        var device = new RawInputDevice {
+            flags = RawInputDeviceFlag.InputSink,
+            target = windowHandle,
+            usagePage = 1,
+            usage = 2,
+        };
+        if (!RegisterRawInputDevices(&device, 1, (uint)RawInputDevice.Size))
+            throw new WinApiException(nameof(RegisterRawInputDevices));
+    }
+
+    [DllImport(dll)]
+    private static unsafe extern int GetRawInputData (nint rawInput, uint command, void* data, uint* size, uint headerSize);
+
+    public static unsafe bool GetRawInputData (nint lParameter, ref RawMouse data) {
+        const uint RIM_TYPEMOUSE = 0u;
+        var rawData = new RawInput();
+        var size = (uint)RawInput.Size;
+        var x = GetRawInputData(lParameter, 0x10000003, &rawData, &size, (uint)RawInputHeader.Size);
+        if (-1 == x)
+            throw new WinApiException(nameof(GetRawInputData));
+        if (RIM_TYPEMOUSE != rawData.header.type)
+            return false;
+        data = rawData.mouse;
+        return true;
+    }
     [DllImport(dll, EntryPoint = "RegisterClassExW", ExactSpelling = true, CharSet = CharSet.Unicode)]
     private static extern ushort RegisterClassEx (ref WindowClassExW windowClass);
 
