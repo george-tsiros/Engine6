@@ -9,23 +9,30 @@ interface ICamera {
     Matrix4x4 LookAtMatrix { get; }
     /// <summary>forward is -Z, +Z is backward, right is +X, up is +Y</summary>
     void Walk (float dx, float dy, float dz);
-    /// <summary>forward is -Z, +Z is backward, right is +X, up is +Y</summary>
-    void Rotate (float aboutX, float aboutY, float aboutZ);
+    /// <summary>pitch is x, yaw is y, roll is z</summary>
+    void Rotate (float pitch, float yaw, float roll);
 }
 
 sealed class QCamera:ICamera {
     public Vector3 Location { get; private set; }
     public QCamera (Vector3 location) {
         Location = location;
+        orientation = Quaternion.Identity;
     }
 
     private Quaternion orientation;
-    public Matrix4x4 LookAtMatrix =>
-        throw new NotImplementedException();
-    public void Rotate (float aboutX, float aboutY, float aboutZ) =>
-        throw new NotImplementedException();
-    public void Walk (float dx, float dy, float dz) =>
-        throw new NotImplementedException();
+    public Matrix4x4 LookAtMatrix {
+        get {
+            var target = Vector3.Transform(-Vector3.UnitZ, orientation);
+            var up = Vector3.Transform(Vector3.UnitY, orientation);
+            return Matrix4x4.CreateLookAt(Location, target, up);
+        }
+    }
+    public void Rotate (float pitch, float yaw, float roll) {
+        orientation += Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+        
+    }
+    public void Walk (float dx, float dy, float dz) { }
 }
 
 sealed class Camera:ICamera {
@@ -69,11 +76,11 @@ sealed class Camera:ICamera {
     public void Walk (float dx, float dy, float dz) =>
         Location += Vector3.Transform(new(dx, dy, dz), Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw));
 
-    public void Rotate (float aboutX, float aboutY, float aboutZ) {
-        if (aboutX != 0 || aboutY != 0) {
+    public void Rotate (float pitch, float yaw, float roll) {
+        if (0 != pitch || 0 != yaw || 0 != roll) {
             lookAtIsValid = false;
-            yaw = (yaw - aboutY) % fTau;
-            pitch = FloatClamp(pitch + aboutX, -.4f * fPi, .4f * fPi);
+            this.yaw = (this.yaw - yaw) % fTau;
+            this.pitch = FloatClamp(this.pitch + pitch, -.4f * fPi, .4f * fPi);
         }
     }
 }

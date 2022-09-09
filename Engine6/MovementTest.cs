@@ -28,12 +28,11 @@ class MovementTest:GlWindowArb {
     private int vertexCount = 0;
     private DirectionalFlat directionalFlat;
     private PassThrough passThrough;
-    private long previousSync;
 
-    private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
+    //private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
 
     protected override void OnInput (int dx, int dy) {
-        camera.Rotate(.01f * dy, .01f * dx, 0);
+        camera.Rotate(.001f * dy, .001f * dx, 0);
     }
     //protected override void OnMouseMove (in Vector2i e) {
     //    if (Buttons.HasFlag(MouseButton.Right)) {
@@ -63,7 +62,7 @@ class MovementTest:GlWindowArb {
         UseProgram(directionalFlat);
         renderingVertexArray = new();
         var model = new Model("data/teapot.obj", true);// Model.Sphere(200, 100, EarthRadius);
-        camera = new Camera(new(0, 0, 2 * model.Max.Y));
+        camera = new QCamera(new(0, 0, 2 * model.Max.Y));
         vertexCount = 3 * model.Faces.Count;
         var vertices = new Vector4[vertexCount];
         var vi = 0;
@@ -110,17 +109,22 @@ class MovementTest:GlWindowArb {
         var dz = IsKeyDown(Key.X) ? 1 : 0;
         if (IsKeyDown(Key.D))
             dz -= 1;
-        if (0 == dx && 0 == dy && 0 == dz)
-            return;
-        var velocity = goFast ? 10f : 1f;
-        var (x, y, z) = velocity * dt * Vector3.Normalize(new(dx, dy, dz));
-        camera.Walk(x, y, z);
+        if (0 != dx || 0 != dy || 0 != dz) {
+            var velocity = goFast ? 10f : 1f;
+            var (x, y, z) = velocity * dt * Vector3.Normalize(new(dx, dy, dz));
+            camera.Walk(x, y, z);
+        }
+        var dtheta = IsKeyDown(Key.S) ? 1 : 0;
+        if (IsKeyDown(Key.F))
+            dtheta -= 1;
+        if (0 != dtheta) {
+            Debug.WriteLine(dt * dtheta);
+            camera.Rotate(0, 0, dt * dtheta);
+        }
     }
 
     protected override void Render () {
-        var dt = Dt;
-        if (0f < dt)
-            Move(Dt);
+        Move(.01f);
         UseProgram(directionalFlat);
         BindFramebuffer(renderingFramebuffer);
         BindVertexArray(renderingVertexArray);
@@ -143,6 +147,5 @@ class MovementTest:GlWindowArb {
         //Clear(BufferBit.ColorDepth);
         Disable(Capability.DepthTest);
         DrawArrays(Primitive.Triangles, 0, 6);
-        previousSync = LastSync;
     }
 }
