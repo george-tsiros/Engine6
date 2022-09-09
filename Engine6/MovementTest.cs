@@ -34,6 +34,7 @@ class MovementTest:GlWindowArb {
     protected override void OnInput (int dx, int dy) {
         camera.Rotate(.001f * dy, .001f * dx, 0);
     }
+
     //protected override void OnMouseMove (in Vector2i e) {
     //    if (Buttons.HasFlag(MouseButton.Right)) {
     //        if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {

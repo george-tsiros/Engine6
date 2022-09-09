@@ -37,6 +37,12 @@
         <None Update="shadersources\directionalLightFlat.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="shadersources\axes.frag">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+        <None Update="shadersources\axes.vert">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
         <None Update="shadersources\lines.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

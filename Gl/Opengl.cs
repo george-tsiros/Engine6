@@ -281,7 +281,7 @@ unsafe public static class Opengl {
     public static void Uniform (int uniform, Vector2 v) => functions.glUniform2f(uniform, v.X, v.Y);
     public static void Uniform (int uniform, Vector2i v) => functions.glUniform2i(uniform, v.X, v.Y);
     public static void Uniform (int uniform, Vector4 v) => functions.glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
-    public static void UseProgram (int p) => functions.glUseProgram(p);
+    public static void UseProgram (Program p) => functions.glUseProgram((int)p);
     public static void VertexAttribDivisor (int index, int divisor) => functions.glVertexAttribDivisor(index, divisor);
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => functions.glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, ptr);
     public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => functions.glVertexAttribIPointer(index, size, (int)type, stride, ptr);

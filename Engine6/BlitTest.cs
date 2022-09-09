@@ -30,7 +30,7 @@ public class BlitTest:GlWindowArb {
     private ICamera camera = new Camera(new(0, 0, 20));
     private readonly Vector3i[] Faces;
     private readonly Vector4d[] Vertices;
-    private Vector2i lastCursorPosition = new(-1, -1);
+    //private Vector2i lastCursorPosition = new(-1, -1);
     private double phi = 0, theta = 0;
     private readonly Vector3d lightDirection = Vector3d.Normalize(-Vector3d.One);
     private Raster softwareRenderSurface;
@@ -211,17 +211,5 @@ public class BlitTest:GlWindowArb {
         softwareRenderTexture.BindTo(1);
         passThrough.Tex(1);
         DrawArrays(Primitive.Triangles, 0, 6);
-    }
-
-    protected override void OnMouseMove (in Vector2i e) {
-
-        var d = e - lastCursorPosition;
-        switch (Buttons) {
-            case MouseButton.Left:
-                theta = Functions.ModuloTwoPi(theta, 0.01 * d.X);
-                phi = DoubleClamp(phi + 0.01 * d.Y, -dPi / 2, dPi / 2);
-                break;
-        }
-        lastCursorPosition = e;
     }
 }

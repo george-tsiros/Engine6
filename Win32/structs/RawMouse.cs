@@ -1,4 +1,4 @@
-﻿namespace Win32;
+namespace Win32;
 
 public struct RawMouse {
     public ushort flags;

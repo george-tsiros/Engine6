@@ -146,17 +146,34 @@ public class Model {
         return model;
     }
 
+    public static Model Cube (float side) =>
+        Cube(side, side, side);
+
     public static Model Cube (float w, float h, float d) => new() {
         Vertices = new() {
-            new(-w / 2, -h / 2, -d / 2),
-            new(+w / 2, -h / 2, -d / 2),
-            new(+w / 2, +h / 2, -d / 2),
-            new(-w / 2, +h / 2, -d / 2),
-            new(-w / 2, -h / 2, +d / 2),
-            new(+w / 2, -h / 2, +d / 2),
-            new(+w / 2, +h / 2, +d / 2),
-            new(-w / 2, +h / 2, +d / 2),
+            new(-w / 2, -h / 2, -d / 2), // near, left, down
+            new(+w / 2, -h / 2, -d / 2), // near, right, down
+            new(+w / 2, +h / 2, -d / 2), // near, right, up
+            new(-w / 2, +h / 2, -d / 2), // near, left, up
+            new(-w / 2, -h / 2, +d / 2), // far, left, down
+            new(+w / 2, -h / 2, +d / 2), // far, right, down
+            new(+w / 2, +h / 2, +d / 2), // far, right, up
+            new(-w / 2, +h / 2, +d / 2), // far, left, up
         },
+        /*
+              3........2
+            / .      / .
+          /   .    /   .
+        7--------6     .
+        |     .  |     .
+        |     0..|.....1
+        |   /    |   /
+        | /      | /
+        4--------5
+
+
+*/
+
         Faces = new List<Vector3i> {
             new(4, 5, 6),
             new(4, 6, 7),

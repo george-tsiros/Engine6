@@ -98,7 +98,7 @@ public abstract class Window:IDisposable {
     protected virtual void OnKeyDown (Key k) { }
     protected virtual void OnKeyUp (Key k) { }
     //protected virtual void OnMouseLeave () { }
-    protected virtual void OnMouseMove (in Vector2i currentPosition) { }
+    //protected virtual void OnMouseMove (in Vector2i currentPosition) { }
     protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnMove (in Vector2i clientRelativePosition) { }
     protected virtual void OnMoving (ref Rectangle topLeft) { }
@@ -134,7 +134,7 @@ public abstract class Window:IDisposable {
         User32.UpdateWindow(Handle);
         _ = User32.ShowWindow(Handle, CmdShow.ShowNormal);
         var m = new Message();
-        //Debug.Assert(Rect.Size == ClientSize);
+
         while (WinMessage.Quit != m.msg) {
             OnIdle();
             while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
@@ -150,12 +150,14 @@ public abstract class Window:IDisposable {
 
     private void CaptureCursor () {
         User32.RegisterMouseRaw(Handle);
+        _=User32.ShowCursor(false);
         deviceRegistered = true;
         Debug.WriteLine("mouse registered");
     }
 
     private void ReleaseCursor () {
         deviceRegistered = false;
+        _ = User32.ShowCursor(true);
         User32.UnregisterMouseRaw();
         Debug.WriteLine("mouse released");
     }
@@ -228,18 +230,18 @@ public abstract class Window:IDisposable {
                     return 0;
                 }
                 break;
-            case WinMessage.MouseMove: {
-                    if (!IsFocused)
-                        break;
-                    if (!tracking) {
-                        User32.TrackMouseEvent(ref trackMouseStruct);
-                        tracking = true;
-                    }
-                    var p = Split(l);
-                    if (p != CursorLocation)
-                        OnMouseMove(CursorLocation = p);
-                }
-                return 0;
+            //case WinMessage.MouseMove: {
+            //        if (!IsFocused)
+            //            break;
+            //        if (!tracking) {
+            //            User32.TrackMouseEvent(ref trackMouseStruct);
+            //            tracking = true;
+            //        }
+            //        var p = Split(l);
+            //        if (p != CursorLocation)
+            //            OnMouseMove(CursorLocation = p);
+            //    }
+            //    return 0;
             case WinMessage.LButtonDown:
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
