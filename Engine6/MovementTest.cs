@@ -19,7 +19,6 @@ class MovementTest:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    private Vector2i lastCursorPosition = new(-1, -1);
     private Vector4 lightDirection = new(0, -1, 0, 0);
     private ICamera camera;// = new Camera(new(0, 0, EarthRadius + 100e3f));
     private VertexArray renderingVertexArray;
@@ -33,28 +32,27 @@ class MovementTest:GlWindowArb {
 
     private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
 
-    protected override void OnButtonUp (MouseButton released, PointShort p) {
-        if (released.HasFlag(MouseButton.Right))
-            lastCursorPosition = new(-1, -1);
+    protected override void OnInput (int dx, int dy) {
+        camera.Rotate(.01f * dy, .01f * dx, 0);
     }
-
-    protected override void OnMouseMove (in Vector2i e) {
-        if (Buttons.HasFlag(MouseButton.Right)) {
-            if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
-                var delta = lastCursorPosition - e;
-                camera.Rotate(-.001f * delta.Y, -.001f * delta.X, 0);
-            }
-            lastCursorPosition = e;
-            return;
-        }
-    }
+    //protected override void OnMouseMove (in Vector2i e) {
+    //    if (Buttons.HasFlag(MouseButton.Right)) {
+    //        if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
+    //            var delta = lastCursorPosition - e;
+    //            camera.Rotate(-.001f * delta.Y, -.001f * delta.X, 0);
+    //        }
+    //        lastCursorPosition = e;
+    //        return;
+    //    }
+    //}
 
     protected override void OnIdle () =>
         Invalidate();
+
     const float EarthRadius = 6.3e6f;
 
     protected override void OnLoad () {
-        var size = ClientSize = new(800, 600);
+        var size = ClientSize = new(1280, 720);
         renderingFramebuffer = new();
         renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
         renderingSurface = new Sampler2D(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };

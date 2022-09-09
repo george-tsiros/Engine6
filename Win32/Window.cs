@@ -148,14 +148,18 @@ public abstract class Window:IDisposable {
 
     public Vector2i CursorLocation { get; private set; } = new(-1, -1);
 
-    private void CaptureCursor () { 
-        Debug.WriteLine("CaptureCursor"); 
+    private void CaptureCursor () {
+        User32.RegisterMouseRaw(Handle);
+        deviceRegistered = true;
+        Debug.WriteLine("mouse registered");
     }
-    
-    private void ReleaseCursor () { 
-        Debug.WriteLine("ReleaseCursor"); 
+
+    private void ReleaseCursor () {
+        deviceRegistered = false;
+        User32.UnregisterMouseRaw();
+        Debug.WriteLine("mouse released");
     }
-    
+
     private bool deviceRegistered = false;
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
@@ -283,7 +287,7 @@ public abstract class Window:IDisposable {
                     var ps = new PaintStruct();
                     var dc = User32.BeginPaint(h, ref ps);
                     //if (!ps.rect.IsEmpty)
-                        OnPaint(ps.rect);
+                    OnPaint(ps.rect);
                     User32.EndPaint(h, ref ps);
                     invalidated = false;
                 }
@@ -291,9 +295,12 @@ public abstract class Window:IDisposable {
             case WinMessage.Input:
                 Debug.Assert(deviceRegistered);
                 var data = new RawMouse();
-                if (User32.GetRawInputData(l, ref data)) {
-                    OnInput(data.lastX, data.lastY);
-                }
+                if (User32.GetRawInputData(l, ref data))
+                    if (0 != data.lastX || 0 != data.lastY) {
+                        var r = Rect;
+                        User32.SetCursorPos(r.Left + r.Width / 2, r.Top + r.Height / 2);
+                        OnInput(data.lastX, data.lastY);
+                    }
                 break;
         }
         return User32.DefWindowProc(h, m, w, l);

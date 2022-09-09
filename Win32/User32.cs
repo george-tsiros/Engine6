@@ -32,8 +32,14 @@ public static class User32 {
         return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
-    [DllImport(dll, SetLastError = true)]
-    public static extern int SetCursorPos (int x, int y);
+    [DllImport(dll, EntryPoint = "SetCursorPos", ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetCursorPos_ (int x, int y);
+
+    public static void SetCursorPos (int x, int y) {
+        if (!SetCursorPos_(x, y))
+            throw new WinApiException(nameof(SetCursorPos));
+    }
 
     [DllImport(dll, SetLastError = true)]
     public static extern nint SetCursor (nint cursor);
@@ -67,6 +73,17 @@ public static class User32 {
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static unsafe extern bool RegisterRawInputDevices (RawInputDevice* devices, uint count, uint structSize);
+
+    public static unsafe void UnregisterMouseRaw () {
+        var device = new RawInputDevice {
+            flags = RawInputDeviceFlag.Remove,
+            target = 0,
+            usagePage = 1,
+            usage = 2,
+        };
+        if (!RegisterRawInputDevices(&device, 1, (uint)RawInputDevice.Size))
+            throw new WinApiException(nameof(RegisterRawInputDevices));
+    }
 
     public static unsafe void RegisterMouseRaw (nint windowHandle) {
         var device = new RawInputDevice {
