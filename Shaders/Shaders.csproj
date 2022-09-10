@@ -23,6 +23,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="log.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
         <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
             <Private>False</Private>

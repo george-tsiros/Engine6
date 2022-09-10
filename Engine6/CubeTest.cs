@@ -21,10 +21,6 @@ class CubeTest:GlWindowArb {
     private Quaternion q = Quaternion.Identity;
     private Axes axes;
     private VertexArray vertexArray;
-    private VertexBuffer<Vector4> vb, cb;
-    private Vector2i lastSize = -Vector2i.One;
-    private Quaternion lastq;
-    private Vector3 lastLocation;
 
     static readonly Vector4[] FaceColors = {
         new(0, 0, 1, 1),
@@ -36,12 +32,10 @@ class CubeTest:GlWindowArb {
     };
 
     protected override void OnLoad () {
-        lastSize = ClientSize = new(1280, 720);
+        ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
-        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)lastSize.X / lastSize.Y, .1f, 100f));
         axes.View(Matrix4x4.CreateTranslation(0, 0, -5));
-        axes.Model(Matrix4x4.CreateFromQuaternion(lastq = q) * Matrix4x4.CreateTranslation(lastLocation = location));
         vertexArray = new();
         var m = Model.Cube(.5f);
         var vertices = new Vector4[m.Faces.Count * 3];
@@ -57,18 +51,14 @@ class CubeTest:GlWindowArb {
             for (var j = 0; j < 6; ++j)
                 colors[o++] = c;
         }
-        vb = new VertexBuffer<Vector4>(vertices);
-        vertexArray.Assign(vb, axes.VertexPosition);
-        cb = new VertexBuffer<Vector4>(colors);
-        vertexArray.Assign(cb, axes.Color);
+        vertexArray.Assign(new VertexBuffer<Vector4>(vertices), axes.VertexPosition);
+        vertexArray.Assign(new VertexBuffer<Vector4>(colors), axes.Color);
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
         ClearColor(0, 0, 0, 1);
         Disposables.Add(vertexArray);
         Disposables.Add(axes);
-        Disposables.Add(vb);
-        Disposables.Add(cb);
     }
 
     int Axis (Key plus, Key minus) {
@@ -83,22 +73,19 @@ class CubeTest:GlWindowArb {
             q *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, .01f * yaw);
         var dv = Axis(Key.D, Key.X);
         if (0 != dv)
-            speed = FloatClamp(speed + .001f * dv, -.01f, .01f);
+            speed = FloatClamp(speed + .001f * dv, 0f, .1f);
         if (0 != speed)
             location += speed * Vector3.Transform(-Vector3.UnitZ, q);
     }
+
     protected override void Render () {
         Move();
         var size = ClientSize;
         Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
-        if (size != lastSize) {
-            axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, .1f, 100f));
-            lastSize = size;
-        }
-        if (lastq != q || lastLocation != location) {
-            axes.Model(Matrix4x4.CreateFromQuaternion(lastq = q) * Matrix4x4.CreateTranslation(lastLocation = location));
-        }
+        BindVertexArray(vertexArray);
+        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 2, (float)size.X / size.Y, .1f, 100f));
+        axes.Model(Matrix4x4.CreateFromQuaternion(q) * Matrix4x4.CreateTranslation(location));
         DrawArrays(Primitive.Triangles, 0, 36);
     }
 }

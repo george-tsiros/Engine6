@@ -11,15 +11,12 @@ public class GlWindow:Window {
     protected nint RenderingContext = 0;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
-    protected long LastRenderTime { get; private set; } = -1l;
-    private const double FPS = 144;
+    private const double FPS = 60;
     private const double TframeSeconds = 1 / FPS;
     private const double TframeTicks = 1e7 * TframeSeconds;
     private readonly long StartTicks;
     private bool disposed = false;
-    private FenceSync sync = null;
     private bool swapPending = false;
-    private long renderStart = 0l;
 
     public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Maximize) {
         StartTicks = Stopwatch.GetTimestamp();
@@ -37,8 +34,6 @@ public class GlWindow:Window {
 
     protected override void OnIdle () {
         if (swapPending) {
-            if (sync is not null && sync.Signaled)
-                LastRenderTime = Ticks() - renderStart;
             // for, say, 72 Hz there's Tframe = 1 / 72 seconds between refreshes. 
             // we wait until 5% of that time remains before we swap.
             if (LastSync + 0.9 * TframeTicks < Ticks()) {
@@ -48,17 +43,8 @@ public class GlWindow:Window {
                 swapPending = false;
             }
         } else {
-            Debug.WriteLine(LastRenderTime / 1e7);
             swapPending = true;
-            sync?.Dispose();
-            renderStart = Ticks();
             Render();
-            sync = new();
-            if (sync.Signaled) {
-                LastRenderTime = Ticks() - renderStart;
-                sync.Dispose();
-                sync = null;
-            }
         }
     }
 
