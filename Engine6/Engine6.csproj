@@ -41,8 +41,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <!--<PackageReference Include="BepuPhysics" Version="2.5.0-beta.6" />-->
-      <!--<PackageReference Include="NAudio.Wasapi" Version="2.1.0" />-->
+      <PackageReference Include="BepuPhysics" Version="2.5.0-beta.8" />
     </ItemGroup>
 
     <ItemGroup>
