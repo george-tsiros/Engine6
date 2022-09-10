@@ -33,7 +33,16 @@ public abstract class Window:IDisposable {
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
 
-    protected nint Handle { get; private set; }
+    public nint Handle { get; private set; }
+    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
+    public DeviceContext Dc { get; private set; }
+    public bool IsFocused { get; private set; }
+    public MouseButton Buttons { get; private set; }
+    protected List<IDisposable> Disposables { get; } = new();
+
+    private readonly int[] KeyState = new int[256 / 32];
+    private bool deviceRegistered = false;
+    private bool disposed;
 
     private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
         if (WinMessage.Create == m) {
@@ -47,16 +56,11 @@ public abstract class Window:IDisposable {
         return User32.DefWindowProc(h, m, w, l);
     }
 
-    public DeviceContext Dc { get; private set; }
-
     public Window (WindowStyle? style = null) {
         creating = this;
         var h = User32.CreateWindow(Atom, style ?? WindowStyle.OverlappedWindow);
         Debug.Assert(h == Handle);
     }
-
-    public bool IsFocused { get; private set; }
-    public MouseButton Buttons { get; private set; }
 
     protected Rectangle Rect {
         get =>
@@ -78,35 +82,30 @@ public abstract class Window:IDisposable {
         }
     }
 
-    private readonly int[] KeyState = new int[256 / 32];
-    private TrackMouseEvent trackMouseStruct;
-    private bool tracking = false;
-
-    protected virtual void OnLoad () { }
-    protected virtual void OnIdle () { }
-    protected virtual void OnClosed () { }
-
-    protected virtual void OnActivateApp (bool activated) { }
     protected virtual void OnActivate (bool activated, ActivateKind kind) { }
+    protected virtual void OnActivateApp (bool activated) { }
     protected virtual void OnButtonDown (MouseButton justDepressed, PointShort p) { }
     protected virtual void OnButtonUp (MouseButton justReleased, PointShort p) { }
     protected virtual void OnCaptureChanged (nint windowOwningMouse) { }
+    protected virtual void OnClosed () { }
+    //protected virtual void OnCreate (ref CreateStructW cs) { }
     protected virtual void OnEnterSizeMove () { }
     protected virtual void OnExitSizeMove () { }
     protected virtual void OnFocusChanged (bool isFocused) { }
     protected virtual void OnGetMinMaxInfo (ref MinMaxInfo x) { }
+    protected virtual void OnIdle () { }
+    protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnKeyDown (Key k) { }
     protected virtual void OnKeyUp (Key k) { }
+    protected virtual void OnLoad () { }
     //protected virtual void OnMouseLeave () { }
     //protected virtual void OnMouseMove (in Vector2i currentPosition) { }
-    protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnMove (in Vector2i clientRelativePosition) { }
     protected virtual void OnMoving (ref Rectangle topLeft) { }
+    //protected virtual void OnPaint () { }
+    protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
     protected virtual void OnSize (SizeType type, Vector2i size) { }
     protected virtual void OnSizing (SizingEdge edge, ref Rectangle r) { }
-    //protected virtual unsafe void OnCreate (CreateStructW* cs) {    }
-    protected virtual void OnPaint (in Rectangle r) { }
-    protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
     protected virtual void OnWindowPosChanged (ref WindowPos p) { }
     protected virtual void OnWindowPosChanging (ref WindowPos p) { }
 
@@ -115,24 +114,10 @@ public abstract class Window:IDisposable {
         return (KeyState[h] & l) != 0;
     }
 
-    protected List<IDisposable> Disposables { get; } = new();
-    private bool invalidated = false;
-    protected void Invalidate () {
-        if (!invalidated) {
-            invalidated = true;
-            User32.InvalidateWindow(Handle);
-        }
-    }
-
     public void Run () {
-        trackMouseStruct = new() {
-            size = TrackMouseEvent.Size,
-            flags = TrackMouseFlag.Leave,
-            window = Handle,
-        };
         OnLoad();
         User32.UpdateWindow(Handle);
-        _ = User32.ShowWindow(Handle, CmdShow.ShowNormal);
+        _ = User32.ShowWindow(Handle, CmdShow.ShowMaximized);
         var m = new Message();
 
         while (WinMessage.Quit != m.msg) {
@@ -146,11 +131,9 @@ public abstract class Window:IDisposable {
             disposable.Dispose();
     }
 
-    public Vector2i CursorLocation { get; private set; } = new(-1, -1);
-
     private void CaptureCursor () {
         User32.RegisterMouseRaw(Handle);
-        _=User32.ShowCursor(false);
+        _ = User32.ShowCursor(false);
         deviceRegistered = true;
         Debug.WriteLine("mouse registered");
     }
@@ -162,7 +145,6 @@ public abstract class Window:IDisposable {
         Debug.WriteLine("mouse released");
     }
 
-    private bool deviceRegistered = false;
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
             case WinMessage.Create:
@@ -230,18 +212,6 @@ public abstract class Window:IDisposable {
                     return 0;
                 }
                 break;
-            //case WinMessage.MouseMove: {
-            //        if (!IsFocused)
-            //            break;
-            //        if (!tracking) {
-            //            User32.TrackMouseEvent(ref trackMouseStruct);
-            //            tracking = true;
-            //        }
-            //        var p = Split(l);
-            //        if (p != CursorLocation)
-            //            OnMouseMove(CursorLocation = p);
-            //    }
-            //    return 0;
             case WinMessage.LButtonDown:
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
@@ -285,15 +255,9 @@ public abstract class Window:IDisposable {
                     OnKeyUp(key);
                     return 0;
                 }
-            case WinMessage.Paint: {
-                    var ps = new PaintStruct();
-                    var dc = User32.BeginPaint(h, ref ps);
-                    //if (!ps.rect.IsEmpty)
-                    OnPaint(ps.rect);
-                    User32.EndPaint(h, ref ps);
-                    invalidated = false;
-                }
-                return 0;
+            //case WinMessage.Paint:
+            //    OnPaint();
+            //    return 0;
             case WinMessage.Input:
                 Debug.Assert(deviceRegistered);
                 var data = new RawMouse();
@@ -316,14 +280,13 @@ public abstract class Window:IDisposable {
             font = value;
     }
 
-    private bool disposed;
-
     public virtual void Dispose () {
         if (!disposed) {
             disposed = true;
             Dc.Close();
             _ = Windows.Remove(Handle);
             User32.DestroyWindow(Handle);
+            GC.SuppressFinalize(this);
         }
     }
 }

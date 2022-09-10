@@ -21,12 +21,14 @@ public class GdiWindow:Window {
     protected override void OnLoad () {
         Resize();
     }
+
     private void Resize () {
         dib?.Dispose();
         dib = new(Dc, ClientSize);
     }
 
     private readonly List<string> q = new();
+
     private void Append (string str) {
         var maxLines = ClientSize.Y / Font.Height;
         var overflow = q.Count + 1 - maxLines;
@@ -38,7 +40,7 @@ public class GdiWindow:Window {
     protected override void OnSizing (SizingEdge edge, ref Rectangle r) =>
         Invalidate();
 
-    protected unsafe override void OnPaint (in Rectangle _) {
+    protected unsafe override void OnPaint () {
         var size = ClientSize;
         Append(size.ToString());
         if (dib is null || dib.Width != size.X || dib.Height != size.Y)

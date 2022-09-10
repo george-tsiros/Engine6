@@ -38,8 +38,6 @@ class AxesTest:GlWindowArb {
     private Axes axes;
     private VertexArray vertexArray;
     private VertexBuffer<Vector4> vb, cb;
-    protected override void OnIdle () =>
-        Invalidate();
 
     protected override void OnLoad () {
         var size = ClientSize = new(1280, 720);

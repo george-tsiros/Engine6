@@ -28,6 +28,7 @@
 
     <ItemGroup>
         <Compile Remove="DrawArraysInstancedTest.cs" />
+        <Compile Remove="GdiWindow.cs" />
         <Compile Remove="Ground.cs" />
         <Compile Remove="ShowTexture.cs" />
         <Compile Remove="SkyBoxTest.cs" />

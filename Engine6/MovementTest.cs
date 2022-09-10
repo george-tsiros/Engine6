@@ -46,8 +46,6 @@ class MovementTest:GlWindowArb {
     //    }
     //}
 
-    protected override void OnIdle () =>
-        Invalidate();
 
     const float EarthRadius = 6.3e6f;
 

@@ -140,7 +140,10 @@ unsafe public static class Opengl {
         internal readonly delegate* unmanaged[Stdcall]<int, int*, void> glGetIntegerv;
         internal readonly delegate* unmanaged[Stdcall]<int, float*, void> glGetFloatv;
         //internal readonly delegate* unmanaged[Stdcall]<int, int, int, int, void> glScissor;
-
+        internal readonly delegate* unmanaged[Stdcall]<uint, uint, nint> glFenceSync;
+        internal readonly delegate* unmanaged[Stdcall]<nint, void> glDeleteSync;
+        internal readonly delegate* unmanaged[Stdcall]<nint, uint, int, int*, int*, void> glGetSynciv;
+        internal readonly delegate* unmanaged[Stdcall]<void> glFlush;
 #pragma warning restore CS0649
     }
 
@@ -291,6 +294,7 @@ unsafe public static class Opengl {
     public static void Clear (BufferBit what) => functions.glClear((int)what);
     public static void BindTexture (int type, int id) => functions.glBindTexture(type, id);
     public static void Viewport (int x, int y, int w, int h) => functions.glViewport(x, y, w, h);
+    public static void Flush () => functions.glFlush();
     private static int GetLocation (int program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
         var l = Encoding.ASCII.GetBytes(name, bytes);
@@ -449,8 +453,7 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public static nint CreateContextARB (DeviceContext dc, ContextConfigurationARB configuration) {
-        var ctx = CreateSimpleContext(dc, configuration.BasicConfiguration);
+    public static nint CreateContextARB (DeviceContext dc, nint ctx, ContextConfigurationARB configuration) {
         var version = configuration.Version ?? ContextVersion;
         var contextFlags = configuration.Flags ?? ContextFlag.Debug;
         var profileMask = configuration.Profile ?? ProfileMask.Core;
@@ -466,6 +469,7 @@ unsafe public static class Opengl {
         DeleteContext(ctx);
         return ctxARB;
     }
+
     private static nint CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
         if (attribs.Length < 2 || attribs[^1] != 0 || attribs[^2] != 0)
             throw new ArgumentException("must have at least 2 arguments", nameof(attribs));
@@ -534,6 +538,32 @@ unsafe public static class Opengl {
     private static string SetInt32Failed (string name, int value) => $"failed to set {name} to {value}";
     private static string SetEnumFailed<T> (T value) where T : Enum => $"failed to set {typeof(T)} to {value}";
 
+    internal static nint FenceSync () {
+        var fence = functions.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        return 0 != fence ? fence : throw new GlException();
+    }
 
+    internal static void DeleteSync (nint sync) {
+        functions.glDeleteSync(sync);
+    }
+
+    internal const uint GL_OBJECT_TYPE = 0x9112;
+    internal const uint GL_SYNC_CONDITION = 0x9113;
+    internal const uint GL_SYNC_STATUS = 0x9114;
+    internal const uint GL_SYNC_FLAGS = 0x9115;
+    internal const uint GL_SYNC_FENCE = 0x9116;
+    internal const uint GL_SYNC_GPU_COMMANDS_COMPLETE = 0x9117;
+    internal const uint GL_UNSIGNALED = 0x9118;
+    internal const uint GL_SIGNALED = 0x9119;
+    internal const uint GL_ALREADY_SIGNALED = 0x911A;
+    internal const uint GL_TIMEOUT_EXPIRED = 0x911B;
+    internal static int GetSynci (nint sync, uint name) {
+        var value = 0;
+        var length = 0;
+        functions.glGetSynciv(sync, name, 1, &length, &value);
+        if (1 != length)
+            throw new GlException();
+        return value;
+    }
 }
 #pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments

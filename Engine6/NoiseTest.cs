@@ -19,7 +19,7 @@ internal class NoiseTest:GlWindowArb {
     private const int ThreadCount = 4;
     private const int rowsPerThread = _HEIGHT / ThreadCount;
 
-    public NoiseTest (WindowStyle? style = null) : base(style: style) {
+    public NoiseTest () : base() {
         ClientSize = new(_WIDTH, _HEIGHT);
     }
 

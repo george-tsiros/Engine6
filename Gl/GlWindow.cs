@@ -7,13 +7,21 @@ using static Opengl;
 
 public class GlWindow:Window {
 
-    protected IntPtr RenderingContext;
-    protected long FramesRendered { get; private set; }
-    protected long LastSync { get; private set; }
+    protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
+    protected nint RenderingContext = 0;
+    protected long FramesRendered { get; private set; } = 0l;
+    protected long LastSync { get; private set; } = 0l;
+    private const double FPS = 36;
+    private const double TframeSeconds = 1 / FPS;
+    private const double TframeTicks = 1e7 * TframeSeconds;
+    private readonly long StartTicks;
+    private bool disposed = false;
+    private FenceSync sync = null;
 
-    public GlWindow (ContextConfiguration? configuration = null, WindowStyle? style = null) : base(style) {
+    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Maximize) {
+        StartTicks = Stopwatch.GetTimestamp();
         RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
-        LastSync = Stopwatch.GetTimestamp();
+        SetSwapInterval(1);
     }
 
     protected override void OnKeyUp (Key k) {
@@ -24,15 +32,23 @@ public class GlWindow:Window {
         }
     }
 
+    private bool swapPending = false;
     protected override void OnIdle () {
-        Invalidate();
-    }
-
-    protected override void OnPaint (in Rectangle r) {
-        Render();
-        Gdi32.SwapBuffers(Dc);
-        LastSync = Stopwatch.GetTimestamp();
-        ++FramesRendered;
+        if (swapPending) {
+            // for, say, 72 Hz there's Tframe = 1 / 72 seconds between refreshes. 
+            // we wait until 5% of that time remains before we swap.
+            if (LastSync + 0.9 * TframeTicks < Ticks()) {
+                Gdi32.SwapBuffers(Dc);
+                LastSync = Ticks();
+                ++FramesRendered;
+                swapPending = false;
+            }
+        } else {
+            swapPending = true;
+            sync?.Dispose();
+            Render();
+            sync = new();
+        }
     }
 
     protected virtual void Render () {
@@ -40,12 +56,12 @@ public class GlWindow:Window {
         Clear(BufferBit.ColorDepth);
     }
 
-    private bool disposed = false;
     public override void Dispose () {
         if (!disposed) {
             disposed = true;
             ReleaseCurrent(Dc);
             DeleteContext(RenderingContext);
+            GC.SuppressFinalize(this);
             base.Dispose();
         }
     }

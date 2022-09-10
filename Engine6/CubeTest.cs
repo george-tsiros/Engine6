@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using static Common.Maths;
 using Win32;
 using Gl;
@@ -11,7 +11,6 @@ class CubeTest:GlWindowArb {
     protected override void OnInput (int dx, int dy) {
         if (0 != dx)
             q *= Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -.001f * dx);
-
         if (0 != dy)
             q *= Quaternion.CreateFromAxisAngle(Vector3.UnitX, .001f * dy);
     }
@@ -22,14 +21,12 @@ class CubeTest:GlWindowArb {
     private Axes axes;
     private VertexArray vertexArray;
     private VertexBuffer<Vector4> vb, cb;
-    protected override void OnIdle () =>
-        Invalidate();
 
     static readonly Vector4[] FaceColors = {
-        new(0, 0, 1, 1), // near
-        new(0, 0, .5f, 1), // far
-        new(0, .5f, 0, 1), // bottom
-        new(0, 1, 0, 1), // top
+        new(0, 0, 1, 1), 
+        new(0, 0, .5f, 1), 
+        new(0, .5f, 0, 1),
+        new(0, 1, 0, 1),
         new(1, 0, 0, 1),
         new(.5f, 0, 0, 1),
     };
@@ -38,7 +35,6 @@ class CubeTest:GlWindowArb {
         var size = ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
-        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, .1f, 100f));
         axes.View(Matrix4x4.CreateTranslation(0, 0, -5));
         vertexArray = new();
         var m = Model.Cube(.5f);
@@ -62,6 +58,7 @@ class CubeTest:GlWindowArb {
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
+        ClearColor(0, 0, 0, 1);
         Disposables.Add(vertexArray);
         Disposables.Add(axes);
         Disposables.Add(vb);
@@ -87,11 +84,10 @@ class CubeTest:GlWindowArb {
 
     protected override void Render () {
         Move();
-        Viewport(new(), ClientSize);
-        UseProgram(axes);
-        BindVertexArray(vertexArray);
-        ClearColor(0, 0, 0, 1);
+        var size = ClientSize;
+        Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
+        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, .1f, 100f));
         axes.Model(Matrix4x4.CreateFromQuaternion(q) * Matrix4x4.CreateTranslation(location));
         DrawArrays(Primitive.Triangles, 0, 36);
     }
