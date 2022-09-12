@@ -21,6 +21,7 @@ internal class NoiseTest:GlWindowArb {
 
     public NoiseTest () : base() {
         ClientSize = new(_WIDTH, _HEIGHT);
+        Load += OnLoad;
     }
 
     private VertexArray quad;
@@ -55,7 +56,7 @@ internal class NoiseTest:GlWindowArb {
         var done = countdown.Signal();
     }
 
-    protected override void OnLoad () {
+    void OnLoad (object sender, EventArgs _) {
         quad = new();
         passThrough = new();
         quad.Assign(new VertexBuffer<Vector4>(QuadVertices), passThrough.VertexPosition);

@@ -13,6 +13,7 @@ class HighlightTriangle:GlWindowArb {
     public HighlightTriangle (Model model) : base() {
         Model = model;
         VertexCount = Model.Faces.Count * 3;
+        Load += OnLoad;
     }
 
     Model Model;
@@ -25,7 +26,8 @@ class HighlightTriangle:GlWindowArb {
     byte[] Pixels;
     VertexIndex vertexIndex;
     PassThrough passThrough;
-    protected override void OnLoad () {
+
+    void OnLoad (object sender, EventArgs _) {
         var size = ClientSize;
 
         Pixels = new byte[size.X * size.Y * sizeof(int)];
@@ -74,13 +76,16 @@ class HighlightTriangle:GlWindowArb {
         new(-1f, +1f, 0, 1),
     };
 
-    protected override void OnKeyUp (Key k) {
-        switch (k) {
+    void OnKeyUp (object sender, KeyEventArgs args) {
+        switch (args.Key) {
             case Key.Up:
                 fovRatio = IntMin(fovRatio + 1, 6);
                 return;
             case Key.Down:
                 fovRatio = IntMax(fovRatio - 1, 2);
+                return;
+            case Key.Escape:
+                User32.PostQuitMessage(0);
                 return;
         }
     }

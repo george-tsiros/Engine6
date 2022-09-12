@@ -1,5 +1,6 @@
 namespace Engine6;
 
+using System;
 using System.Numerics;
 using Shaders;
 using Gl;
@@ -29,27 +30,21 @@ class MovementTest:GlWindowArb {
     private DirectionalFlat directionalFlat;
     private PassThrough passThrough;
 
-    //private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
-
-    protected override void OnInput (int dx, int dy) {
-        camera.Rotate(.001f * dy, .001f * dx, 0);
+    public MovementTest () : base() {
+        Input += OnInput;
+        KeyUp += OnKeyUp;
     }
 
-    //protected override void OnMouseMove (in Vector2i e) {
-    //    if (Buttons.HasFlag(MouseButton.Right)) {
-    //        if (0 <= lastCursorPosition.X && 0 <= lastCursorPosition.Y) {
-    //            var delta = lastCursorPosition - e;
-    //            camera.Rotate(-.001f * delta.Y, -.001f * delta.X, 0);
-    //        }
-    //        lastCursorPosition = e;
-    //        return;
-    //    }
-    //}
+    //private float Dt => 0 < previousSync ? (float)(LastSync - previousSync) / Stopwatch.Frequency : 0;
 
+    void OnInput (object sender, InputEventArgs args) {
+
+        camera.Rotate(.001f * args.Dy, .001f * args.Dx, 0);
+    }
 
     const float EarthRadius = 6.3e6f;
 
-    protected override void OnLoad () {
+    void OnLoad (object sender, EventArgs _) {
         var size = ClientSize = new(1280, 720);
         renderingFramebuffer = new();
         renderingFramebuffer.Attach(new Renderbuffer(size, RenderbufferFormat.Depth24Stencil8), FramebufferAttachment.DepthStencil);
@@ -88,17 +83,19 @@ class MovementTest:GlWindowArb {
         passThrough.Tex(1);
     }
 
-    protected override void OnKeyDown (Key k) {
-        switch (k) {
+    void OnKeyUp (object sender, KeyEventArgs args) {
+        switch (args.Key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                return;
             case Key.Tab:
                 goFast = !goFast;
                 return;
         }
-        base.OnKeyDown(k);
     }
 
     bool goFast = false;
-    void Move (float dt) {
+    void Update (float dt) {
         var dx = IsKeyDown(Key.C) ? 1 : 0;
         if (IsKeyDown(Key.Z))
             dx -= 1;
@@ -123,7 +120,7 @@ class MovementTest:GlWindowArb {
     }
 
     protected override void Render () {
-        Move(.01f);
+        Update(.01f);
         UseProgram(directionalFlat);
         BindFramebuffer(renderingFramebuffer);
         BindVertexArray(renderingVertexArray);

@@ -61,11 +61,19 @@ public class BlitTest:GlWindowArb {
         ModelSpace = new Vector3d[model.Vertices.Count];
         FaceZ = new double[model.Faces.Count];
         FacesAndDots = new (double, int)[model.Faces.Count];
-
-        SetSwapInterval(1);
+        Load += OnLoad;
+        KeyUp += OnKeyUp;
     }
 
-    protected override void OnLoad () {
+    void OnKeyUp (object sender, KeyEventArgs args) {
+        switch (args.Key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                return;
+        }
+    }
+
+    void OnLoad (object sender, EventArgs _) {
         var size = ClientSize;
         offscreenDepthbuffer = new(size, RenderbufferFormat.Depth24Stencil8);
         offscreenRenderingSurface = new(size, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest };

@@ -82,32 +82,44 @@ public abstract class Window:IDisposable {
         }
     }
 
-    protected virtual void OnActivate (bool activated, ActivateKind kind) { }
-    protected virtual void OnActivateApp (bool activated) { }
-    protected virtual void OnButtonDown (MouseButton justDepressed, PointShort p) { }
-    protected virtual void OnButtonUp (MouseButton justReleased, PointShort p) { }
-    protected virtual void OnCaptureChanged (nint windowOwningMouse) { }
-    protected virtual void OnClosed () { }
-    //protected virtual void OnCreate (ref CreateStructW cs) { }
-    protected virtual void OnEnterSizeMove () { }
-    protected virtual void OnExitSizeMove () { }
-    protected virtual void OnFocusChanged (bool isFocused) { }
-    protected virtual void OnGetMinMaxInfo (ref MinMaxInfo x) { }
-    protected virtual void OnIdle () { }
-    protected virtual void OnInput (int dx, int dy) { }
-    protected virtual void OnKeyDown (Key k) { }
-    protected virtual void OnKeyUp (Key k) { }
-    protected virtual void OnLoad () { }
-    //protected virtual void OnMouseLeave () { }
-    //protected virtual void OnMouseMove (in Vector2i currentPosition) { }
-    protected virtual void OnMove (in Vector2i clientRelativePosition) { }
-    protected virtual void OnMoving (ref Rectangle topLeft) { }
-    //protected virtual void OnPaint () { }
-    protected virtual void OnShowWindow (bool shown, ShowWindow reason) { }
-    protected virtual void OnSize (SizeType type, Vector2i size) { }
-    protected virtual void OnSizing (SizingEdge edge, ref Rectangle r) { }
-    protected virtual void OnWindowPosChanged (ref WindowPos p) { }
-    protected virtual void OnWindowPosChanging (ref WindowPos p) { }
+    public event EventHandler Load;
+    public event EventHandler Idle;
+    public event EventHandler Closed;
+    //public event EventHandler<SizingEventArgs> Sizing;
+    public event EventHandler<SizeEventArgs> Size;
+    public event EventHandler<MoveEventArgs> Move;
+    //public event EventHandler<MovingEventArgs> Moving;
+    public event EventHandler<ShowWindowEventArgs> ShowWindow;
+    public event EventHandler<ButtonEventArgs> ButtonDown, ButtonUp;
+    public event EventHandler<FocusChangedEventArgs> FocusChanged;
+    public event EventHandler<KeyEventArgs> KeyDown, KeyUp;
+    public event EventHandler<InputEventArgs> Input;
+    //private void OnActivate (bool activated, ActivateKind kind) { }
+    //private void OnActivateApp (bool activated) { }
+    //private void OnButtonDown (MouseButton justDepressed, PointShort p) { }
+    //private void OnButtonUp (MouseButton justReleased, PointShort p) { }
+    //private void OnCaptureChanged (nint windowOwningMouse) { }
+    //private void OnClosed () { }
+    //private void OnCreate (ref CreateStructW cs) { }
+    //private void OnEnterSizeMove () { }
+    //private void OnExitSizeMove () { }
+    //private void OnFocusChanged (bool isFocused) { }
+    //private void OnGetMinMaxInfo (ref MinMaxInfo x) { }
+    //private void OnIdle () { }
+    //private void OnInput (int dx, int dy) { }
+    //private void OnKeyDown (Key k) { }
+    //private void OnKeyUp (Key k) { }
+    //private void OnLoad () { }
+    //private void OnMouseLeave () { }
+    //private void OnMouseMove (in Vector2i currentPosition) { }
+    //private void OnMove (in Vector2i clientRelativePosition) { }
+    //private void OnMoving (ref Rectangle topLeft) { }
+    //private void OnPaint () { }
+    //private void OnShowWindow (bool shown, ShowWindow reason) { }
+    //private void OnSize (SizeType type, Vector2i size) { }
+    //private void OnSizing (SizingEdge edge, ref Rectangle r) { }
+    //private void OnWindowPosChanged (ref WindowPos p) { }
+    //private void OnWindowPosChanging (ref WindowPos p) { }
 
     public bool IsKeyDown (Key key) {
         var (h, l) = FindIndex(key);
@@ -115,18 +127,18 @@ public abstract class Window:IDisposable {
     }
 
     public void Run () {
-        OnLoad();
+        Load?.Invoke(this, EventArgs.Empty);
         User32.UpdateWindow(Handle);
         _ = User32.ShowWindow(Handle, CmdShow.ShowMaximized);
         var m = new Message();
 
         while (WinMessage.Quit != m.msg) {
-            OnIdle();
+            Idle?.Invoke(this, EventArgs.Empty);
             while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
                 if (User32.GetMessage(ref m))
                     _ = User32.DispatchMessage(ref m);
         }
-        OnClosed();
+        Closed?.Invoke(this, EventArgs.Empty);
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
@@ -152,65 +164,65 @@ public abstract class Window:IDisposable {
                 // yes, it is different from NcCreate
                 return 0;
             case WinMessage.Size:
-                OnSize((SizeType)(int)(w & int.MaxValue), Split(l));
+                Size?.Invoke(this, new((SizeType)(int)(w & int.MaxValue), Split(l)));
                 return 0;
             case WinMessage.Sizing:
-                if (0 != l) {
-                    var r = (Rectangle*)l;
-                    OnSizing((SizingEdge)(w & int.MaxValue), ref *r);
-                    return 0;
-                }
+                //if (0 != l) {
+                //    var r = (Rectangle*)l;
+                //    Sizing?.Invoke(this, new((SizingEdge)(w & int.MaxValue), ref *r));
+                //    return 0;
+                //}
                 break;
             case WinMessage.Move:
-                OnMove(Split(l));
+                Move?.Invoke(this, new(Split(l)));
                 return 0;
             case WinMessage.Moving:
-                if (0 != l) {
-                    var r = (Rectangle*)l;
-                    OnMoving(ref *r);
-                    return 0;
-                }
+                //if (0 != l) {
+                //    var r = (Rectangle*)l;
+                //    Moving?.Invoke(this, new(ref *r));
+                //    return 0;
+                //}
                 break;
             case WinMessage.ShowWindow:
-                OnShowWindow(0 != w, (ShowWindow)(int)(l & int.MaxValue));
+                ShowWindow?.Invoke(this, new(0 != w, (ShowWindowReason)(int)(l & int.MaxValue)));
                 return 0;
             case WinMessage.ActivateApp:
-                OnActivateApp(0 != w);
+                //OnActivateApp(0 != w);
                 return 0;
             case WinMessage.Activate:
-                OnActivate(0 != (w & 0xffff0000), (ActivateKind)(0xffff & w));
+                //OnActivate(0 != (w & 0xffff0000), (ActivateKind)(0xffff & w));
                 return 0;
             case WinMessage.CaptureChanged:
-                OnCaptureChanged(h);
+                //OnCaptureChanged(h);
                 return 0;
             case WinMessage.EnterSizeMove:
-                OnEnterSizeMove();
+                //OnEnterSizeMove();
                 return 0;
             case WinMessage.ExitSizeMove:
-                OnExitSizeMove();
+                //OnExitSizeMove();
                 return 0;
             case WinMessage.EraseBkgnd:
                 return 1;
             case WinMessage.WindowPosChanging:
-                if (0 != l) {
-                    var p = (WindowPos*)l;
-                    OnWindowPosChanging(ref *p);
-                    return 0;
-                }
+                //if (0 != l) {
+                //    var p = (WindowPos*)l;
+                //    OnWindowPosChanging(ref *p);
+                //    return 0;
+                //}
                 break;
             case WinMessage.WindowPosChanged:
-                if (0 != l) {
-                    var p = (WindowPos*)l;
-                    OnWindowPosChanged(ref *p);
-                    return 0;
-                }
+                //if (0 != l) {
+                //    var p = (WindowPos*)l;
+                //    OnWindowPosChanged(ref *p);
+                //    return 0;
+                //}
                 break;
             case WinMessage.GetMinMaxInfo:
-                if (0 != l) {
-                    var p = (MinMaxInfo*)l;
-                    OnGetMinMaxInfo(ref *p);
-                    return 0;
-                }
+                //if (0 != l) {
+                //    var p = (MinMaxInfo*)l;
+                //    OnGetMinMaxInfo(ref *p);
+                //    return 0;
+                //}
                 break;
             case WinMessage.LButtonDown:
             case WinMessage.RButtonDown:
@@ -219,7 +231,7 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    OnButtonDown(change, new(l));
+                    ButtonDown?.Invoke(this, new(change, new(l)));
                 }
                 break;
             case WinMessage.LButtonUp:
@@ -229,30 +241,30 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    OnButtonUp(change, new(l));
+                    ButtonUp?.Invoke(this, new(change, new(l)));
                 }
                 break;
             case WinMessage.SetFocus:
                 CaptureCursor();
-                OnFocusChanged(IsFocused = true);
+                FocusChanged?.Invoke(this, new(IsFocused = true));
                 return 0;
             case WinMessage.KillFocus:
                 ReleaseCursor();
-                OnFocusChanged(IsFocused = false);
+                FocusChanged?.Invoke(this, new(IsFocused = false));
                 return 0;
             case WinMessage.KeyDown:
                 if (0 == (l & 0x40000000)) {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] |= lo;
-                    OnKeyDown(key);
+                    KeyDown?.Invoke(this, new(key));
                 }
                 return 0;
             case WinMessage.KeyUp: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] &= ~lo;
-                    OnKeyUp(key);
+                    KeyUp?.Invoke(this, new(key));
                     return 0;
                 }
             //case WinMessage.Paint:
@@ -265,7 +277,7 @@ public abstract class Window:IDisposable {
                     if (0 != data.lastX || 0 != data.lastY) {
                         var r = Rect;
                         User32.SetCursorPos(r.Left + r.Width / 2, r.Top + r.Height / 2);
-                        OnInput(data.lastX, data.lastY);
+                        Input?.Invoke(this, new(data.lastX, data.lastY));
                     }
                 break;
         }

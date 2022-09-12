@@ -22,21 +22,14 @@ public class GlWindow:Window {
         StartTicks = Stopwatch.GetTimestamp();
         RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
         SetSwapInterval(-1);
+        Idle += OnIdle;
     }
 
-    protected override void OnKeyUp (Key k) {
-        switch (k) {
-            case Key.Escape:
-                User32.PostQuitMessage(0);
-                return;
-        }
-    }
-
-    protected override void OnIdle () {
+    void OnIdle (object sender, EventArgs _) {
         if (swapPending) {
-            // for, say, 72 Hz there's Tframe = 1 / 72 seconds between refreshes. 
-            // we wait until 5% of that time remains before we swap.
-            if (LastSync + 0.9 * TframeTicks < Ticks()) {
+            // for, say, FPS Hz there's Tframe = 1 / FPS seconds between refreshes. 
+            // we wait until 20% of that time remains before we swap.
+            if (LastSync + 0.8 * TframeTicks < Ticks()) {
                 Gdi32.SwapBuffers(Dc);
                 LastSync = Ticks();
                 ++FramesRendered;

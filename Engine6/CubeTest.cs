@@ -1,16 +1,24 @@
 namespace Engine6;
 using static Common.Maths;
+using System;
 using Win32;
 using Gl;
 using Shaders;
 using System.Numerics;
 using static Gl.Opengl;
-using Common;
 
 class CubeTest:GlWindowArb {
+    const float MouseSensitivity = .001f;
+    const float KeyboardSensitivity = .01f;
 
-    private ICamera camera = new QCamera(new(0, 0, 10));
-    private float speed = 0f;
+
+    public CubeTest () : base() {
+        Load += OnLoad;
+        Input += OnInput;
+        KeyUp += OnKeyUp;
+    }
+
+    private ICamera camera = new QCamera(Vector3.Zero);
     private Axes axes;
     private VertexArray vertexArray;
 
@@ -23,15 +31,23 @@ class CubeTest:GlWindowArb {
         new(.5f, 0, 0, 1),
     };
 
-    protected override void OnLoad () {
+    void OnKeyUp (object sender, KeyEventArgs args) {
+        switch (args.Key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                return;
+        }
+    }
+
+    void OnLoad (object sender, EventArgs _) {
         ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
-        //axes.View(Matrix4x4.CreateTranslation(0, 0, -5));
         axes.Model(Matrix4x4.Identity);
         vertexArray = new();
-        var m = Model.Cube(.5f);
+        var m = Model.Cube(10f);
         var vertices = new Vector4[m.Faces.Count * 3];
+        Model.InvertFaces(m);
         var vi = 0;
         foreach (var (i, j, k) in m.Faces) {
             vertices[vi++] = new(m.Vertices[i], 1);
@@ -60,27 +76,23 @@ class CubeTest:GlWindowArb {
         return x + y;
     }
 
-    void Move () {
-        var pitch = Axis(Key.A, Key.Z);
-        var yaw = Axis(Key.S, Key.X);
-        var roll = Axis(Key.D, Key.C);
-        camera.Rotate(.1f * pitch, 0, 0);
-        camera.Rotate(0, .1f * yaw, 0);
-        camera.Rotate(0, 0, .1f * roll);
+    void OnInput (object sender, InputEventArgs args) {
+        var (dx, dy) = (args.Dx, args.Dy);
+        camera.Rotate(-MouseSensitivity * dy, 0, -MouseSensitivity * dx);
+    }
+
+    void Update () {
+        var yaw = KeyboardSensitivity * Axis(Key.F, Key.S);
+        camera.Rotate(0, yaw, 0);
     }
 
     protected override void Render () {
-        Move();
+        Update();
         var size = ClientSize;
         Viewport(new(), size);
         Clear(BufferBit.ColorDepth);
         BindVertexArray(vertexArray);
-        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 2, (float)size.X / size.Y, .1f, 100f));
-        var q = Quaternion.CreateFromAxisAngle(Vector3.UnitX, fPi / 12);
-        //axes.View(Matrix4x4.CreateTranslation(0, 0, -10) * Matrix4x4.CreateFromQuaternion(q ));
-        //axes.View(Matrix4x4.CreateTranslation(0, 0, -10) * Matrix4x4.CreateRotationX(fPi / 6));
-        //axes.View(Matrix4x4.CreateLookAt(new(0, 0, 10), Vector3.Zero, Vector3.UnitY));
-        //axes.Model(Matrix4x4.CreateFromQuaternion(q) * Matrix4x4.CreateTranslation(location));
+        axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 3, (float)size.X / size.Y, .1f, 100f));
         axes.View(camera.LookAtMatrix);
         DrawArrays(Primitive.Triangles, 0, 36);
     }

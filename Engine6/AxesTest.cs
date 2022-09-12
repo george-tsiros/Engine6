@@ -1,9 +1,11 @@
-﻿namespace Engine6;
+namespace Engine6;
 using static Common.Maths;
 using Gl;
+using System;
 using Shaders;
 using System.Numerics;
 using static Gl.Opengl;
+using Win32;
 
 class AxesTest:GlWindowArb {
     private static readonly Vector4[] Axes = {
@@ -24,7 +26,23 @@ class AxesTest:GlWindowArb {
         new(0, 0, 1, 1),
     };
 
-    protected override void OnInput (int dx, int dy) {
+    public AxesTest () :base() { 
+        KeyUp += OnKeyUp;
+        Input += OnInput;
+        Load += OnLoad;
+    }
+
+    void OnKeyUp (object sender, KeyEventArgs args) {
+        switch (args.Key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                return;
+        }
+    }
+
+    void OnInput (object sender, InputEventArgs args) {
+        var (dx, dy) = (args.Dx, args.Dy);
+
         // x != 0, y == 0 => rotation along Z axis (roll, like elite)
         // x == 0, y != 0 => rotation along X axis (pitch)
         // so if both != 0 , the axis of rotation is a linear combination of UnitX + UnitZ
@@ -39,7 +57,7 @@ class AxesTest:GlWindowArb {
     private VertexArray vertexArray;
     private VertexBuffer<Vector4> vb, cb;
 
-    protected override void OnLoad () {
+    void OnLoad (object sender, EventArgs _) {
         var size = ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
