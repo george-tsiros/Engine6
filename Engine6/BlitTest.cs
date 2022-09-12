@@ -27,7 +27,7 @@ public class BlitTest:GlWindowArb {
     private static bool IsInside (in Vector3d v) =>
         -1 < v.Z && v.Z < 1;
 
-    private ICamera camera = new Camera(new(0, 0, 20));
+    private ICamera camera = new QCamera(new(0, 0, 20));
     private readonly Vector3i[] Faces;
     private readonly Vector4d[] Vertices;
     //private Vector2i lastCursorPosition = new(-1, -1);

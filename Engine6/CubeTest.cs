@@ -9,16 +9,8 @@ using Common;
 
 class CubeTest:GlWindowArb {
 
-    protected override void OnInput (int dx, int dy) {
-        if (0 != dx)
-            q *= Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -.001f * dx);
-        if (0 != dy)
-            q *= Quaternion.CreateFromAxisAngle(Vector3.UnitX, .001f * dy);
-    }
-
+    private ICamera camera = new QCamera(new(0, 0, 10));
     private float speed = 0f;
-    private Vector3 location = Vector3.Zero;
-    private Quaternion q = Quaternion.Identity;
     private Axes axes;
     private VertexArray vertexArray;
 
@@ -35,7 +27,8 @@ class CubeTest:GlWindowArb {
         ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
-        axes.View(Matrix4x4.CreateTranslation(0, 0, -5));
+        //axes.View(Matrix4x4.CreateTranslation(0, 0, -5));
+        axes.Model(Matrix4x4.Identity);
         vertexArray = new();
         var m = Model.Cube(.5f);
         var vertices = new Vector4[m.Faces.Count * 3];
@@ -68,14 +61,12 @@ class CubeTest:GlWindowArb {
     }
 
     void Move () {
-        var yaw = Axis(Key.S, Key.F);
-        if (0 != yaw)
-            q *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, .01f * yaw);
-        var dv = Axis(Key.D, Key.X);
-        if (0 != dv)
-            speed = FloatClamp(speed + .001f * dv, 0f, .1f);
-        if (0 != speed)
-            location += speed * Vector3.Transform(-Vector3.UnitZ, q);
+        var pitch = Axis(Key.A, Key.Z);
+        var yaw = Axis(Key.S, Key.X);
+        var roll = Axis(Key.D, Key.C);
+        camera.Rotate(.1f * pitch, 0, 0);
+        camera.Rotate(0, .1f * yaw, 0);
+        camera.Rotate(0, 0, .1f * roll);
     }
 
     protected override void Render () {
@@ -85,7 +76,12 @@ class CubeTest:GlWindowArb {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(vertexArray);
         axes.Projection(Matrix4x4.CreatePerspectiveFieldOfView(fPi / 2, (float)size.X / size.Y, .1f, 100f));
-        axes.Model(Matrix4x4.CreateFromQuaternion(q) * Matrix4x4.CreateTranslation(location));
+        var q = Quaternion.CreateFromAxisAngle(Vector3.UnitX, fPi / 12);
+        //axes.View(Matrix4x4.CreateTranslation(0, 0, -10) * Matrix4x4.CreateFromQuaternion(q ));
+        //axes.View(Matrix4x4.CreateTranslation(0, 0, -10) * Matrix4x4.CreateRotationX(fPi / 6));
+        //axes.View(Matrix4x4.CreateLookAt(new(0, 0, 10), Vector3.Zero, Vector3.UnitY));
+        //axes.Model(Matrix4x4.CreateFromQuaternion(q) * Matrix4x4.CreateTranslation(location));
+        axes.View(camera.LookAtMatrix);
         DrawArrays(Primitive.Triangles, 0, 36);
     }
 }
