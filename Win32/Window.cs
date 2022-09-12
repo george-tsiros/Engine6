@@ -58,7 +58,7 @@ public abstract class Window:IDisposable {
 
     public Window (WindowStyle? style = null) {
         creating = this;
-        var h = User32.CreateWindow(Atom, style ?? WindowStyle.OverlappedWindow);
+        var h = User32.CreateWindow(Atom, style ?? WindowStyle.OverlappedWindow, WindowStyleEx.);
         Debug.Assert(h == Handle);
     }
 

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 public struct WindowClassExW {
     public uint size = (uint)Marshal.SizeOf<WindowClassExW>();
-    public ClassStyle style = ClassStyle.HRedraw | ClassStyle.VRedraw;
+    public ClassStyle style = ClassStyle.None;
     public WndProc wndProc = null;
     public int cbClsExtra = 0;
     public int cbWndExtra = 0;

@@ -24,12 +24,12 @@ public class GlWindow:Window {
         SetSwapInterval(-1);
         Idle += OnIdle;
     }
-
+    private double threshold = 0.90;
     void OnIdle (object sender, EventArgs _) {
         if (swapPending) {
             // for, say, FPS Hz there's Tframe = 1 / FPS seconds between refreshes. 
-            // we wait until 20% of that time remains before we swap.
-            if (LastSync + 0.8 * TframeTicks < Ticks()) {
+            // we wait until 5% of that time remains before we swap.
+            if (LastSync + threshold * TframeTicks < Ticks()) {
                 Gdi32.SwapBuffers(Dc);
                 LastSync = Ticks();
                 ++FramesRendered;
