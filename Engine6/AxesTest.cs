@@ -7,7 +7,7 @@ using System.Numerics;
 using static Gl.Opengl;
 using Win32;
 
-class AxesTest:GlWindowArb {
+class AxesTest:GlWindow {
     private static readonly Vector4[] Axes = {
         new(Vector3.Zero, 1),
         new(Vector3.UnitX, 1),

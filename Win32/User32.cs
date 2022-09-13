@@ -307,27 +307,27 @@ public static class User32 {
     //[DllImport(dll, SetLastError = true)]
     //public static extern nint GetWindowLongPtrA (nint hWnd, int nIndex);
 
-    //[DllImport(dll, SetLastError = true)]
-    //private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
+    [DllImport(dll, SetLastError = true)]
+    private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
 
-    //private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
-    //    var before = Kernel32.GetLastError();
-    //    if (0 != before)
-    //        throw new WinApiException("pre-existing error", before);
-    //    var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
-    //    if (0 == previousValue) {
-    //        var after = Kernel32.GetLastError();
-    //        if (0 != after)
-    //            throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
-    //    }
-    //}
+    private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
+        var before = Kernel32.GetLastError();
+        if (0 != before)
+            throw new WinApiException("pre-existing error", before);
+        var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
+        if (0 == previousValue) {
+            var after = Kernel32.GetLastError();
+            if (0 != after)
+                throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
+        }
+    }
 
     //public static void SetWindow (nint windowHandle, WndProc proc) =>
     //    SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
 
-    //public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
-    //    SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
+    public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
+        SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
 
-    //public static void SetWindow (nint windowHandle, WindowStyle style) =>
-    //    SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
+    public static void SetWindow (nint windowHandle, WindowStyle style) =>
+        SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
 }

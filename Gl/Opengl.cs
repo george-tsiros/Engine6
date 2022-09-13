@@ -47,6 +47,7 @@ unsafe public static class Opengl {
                     var extPtr = wglGetProcAddress(f.Name);
                     if (0 != extPtr) {
                         f.SetValue(this, extPtr);
+                        Debug.WriteLine($"{f.Name} found with {nameof(wglGetProcAddress)}");
                         continue;
                     }
                     if (0 == opengl32dll)
@@ -57,6 +58,7 @@ unsafe public static class Opengl {
                     if (0 == glPtr)
                         throw new WinApiException($"failed to get address of {f.Name}");
                     f.SetValue(this, glPtr);
+                    Debug.WriteLine($"{f.Name} found with {nameof(Kernel32.GetProcAddress)}");
                 }
         }
 #pragma warning disable CS0649
@@ -186,19 +188,12 @@ unsafe public static class Opengl {
                 throw new WinApiException(nameof(wglGetPixelFormatAttribivARB));
     }
 
-    public static nint CreateContextAttribsARB (nint dc, nint sharedContext, ReadOnlySpan<int> attribs) {
-        fixed (int* p = attribs) {
-            var context = wglCreateContextAttribsARB(dc, sharedContext, p);
-            return 0 != context ? context : throw new WinApiException(nameof(wglCreateContextAttribsARB));
-        }
-    }
-
     public static void ReadOnePixel (int x, int y, int width, int height, out uint pixel) {
         fixed (uint* p = &pixel)
             functions.glReadnPixels(x, y, width, height, Const.RED_INTEGER, Const.INT, sizeof(uint), p);
     }
     public static void DepthFunc (DepthFunction function) => functions.glDepthFunc((int)function);
-    public static GlErrorCodes GetError () => (GlErrorCodes)glGetError();
+    internal static GlErrorCodes GetError () => (GlErrorCodes)glGetError();
     public static nint GetCurrentContext () => wglGetCurrentContext();
     public static void Viewport (Vector2i position, Vector2i size) => functions.glViewport(position.X, position.Y, size.X, size.Y);
     public static int GetAttribLocation (int program, string name) => GetLocation(program, name, functions.glGetAttribLocation);
@@ -233,8 +228,8 @@ unsafe public static class Opengl {
             if (0 != GetIntegerv(IntParameter.FramebufferBinding))
                 throw new GlException(SetInt32Failed(nameof(FramebufferTarget.Framebuffer), 0));
         }
-
     }
+
     public static void BindFramebuffer (Framebuffer buffer) {
         if (buffer != GetIntegerv(IntParameter.FramebufferBinding)) {
             functions.glBindFramebuffer((int)FramebufferTarget.Framebuffer, buffer);
@@ -404,26 +399,20 @@ unsafe public static class Opengl {
         return str;
     }
 
-    private static void MakeCurrent (DeviceContext deviceContext, nint renderingContext) {
-        if (!wglMakeCurrent((nint)deviceContext, renderingContext))
-            throw new WinApiException(nameof(wglMakeCurrent));
-
-        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int>)wglGetProcAddress(nameof(wglGetPixelFormatAttribivARB));
-        if (wglGetPixelFormatAttribivARB is null)
-            throw new Exception($"{nameof(wglGetPixelFormatAttribivARB)} is null");
-        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<nint, nint, int*, nint>)wglGetProcAddress(nameof(wglCreateContextAttribsARB));
-        if (wglCreateContextAttribsARB is null)
-            throw new Exception($"{nameof(wglCreateContextAttribsARB)} is null");
+    private static void Prepare () {
 
         functions = new();
 
         VersionString = GetString(OpenglString.Version);
+        Debug.WriteLine($"{nameof(OpenglString.Version)}: {VersionString}");
         Renderer = GetString(OpenglString.Renderer);
+        Debug.WriteLine($"{nameof(OpenglString.Renderer)}: {Renderer}");
         var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )?");
         if (!m.Success)
             throw new Exception($"'{VersionString}' not a version string");
         ContextVersion = Version.Parse(m.Groups[1].Value);
         ShaderVersionString = $"{ContextVersion.Major}{ContextVersion.Minor}0";
+
         if (m.Groups[3].Success && Enum.TryParse<ProfileMask>(m.Groups[3].Value, out var profileMask))
             Profile = profileMask;
         else
@@ -441,7 +430,9 @@ unsafe public static class Opengl {
             supportedExtensions.AddRange(GetString(OpenglString.Extensions).Split(' '));
         };
     }
+
     static readonly Version LegacyOpenglVersion = new(3, 0, 0);
+
     public static void DeleteContext (nint renderingContext) {
         if (!wglDeleteContext(renderingContext))
             throw new WinApiException(nameof(wglDeleteContext));
@@ -453,7 +444,27 @@ unsafe public static class Opengl {
         return i;
     }
 
-    public static nint CreateContextARB (DeviceContext dc, nint ctx, ContextConfigurationARB configuration) {
+    public static nint CreateContext (DeviceContext dc, ContextConfiguration configuration) {
+        if (0 != wglGetCurrentContext())
+            throw new WinApiException("context already exists");
+        var descriptor = new PixelFormatDescriptor();
+        var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
+        if (0 == pfIndex)
+            throw new Exception("no pixelformat found");
+        Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
+        var rc = wglCreateContext((nint)dc);
+        if (0 == rc)
+            throw new WinApiException("failed wglCreateContext");
+        if (!wglMakeCurrent((nint)dc, rc))
+            throw new WinApiException(nameof(wglMakeCurrent));
+
+        wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int>)wglGetProcAddress(nameof(wglGetPixelFormatAttribivARB));
+        if (wglGetPixelFormatAttribivARB is null)
+            throw new Exception($"failed to get {nameof(wglGetPixelFormatAttribivARB)}");
+        wglCreateContextAttribsARB = (delegate* unmanaged[Stdcall]<nint, nint, int*, nint>)wglGetProcAddress(nameof(wglCreateContextAttribsARB));
+        if (wglCreateContextAttribsARB is null)
+            throw new Exception($"failed to get {nameof(wglCreateContextAttribsARB)}");
+
         var version = configuration.Version ?? ContextVersion;
         var contextFlags = configuration.Flags ?? ContextFlag.Debug;
         var profileMask = configuration.Profile ?? ProfileMask.Core;
@@ -465,34 +476,21 @@ unsafe public static class Opengl {
             0, 0,
         };
         var ctxARB = CreateContextAttribsARB(dc, nameValuePairs);
-        MakeCurrent(dc, ctxARB);
-        DeleteContext(ctx);
-        return ctxARB;
+        if (wglMakeCurrent((nint)dc, ctxARB)) {
+            DeleteContext(rc);
+            Prepare();
+            return ctxARB;
+        }
+        throw new WinApiException(nameof(wglMakeCurrent));
     }
 
     private static nint CreateContextAttribsARB (DeviceContext dc, int[] attribs) {
-        if (attribs.Length < 2 || attribs[^1] != 0 || attribs[^2] != 0)
-            throw new ArgumentException("must have at least 2 arguments", nameof(attribs));
         fixed (int* p = attribs) {
             var ctxARB = wglCreateContextAttribsARB((nint)dc, 0, p);
             return 0 != ctxARB ? ctxARB : throw new WinApiException(nameof(wglCreateContextAttribsARB));
         }
     }
 
-    public static nint CreateSimpleContext (DeviceContext dc, ContextConfiguration configuration) {
-        if (0 != wglGetCurrentContext())
-            throw new WinApiException("context already exists");
-        var descriptor = new PixelFormatDescriptor();
-        var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
-        if (0 == pfIndex)
-            throw new Exception("no pixelformat found");
-        Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
-        var rc = wglCreateContext((nint)dc);
-        if (0 == rc)
-            throw new WinApiException("failed wglCreateContext");
-        MakeCurrent(dc, rc);
-        return rc;
-    }
     public static ProfileMask Profile { get; private set; } = ProfileMask.Undefined;
     public static Version ContextVersion { get; private set; }
     public static string ShaderVersionString { get; private set; }

@@ -9,7 +9,7 @@ using Win32;
 using static Common.Maths;
 using Common;
 
-class HighlightTriangle:GlWindowArb {
+class HighlightTriangle:GlWindow {
     public HighlightTriangle (Model model) : base() {
         Model = model;
         VertexCount = Model.Faces.Count * 3;

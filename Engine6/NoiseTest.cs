@@ -13,7 +13,7 @@ using static Common.Maths;
 using Common;
 using System.Text;
 
-internal class NoiseTest:GlWindowArb {
+internal class NoiseTest:GlWindow {
     private const int _WIDTH = 128, _HEIGHT = _WIDTH;
     private const float _XSCALE = 1000f / _WIDTH, _YSCALE = 1000f / _HEIGHT;
     private const int ThreadCount = 4;

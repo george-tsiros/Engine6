@@ -1,9 +1,9 @@
 namespace Gl;
 
-using System;
-using System.Diagnostics;
 using Win32;
 using static Opengl;
+using System.Diagnostics;
+using System;
 
 public class GlWindow:Window {
 
@@ -11,25 +11,17 @@ public class GlWindow:Window {
     protected nint RenderingContext = 0;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
-    private const double FPS = 60;
-    private const double TframeSeconds = 1 / FPS;
+
+    private const double FPScap = 140;
+    private const double TframeSeconds = 1 / FPScap;
     private const double TframeTicks = 1e7 * TframeSeconds;
     private readonly long StartTicks;
     private bool disposed = false;
     private bool swapPending = false;
 
-    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Maximize) {
-        StartTicks = Stopwatch.GetTimestamp();
-        RenderingContext = CreateSimpleContext(Dc, configuration ?? ContextConfiguration.Default);
-        SetSwapInterval(-1);
-        Idle += OnIdle;
-    }
-    private double threshold = 0.90;
     void OnIdle (object sender, EventArgs _) {
         if (swapPending) {
-            // for, say, FPS Hz there's Tframe = 1 / FPS seconds between refreshes. 
-            // we wait until 5% of that time remains before we swap.
-            if (LastSync + threshold * TframeTicks < Ticks()) {
+            if (LastSync + TframeTicks < Ticks()) {
                 Gdi32.SwapBuffers(Dc);
                 LastSync = Ticks();
                 ++FramesRendered;
@@ -54,5 +46,13 @@ public class GlWindow:Window {
             GC.SuppressFinalize(this);
             base.Dispose();
         }
+    }
+
+    public GlWindow (ContextConfiguration? configuration = null) : base() {
+        User32.SetWindow(Handle, WindowStyle.Overlapped);
+        RenderingContext = CreateContext(Dc, configuration ?? ContextConfiguration.Default);
+        SetSwapInterval(-1);
+        StartTicks = Stopwatch.GetTimestamp();
+        Idle += OnIdle;
     }
 }

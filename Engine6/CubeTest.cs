@@ -6,10 +6,11 @@ using Gl;
 using Shaders;
 using System.Numerics;
 using static Gl.Opengl;
+using System.Diagnostics;
 
-class CubeTest:GlWindowArb {
-    const float MouseSensitivity = .001f;
-    const float KeyboardSensitivity = .01f;
+class CubeTest:GlWindow {
+    const float MouseSensitivity = .0005f;
+    const float KeyboardSensitivity = .002f;
 
 
     public CubeTest () : base() {
@@ -75,7 +76,7 @@ class CubeTest:GlWindowArb {
         var y = IsKeyDown(minus) ? -1 : 0;
         return x + y;
     }
-
+    
     void OnInput (object sender, InputEventArgs args) {
         var (dx, dy) = (args.Dx, args.Dy);
         camera.Rotate(-MouseSensitivity * dy, 0, -MouseSensitivity * dx);

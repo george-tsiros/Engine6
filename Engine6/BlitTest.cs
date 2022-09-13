@@ -10,7 +10,7 @@ using static Gl.Opengl;
 using static Common.Maths;
 using Common;
 
-public class BlitTest:GlWindowArb {
+public class BlitTest:GlWindow {
     private static readonly string[] syncs = "free sink,no sync at all,vsync".Split(',');
     private static readonly Vector4[] QuadVertices = {
         new(-1f, -1f, 0, 1),

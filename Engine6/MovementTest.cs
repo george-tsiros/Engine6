@@ -10,7 +10,7 @@ using Common;
 using System.Diagnostics;
 using Win32;
 
-class MovementTest:GlWindowArb {
+class MovementTest:GlWindow {
     static readonly Vector4[] QuadVertices = {
         new(-1f, -1f, 0, 1),
         new(+1f, -1f, 0, 1),
