@@ -141,21 +141,27 @@ public static unsafe class RenderingContext {
 
         VersionString = GetString(OpenglString.Version);
         Debug.WriteLine($"{nameof(OpenglString.Version)}: {VersionString}");
+
         Renderer = GetString(OpenglString.Renderer);
         Debug.WriteLine($"{nameof(OpenglString.Renderer)}: {Renderer}");
+        
         var m = Regex.Match(VersionString, @"^(\d\.\d\.\d+) ((Core|Compatibility) )?");
         if (!m.Success)
             throw new Exception($"'{VersionString}' not a version string");
+        
         ContextVersion = Version.Parse(m.Groups[1].Value);
         if (configuration.Version is Version v) {
             if (v.Major != ContextVersion.Major || v.Minor != ContextVersion.Minor)
                 throw new Exception($"asked for {v} got {ContextVersion}");
         }
+        
         ShaderVersionString = $"{ContextVersion.Major}{ContextVersion.Minor}0";
+        
         if (m.Groups[3].Success && Enum.TryParse<ProfileMask>(m.Groups[3].Value, out var profileMask))
             Profile = profileMask;
         else
             Profile = ProfileMask.Undefined;
+
         supportedExtensions = new();
         if (LegacyOpenglVersion < ContextVersion) {
             int count = 0;

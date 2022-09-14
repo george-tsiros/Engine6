@@ -12,7 +12,6 @@ class CubeTest:GlWindow {
     const float MouseSensitivity = .0005f;
     const float KeyboardSensitivity = .002f;
 
-
     public CubeTest () : base() {
         Load += OnLoad;
         Input += OnInput;
@@ -34,8 +33,6 @@ class CubeTest:GlWindow {
 
     void OnKeyUp (object sender, KeyEventArgs args) {
         switch (args.Key) {
-            //case Key.Tab:
-            //    return;
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
