@@ -19,7 +19,7 @@ class CubeTest:GlWindow {
         KeyUp += OnKeyUp;
     }
 
-    private ICamera camera = new QCamera(Vector3.Zero);
+    private ICamera camera = new QCamera(new(0, 0, 10));
     private Axes axes;
     private VertexArray vertexArray;
 
@@ -34,6 +34,13 @@ class CubeTest:GlWindow {
 
     void OnKeyUp (object sender, KeyEventArgs args) {
         switch (args.Key) {
+            case Key.Tab:
+                var x = GetSwapInterval();
+                var y = x == 1 ? -1 : x + 1;
+                Debug.WriteLine($"swap {y}");
+                SetSwapInterval(y);
+                index = 0;
+                return;
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
@@ -41,14 +48,12 @@ class CubeTest:GlWindow {
     }
 
     void OnLoad (object sender, EventArgs _) {
-        ClientSize = new(1280, 720);
         axes = new();
         UseProgram(axes);
         axes.Model(Matrix4x4.Identity);
         vertexArray = new();
-        var m = Model.Cube(10f);
+        var m = Model.Cube(1f);
         var vertices = new Vector4[m.Faces.Count * 3];
-        Model.InvertFaces(m);
         var vi = 0;
         foreach (var (i, j, k) in m.Faces) {
             vertices[vi++] = new(m.Vertices[i], 1);
@@ -76,7 +81,7 @@ class CubeTest:GlWindow {
         var y = IsKeyDown(minus) ? -1 : 0;
         return x + y;
     }
-    
+
     void OnInput (object sender, InputEventArgs args) {
         var (dx, dy) = (args.Dx, args.Dy);
         camera.Rotate(-MouseSensitivity * dy, 0, -MouseSensitivity * dx);

@@ -13,7 +13,6 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-#pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
 
 unsafe public static class Opengl {
@@ -47,7 +46,7 @@ unsafe public static class Opengl {
                     var extPtr = wglGetProcAddress(f.Name);
                     if (0 != extPtr) {
                         f.SetValue(this, extPtr);
-                        Debug.WriteLine($"{f.Name} found with {nameof(wglGetProcAddress)}");
+                        //Debug.WriteLine($"{f.Name} found with {nameof(wglGetProcAddress)}");
                         continue;
                     }
                     if (0 == opengl32dll)
@@ -58,7 +57,7 @@ unsafe public static class Opengl {
                     if (0 == glPtr)
                         throw new WinApiException($"failed to get address of {f.Name}");
                     f.SetValue(this, glPtr);
-                    Debug.WriteLine($"{f.Name} found with {nameof(Kernel32.GetProcAddress)}");
+                    //Debug.WriteLine($"{f.Name} found with {nameof(Kernel32.GetProcAddress)}");
                 }
         }
 #pragma warning disable CS0649
@@ -154,7 +153,7 @@ unsafe public static class Opengl {
 
     private static int GetSwapIntervalEXT () => functions.wglGetSwapIntervalEXT();
     private static bool SwapIntervalEXT (int frames) => 0 != functions.wglSwapIntervalEXT(frames);
-
+    public static int GetSwapInterval () => GetSwapIntervalEXT();
     public static void SetSwapInterval (int value) {
         if (value != GetSwapIntervalEXT()) {
             if (!SwapIntervalEXT(value))
@@ -564,4 +563,5 @@ unsafe public static class Opengl {
         return value;
     }
 }
-#pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments
+//#pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
+//#pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments

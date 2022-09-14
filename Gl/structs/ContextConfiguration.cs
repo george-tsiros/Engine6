@@ -16,7 +16,7 @@ public readonly struct ContextConfiguration {
         ColorBits = 32,
         DepthBits = 24,
         DoubleBuffer = true,
-        Flags = ContextFlag.None, // ContextFlag.Debug | ContextFlag.ForwardCompatible,
+        Flags = ContextFlag.ForwardCompatible | ContextFlag.Debug,
         Profile = ProfileMask.Core
     };
 }
