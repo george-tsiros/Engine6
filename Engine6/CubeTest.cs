@@ -19,7 +19,7 @@ class CubeTest:GlWindow {
         KeyUp += OnKeyUp;
     }
 
-    private ICamera camera = new QCamera(new(0, 0, 10));
+    private ICamera camera = new QCamera(new(0, 0, 5));
     private Axes axes;
     private VertexArray vertexArray;
 
@@ -34,13 +34,8 @@ class CubeTest:GlWindow {
 
     void OnKeyUp (object sender, KeyEventArgs args) {
         switch (args.Key) {
-            case Key.Tab:
-                var x = GetSwapInterval();
-                var y = x == 1 ? -1 : x + 1;
-                Debug.WriteLine($"swap {y}");
-                SetSwapInterval(y);
-                index = 0;
-                return;
+            //case Key.Tab:
+            //    return;
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;

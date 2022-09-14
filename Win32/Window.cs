@@ -147,14 +147,12 @@ public abstract class Window:IDisposable {
         User32.RegisterMouseRaw(Handle);
         _ = User32.ShowCursor(false);
         deviceRegistered = true;
-        Debug.WriteLine("mouse registered");
     }
 
     private void ReleaseCursor () {
         deviceRegistered = false;
         _ = User32.ShowCursor(true);
         User32.UnregisterMouseRaw();
-        Debug.WriteLine("mouse released");
     }
 
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
