@@ -1,14 +1,13 @@
 namespace Gl;
 
 using Win32;
-using static Opengl;
+using static RenderingContext;
 using System.Diagnostics;
 using System;
 
 public class GlWindow:Window {
 
     protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
-    protected nint RenderingContext = 0;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
 
@@ -21,12 +20,13 @@ public class GlWindow:Window {
     private bool swapPending = false;
 
     public GlWindow (ContextConfiguration? configuration = null) : base() {
+        Create(Dc, configuration ?? ContextConfiguration.Default);
         User32.SetWindow(Handle, WindowStyle.Overlapped);
-        RenderingContext = CreateContext(Dc, configuration ?? ContextConfiguration.Default);
         SetSwapInterval(-1);
         StartTicks = Stopwatch.GetTimestamp();
         Idle += OnIdle;
     }
+
     int statCount = 0;
     string Stats () {
         var sum = 0l;
@@ -80,8 +80,7 @@ public class GlWindow:Window {
     public override void Dispose () {
         if (!disposed) {
             disposed = true;
-            ReleaseCurrent(Dc);
-            DeleteContext(RenderingContext);
+            Close();
             GC.SuppressFinalize(this);
             base.Dispose();
         }

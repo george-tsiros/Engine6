@@ -5,7 +5,7 @@ using Win32;
 using Gl;
 using Shaders;
 using System.Numerics;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using System.Diagnostics;
 
 class CubeTest:GlWindow {

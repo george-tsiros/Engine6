@@ -1,7 +1,7 @@
 namespace Shaders;
 
 using Gl;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using System.Numerics;
 using Common;
 

@@ -4,7 +4,7 @@ using Gl;
 using System;
 using Shaders;
 using System.Numerics;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using Win32;
 
 class AxesTest:GlWindow {

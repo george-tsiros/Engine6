@@ -1,7 +1,7 @@
 namespace Gl;
 
 using System;
-using static Opengl;
+using static RenderingContext;
 using Common;
 
 public class Renderbuffer:OpenglObject {

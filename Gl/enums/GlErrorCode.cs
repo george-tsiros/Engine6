@@ -1,6 +1,6 @@
 namespace Gl;
 
-public enum GlErrorCodes:uint {
+public enum GlErrorCode:uint {
     NoError = Const.NO_ERROR,
     InvalidEnum = Const.INVALID_ENUM,
     InvalidValue = Const.INVALID_VALUE,

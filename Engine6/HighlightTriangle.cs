@@ -4,7 +4,7 @@ using System;
 using System.Numerics;
 using Shaders;
 using Gl;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using Win32;
 using static Common.Maths;
 using Common;

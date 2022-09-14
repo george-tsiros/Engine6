@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Gl;
 using Shaders;
 using Win32;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using static Common.Maths;
 using Common;
 

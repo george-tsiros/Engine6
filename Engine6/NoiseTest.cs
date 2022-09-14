@@ -2,7 +2,7 @@ namespace Engine6;
 
 using System.Threading;
 using Gl;
-using static Gl.Opengl;
+using static Gl.RenderingContext;
 using Shaders;
 using System.Numerics;
 using System;

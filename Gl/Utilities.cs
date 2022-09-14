@@ -123,25 +123,25 @@ public static class Utilities {
         (eh = GetBackingField(type, prop, flags)) != null;
    
     unsafe public static int ShaderFromString (ShaderType type, string source) {
-        var vs = Opengl.CreateShader(type);
-        Opengl.ShaderSource(vs, $"#version {Opengl.ShaderVersionString} core\n{source}");
-        Opengl.CompileShader(vs);
-        var log = Opengl.GetShaderInfoLog(vs);
+        var vs = RenderingContext.CreateShader(type);
+        RenderingContext.ShaderSource(vs, $"#version {RenderingContext.ShaderVersionString} core\n{source}");
+        RenderingContext.CompileShader(vs);
+        var log = RenderingContext.GetShaderInfoLog(vs);
         return 0 ==log.Length ? vs : throw new ApplicationException(log);
     }
 
     unsafe public static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
-        var program = Opengl.CreateProgram();
-        Opengl.AttachShader(program, vertexShader);
-        Opengl.AttachShader(program, fragmentShader);
-        Opengl.LinkProgram(program);
-        var log = Opengl.GetProgramInfoLog(program);
+        var program = RenderingContext.CreateProgram();
+        RenderingContext.AttachShader(program, vertexShader);
+        RenderingContext.AttachShader(program, fragmentShader);
+        RenderingContext.LinkProgram(program);
+        var log = RenderingContext.GetProgramInfoLog(program);
         if (log.Length > 0)
             throw new ApplicationException(log);
-        Opengl.DeleteShader(vertexShader);
-        Opengl.DeleteShader(fragmentShader);
+        RenderingContext.DeleteShader(vertexShader);
+        RenderingContext.DeleteShader(fragmentShader);
         return program;
     }
     

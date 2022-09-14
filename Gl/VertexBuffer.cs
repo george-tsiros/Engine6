@@ -2,7 +2,7 @@ namespace Gl;
 
 using System;
 using System.Runtime.InteropServices;
-using static Opengl;
+using static RenderingContext;
 
 public class VertexBuffer<T>:OpenglObject where T : unmanaged {
     public int ElementSize { get; } = Marshal.SizeOf<T>();

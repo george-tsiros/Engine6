@@ -2,18 +2,18 @@ namespace Gl;
 
 using System;
 using System.Collections.Generic;
-using static Opengl;
+using static RenderingContext;
 
 public class GlException:Exception {
 
-    public GlErrorCodes GlError { get; }
+    public GlErrorCode GlError { get; }
     public string GlMessage { get; }
 
     public static void Assert () {
-        var errors = new List<GlErrorCodes>();
+        var errors = new List<GlErrorCode>();
         for (; ; ) { 
         var e = GetError();
-            if (GlErrorCodes.NoError == e)
+            if (GlErrorCode.NoError == e)
                 break;
             errors.Add(e);
         }
@@ -23,7 +23,7 @@ public class GlException:Exception {
         }
     }
 
-    private GlException (GlErrorCodes e, string str) : base(str) {
+    private GlException (GlErrorCode e, string str) : base(str) {
         GlError = e;
         GlMessage = str;
     }
