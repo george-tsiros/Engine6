@@ -76,7 +76,7 @@ public static unsafe class RenderingContext {
         if (0 != handle || 0 != wglGetCurrentContext())
             throw new Exception("context already exists");
 
-        var descriptor = new PixelFormatDescriptor();
+        PixelFormatDescriptor descriptor = new();
         var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
 
@@ -107,11 +107,12 @@ public static unsafe class RenderingContext {
         if (wglCreateContextAttribsARB is null)
             throw new Exception($"failed to get {nameof(wglCreateContextAttribsARB)}");
 
-        List<int> asList = new();
-        asList.Add((int)ContextAttrib.MajorVersion);
-        asList.Add(requestedVersion.Major);
-        asList.Add((int)ContextAttrib.MinorVersion);
-        asList.Add(requestedVersion.Minor);
+        List<int> asList = new() {
+            (int)ContextAttrib.MajorVersion,
+            requestedVersion.Major,
+            (int)ContextAttrib.MinorVersion,
+            requestedVersion.Minor
+        };
 
         if (configuration.Flags is ContextFlag flags) {
             asList.Add((int)ContextAttrib.ContextFlags);
@@ -191,15 +192,14 @@ public static unsafe class RenderingContext {
         return supportedExtensions.Contains(extension);
     }
 
-    public static IReadOnlyCollection<string> SupportedExtensions => supportedExtensions;
+    public static IReadOnlyCollection<string> SupportedExtensions =>
+        supportedExtensions;
 
     private static readonly Version LegacyOpenglVersion = new(3, 0, 0);
     private static nint opengl32dll;
 
     private static int FindPixelFormat (DeviceContext dc, ref PixelFormatDescriptor pfd, ContextConfiguration configuration) {
         var formatCount = Gdi32.GetPixelFormatCount(dc);
-        if (formatCount == 0)
-            throw new WinApiException("formatCount == 0");
 
         var requireDoubleBuffer = configuration.DoubleBuffer is bool _0 && _0 ? PixelFlag.DoubleBuffer : PixelFlag.None;
         var rejectDoubleBuffer = configuration.DoubleBuffer is bool _1 && !_1 ? PixelFlag.DoubleBuffer : PixelFlag.None;
@@ -224,21 +224,17 @@ public static unsafe class RenderingContext {
         throw new Exception("no pixelformat found");
     }
 
-    public static int CreateBuffer () {
-        return Create(glCreateBuffers);
-    }
+    public static int CreateBuffer () =>
+        Create(glCreateBuffers);
 
-    public static int CreateVertexArray () {
-        return Create(glCreateVertexArrays);
-    }
+    public static int CreateVertexArray () =>
+        Create(glCreateVertexArrays);
 
-    public static int CreateFramebuffer () {
-        return Create(glCreateFramebuffers);
-    }
+    public static int CreateFramebuffer () =>
+        Create(glCreateFramebuffers);
 
-    public static int CreateRenderbuffer () {
-        return Create(glCreateRenderbuffers);
-    }
+    public static int CreateRenderbuffer () =>
+        Create(glCreateRenderbuffers);
 
     private static int Create (delegate* unmanaged[Stdcall]<int, int*, void> f) {
         NotDisposed();
@@ -709,7 +705,7 @@ public static unsafe class RenderingContext {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, nint> glGetString;
     [GlVersion(1, 0)] private static delegate* unmanaged[Stdcall]<int, int> wglSwapIntervalEXT;
     [GlVersion(1, 0)] private static delegate* unmanaged[Stdcall]<int> wglGetSwapIntervalEXT;
-    
+
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<byte, byte, byte, byte, void> glColorMask;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<byte, void> glDepthMask;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<double, double, void> glDepthRange;
@@ -904,14 +900,14 @@ public static unsafe class RenderingContext {
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int> glGetError;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<void> glFinish;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<void> glFlush;
-    
+
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix2x3fv;
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix2x4fv;
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix3x2fv;
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix3x4fv;
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x2fv;
     [GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x3fv;
-    
+
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetFragDataLocation;
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glVertexAttribI4ubv;
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte, byte, byte, byte, void> glColorMaski;
@@ -996,7 +992,7 @@ public static unsafe class RenderingContext {
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, void> glGenerateMipmap;
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndConditionalRender;
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndTransformFeedback;
-    
+
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformBlockIndex;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glGetUniformIndices;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int*, int, int*, void> glGetActiveUniformsiv;
@@ -1009,7 +1005,7 @@ public static unsafe class RenderingContext {
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glUniformBlockBinding;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, nint, nint, nint, void> glCopyBufferSubData;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, void> glPrimitiveRestartIndex;
-   
+
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetFragDataIndex;
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<int, int*, int, void**, int, int*, void> glMultiDrawElementsBaseVertex;
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<int, int, float*, void> glGetMultisamplefv;
@@ -1044,7 +1040,7 @@ public static unsafe class RenderingContext {
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<nint, int, ulong, int> glClientWaitSync;
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<nint, int, ulong, void> glWaitSync;
     [GlVersion(3, 2)] private static delegate* unmanaged[Stdcall]<nint, void> glDeleteSync;
-   
+
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, byte> glIsSampler;
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDeleteSamplers;
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenSamplers;
@@ -1054,7 +1050,7 @@ public static unsafe class RenderingContext {
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte, int, void> glVertexAttribP4ui;
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindSampler;
     [GlVersion(3, 3)] private static delegate* unmanaged[Stdcall]<int, int, void> glVertexAttribDivisor;
-  
+
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<float, void> glMinSampleShading;
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, byte> glIsTransformFeedback;
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glPatchParameterfv;
@@ -1084,7 +1080,7 @@ public static unsafe class RenderingContext {
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, void*, void> glDrawArraysIndirect;
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<void> glPauseTransformFeedback;
     [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<void> glResumeTransformFeedback;
-  
+
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<float, float, void> glDepthRangef;
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<float, void> glClearDepthf;
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<int, byte> glIsProgramPipeline;
@@ -1156,7 +1152,7 @@ public static unsafe class RenderingContext {
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<int, void> glBindProgramPipeline;
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<int, void> glValidateProgramPipeline;
     [GlVersion(4, 1)] private static delegate* unmanaged[Stdcall]<void> glReleaseShaderCompiler;
- 
+
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, byte, int, int, int, void> glBindImageTexture;
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetActiveAtomicCounterBufferiv;
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, void> glGetInternalformativ;
@@ -1169,7 +1165,7 @@ public static unsafe class RenderingContext {
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, void*, int, int, void> glDrawElementsInstancedBaseInstance;
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glDrawTransformFeedbackInstanced;
     [GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, void> glMemoryBarrier;
-  
+
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<DebugProc, void*, void> glDebugMessageCallback;
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceIndex;
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocation;
@@ -1223,7 +1219,7 @@ public static unsafe class RenderingContext {
     [GlVersion(4, 4)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, int, int, void*, void> glClearTexSubImage;
     [GlVersion(4, 4)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void*, void> glClearTexImage;
     [GlVersion(4, 4)] private static delegate* unmanaged[Stdcall]<int, nint, void*, int, void> glBufferStorage;
-    
+
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, byte> glUnmapNamedBuffer;
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int*, void> glCreateBuffers;
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int*, void> glCreateFramebuffers;
