@@ -3,18 +3,19 @@ namespace Gl;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Numerics;
+using static RenderingContext;
+
 public static class Utilities {
-    public static byte[] AssertShorts (byte[] bytes) => 
+    public static byte[] AssertShorts (byte[] bytes) =>
         Assert(bytes, 1);
 
-    public static byte[] AssertInts (byte[] bytes) => 
+    public static byte[] AssertInts (byte[] bytes) =>
         Assert(bytes, 3);
 
-    public static byte[] AssertLongs (byte[] bytes) => 
+    public static byte[] AssertLongs (byte[] bytes) =>
         Assert(bytes, 7);
 
-    private static byte[] Assert (byte[] bytes, int mask) => 
+    private static byte[] Assert (byte[] bytes, int mask) =>
         (bytes.Length & mask) == 0 ? bytes : throw new ArgumentException($"{bytes.Length} not divisible by {mask + 1}");
 
     unsafe public static void MemSet (byte[] bytes, byte b) {
@@ -82,10 +83,10 @@ public static class Utilities {
                 ((long*)bp)[i] = 0;
     }
 
-    public static string VisualStudioLink (StackFrame sf) => 
+    public static string VisualStudioLink (StackFrame sf) =>
         $">{sf.GetFileName()}({sf.GetFileLineNumber()},{sf.GetFileColumnNumber()}):";
 
-    public static string Method (int skip = 0) => 
+    public static string Method (int skip = 0) =>
         VisualStudioLink(new StackFrame(skip + 1, true));
 
     public static void Trace (string message) {
@@ -113,40 +114,61 @@ public static class Utilities {
         value = values[index];
     }
 
-    private static string TraceFormat (string message, int skip = 0) => 
+    private static string TraceFormat (string message, int skip = 0) =>
         $"{Method(skip + 2)} {message}";
 
-    public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) => 
+    public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) =>
         type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
 
-    public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) => 
+    public static bool TryGetBackingField (Type type, PropertyInfo prop, out FieldInfo eh, BindingFlags flags = BindingFlags.Instance) =>
         (eh = GetBackingField(type, prop, flags)) != null;
-   
+
+    private static readonly (byte major, byte minor, byte characters)[] ValidOpenglVersions = {
+        (2, 0, 0x11),
+        (2, 1, 0x12),
+        (3, 0, 0x13),
+        (3, 1, 0x14),
+        (3, 2, 0x15),
+        (3, 3, 0x33),
+        (4, 0, 0x40),
+        (4, 1, 0x41),
+        (4, 2, 0x42),
+        (4, 3, 0x43),
+        (4, 4, 0x44),
+        (4, 5, 0x45),
+        (4, 6, 0x46),
+    };
+
     unsafe public static int ShaderFromString (ShaderType type, string source) {
-        var vs = RenderingContext.CreateShader(type);
-        RenderingContext.ShaderSource(vs, $"#version {RenderingContext.ShaderVersionString} core\n{source}");
-        RenderingContext.CompileShader(vs);
-        var log = RenderingContext.GetShaderInfoLog(vs);
-        return 0 ==log.Length ? vs : throw new ApplicationException(log);
+        var vs = CreateShader(type);
+        var (version, profile) = GetCurrentContextVersion();
+        var characters = Array.Find(ValidOpenglVersions, x => x.major == version.Major && x.minor == version.Minor).characters;
+        if (0 == characters)
+            throw new InvalidOperationException($"{version} not a known opengl version");
+        var core = ProfileMask.Core == profile ? " core" : string.Empty;
+        ShaderSource(vs, $"#version {characters:x}0{core}\n{source}");
+        CompileShader(vs);
+        var log = GetShaderInfoLog(vs);
+        return 0 == log.Length ? vs : throw new ApplicationException(log);
     }
 
     unsafe public static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
-        var program = RenderingContext.CreateProgram();
-        RenderingContext.AttachShader(program, vertexShader);
-        RenderingContext.AttachShader(program, fragmentShader);
-        RenderingContext.LinkProgram(program);
-        var log = RenderingContext.GetProgramInfoLog(program);
+        var program = CreateProgram();
+        AttachShader(program, vertexShader);
+        AttachShader(program, fragmentShader);
+        LinkProgram(program);
+        var log = GetProgramInfoLog(program);
         if (log.Length > 0)
             throw new ApplicationException(log);
-        RenderingContext.DeleteShader(vertexShader);
-        RenderingContext.DeleteShader(fragmentShader);
+        DeleteShader(vertexShader);
+        DeleteShader(fragmentShader);
         return program;
     }
-    
+
     unsafe public delegate void GetInfoLog (int i, int j, ref int k, byte* p);
-    
+
     unsafe public static void ThrowThing (GetInfoLog f, int name, int length) {
         Span<byte> bytes = stackalloc byte[length + 1];
         fixed (byte* ptr = bytes)

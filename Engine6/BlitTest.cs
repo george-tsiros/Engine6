@@ -207,7 +207,7 @@ public class BlitTest:GlWindow {
                 softwareRenderSurface.TriangleU32(ScreenSpace[a], ScreenSpace[b], ScreenSpace[c], color);
             }
         }
-        softwareRenderSurface.DrawString(VersionString, Font, 0, textRow += Font.Height);
+        //softwareRenderSurface.DrawString(VersionString, Font, 0, textRow += Font.Height);
 
         softwareRenderTexture.Upload(softwareRenderSurface);
 
