@@ -3,7 +3,7 @@ namespace Gl;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using static RenderingContext;
+using static GlContext;
 
 public static class Utilities {
     public static byte[] AssertShorts (byte[] bytes) =>

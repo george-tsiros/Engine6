@@ -41,7 +41,6 @@ public abstract class Window:IDisposable {
     protected List<IDisposable> Disposables { get; } = new();
 
     private readonly int[] KeyState = new int[256 / 32];
-    private bool deviceRegistered = false;
     private bool disposed;
 
     private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
@@ -56,9 +55,9 @@ public abstract class Window:IDisposable {
         return User32.DefWindowProc(h, m, w, l);
     }
 
-    public Window (WindowStyle? style = null) {
+    public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
         creating = this;
-        var h = User32.CreateWindow(Atom, style ?? WindowStyle.Overlapped, WindowStyleEx.TopMost);
+        var h = User32.CreateWindow(Atom, style, styleEx);
         Debug.Assert(h == Handle);
     }
 
@@ -94,6 +93,7 @@ public abstract class Window:IDisposable {
     public event EventHandler<FocusChangedEventArgs> FocusChanged;
     public event EventHandler<KeyEventArgs> KeyDown, KeyUp;
     public event EventHandler<InputEventArgs> Input;
+    public event EventHandler<PaintEventArgs> Paint;
     //private void OnActivate (bool activated, ActivateKind kind) { }
     //private void OnActivateApp (bool activated) { }
     //private void OnButtonDown (MouseButton justDepressed, PointShort p) { }
@@ -141,18 +141,6 @@ public abstract class Window:IDisposable {
         Closed?.Invoke(this, EventArgs.Empty);
         foreach (var disposable in Disposables)
             disposable.Dispose();
-    }
-
-    private void CaptureCursor () {
-        User32.RegisterMouseRaw(Handle);
-        _ = User32.ShowCursor(false);
-        deviceRegistered = true;
-    }
-
-    private void ReleaseCursor () {
-        deviceRegistered = false;
-        _ = User32.ShowCursor(true);
-        User32.UnregisterMouseRaw();
     }
 
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
@@ -243,11 +231,9 @@ public abstract class Window:IDisposable {
                 }
                 break;
             case WinMessage.SetFocus:
-                CaptureCursor();
                 FocusChanged?.Invoke(this, new(IsFocused = true));
                 return 0;
             case WinMessage.KillFocus:
-                ReleaseCursor();
                 FocusChanged?.Invoke(this, new(IsFocused = false));
                 return 0;
             case WinMessage.KeyDown:
@@ -265,18 +251,22 @@ public abstract class Window:IDisposable {
                     KeyUp?.Invoke(this, new(key));
                     return 0;
                 }
-            //case WinMessage.Paint:
-            //    OnPaint();
-            //    return 0;
+            case WinMessage.Paint:
+                PaintStruct ps = new();
+                var eh = User32.BeginPaint(Handle, ref ps);
+                Paint?.Invoke(this, new(eh, in ps));
+                User32.EndPaint(Handle, ref ps);
+                return 0;
             case WinMessage.Input:
-                Debug.Assert(deviceRegistered);
-                var data = new RawMouse();
-                if (User32.GetRawInputData(l, ref data))
-                    if (0 != data.lastX || 0 != data.lastY) {
-                        var r = Rect.Center;
-                        User32.SetCursorPos(r.X, r.Y);
-                        Input?.Invoke(this, new(data.lastX, data.lastY));
-                    }
+                if (Input is not null) {
+                    var data = new RawMouse();
+                    if (User32.GetRawInputData(l, ref data))
+                        if (0 != data.lastX || 0 != data.lastY) {
+                            var r = Rect.Center;
+                            User32.SetCursorPos(r.X, r.Y);
+                            Input(this, new(data.lastX, data.lastY));
+                        }
+                }
                 break;
         }
         return User32.DefWindowProc(h, m, w, l);

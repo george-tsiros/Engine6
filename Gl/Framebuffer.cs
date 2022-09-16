@@ -1,7 +1,7 @@
 namespace Gl;
 
 using System;
-using static RenderingContext;
+using static GlContext;
 
 public class Framebuffer:OpenglObject {
     

@@ -50,6 +50,7 @@ unsafe public class Dib:IDisposable {
     public readonly int Width;
     public readonly int Height;
     public readonly int Stride;
+    public Vector2i Size => new(Width, Height);
     readonly int pixelCount;
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>

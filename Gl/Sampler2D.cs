@@ -1,7 +1,7 @@
 namespace Gl;
 
 using System;
-using static RenderingContext;
+using static GlContext;
 using Win32;
 using Common;
 

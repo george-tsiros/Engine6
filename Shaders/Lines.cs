@@ -1,7 +1,7 @@
 namespace Shaders;
 
 using Gl;
-using static Gl.RenderingContext;
+using static Gl.GlContext;
 using System.Numerics;
 using Common;
 
@@ -14,11 +14,6 @@ public class Lines:Program {
     [GlAttrib("vertexPosition")]
     public int VertexPosition { get; }
 
-    //size 1, type Vector4
-    [GlUniform("color")]
-    private readonly int color;
-    public void Color (Vector4 v) => Uniform(color, v);
-
     //size 1, type Vector2i
     [GlUniform("offset")]
     private readonly int offset;
@@ -28,6 +23,11 @@ public class Lines:Program {
     [GlUniform("renderSize")]
     private readonly int renderSize;
     public void RenderSize (Vector2i v) => Uniform(renderSize, v);
+
+    //size 1, type Vector4
+    [GlUniform("color")]
+    private readonly int color;
+    public void Color (Vector4 v) => Uniform(color, v);
 
 #pragma warning restore CS0649
 }

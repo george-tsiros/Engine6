@@ -30,7 +30,6 @@
         <Compile Remove="AxesTest.cs" />
         <Compile Remove="BlitTest.cs" />
         <Compile Remove="DrawArraysInstancedTest.cs" />
-        <Compile Remove="GdiWindow.cs" />
         <Compile Remove="Ground.cs" />
         <Compile Remove="HighlightTriangle.cs" />
         <Compile Remove="MovementTest.cs" />

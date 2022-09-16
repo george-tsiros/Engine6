@@ -12,7 +12,7 @@ class CubeTest:GlWindow {
     const float MouseSensitivity = .0005f;
     const float KeyboardSensitivity = .002f;
 
-    public CubeTest () : base() {
+    public CubeTest (ContextConfiguration? c = null) : base(c) {
         Load += OnLoad;
         Input += OnInput;
         KeyUp += OnKeyUp;
@@ -40,6 +40,7 @@ class CubeTest:GlWindow {
     }
 
     void OnLoad (object sender, EventArgs _) {
+        SetSwapInterval(1);
         axes = new();
         UseProgram(axes);
         axes.Model(Matrix4x4.Identity);

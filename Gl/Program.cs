@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using static RenderingContext;
+using static GlContext;
 public abstract class Program:OpenglObject {
 
     private static string Unpack (string base64) =>

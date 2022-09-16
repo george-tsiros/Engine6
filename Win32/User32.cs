@@ -220,6 +220,10 @@ public static class User32 {
     public static extern nint SetCapture (nint windowHandle);
 
     [DllImport(dll, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetWindowPos (nint window, nint insertAfter, int x, int y, int w, int h, WindowPosFlags flags);
+    
+    [DllImport(dll, SetLastError = true)]
     public static extern void ReleaseCapture ();
 
     [DllImport(dll, SetLastError = true)]
@@ -240,6 +244,8 @@ public static class User32 {
     [DllImport(dll, SetLastError = true, CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetWindowTextW (nint windowHandle, string text);
+
+
 
     //[DllImport(dll, SetLastError = true, CharSet = CharSet.Ansi)]
     //[return: MarshalAs(UnmanagedType.Bool)]

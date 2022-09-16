@@ -1,10 +1,10 @@
 namespace Gl;
 
 using Win32;
-//using static RenderingContext;
 using System.Diagnostics;
 using System;
 using static GlContext;
+
 public class GlWindow:Window {
 
     protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
@@ -17,26 +17,32 @@ public class GlWindow:Window {
     private static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
     private readonly long StartTicks;
     private bool disposed = false;
-    private bool swapPending = false;
+
     protected readonly GlContext Ctx;
-    public GlWindow (ContextConfiguration? configuration = null) : base() {
+    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
-        User32.SetWindow(Handle, WindowStyle.Overlapped);
         StartTicks = Stopwatch.GetTimestamp();
         Idle += OnIdle;
+        FocusChanged += OnFocusChanged;
+    }
+
+    private void OnFocusChanged (object sender, FocusChangedEventArgs e) {
+        _ = User32.ShowCursor(!e.Focused);
+
+        if (e.Focused)
+            User32.RegisterMouseRaw(Handle);
+        else
+            User32.UnregisterMouseRaw();
     }
 
     void OnIdle (object sender, EventArgs _) {
-        if (swapPending) {
-            if (LastSync + TframeTicks < Ticks()) {
+        if (LastSync + 0.9 * TframeTicks < Ticks()) {
+            if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
                 LastSync = Ticks();
-                ++FramesRendered;
-                swapPending = false;
             }
-        } else {
-            swapPending = true;
             Render();
+            ++FramesRendered;
         }
     }
 

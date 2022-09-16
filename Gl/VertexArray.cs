@@ -3,7 +3,7 @@ namespace Gl;
 using System;
 using System.Numerics;
 using System.Collections.Generic;
-using static RenderingContext;
+using static GlContext;
 using Win32;
 using Common;
 
