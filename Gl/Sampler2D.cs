@@ -71,7 +71,7 @@ public class Sampler2D:OpenglObject {
         if (raster.BytesPerChannel != 1)
             throw new ArgumentException("only 1 byte per pixel bitmaps are supported");
 
-        var texture = new Sampler2D(raster.Size, TextureFormatWith(raster.Channels));
+        Sampler2D texture = new(raster.Size, TextureFormatWith(raster.Channels));
         texture.Upload(raster);
         return texture;
     }

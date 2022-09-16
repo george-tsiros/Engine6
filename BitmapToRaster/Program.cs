@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 class BitmapToRaster {
 
     private static Font CreateFont (string familyName, float emSize) {
-        var f = new Font(familyName, emSize, GraphicsUnit.Pixel);
+        Font f = new(familyName, emSize, GraphicsUnit.Pixel);
         return string.Equals(f.FontFamily.Name, familyName, StringComparison.OrdinalIgnoreCase) ? f : throw new ArgumentException("no such font", nameof(familyName));
     }
 
@@ -44,11 +44,11 @@ class BitmapToRaster {
 
     private static void FontToTextFont (Font font) {
         const char OnChar = 'X', OffChar = '.';
-        var alignment = new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
+        StringFormat alignment = new() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
 
         var maxSize = (int)Math.Ceiling(15f * font.SizeInPoints);
         using var bitmap = new Bitmap(maxSize, maxSize, PixelFormat.Format32bppArgb);
-        var entireBitmapF = new RectangleF(new(), bitmap.Size);
+        RectangleF entireBitmapF = new(new(), bitmap.Size);
 
         using (var graphics = FromImage(bitmap)) {
             graphics.Clear(Color.Transparent);
@@ -68,7 +68,7 @@ class BitmapToRaster {
         for (var i = 0; i < blankLineCount; ++i)
             text.Write(blank);
 
-        var entireBitmap = new Rectangle(new(), bitmap.Size);
+        Rectangle entireBitmap = new(new(), bitmap.Size);
         var intBuffer = new int[size.Width];
         var charBuffer = new char[size.Width + 1];
         charBuffer[size.Width] = '\n';

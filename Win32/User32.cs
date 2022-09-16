@@ -74,7 +74,7 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static unsafe extern bool RegisterRawInputDevices (RawInputDevice* devices, uint count, uint structSize);
 
-    public static unsafe void UnregisterMouseRaw () => 
+    public static unsafe void UnregisterMouseRaw () =>
         HandleMouseRawRegistering(0);
 
     public static unsafe void RegisterMouseRaw (nint windowHandle) {
@@ -84,7 +84,7 @@ public static class User32 {
     }
 
     private static unsafe void HandleMouseRawRegistering (nint handleOrZero) {
-        var device = new RawInputDevice {
+        RawInputDevice device = new() {
             flags = 0 != handleOrZero ? RawInputDeviceFlag.InputSink : RawInputDeviceFlag.Remove,
             target = handleOrZero,
             usagePage = 1,
@@ -99,7 +99,7 @@ public static class User32 {
 
     public static unsafe bool GetRawInputData (nint lParameter, ref RawMouse data) {
         const uint RIM_TYPEMOUSE = 0u;
-        var rawData = new RawInput();
+        RawInput rawData = new();
         var size = (uint)RawInput.Size;
         var x = GetRawInputData(lParameter, 0x10000003, &rawData, &size, (uint)RawInputHeader.Size);
         if (-1 == x)
@@ -222,7 +222,7 @@ public static class User32 {
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetWindowPos (nint window, nint insertAfter, int x, int y, int w, int h, WindowPosFlags flags);
-    
+
     [DllImport(dll, SetLastError = true)]
     public static extern void ReleaseCapture ();
 
@@ -241,9 +241,9 @@ public static class User32 {
             throw new WinApiException(nameof(MoveWindow));
     }
 
-    [DllImport(dll, SetLastError = true, CharSet = CharSet.Unicode)]
+    [DllImport(dll, EntryPoint = "SetWindowTextA", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetWindowTextW (nint windowHandle, string text);
+    public static extern bool SetWindowText (nint windowHandle, nint text);
 
 
 

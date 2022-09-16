@@ -77,7 +77,7 @@ public partial class Configuration:Form {
 
     private List<Datum> GetPixelFormatDescriptors () {
         var count = Gdi32.GetPixelFormatCount(Dc);
-        var p = new PixelFormatDescriptor() {
+        PixelFormatDescriptor p = new() {
             size = Win32.PixelFormatDescriptor.Size,
             version = 1,
         };

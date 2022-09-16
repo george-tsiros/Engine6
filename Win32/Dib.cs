@@ -5,8 +5,26 @@ using System;
 using System.Runtime.InteropServices;
 
 unsafe public class Dib:IDisposable {
-
     private const int MaxBitmapDimension = 8192;
+
+    public static void Blit (Dib target, Dib source, in Rectangle to, in Vector2i from) {
+        throw new NotImplementedException();
+    }
+
+    public readonly IntPtr Handle;
+    public readonly int Width;
+    public readonly int Height;
+    public readonly int Stride;
+
+    public BitmapInfo Info =>
+        info;
+
+    public Vector2i Size =>
+        new(Width, Height);
+
+    /// <summary>AARRGGBB</summary>
+    public uint* Pixels =>
+        !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     public Dib (DeviceContext dc, Vector2i size) {
         var (w, h) = size;
@@ -41,22 +59,9 @@ unsafe public class Dib:IDisposable {
         pixelCount = Width * Height;
     }
 
-    BitmapInfo info;
-    public BitmapInfo Info => info;
-    // AARRGGBB
-    private readonly uint* raw;
-    public uint* Pixels => !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
-    public readonly IntPtr Handle;
-    public readonly int Width;
-    public readonly int Height;
-    public readonly int Stride;
-    public Vector2i Size => new(Width, Height);
-    readonly int pixelCount;
-
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
     public void DrawString (ReadOnlySpan<char> str, Font font, int x, int y, uint color = ~0u) {
-        if (disposed)
-            throw new ObjectDisposedException(nameof(Dib));
+        NotDisposed();
         var textWidth = font.WidthOf(str);
         if (x < 0 || Width <= x + textWidth)
             return;
@@ -79,57 +84,19 @@ unsafe public class Dib:IDisposable {
         }
     }
 
-    private unsafe void Blit (char ascii, Font font, int x, int y, int charWidth, uint color) {
-        var rowStart = (Height - y - 1) * Width;
-        var source = font.Offset[ascii];
-        var offset = rowStart + x;
-        for (var row = 0; row < font.Height; ++row, offset -= Width, source += charWidth) {
-            var xpos = x;
-            for (var column = 0; xpos < Width && column < charWidth; ++column, ++xpos) {
-                raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
-            }
-        }
-    }
-
     public void ClearU32 (Color color) {
-        if (disposed)
-            throw new ObjectDisposedException(nameof(Dib));
+        NotDisposed();
         ClearU32Internal(color.Argb);
     }
 
-    unsafe private void ClearU32Internal (uint color) {
-        var ulongCount = pixelCount >> 1;
-        var p = (ulong*)raw;
-        var ul = ((ulong)color << 32) | color;
-        for (var i = 0; i < ulongCount; ++i)
-            p[i] = ul;
-        if ((pixelCount & 1) != 0)
-            raw[pixelCount - 1] = color;
-    }
-
     public void FillRectU32 (Rectangle r, Color color) {
-        if (disposed)
-            throw new ObjectDisposedException(nameof(Dib));
+        NotDisposed();
         var clipped = r.Clip(new(Vector2i.Zero, new(Width, Height)));
         if (clipped.Width <= 0 || clipped.Height <= 0)
             return;
         FillRectU32Internal(clipped, color.Argb);
     }
 
-    unsafe private void FillRectU32Internal (Rectangle clipped, uint color) {
-        var y = clipped.Top;
-        var h = clipped.Height;
-        var w = clipped.Width;
-        var offset = (Height - y - 1) * Width + clipped.Left;
-
-        while (--h >= 0) {
-            var x = offset;
-            for (var i = 0; i < w; ++i)
-                raw[x++] = color;
-            offset -= Width;
-        }
-    }
-    bool disposed;
     public void Dispose (bool dispose) {
         if (disposed)
             return;
@@ -143,8 +110,50 @@ unsafe public class Dib:IDisposable {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    //private static bool IsTopLeft (in Vector2i a, in Vector2i b) =>
-    //    a.Y == b.Y && b.X < a.X || b.Y < a.Y;
 
-    //private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
+    private void NotDisposed () {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
+    }
+
+    private BitmapInfo info;
+    private readonly uint* raw;
+    private readonly int pixelCount;
+    private bool disposed;
+
+    private unsafe void ClearU32Internal (uint color) {
+        var ulongCount = pixelCount >> 1;
+        var p = (ulong*)raw;
+        var ul = ((ulong)color << 32) | color;
+        for (var i = 0; i < ulongCount; ++i)
+            p[i] = ul;
+        if ((pixelCount & 1) != 0)
+            raw[pixelCount - 1] = color;
+    }
+
+    private unsafe void FillRectU32Internal (Rectangle clipped, uint color) {
+        var y = clipped.Top;
+        var h = clipped.Height;
+        var w = clipped.Width;
+        var offset = (Height - y - 1) * Width + clipped.Left;
+
+        while (--h >= 0) {
+            var x = offset;
+            for (var i = 0; i < w; ++i)
+                raw[x++] = color;
+            offset -= Width;
+        }
+    }
+
+    private unsafe void Blit (char ascii, Font font, int x, int y, int charWidth, uint color) {
+        var rowStart = (Height - y - 1) * Width;
+        var source = font.Offset[ascii];
+        var offset = rowStart + x;
+        for (var row = 0; row < font.Height; ++row, offset -= Width, source += charWidth) {
+            var xpos = x;
+            for (var column = 0; xpos < Width && column < charWidth; ++column, ++xpos) {
+                raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
+            }
+        }
+    }
 }

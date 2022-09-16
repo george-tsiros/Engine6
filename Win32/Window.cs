@@ -8,29 +8,11 @@ using System.Diagnostics;
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
 public abstract class Window:IDisposable {
-    private const string ClassName = nameof(Window);
 
-    static Window () {
-        var wc = new WindowClassW() {
-            style = ClassStyle.None,
-            wndProc = staticWndProc,
-            hCursor = User32.LoadCursor(SystemCursor.Arrow),
-            classname = nameof(Window),
-        };
-        Atom = User32.RegisterClass(ref wc);
-    }
-
-    private static readonly Dictionary<nint, Window> Windows = new();
-    private static readonly ushort Atom;
-    private static readonly WndProc staticWndProc = StaticWndProc;
-    private static Window creating;
-
-    private static (int h, int l) FindIndex (Key k) =>
-        ((int)k >> 5, 1 << ((int)k & 31));
-
-    private static Vector2i Split (nint l) {
-        var i = (int)(l & int.MaxValue);
-        return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
+    public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
+        creating = this;
+        var h = User32.CreateWindow(Atom, style, styleEx);
+        Debug.Assert(h == Handle);
     }
 
     public nint Handle { get; private set; }
@@ -38,28 +20,13 @@ public abstract class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
+    public Font Font {
+        get =>
+            font ??= new("data/ubuntu_mono_ligaturized.txt");
+        set =>
+            font = value;
+    }
     protected List<IDisposable> Disposables { get; } = new();
-
-    private readonly int[] KeyState = new int[256 / 32];
-    private bool disposed;
-
-    private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
-        if (WinMessage.Create == m) {
-            Windows.Add(creating.Handle = h, creating);
-            return creating.WndProc(h, m, w, l);
-        }
-
-        if (Windows.TryGetValue(h, out var window))
-            return window.WndProc(h/*wat*/, m, w, l);
-
-        return User32.DefWindowProc(h, m, w, l);
-    }
-
-    public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
-        creating = this;
-        var h = User32.CreateWindow(Atom, style, styleEx);
-        Debug.Assert(h == Handle);
-    }
 
     protected Rectangle Rect {
         get =>
@@ -79,6 +46,60 @@ public abstract class Window:IDisposable {
                 User32.MoveWindow(Handle, r.Left, r.Top, w, h, false);
             }
         }
+    }
+
+    public bool IsKeyDown (Key key) {
+        var (h, l) = FindIndex(key);
+        return (KeyState[h] & l) != 0;
+    }
+
+    public void Run (CmdShow show = CmdShow.ShowNormal) {
+        Load?.Invoke(this, EventArgs.Empty);
+        User32.UpdateWindow(Handle);
+        _ = User32.ShowWindow(Handle, show);
+        Message m = new();
+
+        while (WinMessage.Quit != m.msg) {
+            Idle?.Invoke(this, EventArgs.Empty);
+            while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
+                if (User32.GetMessage(ref m))
+                    _ = User32.DispatchMessage(ref m);
+        }
+        Closed?.Invoke(this, EventArgs.Empty);
+        foreach (var disposable in Disposables)
+            disposable.Dispose();
+    }
+
+    private const string ClassName = nameof(Window);
+
+    static Window () {
+        WindowClassW wc = new() {
+            style = ClassStyle.None,
+            wndProc = staticWndProc,
+            hCursor = User32.LoadCursor(SystemCursor.Arrow),
+            classname = nameof(Window),
+        };
+        Atom = User32.RegisterClass(ref wc);
+    }
+
+    private static readonly Dictionary<nint, Window> Windows = new();
+    private static readonly ushort Atom;
+    private static readonly WndProc staticWndProc = StaticWndProc;
+    private static Window creating;
+    private readonly int[] KeyState = new int[256 / 32];
+    private bool disposed;
+    private Font font;
+
+    private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
+        if (WinMessage.Create == m) {
+            Windows.Add(creating.Handle = h, creating);
+            return creating.WndProc(h, m, w, l);
+        }
+
+        if (Windows.TryGetValue(h, out var window))
+            return window.WndProc(h/*wat*/, m, w, l);
+
+        return User32.DefWindowProc(h, m, w, l);
     }
 
     public event EventHandler Load;
@@ -121,30 +142,11 @@ public abstract class Window:IDisposable {
     //private void OnWindowPosChanged (ref WindowPos p) { }
     //private void OnWindowPosChanging (ref WindowPos p) { }
 
-    public bool IsKeyDown (Key key) {
-        var (h, l) = FindIndex(key);
-        return (KeyState[h] & l) != 0;
-    }
-
-    public void Run () {
-        Load?.Invoke(this, EventArgs.Empty);
-        User32.UpdateWindow(Handle);
-        _ = User32.ShowWindow(Handle, CmdShow.ShowMaximized);
-        var m = new Message();
-
-        while (WinMessage.Quit != m.msg) {
-            Idle?.Invoke(this, EventArgs.Empty);
-            while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
-                if (User32.GetMessage(ref m))
-                    _ = User32.DispatchMessage(ref m);
-        }
-        Closed?.Invoke(this, EventArgs.Empty);
-        foreach (var disposable in Disposables)
-            disposable.Dispose();
-    }
-
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
+            case WinMessage.Close:
+                User32.PostQuitMessage(0);
+                return 0;
             case WinMessage.Create:
                 Dc = new(h);
                 // yes, it is different from NcCreate
@@ -259,7 +261,7 @@ public abstract class Window:IDisposable {
                 return 0;
             case WinMessage.Input:
                 if (Input is not null) {
-                    var data = new RawMouse();
+                    RawMouse data = new();
                     if (User32.GetRawInputData(l, ref data))
                         if (0 != data.lastX || 0 != data.lastY) {
                             var r = Rect.Center;
@@ -272,14 +274,6 @@ public abstract class Window:IDisposable {
         return User32.DefWindowProc(h, m, w, l);
     }
 
-    private Font font;
-    public Font Font {
-        get =>
-            font ??= new("data/ubuntu_mono_ligaturized.txt");
-        set =>
-            font = value;
-    }
-
     public virtual void Dispose () {
         if (!disposed) {
             disposed = true;
@@ -288,5 +282,13 @@ public abstract class Window:IDisposable {
             User32.DestroyWindow(Handle);
             GC.SuppressFinalize(this);
         }
+    }
+
+    private static (int h, int l) FindIndex (Key k) =>
+        ((int)k >> 5, 1 << ((int)k & 31));
+
+    private static Vector2i Split (nint l) {
+        var i = (int)(l & int.MaxValue);
+        return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }
 }
