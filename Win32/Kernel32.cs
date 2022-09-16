@@ -8,8 +8,10 @@ public static class Kernel32 {
     [DllImport(dll, EntryPoint = "GetProcAddress", ExactSpelling = true, SetLastError = true)]
     private extern static nint GetProcAddress_ (nint module, nint name);
 
-    public static nint GetProcAddress (nint module, AnsiString name) => 
-        GetProcAddress_(module, name);
+    public static nint GetProcAddress (nint module, string name) {
+        using AnsiString n = new(name);
+        return GetProcAddress_(module, n);
+    }
 
     [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
     public extern static uint GetLastError ();

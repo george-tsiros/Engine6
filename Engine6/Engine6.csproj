@@ -27,9 +27,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Remove="AxesTest.cs" />
+        <Compile Remove="BlitTest.cs" />
         <Compile Remove="DrawArraysInstancedTest.cs" />
         <Compile Remove="GdiWindow.cs" />
         <Compile Remove="Ground.cs" />
+        <Compile Remove="HighlightTriangle.cs" />
+        <Compile Remove="MovementTest.cs" />
+        <Compile Remove="NoiseTest.cs" />
         <Compile Remove="ShowTexture.cs" />
         <Compile Remove="SkyBoxTest.cs" />
     </ItemGroup>
@@ -38,6 +43,14 @@
       <None Remove="data\font.png" />
       <None Remove="data\teapot.hits" />
       <None Remove="data\ufl2.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="AxesTest.cs" />
+      <None Include="BlitTest.cs" />
+      <None Include="HighlightTriangle.cs" />
+      <None Include="MovementTest.cs" />
+      <None Include="NoiseTest.cs" />
     </ItemGroup>
 
     <ItemGroup>

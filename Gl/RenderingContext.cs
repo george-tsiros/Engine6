@@ -18,33 +18,10 @@ public static unsafe class RenderingContext {
     private const BindingFlags NonPublicStatic = BindingFlags.NonPublic | BindingFlags.Static;
     private const PixelFlag RequiredFlags = PixelFlag.SupportOpengl | PixelFlag.DrawToWindow;
     private const PixelFlag RejectedFlags = PixelFlag.GenericAccelerated | PixelFlag.GenericFormat;
-    private const string opengl32 = nameof(opengl32) + ".dll";
 
     private static DeviceContext Dc;
     private static nint handle;
 
-    [DllImport(opengl32, SetLastError = true)]
-    private static extern nint wglCreateContext (nint dc);
-
-    [DllImport(opengl32, SetLastError = true)]
-    private static extern nint wglGetProcAddress (nint name);
-
-    [DllImport(opengl32)]
-    private static extern nint glGetString (int name);
-
-    [DllImport(opengl32)]
-    private static extern nint wglGetCurrentDC ();
-
-    [DllImport(opengl32, SetLastError = true)]
-    private static extern nint wglGetCurrentContext ();
-
-    [DllImport(opengl32, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool wglMakeCurrent (nint dc, nint hglrc);
-
-    [DllImport(opengl32, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private extern static bool wglDeleteContext (nint hglrc);
 
     public static void Create (DeviceContext dc) =>
         Create(dc, ContextConfiguration.Default);
@@ -52,14 +29,14 @@ public static unsafe class RenderingContext {
     public static void Close () {
         NotDisposed();
     }
+    delegate nint CreateContextARB (nint a, nint b, int* c);
 
-    delegate nint CreateContextAttribs (nint a, nint b, int* c);
-    private static CreateContextAttribs wglCreateContextAttribsARB;
+    private static CreateContextARB wglCreateContextAttribsARB;
     //private readonly delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int> wglGetPixelFormatAttribivARB;
     //public static ProfileMask Profile { get; private set; } = ProfileMask.Undefined;
     public static (Version, ProfileMask) GetCurrentContextVersion () {
         NotDisposed();
-        var str = GetString(OpenglString.Version);
+        var str = Opengl.GetString(OpenglString.Version);
         var m = Regex.Match(str, @"^(\d+\.\d+(\.\d+)?) ((Core|Compatibility) )?");
         if (!m.Success)
             throw new Exception($"'{str}' does not begin with a valid version string");
@@ -69,22 +46,18 @@ public static unsafe class RenderingContext {
     }
 
     //public static string ShaderVersionString { get; private set; }
-
     // yes, it is quite janky for the time being. For all the reasons you can see and many more
     public static void Create (DeviceContext dc, ContextConfiguration configuration) {
 
-        if (0 != handle || 0 != wglGetCurrentContext())
+        if (0 != handle || 0 != Opengl.wglGetCurrentContext())
             throw new Exception("context already exists");
 
         PixelFormatDescriptor descriptor = new();
         var pfIndex = FindPixelFormat(dc, ref descriptor, configuration);
         Gdi32.SetPixelFormat(dc, pfIndex, ref descriptor);
 
-        var rc = wglCreateContext((nint)dc);
-        if (0 == rc)
-            throw new WinApiException("failed wglCreateContext");
-        if (!wglMakeCurrent((nint)dc, rc))
-            throw new WinApiException(nameof(wglMakeCurrent));
+        var rc = Opengl.CreateContext(dc);
+        Opengl.MakeCurrent((nint)dc, rc);
 
         var requestedVersion = configuration.Version ?? GetCurrentContextVersion().Item1;
 
@@ -102,12 +75,9 @@ public static unsafe class RenderingContext {
         //wglGetPixelFormatAttribivARB = (delegate* unmanaged[Stdcall]<nint, int, int, int, int*, int*, int>)wglGetProcAddress((AnsiString)nameof(wglGetPixelFormatAttribivARB));
         //if (wglGetPixelFormatAttribivARB is null)
         //    throw new Exception($"failed to get {nameof(wglGetPixelFormatAttribivARB)}");
+        wglCreateContextAttribsARB = Marshal.GetDelegateForFunctionPointer<CreateContextARB>(Opengl.GetProcAddress(nameof(wglCreateContextAttribsARB)));
 
-        wglCreateContextAttribsARB = Marshal.GetDelegateForFunctionPointer<CreateContextAttribs>(wglGetProcAddress((AnsiString)nameof(wglCreateContextAttribsARB)));
-        if (wglCreateContextAttribsARB is null)
-            throw new Exception($"failed to get {nameof(wglCreateContextAttribsARB)}");
-
-        List<int> asList = new() {
+        List<int> attributes = new() {
             (int)ContextAttrib.MajorVersion,
             requestedVersion.Major,
             (int)ContextAttrib.MinorVersion,
@@ -115,30 +85,33 @@ public static unsafe class RenderingContext {
         };
 
         if (configuration.Flags is ContextFlag flags) {
-            asList.Add((int)ContextAttrib.ContextFlags);
-            asList.Add((int)flags);
+            attributes.Add((int)ContextAttrib.ContextFlags);
+            attributes.Add((int)flags);
         }
         if (configuration.Profile is ProfileMask mask) {
-            asList.Add((int)ContextAttrib.ProfileMask);
-            asList.Add((int)mask);
+            attributes.Add((int)ContextAttrib.ProfileMask);
+            attributes.Add((int)mask);
         }
-        asList.Add(0);
+        attributes.Add(0);
 
-        var asArray = asList.ToArray();
+        var asArray = attributes.ToArray();
 
         fixed (int* p = asArray)
             handle = wglCreateContextAttribsARB((nint)dc, 0, p);
 
         try {
             if (0 == handle)
-                throw new WinApiException(nameof(wglCreateContextAttribsARB));
-            if (!wglMakeCurrent((nint)dc, handle)) {
-                handle = 0;
-                _ = wglDeleteContext(handle);
-                throw new WinApiException(nameof(wglMakeCurrent));
-            }
+                throw new Exception(nameof(wglCreateContextAttribsARB));
+            Opengl.MakeCurrent((nint)dc, handle);
+
+        } catch (WinApiException) {
+            if (!Opengl.wglDeleteContext(handle))
+                Debug.WriteLine($"failed to make ARB context current, also failed to delete it");
+            handle = 0;
+            throw;
         } finally {
-            _ = wglDeleteContext(rc);
+            if (!Opengl.wglDeleteContext(rc))
+                Debug.WriteLine($"failed to delete temporary context");
         }
 
         Dc = dc;
@@ -146,13 +119,13 @@ public static unsafe class RenderingContext {
         var (contextVersion, profile) = GetCurrentContextVersion();
         if (contextVersion.Major != requestedVersion.Major || contextVersion.Minor != requestedVersion.Minor)
             throw new Exception($"requested {requestedVersion} got {contextVersion}");
-        Debug.WriteLine($"{contextVersion}, {profile} ({GetString(OpenglString.Version)}, {GetString(OpenglString.Vendor)}, {GetString(OpenglString.Renderer)})");
+        Debug.WriteLine($"{contextVersion}, {profile} ({Opengl.GetString(OpenglString.Version)}, {Opengl.GetString(OpenglString.Vendor)}, {Opengl.GetString(OpenglString.Renderer)})");
         //Profile = profile;
-
+        const string opengl32 = "opengl32.dll";
         foreach (var f in typeof(RenderingContext).GetFields(NonPublicStatic)) {
             if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
                 if (attr.MinimumVersion.Major <= contextVersion.Major && attr.MinimumVersion.Minor <= contextVersion.Minor) {
-                    var extPtr = wglGetProcAddress((AnsiString)f.Name);
+                    var extPtr = Opengl.GetProcAddress(f.Name);
                     if (0 != extPtr) {
                         f.SetValue(null, extPtr);
                         continue;
@@ -181,7 +154,7 @@ public static unsafe class RenderingContext {
                 supportedExtensions.Add(Marshal.PtrToStringAnsi(p));
             }
         } else {
-            supportedExtensions.AddRange(GetString(OpenglString.Extensions).Split(' '));
+            supportedExtensions.AddRange(Opengl.GetString(OpenglString.Extensions).Split(' '));
         }
     }
 
@@ -506,11 +479,6 @@ public static unsafe class RenderingContext {
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)
             glShaderSource(id, 1, &strPtr, null);
-    }
-
-    public static string GetString (OpenglString name) {
-        NotDisposed();
-        return Marshal.PtrToStringAnsi(glGetString((int)name));
     }
 
     public static string GetShaderInfoLog (int id) {

@@ -74,21 +74,19 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static unsafe extern bool RegisterRawInputDevices (RawInputDevice* devices, uint count, uint structSize);
 
-    public static unsafe void UnregisterMouseRaw () {
-        var device = new RawInputDevice {
-            flags = RawInputDeviceFlag.Remove,
-            target = 0,
-            usagePage = 1,
-            usage = 2,
-        };
-        if (!RegisterRawInputDevices(&device, 1, (uint)RawInputDevice.Size))
-            throw new WinApiException(nameof(RegisterRawInputDevices));
-    }
+    public static unsafe void UnregisterMouseRaw () => 
+        HandleMouseRawRegistering(0);
 
     public static unsafe void RegisterMouseRaw (nint windowHandle) {
+        if (0 == windowHandle)
+            throw new ArgumentException("may not be zero", nameof(windowHandle));
+        HandleMouseRawRegistering(windowHandle);
+    }
+
+    private static unsafe void HandleMouseRawRegistering (nint handleOrZero) {
         var device = new RawInputDevice {
-            flags = RawInputDeviceFlag.InputSink,
-            target = windowHandle,
+            flags = 0 != handleOrZero ? RawInputDeviceFlag.InputSink : RawInputDeviceFlag.Remove,
+            target = handleOrZero,
             usagePage = 1,
             usage = 2,
         };

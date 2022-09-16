@@ -1,10 +1,10 @@
 namespace Gl;
 
 using Win32;
-using static RenderingContext;
+//using static RenderingContext;
 using System.Diagnostics;
 using System;
-
+using static GlContext;
 public class GlWindow:Window {
 
     protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
@@ -18,9 +18,9 @@ public class GlWindow:Window {
     private readonly long StartTicks;
     private bool disposed = false;
     private bool swapPending = false;
-
+    protected readonly GlContext Ctx;
     public GlWindow (ContextConfiguration? configuration = null) : base() {
-        Create(Dc, configuration ?? ContextConfiguration.Default);
+        Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         User32.SetWindow(Handle, WindowStyle.Overlapped);
         StartTicks = Stopwatch.GetTimestamp();
         Idle += OnIdle;
@@ -48,7 +48,7 @@ public class GlWindow:Window {
     public override void Dispose () {
         if (!disposed) {
             disposed = true;
-            Close();
+            Ctx.Dispose();
             GC.SuppressFinalize(this);
             base.Dispose();
         }

@@ -273,8 +273,8 @@ public abstract class Window:IDisposable {
                 var data = new RawMouse();
                 if (User32.GetRawInputData(l, ref data))
                     if (0 != data.lastX || 0 != data.lastY) {
-                        var r = Rect;
-                        User32.SetCursorPos(r.Left + r.Width / 2, r.Top + r.Height / 2);
+                        var r = Rect.Center;
+                        User32.SetCursorPos(r.X, r.Y);
                         Input?.Invoke(this, new(data.lastX, data.lastY));
                     }
                 break;

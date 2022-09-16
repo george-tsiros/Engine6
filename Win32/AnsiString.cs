@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public unsafe sealed class AnsiString:IDisposable {
+public readonly struct AnsiString:IDisposable {
     public static implicit operator nint (AnsiString self) => self.Handle;
     public static implicit operator AnsiString (string str) => new(str);
 
@@ -20,14 +20,12 @@ public unsafe sealed class AnsiString:IDisposable {
 
     private readonly byte[] bytes;
     private readonly GCHandle handle;
-    private bool disposed;
     
-    public nint Handle => !disposed ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(AnsiString));
+    public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(AnsiString));
     
     
     public void Dispose () {
-        if (!disposed) {
-            disposed = true;
+        if (handle.IsAllocated) {
             handle.Free();
         }
     }
