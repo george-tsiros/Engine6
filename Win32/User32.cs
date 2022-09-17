@@ -5,6 +5,7 @@ using System;
 using Common;
 
 public static class User32 {
+
     private const string dll = nameof(User32) + ".dll";
 
     [DllImport(dll, SetLastError = true)]
@@ -318,8 +319,8 @@ public static class User32 {
                 throw new Exception(nameof(User32.InvalidateRect));
     }
 
-    public unsafe static void InvalidateWindow (nint windowHandle) {
-        if (!InvalidateRect(windowHandle, null, 0))
+    public unsafe static void InvalidateWindow (Window window) {
+        if (!InvalidateRect(window.Handle, null, 0))
             throw new Exception(nameof(User32.InvalidateRect));
     }
 

@@ -1,6 +1,7 @@
 namespace Win32;
 
 public enum RasterOperation:uint {
+
     /// <summary>dest = source</summary>
     SrcCopy = 0x00CC0020u,
     /// <summary>dest = source OR dest</summary>
@@ -31,5 +32,4 @@ public enum RasterOperation:uint {
     Blackness = 0x00000042u,
     /// <summary>dest = WHITE</summary>
     Whiteness = 0x00FF0062u,
-
 }

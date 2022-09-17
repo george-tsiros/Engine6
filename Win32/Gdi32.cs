@@ -1,6 +1,7 @@
 namespace Win32;
 
 using Common;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 public static class Gdi32 {
@@ -26,7 +27,7 @@ public static class Gdi32 {
     public static extern bool GdiFlush ();
 
     [DllImport(dll)]
-    public unsafe static extern int StretchDIBits (nint dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, in BitmapInfo info, int use, int op);
+    private unsafe static extern int StretchDIBits (nint dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, in BitmapInfo info, int use, uint op);
 
     //[DllImport(dll)]
     //public unsafe static extern int SetDIBits (nint dc, nint bitmapHandle, uint start, uint count, void* p, in BitmapInfo info, int use);
@@ -107,5 +108,9 @@ public static class Gdi32 {
     public static void BitBlt (DeviceContext to, DeviceContext from, in Rectangle destination, in Vector2i origin, RasterOperation op) {
         if (!BitBlt_((nint)to, destination.Left, destination.Top, destination.Width, destination.Height, (nint)from, origin.X, origin.Y, (uint)op))
             throw new WinApiException(nameof(BitBlt));
+    }
+
+    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, in Dib source, RasterOperation op) {
+        return StretchDIBits((nint)dc, to.Left, to.Top, to.Width, to.Height, from.Left, from.Top, from.Width, from.Height, source.Pixels, source.Info, 0, (uint)op);
     }
 }

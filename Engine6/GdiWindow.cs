@@ -7,13 +7,21 @@ using Win32;
 
 public class GdiWindow:Window {
 
-    private Dib dib;
     public GdiWindow () : base() {
         KeyUp += OnKeyUp;
         Paint += OnPaint;
+        Size += OnSize;
     }
 
-    long lastTicks = 0l;
+    private Dib dib;
+
+    private readonly List<string> q = new();
+
+    private long lastTicks = 0l;
+
+    private void OnSize (object sender, SizeEventArgs e) {
+        User32.InvalidateWindow(this);
+    }
 
     private void OnPaint (object sender, PaintEventArgs args) {
         var t0 = Stopwatch.GetTimestamp();
@@ -45,11 +53,8 @@ public class GdiWindow:Window {
         }
         if (dib is null) {
             dib = new(Dc, ClientSize);
-            User32.InvalidateWindow(Handle);
         }
     }
-
-    private readonly List<string> q = new();
 
     private void Append (string str) {
         var maxLines = ClientSize.Y / Font.Height;
@@ -61,7 +66,6 @@ public class GdiWindow:Window {
 
     private unsafe static void Blit (DeviceContext dc, in Rectangle rect, Dib dib) {
         Debug.Assert(rect.Size == dib.Size);
-        _ = Gdi32.StretchDIBits((nint)dc, 0, 0, rect.Width, rect.Height, 0, 0, dib.Width, dib.Height, dib.Pixels, dib.Info, 0, 0xcc0020);
+        _ = Gdi32.StretchDIBits(dc, rect, new(new(), dib.Size), dib, RasterOperation.SrcCopy);
     }
-
 }

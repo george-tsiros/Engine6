@@ -5,8 +5,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 public readonly struct Ascii:IDisposable {
-    public static implicit operator nint (Ascii self) => self.Handle;
-    public static implicit operator Ascii (string str) => new(str);
+    public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(Ascii));
+
+    public byte this[int index] {
+        get => bytes[index];
+        set => bytes[index] = 0 != value ? value : throw new ArgumentException("no.", nameof(value));
+    }
 
     public Ascii (string str) {
         var byteCount = Encoding.ASCII.GetByteCount(str);
@@ -18,10 +22,19 @@ public readonly struct Ascii:IDisposable {
         bytes[str.Length] = 0;
     }
 
+    public static implicit operator nint (Ascii self) => self.Handle;
+    public static implicit operator Ascii (string str) => new(str);
+
+    internal Ascii (ReadOnlySpan<byte> characters) {
+        bytes = new byte[characters.Length + 1];
+        handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        characters.CopyTo(bytes);
+        bytes[characters.Length] = 0;
+    }
+
     private readonly byte[] bytes;
     private readonly GCHandle handle;
 
-    public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(Ascii));
 
     public void Dispose () {
         if (handle.IsAllocated) {

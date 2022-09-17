@@ -1,16 +1,11 @@
 namespace Engine6;
 
-using System;
 using Win32;
 using Gl;
 using Shaders;
 using System.Numerics;
 using static Gl.GlContext;
 using static Common.Maths;
-
-class Editor {
-    public ReadOnlySpan<byte> AsSpan () => throw new NotImplementedException();
-}
 
 public class CubeTest:GlWindow {
 
