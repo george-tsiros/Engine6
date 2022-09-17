@@ -1,17 +1,19 @@
+namespace Engine6;
+
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System;
 using System.Threading.Tasks;
 using Win32;
+using Gl;
 
-namespace Engine6;
 public partial class Configuration:Form {
-    const string WhenReady = "If you are certain you can make a better choice than the default, go ahead.";
-    const string NoPixelFormat = "Could not find any appropriate configuration.";
-    public PixelFormatDescriptor? PixelFormatDescriptor { get; private set; }
-    public int Index { get; private set; }
+    public ContextConfiguration? Config { get; private set; }
 
-    class Datum {
+    private const string WhenReady = "If you are certain you can make a better choice than the default, go ahead.";
+    private const string NoPixelFormat = "Could not find any appropriate configuration.";
+
+    private class Datum {
         public int Index { get; init; }
         public string Description { get; init; }
         public PixelFormatDescriptor Pfd { get; init; }
@@ -20,7 +22,7 @@ public partial class Configuration:Form {
 
     private const PixelFlag RequiredFlags = PixelFlag.None
         | PixelFlag.DrawToWindow
-        | PixelFlag.DoubleBuffer
+        //| PixelFlag.DoubleBuffer
         | PixelFlag.SupportOpengl
         //| PixelFlags.SwapExchange
         //| PixelFlags.SupportComposition
@@ -45,31 +47,36 @@ public partial class Configuration:Form {
     }
 
     private void Click_quit (object sender, System.EventArgs e) {
-        PixelFormatDescriptor = null;
-        Index = 0;
+        Config = null;
         DialogResult = DialogResult.Cancel;
         Close();
     }
 
     private void Click_start (object sender, System.EventArgs e) {
-        var datum = (Datum)listBox1.SelectedItem;
-        PixelFormatDescriptor = datum.Pfd;
-        Index = datum.Index;
+        var pfd = ((Datum)listBox1.SelectedItem).Pfd;
+        Config = new() {
+            ColorBits = pfd.colorBits,
+            DepthBits = pfd.depthBits,
+            DoubleBuffer = pfd.flags.HasFlag(PixelFlag.DoubleBuffer),
+            SwapMethod = SwapMethodFrom(pfd.flags),
+            Profile = ProfileMask.Core,
+            Flags = ContextFlag.Debug | ContextFlag.ForwardCompatible
+        };
         DialogResult = DialogResult.OK;
         Close();
     }
 
     private DeviceContext Dc;
 
-    static string PfdToString (in PixelFormatDescriptor p) =>
-        $"color bits: {p.colorBits}, depth bits: {p.depthBits}, stencil bits: {p.stencilBits}, acc. bits: {p.accBits}, swap method: {SwapMethod(p.flags)}";
+    private static string PfdToString (in PixelFormatDescriptor p) =>
+        $"color bits: {p.colorBits}, depth bits: {p.depthBits}, swap method: {SwapMethodFrom(p.flags)}{(p.flags.HasFlag(PixelFlag.DoubleBuffer)? ", doublebuffered" : null)}";
 
-    static string SwapMethod (PixelFlag f) {
+    private static SwapMethod SwapMethodFrom (PixelFlag f) {
         if (f.HasFlag(PixelFlag.SwapCopy))
-            return nameof(PixelFlag.SwapCopy);
+            return SwapMethod.Copy;
         if (f.HasFlag(PixelFlag.SwapExchange))
-            return nameof(PixelFlag.SwapExchange);
-        return "Undefined";
+            return SwapMethod.Swap;
+        return SwapMethod.Undefined;
     }
 
     private List<Datum> GetPixelFormatDescriptors () {

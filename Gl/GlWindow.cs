@@ -7,9 +7,31 @@ using static GlContext;
 
 public class GlWindow:Window {
 
+    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
+        Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
+        StartTicks = Stopwatch.GetTimestamp();
+        Idle += OnIdle;
+        KeyDown += OnKeyDown;
+        FocusChanged += OnFocusChanged;
+    }
+
+    private void OnKeyDown (object sender, KeyEventArgs e) {
+        switch (e.Key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                break;
+        }
+    }
+
+    protected virtual void Render () {
+        ClearColor(0.5f, 0.5f, 0.5f, 1f);
+        Clear(BufferBit.ColorDepth);
+    }
+
     protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
+    protected readonly GlContext Ctx;
 
     private const double FPScap = 60;
     private const double TframeSeconds = 1 / FPScap;
@@ -17,14 +39,6 @@ public class GlWindow:Window {
     private static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
     private readonly long StartTicks;
     private bool disposed = false;
-
-    protected readonly GlContext Ctx;
-    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
-        Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
-        StartTicks = Stopwatch.GetTimestamp();
-        Idle += OnIdle;
-        FocusChanged += OnFocusChanged;
-    }
 
     private void OnFocusChanged (object sender, FocusChangedEventArgs e) {
         _ = User32.ShowCursor(!e.Focused);
@@ -35,7 +49,7 @@ public class GlWindow:Window {
             User32.UnregisterMouseRaw();
     }
 
-    void OnIdle (object sender, System.EventArgs _) {
+    private void OnIdle (object sender, EventArgs _) {
         if (LastSync + 0.9 * TframeTicks < Ticks()) {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
@@ -44,11 +58,6 @@ public class GlWindow:Window {
             Render();
             ++FramesRendered;
         }
-    }
-
-    protected virtual void Render () {
-        ClearColor(0.5f, 0.5f, 0.5f, 1f);
-        Clear(BufferBit.ColorDepth);
     }
 
     public override void Dispose () {
