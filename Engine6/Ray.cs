@@ -1,7 +1,7 @@
-namespace Engine6;
 
 using System.Numerics;
 
+namespace Engine6;
 readonly struct Ray {
     public readonly Vector3 Origin, Direction;
     public Ray (Vector3 origin, Vector3 direction) {

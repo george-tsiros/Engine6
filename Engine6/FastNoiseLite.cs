@@ -48,13 +48,13 @@
 // https://github.com/Auburn/FastNoise
 
 
-namespace Engine6;
 
-using System;
 using System.Runtime.CompilerServices;
 
 // Switch between using floats or doubles for input position
 using Float = System.Single;
+
+namespace Engine6;
 //using Float = System.Double;
 
 public class FastNoiseLite {

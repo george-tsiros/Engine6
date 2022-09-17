@@ -1,6 +1,6 @@
-namespace Engine6;
 using System;
 
+namespace Engine6;
 class Stats {
     private int index = -1;
     private int count;

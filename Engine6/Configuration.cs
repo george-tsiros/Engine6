@@ -1,13 +1,10 @@
-namespace Engine6;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System;
 using System.Threading.Tasks;
-using System.Threading;
 using Win32;
-using System.Diagnostics;
 
-
+namespace Engine6;
 public partial class Configuration:Form {
     const string WhenReady = "If you are certain you can make a better choice than the default, go ahead.";
     const string NoPixelFormat = "Could not find any appropriate configuration.";
@@ -47,14 +44,14 @@ public partial class Configuration:Form {
         Dc = null;
     }
 
-    private void Click_quit (object sender, EventArgs e) {
+    private void Click_quit (object sender, System.EventArgs e) {
         PixelFormatDescriptor = null;
         Index = 0;
         DialogResult = DialogResult.Cancel;
         Close();
     }
 
-    private void Click_start (object sender, EventArgs e) {
+    private void Click_start (object sender, System.EventArgs e) {
         var datum = (Datum)listBox1.SelectedItem;
         PixelFormatDescriptor = datum.Pfd;
         Index = datum.Index;
@@ -90,7 +87,7 @@ public partial class Configuration:Form {
         return l;
     }
 
-    private async void Load_self (object sender, EventArgs args) {
+    private async void Load_self (object sender, System.EventArgs args) {
         Load -= Load_self;
         try {
             var list = await Task.Factory.StartNew(GetPixelFormatDescriptors);

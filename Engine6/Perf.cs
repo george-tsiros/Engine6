@@ -1,10 +1,10 @@
-#define __BINARY__
-
 namespace Engine6;
+
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+
 
 sealed class Perf<T>:IDisposable where T : struct, Enum {
 

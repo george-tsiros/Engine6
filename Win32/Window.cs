@@ -54,18 +54,18 @@ public abstract class Window:IDisposable {
     }
 
     public void Run (CmdShow show = CmdShow.ShowNormal) {
-        Load?.Invoke(this, EventArgs.Empty);
+        Load?.Invoke(this, System.EventArgs.Empty);
         User32.UpdateWindow(Handle);
         _ = User32.ShowWindow(Handle, show);
         Message m = new();
 
         while (WinMessage.Quit != m.msg) {
-            Idle?.Invoke(this, EventArgs.Empty);
+            Idle?.Invoke(this, System.EventArgs.Empty);
             while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
                 if (User32.GetMessage(ref m))
                     _ = User32.DispatchMessage(ref m);
         }
-        Closed?.Invoke(this, EventArgs.Empty);
+        Closed?.Invoke(this, System.EventArgs.Empty);
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }

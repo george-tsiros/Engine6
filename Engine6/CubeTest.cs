@@ -1,12 +1,11 @@
-namespace Engine6;
 using static Common.Maths;
-using System;
 using Win32;
 using Gl;
 using Shaders;
 using System.Numerics;
 using static Gl.GlContext;
-using System.Diagnostics;
+
+namespace Engine6;
 
 class CubeTest:GlWindow {
     const float MouseSensitivity = .0005f;
@@ -39,7 +38,7 @@ class CubeTest:GlWindow {
         }
     }
 
-    void OnLoad (object sender, EventArgs _) {
+    void OnLoad (object sender, System.EventArgs _) {
         SetSwapInterval(1);
         axes = new();
         UseProgram(axes);

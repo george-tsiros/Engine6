@@ -22,8 +22,7 @@ public readonly struct AnsiString:IDisposable {
     private readonly GCHandle handle;
     
     public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(AnsiString));
-    
-    
+
     public void Dispose () {
         if (handle.IsAllocated) {
             handle.Free();

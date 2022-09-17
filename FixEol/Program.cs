@@ -6,9 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 class Program {
-    static readonly string[] extensions = ".cs,.txt,.cap,.json,.vert,.frag,.csproj,.sql,.runsettings".Split(',');
-    /*
-*/
+
+    static readonly string[] extensions = ".cs,.cpp,.c,.h,.hpp,.md,.bat,.txt,.cap,.json,.vert,.frag,.csproj,.sql,.runsettings".Split(',');
 
     static bool HasKnownExtension (string f) =>
         Array.Exists(extensions, e => string.Equals(Path.GetExtension(f), e, StringComparison.OrdinalIgnoreCase));

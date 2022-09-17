@@ -35,7 +35,7 @@ public class GlWindow:Window {
             User32.UnregisterMouseRaw();
     }
 
-    void OnIdle (object sender, EventArgs _) {
+    void OnIdle (object sender, System.EventArgs _) {
         if (LastSync + 0.9 * TframeTicks < Ticks()) {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);

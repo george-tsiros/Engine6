@@ -1,10 +1,6 @@
-namespace Engine6;
-
-using System;
-using System.Diagnostics;
 using System.Numerics;
-using static Common.Maths;
 
+namespace Engine6;
 interface ICamera {
     Vector3 Location { get; }
     Matrix4x4 LookAtMatrix { get; }

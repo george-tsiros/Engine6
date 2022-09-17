@@ -1,17 +1,15 @@
-namespace Engine6;
 
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using Win32;
 using static Common.Maths;
 using Common;
 using System.Numerics;
 
+namespace Engine6;
 public class Model {
     public List<Vector3i> Faces { get; private set; }
     public List<Vector3> Vertices { get; private set; }

@@ -12,11 +12,7 @@ public readonly struct ContextConfiguration {
     public ProfileMask? Profile { get; init; }
     public ContextFlag? Flags { get; init; }
     public static readonly ContextConfiguration Default = new() {
-        Version = new(4, 5),
         ColorBits = 32,
         DepthBits = 24,
-        DoubleBuffer = true,
-        Flags = ContextFlag.ForwardCompatible | ContextFlag.Debug,
-        Profile = ProfileMask.Core
     };
 }

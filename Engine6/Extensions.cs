@@ -1,12 +1,10 @@
-namespace Engine6;
 
 using System;
 using System.Text.RegularExpressions;
 using System.Reflection;
-using System.Numerics;
 using static Common.Maths;
-using Common;
 
+namespace Engine6;
 static class Extensions {
     internal static double NextDouble (this Random self, double min, double max) => (max - min) * self.NextDouble() + min;
     internal static float NextFloat (this Random self, double min, double max) => (float)NextDouble(self, min, max);
