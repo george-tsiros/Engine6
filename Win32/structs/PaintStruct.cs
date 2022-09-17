@@ -1,9 +1,7 @@
 namespace Win32;
 
-using System;
-
 public unsafe struct PaintStruct {
-    public IntPtr deviceContext;
+    public nint deviceContext;
     public int erase;
     public Rectangle rect;
     public int restore;

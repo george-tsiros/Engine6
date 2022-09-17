@@ -1,6 +1,5 @@
 namespace Gl;
 
-using System;
 using System.Numerics;
 using Common;
 

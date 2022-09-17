@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using Gl;
 using static Gl.GlContext;
 using static Gl.Utilities;
-using Win32;
 using System.Text;
 
 class ShaderGen {

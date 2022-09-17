@@ -1,10 +1,10 @@
+namespace Engine6;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Win32;
 
-namespace Engine6;
 public class GdiWindow:Window {
 
     private Dib dib;
@@ -20,8 +20,7 @@ public class GdiWindow:Window {
         Resize();
         var size = ClientSize;
         Append(size.ToString());
-        using (AnsiString str = new(TimeSpan.FromTicks(lastTicks).ToString()))
-            _ = User32.SetWindowText(Handle, str);
+        User32.SetWindowText(this, TimeSpan.FromTicks(lastTicks).ToString());
         dib.ClearU32(Color.Black);
 
         for (var (i, y) = (0, 0); i < q.Count && y < size.Y; ++i, y += Font.Height)

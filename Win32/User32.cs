@@ -2,7 +2,6 @@ namespace Win32;
 
 using System.Runtime.InteropServices;
 using System;
-using System.Text;
 using Common;
 
 public static class User32 {
@@ -117,9 +116,6 @@ public static class User32 {
     [DllImport(dll)]
     private static extern int GetMessageW (ref Message m, nint handle, uint min, uint max);
 
-    public static bool GetMessage (ref Message m) =>
-        0 != GetMessageW(ref m, 0, 0, 0);
-
     [DllImport(dll, EntryPoint = "PeekMessageW", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool PeekMessage (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
@@ -151,9 +147,9 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool MoveWindow_ (nint windowHandle, int x, int y, int w, int h, bool repaint);
 
-    [DllImport(dll, EntryPoint = "SetWindowTextA", ExactSpelling = true, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetWindowText (nint windowHandle, nint text);
+    private static extern bool SetWindowTextA (nint windowHandle, nint text);
 
     //[DllImport(dll, SetLastError = true, CharSet = CharSet.Ansi)]
     //[return: MarshalAs(UnmanagedType.Bool)]
@@ -305,12 +301,12 @@ public static class User32 {
         if (!DestroyWindow_(hwnd))
             throw new WinApiException(nameof(DestroyWindow));
     }
-    
+
     public static void UpdateWindow (nint windowHandle) {
         if (!UpdateWindow_(windowHandle))
             throw new WinApiException(nameof(UpdateWindow));
     }
-    
+
     public static void MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint) {
         if (!MoveWindow_(windowHandle, x, y, w, h, repaint))
             throw new WinApiException(nameof(MoveWindow));
@@ -331,5 +327,14 @@ public static class User32 {
         var (w, h) = size is Vector2i s ? (s.X, s.Y) : (640, 480);
         var p = CreateWindowEx(styleEx, (nint)atom, 0, style, 10, 10, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
         return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
+    }
+
+    public static bool GetMessage (ref Message m) =>
+        0 != GetMessageW(ref m, 0, 0, 0);
+
+    public static void SetWindowText (Window window, string text) {
+        using Ascii x = new(text);
+        if (!SetWindowTextA(window.Handle, (nint)x))
+            throw new WinApiException(nameof(SetWindowTextA));
     }
 }

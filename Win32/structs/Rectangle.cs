@@ -1,8 +1,6 @@
 namespace Win32;
 
 using Common;
-using System;
-using System.Runtime.InteropServices;
 
 public struct Rectangle {
 

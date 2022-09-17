@@ -1,7 +1,7 @@
+namespace Engine6;
 
 using Gl;
 
-namespace Engine6;
 class Engine6 {
 
     static void Main () {
@@ -16,7 +16,7 @@ class Engine6 {
         };
 
 
-            
+
         using var f = new CubeTest();
         f.Run();
     }

@@ -1,6 +1,7 @@
 namespace Win32;
 
 using System.Runtime.InteropServices;
+using Common;
 
 public static class Kernel32 {
     private const string dll = nameof(Kernel32) + ".dll";
@@ -21,17 +22,17 @@ public static class Kernel32 {
     public static nint GetModuleHandle (string name) {
         if (name is null)
             return GetModuleHandle_(0);
-        using AnsiString n = new(name);
+        using Ascii n = new(name);
         return GetModuleHandle_(n);
     }
 
     public static bool GetModuleHandleEx (uint flags, string moduleName, ref nint module) {
-        using AnsiString name = new(moduleName);
+        using Ascii name = new(moduleName);
         return GetModuleHandleExA(flags, (nint)name, ref module);
     }
 
     public static nint GetProcAddress (nint module, string name) {
-        using AnsiString n = new(name);
+        using Ascii n = new(name);
         return GetProcAddress_(module, n);
     }
 }

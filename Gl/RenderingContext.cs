@@ -1,16 +1,5 @@
 namespace Gl;
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System;
-using System.Text;
-using Win32;
-using System.Numerics;
-using Common;
-
 
 //public static unsafe class RenderingContext {
 

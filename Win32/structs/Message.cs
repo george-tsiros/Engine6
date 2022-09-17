@@ -1,13 +1,11 @@
 namespace Win32;
 
-using System;
-
 public struct Message {
-    public IntPtr hWnd;
+    public nint hWnd;
     public WinMessage msg;
-    public IntPtr wparam;
-    public IntPtr lparam;
-    public IntPtr result;
+    public nint wparam;
+    public nint lparam;
+    public nint result;
     public uint time;
     public int px;
     public int py;

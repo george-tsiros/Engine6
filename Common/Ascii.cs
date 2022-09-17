@@ -1,14 +1,14 @@
-namespace Win32;
+namespace Common;
 
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public readonly struct AnsiString:IDisposable {
-    public static implicit operator nint (AnsiString self) => self.Handle;
-    public static implicit operator AnsiString (string str) => new(str);
+public readonly struct Ascii:IDisposable {
+    public static implicit operator nint (Ascii self) => self.Handle;
+    public static implicit operator Ascii (string str) => new(str);
 
-    public AnsiString (string str) {
+    public Ascii (string str) {
         var byteCount = Encoding.ASCII.GetByteCount(str);
         if (str.Length != byteCount)
             throw new ArgumentException("not an ascii string", nameof(str));
@@ -20,12 +20,13 @@ public readonly struct AnsiString:IDisposable {
 
     private readonly byte[] bytes;
     private readonly GCHandle handle;
-    
-    public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(AnsiString));
+
+    public nint Handle => handle.IsAllocated ? handle.AddrOfPinnedObject() : throw new ObjectDisposedException(nameof(Ascii));
 
     public void Dispose () {
         if (handle.IsAllocated) {
             handle.Free();
+            GC.SuppressFinalize(this);
         }
     }
 }

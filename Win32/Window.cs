@@ -90,7 +90,7 @@ public abstract class Window:IDisposable {
     private bool disposed;
     private Font font;
 
-    private static nint StaticWndProc (IntPtr h, WinMessage m, nuint w, nint l) {
+    private static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
         if (WinMessage.Create == m) {
             Windows.Add(creating.Handle = h, creating);
             return creating.WndProc(h, m, w, l);

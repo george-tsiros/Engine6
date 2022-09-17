@@ -1,15 +1,21 @@
-using static Common.Maths;
+namespace Engine6;
+
+using System;
 using Win32;
 using Gl;
 using Shaders;
 using System.Numerics;
 using static Gl.GlContext;
+using static Common.Maths;
 
-namespace Engine6;
+class Editor {
+    public ReadOnlySpan<byte> AsSpan () => throw new NotImplementedException();
+}
 
-class CubeTest:GlWindow {
-    const float MouseSensitivity = .0005f;
-    const float KeyboardSensitivity = .002f;
+public class CubeTest:GlWindow {
+
+    private const float MouseSensitivity = .0005f;
+    private const float KeyboardSensitivity = .002f;
 
     public CubeTest (ContextConfiguration? c = null) : base(c) {
         Load += OnLoad;
@@ -20,8 +26,7 @@ class CubeTest:GlWindow {
     private ICamera camera = new QCamera(new(0, 0, 5));
     private Axes axes;
     private VertexArray vertexArray;
-
-    static readonly Vector4[] FaceColors = {
+    private static readonly Vector4[] FaceColors = {
         new(0, 0, 1, 1),
         new(0, 0, .5f, 1),
         new(0, .5f, 0, 1),
@@ -30,7 +35,7 @@ class CubeTest:GlWindow {
         new(.5f, 0, 0, 1),
     };
 
-    void OnKeyUp (object sender, KeyEventArgs args) {
+    private void OnKeyUp (object sender, KeyEventArgs args) {
         switch (args.Key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
@@ -38,7 +43,7 @@ class CubeTest:GlWindow {
         }
     }
 
-    void OnLoad (object sender, System.EventArgs _) {
+    private void OnLoad (object sender, System.EventArgs _) {
         SetSwapInterval(1);
         axes = new();
         UseProgram(axes);
@@ -68,18 +73,18 @@ class CubeTest:GlWindow {
         Disposables.Add(axes);
     }
 
-    int Axis (Key plus, Key minus) {
+    private int Axis (Key plus, Key minus) {
         var x = IsKeyDown(plus) ? 1 : 0;
         var y = IsKeyDown(minus) ? -1 : 0;
         return x + y;
     }
 
-    void OnInput (object sender, InputEventArgs args) {
+    private void OnInput (object sender, InputEventArgs args) {
         var (dx, dy) = (args.Dx, args.Dy);
         camera.Rotate(-MouseSensitivity * dy, 0, -MouseSensitivity * dx);
     }
 
-    void Update () {
+    private void Update () {
         var yaw = KeyboardSensitivity * Axis(Key.F, Key.S);
         camera.Rotate(0, yaw, 0);
     }

@@ -1,6 +1,4 @@
 namespace Gl;
-
-using System;
 //using static RenderingContext;
 
 //public class FenceSync:IDisposable {

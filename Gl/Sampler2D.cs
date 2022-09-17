@@ -2,7 +2,6 @@ namespace Gl;
 
 using System;
 using static GlContext;
-using Win32;
 using Common;
 
 public class Sampler2D:OpenglObject {

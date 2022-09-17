@@ -1,6 +1,5 @@
 namespace Win32;
 
-using System;
 using System.Runtime.InteropServices;
 
 public struct WindowClassExW {
@@ -9,14 +8,14 @@ public struct WindowClassExW {
     public WndProc wndProc = null;
     public int cbClsExtra = 0;
     public int cbWndExtra = 0;
-    public IntPtr hInstance = IntPtr.Zero;
-    public IntPtr hIcon = IntPtr.Zero;
-    public IntPtr hCursor = IntPtr.Zero;
-    public IntPtr hbrBackground = IntPtr.Zero;
+    public nint hInstance = 0;
+    public nint hIcon = 0;
+    public nint hCursor = 0;
+    public nint hbrBackground = 0;
     [MarshalAs(UnmanagedType.LPWStr)]
     public string lpszmenuname = null;
     [MarshalAs(UnmanagedType.LPWStr)]
     public string classname = null;
-    public IntPtr hIconsm = IntPtr.Zero;
+    public nint hIconsm = 0;
     public WindowClassExW () { }
 }

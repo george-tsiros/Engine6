@@ -1,7 +1,6 @@
 namespace Win32;
 
 using System.Runtime.InteropServices;
-using System.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PixelFormatDescriptor {

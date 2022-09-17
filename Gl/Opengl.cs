@@ -1,6 +1,8 @@
 namespace Gl;
+
 using System.Runtime.InteropServices;
 using Win32;
+using Common;
 
 internal static class Opengl {
     private const string opengl32 = nameof(opengl32) + ".dll";
@@ -16,7 +18,7 @@ internal static class Opengl {
     private static extern nint wglGetProcAddress (nint name);
 
     internal static nint GetProcAddress (string name) {
-        using AnsiString n = new(name);
+        using Ascii n = new(name);
         return wglGetProcAddress(n);
     }
 

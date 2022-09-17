@@ -1,14 +1,10 @@
 namespace Gl;
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using Win32;
 using Common;
-using System.Runtime.InteropServices;
 
 public class Raster:IDisposable {
 

@@ -11,7 +11,7 @@ unsafe public class Dib:IDisposable {
         throw new NotImplementedException();
     }
 
-    public readonly IntPtr Handle;
+    public readonly nint Handle;
     public readonly int Width;
     public readonly int Height;
     public readonly int Stride;
@@ -49,10 +49,10 @@ unsafe public class Dib:IDisposable {
         };
         void* pixels = null;
         Handle = Gdi32.CreateDIBSection(dc, ref info, ref pixels);
-        if (IntPtr.Zero == Handle)
-            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Handle)");
+        if (0 == Handle)
+            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (0 == Handle)");
         if (null == pixels)
-            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (IntPtr.Zero == Bits)");
+            throw new WinApiException($"{nameof(Gdi32.CreateDIBSection)} failed (0 == Bits)");
         raw = (uint*)pixels;
 
         Stride = Width;
