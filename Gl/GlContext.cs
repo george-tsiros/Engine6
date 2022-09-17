@@ -14,6 +14,9 @@ using Common;
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
 
 public sealed unsafe class GlContext:IDisposable {
+
+    public static int GetSwapInterval () => wglGetSwapIntervalEXT();
+    public static void AttachShader (int program, int shader) => glAttachShader(program, shader);
     public static void ClearColor (float r, float g, float b, float a) => glClearColor(r, g, b, a);
     public static void Clear (BufferBit mask) => glClear((int)mask);
     public static void UseProgram (Program p) => glUseProgram((int)p);
@@ -76,8 +79,6 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => glVertexAttribIPointer(index, size, (int)type, stride, (void*)ptr);
-
-
     public static FramebufferStatus CheckNamedFramebufferStatus (int id, FramebufferTarget target) => (FramebufferStatus)glCheckNamedFramebufferStatus(id, (int)target);
     public static void NamedFramebufferTexture (int id, FramebufferAttachment attachment, Sampler2D texture) => glNamedFramebufferTexture(id, (int)attachment, (int)texture, 0);
     public static void NamedFramebufferRenderbuffer (int framebuffer, FramebufferAttachment attachment, int renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
@@ -85,8 +86,6 @@ public sealed unsafe class GlContext:IDisposable {
     public static void NamedBufferStorage (int buffer, int size, nint data, int flags) => glNamedBufferStorage(buffer, size, (void*)data, flags);
     public static void NamedBufferSubData (int buffer, int offset, int size, void* data) => glNamedBufferSubData(buffer, offset, size, data);
     public static void DeleteBuffer (int id) => glDeleteBuffers(1, &id);
-
-
 
     public static void ShaderSource (int id, string source) {
         var bytes = new byte[source.Length + 1];
@@ -117,9 +116,6 @@ public sealed unsafe class GlContext:IDisposable {
             glGetProgramInfoLog(id, bufferLength, null, p);
         return Encoding.ASCII.GetString(bytes);
     }
-
-    public static void AttachShader (int program, int shader) => glAttachShader(program, shader);
-
 
     private static int GetLocation (int program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
@@ -152,7 +148,7 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
 
-    public static int GetProgram (int id, ProgramParameter p) { // I wish I could join this with GetShader
+    public static int GetProgram (int id, ProgramParameter p) {
         int i;
         glGetProgramiv(id, (int)p, &i);
         return i;
@@ -171,6 +167,7 @@ public sealed unsafe class GlContext:IDisposable {
                 throw new GlException(SetInt32Failed(nameof(IntParameter.VertexArrayBinding), value));
         }
     }
+
     private static string SetBoolFailed (string name, bool value) =>
         $"failed to turn {name} {(value ? "on" : "off")}";
 
@@ -186,13 +183,11 @@ public sealed unsafe class GlContext:IDisposable {
         return i;
     }
 
-
     private static int Create (delegate* unmanaged[Stdcall]<int, int*, void> f) {
         int i;
         f(1, &i);
         return i;
     }
-    public static int GetSwapInterval () => wglGetSwapIntervalEXT();
 
     public static void SetSwapInterval (int value) {
         if (value != wglGetSwapIntervalEXT()) {
@@ -916,6 +911,7 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
+
     public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
         var str = Opengl.GetString(OpenglString.Version);
         var m = Regex.Match(str, @"^(\d+\.\d+(\.\d+)?) ((Core|Compatibility) )?");

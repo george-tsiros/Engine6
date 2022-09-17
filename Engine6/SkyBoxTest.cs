@@ -19,10 +19,10 @@ namespace Engine {
             if (_camera.Key(key, state))
                 return;
             switch (key) {
-            case GLFW.Keys.Tab:
-                if (state == GLFW.InputState.Release)
-                    CursorGrabbed = !CursorGrabbed;
-                break;
+                case GLFW.Keys.Tab:
+                    if (state == GLFW.InputState.Release)
+                        CursorGrabbed = !CursorGrabbed;
+                    break;
             }
         }
         protected override void CursorPosition (IntPtr windowPtr, Vector2i v) {

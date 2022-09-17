@@ -4,27 +4,7 @@ using Common;
 using System;
 using System.Runtime.InteropServices;
 
-unsafe public class Dib:IDisposable {
-    private const int MaxBitmapDimension = 8192;
-
-    public static void Blit (Dib target, Dib source, in Rectangle to, in Vector2i from) {
-        throw new NotImplementedException();
-    }
-
-    public readonly nint Handle;
-    public readonly int Width;
-    public readonly int Height;
-    public readonly int Stride;
-
-    public BitmapInfo Info =>
-        info;
-
-    public Vector2i Size =>
-        new(Width, Height);
-
-    /// <summary>AARRGGBB</summary>
-    public uint* Pixels =>
-        !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
+unsafe sealed public class Dib:IDisposable {
 
     public Dib (DeviceContext dc, Vector2i size) {
         var (w, h) = size;
@@ -58,6 +38,25 @@ unsafe public class Dib:IDisposable {
         Stride = Width;
         pixelCount = Width * Height;
     }
+
+    public static void Blit (Dib target, Dib source, in Rectangle to, in Vector2i from) {
+        throw new NotImplementedException();
+    }
+
+    public readonly nint Handle;
+    public readonly int Width;
+    public readonly int Height;
+    public readonly int Stride;
+
+    public BitmapInfo Info =>
+        info;
+
+    public Vector2i Size =>
+        new(Width, Height);
+
+    /// <summary>AARRGGBB</summary>
+    public uint* Pixels =>
+        !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
     public void DrawString (ReadOnlySpan<char> str, Font font, int x, int y, uint color = ~0u) {
@@ -97,19 +96,14 @@ unsafe public class Dib:IDisposable {
         FillRectU32Internal(clipped, color.Argb);
     }
 
-    public void Dispose (bool dispose) {
-        if (disposed)
-            return;
-        if (dispose) {
+    public void Dispose () {
+        if (!disposed) {
             Gdi32.DeleteObject(Handle);
             disposed = true;
         }
     }
 
-    public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    private const int MaxBitmapDimension = 8192;
 
     private void NotDisposed () {
         if (disposed)

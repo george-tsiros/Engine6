@@ -1,12 +1,13 @@
 namespace Common;
+
 using System;
 using static Common.Maths;
 
 public readonly struct Matrix3d {
 
-    public readonly double 
-        M11, M12, M13, 
-        M21, M22, M23, 
+    public readonly double
+        M11, M12, M13,
+        M21, M22, M23,
         M31, M32, M33;
 
     public Matrix3d (double m11, double m12, double m13, double m21, double m22, double m23, double m31, double m32, double m33) {
@@ -74,16 +75,16 @@ public readonly struct Matrix3d {
         var (s, c) = DoubleSinCos(a);
         return new Matrix3d(
             c, 0, -s,
-            0, 1, 0, 
-            s, 0, c 
+            0, 1, 0,
+            s, 0, c
         );
     }
 
     public static Matrix3d RotationZ (double a) {
         var (s, c) = DoubleSinCos(a);
         return new Matrix3d(
-           c, s, 0, 
-           -s, c, 0, 
+           c, s, 0,
+           -s, c, 0,
            0, 0, 1
         );
     }

@@ -33,7 +33,7 @@ public class Model {
     }
 
     public Model (string filepath, bool center = false) {
-        using var reader = new StreamReader(filepath);
+        using StreamReader reader = new(filepath);
         Read(reader, center);
     }
 
@@ -96,7 +96,7 @@ public class Model {
         var dTheta = 2 * fPi / nTheta;
         var fPhi = fPi / nPhi;
         var phi = fPhi;
-        var model = new Model() { Vertices = new(), Faces = new() };
+        Model model = new() { Vertices = new(), Faces = new() };
         model.Vertices.Add(radius * Vector3.UnitY);
 
         for (int vi = 1; vi < nPhi; ++vi, phi += fPhi) {

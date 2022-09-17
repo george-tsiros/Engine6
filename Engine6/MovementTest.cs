@@ -55,7 +55,7 @@ class MovementTest:GlWindow {
         Debug.Assert(0 < directionalFlat);
         UseProgram(directionalFlat);
         renderingVertexArray = new();
-        var model = new Model("data/teapot.obj", true);// Model.Sphere(200, 100, EarthRadius);
+        Model model = new("data/teapot.obj", true);// Model.Sphere(200, 100, EarthRadius);
         camera = new QCamera(new(0, 0, 2 * model.Max.Y));
         vertexCount = 3 * model.Faces.Count;
         var vertices = new Vector4[vertexCount];

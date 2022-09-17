@@ -28,10 +28,10 @@ namespace Engine {
             if (_camera.Key(key, state))
                 return;
             switch (key) {
-            case GLFW.Keys.Tab:
-                if (state == GLFW.InputState.Release)
-                    CursorGrabbed = !CursorGrabbed;
-                break;
+                case GLFW.Keys.Tab:
+                    if (state == GLFW.InputState.Release)
+                        CursorGrabbed = !CursorGrabbed;
+                    break;
             }
         }
         protected override void CursorPosition (IntPtr windowPtr, Vector2i v) {
@@ -56,7 +56,7 @@ namespace Engine {
             glGetProgramiv(SimpleTexture.Id, GL.ACTIVE_UNIFORM_MAX_LENGTH, out maxLength);
             glGetProgramiv(SimpleTexture.Id, GL.ACTIVE_UNIFORMS, out var uniformCount);
             for (var i = 0u; i < uniformCount; ++i) {
-                using (var h = new Handle(buffer))
+                using (Handle h = new(buffer))
                     glGetActiveUniform(SimpleTexture.Id, i, maxLength, out actualLength, out size, out type, h);
                 var name = System.Text.Encoding.ASCII.GetString(buffer, 0, actualLength);
                 var location = glGetUniformLocation(SimpleTexture.Id, name);
@@ -66,7 +66,7 @@ namespace Engine {
             glGetProgramiv(SimpleTexture.Id, GL.ACTIVE_ATTRIBUTE_MAX_LENGTH, out maxLength);
             glGetProgramiv(SimpleTexture.Id, GL.ACTIVE_ATTRIBUTES, out var attributeCount);
             for (var i = 0u; i < attributeCount; ++i) {
-                using (var h = new Handle(buffer))
+                using (Handle h = new(buffer))
                     glGetActiveAttrib(SimpleTexture.Id, i, maxLength, out actualLength, out size, out type, h);
                 var name = System.Text.Encoding.ASCII.GetString(buffer, 0, actualLength);
                 var location = glGetAttribLocation(SimpleTexture.Id, name);

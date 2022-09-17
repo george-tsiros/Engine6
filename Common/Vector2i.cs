@@ -1,4 +1,5 @@
 namespace Common;
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -18,43 +19,43 @@ public readonly struct Vector2i {
 
     public static Vector2i Min (in Vector2i a, in Vector2i b) =>
         new(Maths.IntMin(a.X, b.X), Maths.IntMin(a.Y, b.Y));
-    
+
     public static Vector2i Max (in Vector2i a, in Vector2i b) =>
         new(Maths.IntMax(a.X, b.X), Maths.IntMax(a.Y, b.Y));
-    
+
     public static Vector2i operator + (in Vector2i a, in Vector2i b) =>
         new(a.X + b.X, a.Y + b.Y);
-    
+
     public static Vector2i operator - (in Vector2i a, in Vector2i b) =>
         new(a.X - b.X, a.Y - b.Y);
-    
+
     public static Vector2i operator - (in Vector2i v) =>
         new(-v.X, -v.Y);
-    
+
     public static Vector2 operator * (in Vector2i a, in Vector2 b) =>
         new(a.X * b.X, a.Y * b.Y);
-    
+
     public static bool operator == (in Vector2i a, in Vector2i b) =>
         a.X == b.X && a.Y == b.Y;
-    
+
     public static bool operator != (in Vector2i a, in Vector2i b) =>
         a.X != b.X || a.Y != b.Y;
-    
+
     public static explicit operator Vector2 (in Vector2i v) =>
         new(v.X, v.Y);
-    
+
     public static explicit operator Vector2i (in Vector2 v) =>
         new((int)v.X, (int)v.Y);
-    
+
     public void Deconstruct (out int x, out int y) =>
         (x, y) = (X, Y);
-    
+
     public override bool Equals ([NotNullWhen(true)] object obj) =>
         obj is Vector2i other && other == this;
-    
+
     public override int GetHashCode () =>
         HashCode.Combine(X, Y);
-    
+
     public override string ToString () =>
         $"({X}, {Y})";
 }

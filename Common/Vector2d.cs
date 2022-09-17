@@ -1,7 +1,9 @@
 namespace Common;
+
 using System;
 using System.Numerics;
 using static Maths;
+
 public readonly struct Vector2d {
 
     public readonly double X, Y;

@@ -8,6 +8,7 @@ using Win32;
 public class GdiWindow:Window {
 
     public GdiWindow () : base() {
+        KeyDown += OnKeyDown;
         KeyUp += OnKeyUp;
         Paint += OnPaint;
         Size += OnSize;
@@ -44,6 +45,10 @@ public class GdiWindow:Window {
                 User32.PostQuitMessage(0);
                 return;
         }
+    }
+
+    private void OnKeyDown (object sender, KeyEventArgs e) {
+
     }
 
     private void Resize () {

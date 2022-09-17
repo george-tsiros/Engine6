@@ -252,19 +252,10 @@ public static class User32 {
             throw new WinApiException(nameof(TrackMouseEvent));
     }
 
-    public static unsafe void UnregisterMouseRaw () =>
-        HandleMouseRawRegistering(0);
-
-    public static unsafe void RegisterMouseRaw (nint windowHandle) {
-        if (0 == windowHandle)
-            throw new ArgumentException("may not be zero", nameof(windowHandle));
-        HandleMouseRawRegistering(windowHandle);
-    }
-
-    private static unsafe void HandleMouseRawRegistering (nint handleOrZero) {
+    public static unsafe void RegisterMouseRaw (Window window) {
         RawInputDevice device = new() {
-            flags = 0 != handleOrZero ? RawInputDeviceFlag.InputSink : RawInputDeviceFlag.Remove,
-            target = handleOrZero,
+            flags = window is null ? RawInputDeviceFlag.Remove : RawInputDeviceFlag.InputSink,
+            target = window?.Handle ?? 0,
             usagePage = 1,
             usage = 2,
         };

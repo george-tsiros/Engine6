@@ -69,7 +69,7 @@ public partial class Configuration:Form {
     private DeviceContext Dc;
 
     private static string PfdToString (in PixelFormatDescriptor p) =>
-        $"color bits: {p.colorBits}, depth bits: {p.depthBits}, swap method: {SwapMethodFrom(p.flags)}{(p.flags.HasFlag(PixelFlag.DoubleBuffer)? ", doublebuffered" : null)}";
+        $"color bits: {p.colorBits}, depth bits: {p.depthBits}, swap method: {SwapMethodFrom(p.flags)}{(p.flags.HasFlag(PixelFlag.DoubleBuffer) ? ", doublebuffered" : null)}";
 
     private static SwapMethod SwapMethodFrom (PixelFlag f) {
         if (f.HasFlag(PixelFlag.SwapCopy))
@@ -85,7 +85,7 @@ public partial class Configuration:Form {
             size = Win32.PixelFormatDescriptor.Size,
             version = 1,
         };
-        var l = new List<Datum>();
+        List<Datum> l = new();
         for (var i = 1; i <= count; ++i) {
             Gdi32.DescribePixelFormat(Dc, i, ref p);
             if (0 == p.pixelType && 32 == p.colorBits && 24 <= p.depthBits && (RequiredFlags & p.flags) == RequiredFlags && (RejectedFlags & p.flags) == 0)

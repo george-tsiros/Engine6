@@ -218,7 +218,7 @@ public class Raster:IDisposable {
     }
 
     private static Raster FromStream (FileStream f) {
-        using var r = new BinaryReader(f, System.Text.Encoding.UTF8, true);
+        using BinaryReader r = new(f, System.Text.Encoding.UTF8, true);
         var width = r.ReadInt32();
         var height = r.ReadInt32();
         var channels = r.ReadInt32();
@@ -232,7 +232,7 @@ public class Raster:IDisposable {
     public static Raster FromFile (string filepath) {
         using var f = File.OpenRead(filepath);
         var raster = FromStream(f);
-        using var unzip = new DeflateStream(f, CompressionMode.Decompress);
+        using DeflateStream unzip = new(f, CompressionMode.Decompress);
         var read = unzip.Read(raster.Pixels, 0, raster.Pixels.Length);
         return read == raster.Pixels.Length ? raster : throw new ApplicationException($"{filepath}: expected to read {raster.Pixels.Length} bytes, read {read} instead");
     }

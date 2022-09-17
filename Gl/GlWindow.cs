@@ -31,7 +31,7 @@ public class GlWindow:Window {
     protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
-    protected readonly GlContext Ctx;
+    protected GlContext Ctx;
 
     private const double FPScap = 60;
     private const double TframeSeconds = 1 / FPScap;
@@ -42,11 +42,7 @@ public class GlWindow:Window {
 
     private void OnFocusChanged (object sender, FocusChangedEventArgs e) {
         _ = User32.ShowCursor(!e.Focused);
-
-        if (e.Focused)
-            User32.RegisterMouseRaw(Handle);
-        else
-            User32.UnregisterMouseRaw();
+        User32.RegisterMouseRaw(e.Focused ? this : null);
     }
 
     private void OnIdle (object sender, EventArgs _) {

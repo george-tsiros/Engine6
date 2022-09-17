@@ -18,7 +18,7 @@ namespace Perf {
         private readonly List<(int eventIndex, int maxDepth)> FrameInfo = new List<(int, int)>();
 
         private Perf (string filepath) {
-            using (var reader = new BinaryReader(File.OpenRead(filepath))) {
+            using (BinaryReader reader = new(File.OpenRead(filepath))) {
                 var enumCount = reader.ReadInt32();
                 Names = new string[enumCount];
                 Values = new int[enumCount];
@@ -51,13 +51,13 @@ namespace Perf {
 
         private void Load_self (object sender, EventArgs args) {
             Load -= Load_self;
-            ClientSize = new Size(_IMAGE_WIDTH_ + 50, 500);
-            Location = new Point(10, 10);
-            frameNum = new IntegralUpDown() { Width = 200 };
+            ClientSize = new(_IMAGE_WIDTH_ + 50, 500);
+            Location = new(10, 10);
+            frameNum = new() { Width = 200 };
             Controls.Add(frameNum);
-            picture = new PictureBox() { Location = new Point(10, 50), ClientSize = new Size(_IMAGE_WIDTH_, _SECTION_HEIGHT_) };
+            picture = new() { Location = new(10, 50), ClientSize = new(_IMAGE_WIDTH_, _SECTION_HEIGHT_) };
             Controls.Add(picture);
-            detail = new PictureBox() { Location = new Point(10, 50 + _SECTION_HEIGHT_ + 50), ClientSize = new Size(_IMAGE_WIDTH_, _SECTION_HEIGHT_) };
+            detail = new() { Location = new(10, 50 + _SECTION_HEIGHT_ + 50), ClientSize = new(_IMAGE_WIDTH_, _SECTION_HEIGHT_) };
             Controls.Add(detail);
 
             frameNum.ValueChanged += ValueChanged_frameNum;
@@ -108,10 +108,10 @@ namespace Perf {
             detail.Image = new Bitmap(_IMAGE_WIDTH_, imageHeight, PixelFormat.Format32bppArgb);
             previousImage?.Dispose();
 
-            picture.ClientSize = new Size(_IMAGE_WIDTH_, imageHeight);
-            detail.ClientSize = new Size(_IMAGE_WIDTH_, imageHeight);
+            picture.ClientSize = new(_IMAGE_WIDTH_, imageHeight);
+            detail.ClientSize = new(_IMAGE_WIDTH_, imageHeight);
 
-            detail.Location = new Point(detail.Left, picture.Top + picture.Height + picture.Margin.Vertical);
+            detail.Location = new(detail.Left, picture.Top + picture.Height + picture.Margin.Vertical);
             using (var g = Graphics.FromImage(detail.Image))
                 g.Clear(Color.Black);
 
@@ -124,7 +124,7 @@ namespace Perf {
             using (var g = DrawAndClear(picture.BackgroundImage, Color.Black)) {
                 var eventIndex = FrameInfo[FrameIndex].eventIndex;
                 var t0 = Entries[eventIndex].Ticks;
-                var stk = new Stack<Entry>();
+                Stack<Entry> stk = new();
                 brushIndex = 0;
                 do {
                     var entry = Entries[eventIndex++];
@@ -188,7 +188,7 @@ namespace Perf {
             using (var g = DrawAndClear(detail.Image, Color.Black)) {
                 var eventIndex = FrameInfo[FrameIndex].eventIndex;
                 var frameStartTicks = Entries[eventIndex].Ticks;
-                var stk = new Stack<Entry>();
+                Stack<Entry> stk = new();
                 brushIndex = 0;
                 do {
                     var entry = Entries[eventIndex++];
@@ -250,7 +250,7 @@ namespace Perf {
 
         [STAThread]
         static void Main (string[] args) {
-            using (var f = new Perf(Path.Combine(Directory.GetCurrentDirectory(), args[0])))
+            using (Perf f = new(Path.Combine(Directory.GetCurrentDirectory(), args[0])))
                 _ = f.ShowDialog();
         }
     }

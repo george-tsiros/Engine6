@@ -17,13 +17,13 @@ class Program {
     private class BenchResult:IComparable<BenchResult> {
         public double Performance { get; }
         public string Message { get; }
-        public BenchResult (double performance, string message) => 
+        public BenchResult (double performance, string message) =>
             (Performance, Message) = (performance, message);
 
-        public int CompareTo (BenchResult other) => 
+        public int CompareTo (BenchResult other) =>
             Performance.CompareTo(other.Performance);
 
-        public override string ToString () => 
+        public override string ToString () =>
             Message;
 
     }
@@ -71,13 +71,13 @@ class Program {
     }
 
     private static void TestOneUseStringMemoryPressure (TextWriter writer) {
-        var r = new Random();
+        Random r = new();
         while (!Console.KeyAvailable)
             for (var i = 0; i < 1000; ++i)
                 writer.Write(RandomString(r));
     }
 
-    private static void Trace () => 
+    private static void Trace () =>
         Console.WriteLine(new StackFrame(1).GetMethod().Name);
 
     private static void Bench_Actual_Stream (string filename) {
@@ -85,7 +85,7 @@ class Program {
         using var stream = File.Create(filename);
         Bench(stream);
     }
-    
+
     private static void Bench_Null_Stream () {
         Trace();
         Bench(Stream.Null);
@@ -93,20 +93,20 @@ class Program {
 
     private static void Bench_StringFormat_Actual_StreamWriter () {
         Trace();
-        using var writer = new StreamWriter("test.txt");
+        using StreamWriter writer = new("test.txt");
         Bench(writer);
     }
-    
+
     private static void Bench_StringFormat_Null_StreamWriter () {
         Trace();
         Bench(StreamWriter.Null);
     }
-    
+
     private static void Bench_Binary_Null () {
         Trace();
         Bench_Binary(Stream.Null);
     }
-    
+
     private static void Bench_BinaryWriter (string filename, long count = 1000000l) {
         Trace();
         using BinaryWriter writer = new BinaryWriter(File.Create(filename));
@@ -114,8 +114,8 @@ class Program {
         var longs = new long[count];
         var strings = new string[count];
         var foos = new FooEnum[count];
-        var r = new Random();
-        var results = new List<BenchResult>();
+        Random r = new();
+        List<BenchResult> results = new();
         do {
             for (var i = 0; i < count; ++i) {
                 kinds[i] = (Kind)r.Next(0, 3);
@@ -144,7 +144,7 @@ class Program {
 
         } while (!Console.KeyAvailable);
     }
-    
+
     unsafe private static void WithBinaryWriterUnsafe (BinaryWriter writer, long int64, int int32) {
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
@@ -153,12 +153,12 @@ class Program {
         }
         writer.Write(bytes);
     }
-    
+
     private static void WithBinaryWriterSimplest (BinaryWriter writer, long int64, int int32) {
         writer.Write(int64);
         writer.Write((byte)int32);
     }
-    
+
     private static void Bench_Binary_Actual (string filename) {
         Trace();
         using Stream writer = File.Create(filename);
@@ -186,8 +186,8 @@ class Program {
         var longs = new long[count];
         var strings = new string[count];
         var foos = new FooEnum[count];
-        var r = new Random();
-        var results = new List<BenchResult>();
+        Random r = new();
+        List<BenchResult> results = new();
         do {
             for (var i = 0; i < count; ++i) {
                 kinds[i] = (Kind)r.Next(0, 3);
@@ -259,7 +259,7 @@ class Program {
         const string format = "{0} {1}\n";
         var longs = new long[count];
         var strings = new string[count];
-        var r = new Random();
+        Random r = new();
         do {
             for (var i = 0; i < count; ++i) {
                 longs[i] = r.NextInt64(1_000_000, 1_000_000_000);
@@ -283,7 +283,7 @@ class Program {
 
     private static void Bench (Stream stream, long count = 1000000l) {
         var longs = new long[count];
-        var r = new Random();
+        Random r = new();
         var arrays = new byte[count][];
         var strings = new string[count];
         do {
@@ -459,7 +459,7 @@ class Program {
         stream.Write(new ReadOnlySpan<byte>(bytes, byteCount));
     }
 
-    private static void Rep (long ticks, long count, string info = null) => 
+    private static void Rep (long ticks, long count, string info = null) =>
         Console.WriteLine(Format(ticks, count, info));
 
     private static string RandomString (Random r) {
@@ -492,6 +492,6 @@ class Program {
         };
         return $"{newValue:##0.000} {symbol}{unit}";
     }
-    private static string Format (long ticks, long count, string info = null) => 
+    private static string Format (long ticks, long count, string info = null) =>
         $"{info}{ticks} ticks, {(double)ticks / count} ticks/item, {ToEng((double)ticks / Stopwatch.Frequency)}s, {ToEng((double)ticks / count / Stopwatch.Frequency)}s/item ";
 }

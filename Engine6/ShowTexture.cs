@@ -21,19 +21,19 @@ namespace Engine {
             if (state == GLFW.InputState.Repeat)
                 return;
             switch (key) {
-            case GLFW.Keys.PageUp:
-                if (state == GLFW.InputState.Release && _scale < 8)
-                    ResetTexture(_t, _pixels, ++_scale, __SIZE, _noise);
-                break;
-            case GLFW.Keys.PageDown:
-                if (state == GLFW.InputState.Release && _scale > 0)
-                    ResetTexture(_t, _pixels, --_scale, __SIZE, _noise);
-                break;
-            case GLFW.Keys.Up:
-                _sinceLastPress = 0f;
-                break;
-            case GLFW.Keys.Down:
-                break;
+                case GLFW.Keys.PageUp:
+                    if (state == GLFW.InputState.Release && _scale < 8)
+                        ResetTexture(_t, _pixels, ++_scale, __SIZE, _noise);
+                    break;
+                case GLFW.Keys.PageDown:
+                    if (state == GLFW.InputState.Release && _scale > 0)
+                        ResetTexture(_t, _pixels, --_scale, __SIZE, _noise);
+                    break;
+                case GLFW.Keys.Up:
+                    _sinceLastPress = 0f;
+                    break;
+                case GLFW.Keys.Down:
+                    break;
             }
         }
         private static void ResetTexture (uint texture, float[] pixels, int iscale, int size, OpenSimplex2S noise) {
@@ -43,7 +43,7 @@ namespace Engine {
             for (var y = 0; y < size; ++y)
                 for (var x = 0; x < size; ++x)
                     pixels[y * size + x] = (float)(noise.Noise2(scale * x, scale * y) * 0.5 + 0.5);
-            using (var h = new Handle(pixels))
+            using (Handle h = new(pixels))
                 glTextureSubImage2D(texture, 0, 0, 0, size, size, GL.RED, GL.FLOAT, h);
 
         }

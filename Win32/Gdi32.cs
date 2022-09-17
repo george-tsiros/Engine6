@@ -110,7 +110,6 @@ public static class Gdi32 {
             throw new WinApiException(nameof(BitBlt));
     }
 
-    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, in Dib source, RasterOperation op) {
-        return StretchDIBits((nint)dc, to.Left, to.Top, to.Width, to.Height, from.Left, from.Top, from.Width, from.Height, source.Pixels, source.Info, 0, (uint)op);
-    }
+    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, in Dib source, RasterOperation op) => 
+        StretchDIBits((nint)dc, to.Left, to.Top, to.Width, to.Height, from.Left, from.Top, from.Width, from.Height, source.Pixels, source.Info, 0, (uint)op);
 }

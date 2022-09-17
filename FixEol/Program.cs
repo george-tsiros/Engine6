@@ -61,7 +61,7 @@ class Program {
         var bom = Bom.FindBom(buffer);
         var encoding = bom.Encoding ?? throw new InvalidOperationException("no encoding for this Bom, this shouldn't happen");
         var lines = File.ReadAllLines(filepath);
-        using var f = new StreamWriter(filepath, false, encoding) { NewLine = "\n" };
+        using StreamWriter f = new(filepath, false, encoding) { NewLine = "\n" };
         foreach (var line in lines)
             f.WriteLine(line);
     }

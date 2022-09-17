@@ -20,14 +20,14 @@ namespace Engine {
             if (_camera.Key(key, state))
                 return;
             switch (key) {
-            case GLFW.Keys.Tab:
-                if (state == GLFW.InputState.Release)
-                    CursorGrabbed = !CursorGrabbed;
-                break;
-            case GLFW.Keys.F1:
-                if (state == GLFW.InputState.Release)
-                    _useSecondary = !_useSecondary;
-                break;
+                case GLFW.Keys.Tab:
+                    if (state == GLFW.InputState.Release)
+                        CursorGrabbed = !CursorGrabbed;
+                    break;
+                case GLFW.Keys.F1:
+                    if (state == GLFW.InputState.Release)
+                        _useSecondary = !_useSecondary;
+                    break;
             }
         }
 
@@ -42,15 +42,15 @@ namespace Engine {
             _mousePosition = new((int)Math.Floor(mx), (int)Math.Floor(my));
             _primaryVertexArray = BindNewVertexArray();
             var heightmap = new float[__SIZE * __SIZE];
-            var n0 = new OpenSimplex2S(2l);
-            var n1 = new OpenSimplex2S(1l);
+            OpenSimplex2S n0 = new(2l);
+            OpenSimplex2S n1 = new(1l);
             var o0 = 10.0 / __SIZE;
             var o1 = 2.0 / __SIZE;
             for (var z = 0; z < __SIZE; ++z)
                 for (var x = 0; x < __SIZE; ++x)
                     heightmap[z * __SIZE + x] = (float)(n0.Noise2(o0 * x, o0 * z) + 1) + 10f * (float)(n1.Noise2(o1 * x, o1 * z) + 1);
 
-            var lightDirection = new Vector3(1, 0.1f, 0);
+            Vector3 lightDirection = new(1, 0.1f, 0);
             var lightColor = Vector3.One;
             var model = Matrix4x4.CreateTranslation(-__SIZE * .5f * __SCALE, 0f, -__SIZE * .5f * __SCALE);
             var projection = Matrix4x4.CreatePerspectiveFieldOfView((float)(Math.PI / 6), (float)Width / Height, 10f, 1000f);

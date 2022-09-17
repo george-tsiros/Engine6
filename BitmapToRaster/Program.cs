@@ -46,7 +46,7 @@ class BitmapToRaster {
         StringFormat alignment = new() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
 
         var maxSize = (int)Math.Ceiling(15f * font.SizeInPoints);
-        using var bitmap = new Bitmap(maxSize, maxSize, PixelFormat.Format32bppArgb);
+        using Bitmap bitmap = new(maxSize, maxSize, PixelFormat.Format32bppArgb);
         RectangleF entireBitmapF = new(new(), bitmap.Size);
 
         using (var graphics = FromImage(bitmap)) {
@@ -124,8 +124,8 @@ class BitmapToRaster {
     }
 
     private static void ImageToRaster (string filepath, string outputRoot) {
-        using var image = new Bitmap(filepath);
-        var l = image.LockBits(new Rectangle(Point.Empty, image.Size), ImageLockMode.ReadOnly, image.PixelFormat);
+        using Bitmap image = new(filepath);
+        var l = image.LockBits(new(new(), image.Size), ImageLockMode.ReadOnly, image.PixelFormat);
         var bytes = new byte[l.Stride * l.Height];
         var channels = l.Stride / l.Width;
         const int bytesPerChannel = 1;
@@ -140,13 +140,13 @@ class BitmapToRaster {
         _ = Directory.CreateDirectory(outputDir);
         var outputFilepath = Path.Combine(outputDir, outputFilename);
         Console.Write($"{filepath}: {image.Width}x{image.Height}, {channels} ch, {bytes.Length} B");
-        using (var f = new BinaryWriter(File.Create(outputFilepath))) {
+        using (BinaryWriter f = new(File.Create(outputFilepath))) {
             f.Write(image.Width);
             f.Write(image.Height);
             f.Write(channels);
             f.Write(bytesPerChannel);
             f.Write(bytes.Length);
-            using var zip = new DeflateStream(f.BaseStream, CompressionLevel.Optimal);
+            using DeflateStream zip = new(f.BaseStream, CompressionLevel.Optimal);
             zip.Write(bytes, 0, bytes.Length);
         }
         var compressedSize = new FileInfo(outputFilepath).Length;

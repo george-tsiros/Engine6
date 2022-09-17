@@ -1,10 +1,9 @@
 namespace Common;
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-public unsafe class Editor:IDisposable {
+public sealed unsafe class Editor:IDisposable {
 
     public Editor () {
         ptr = (byte*)Marshal.AllocHGlobal(capacity = StartingSize);
@@ -37,12 +36,12 @@ public unsafe class Editor:IDisposable {
     private const int StartingSize = 256;
 
     private int capacity = 0;
-    
+
     /// <summary>EXCLUDING NULL TERMINATING BYTE</summary>
     private int length = 0;
-    
+
     private byte* ptr;
-    
+
     private bool disposed = false;
 
     private void NotDisposed () {

@@ -26,7 +26,7 @@ class AxesTest:GlWindow {
         new(0, 0, 1, 1),
     };
 
-    public AxesTest () :base() { 
+    public AxesTest () : base() {
         KeyUp += OnKeyUp;
         Input += OnInput;
         Load += OnLoad;

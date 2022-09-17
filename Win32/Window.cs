@@ -238,21 +238,20 @@ public abstract class Window:IDisposable {
             case WinMessage.KillFocus:
                 FocusChanged?.Invoke(this, new(IsFocused = false));
                 return 0;
-            case WinMessage.KeyDown:
-                if (0 == (l & 0x40000000)) {
+            case WinMessage.KeyDown: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] |= lo;
-                    KeyDown?.Invoke(this, new(key));
+                    KeyDown?.Invoke(this, new(key, 0 != (l & 0x40000000)));
                 }
                 return 0;
             case WinMessage.KeyUp: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] &= ~lo;
-                    KeyUp?.Invoke(this, new(key));
-                    return 0;
+                    KeyUp?.Invoke(this, new(key, false));
                 }
+                return 0;
             case WinMessage.Paint:
                 PaintStruct ps = new();
                 var eh = User32.BeginPaint(Handle, ref ps);

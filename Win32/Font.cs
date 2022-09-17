@@ -30,11 +30,11 @@ public class Font {
     }
 
     public Font (string filepath) {
-        using var f = new StreamReader(filepath);
+        using StreamReader f = new(filepath);
         ReadFrom(f);
     }
 
-    private void ReadFrom (StreamReader r) {
+    private void ReadFrom (TextReader r) {
         FamilyName = r.ReadLine();
         if (FamilyName is null)
             return;
@@ -47,7 +47,7 @@ public class Font {
         offsets = new int[256];
         Height = info[0];
         var on = (char)info[1];
-        using (var mem = new MemoryStream()) {
+        using (MemoryStream mem = new ()) {
             var width = 0;
             for (int ascii = 0, row = 1; ascii < 256; ++row) {
                 var line = r.ReadLine();

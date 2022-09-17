@@ -10,9 +10,9 @@ public class GlException:Exception {
     public string GlMessage { get; }
 
     public static void Assert () {
-        var errors = new List<GlErrorCode>();
-        for (; ; ) { 
-        var e = GetError();
+        List<GlErrorCode> errors = new();
+        for (; ; ) {
+            var e = GetError();
             if (GlErrorCode.NoError == e)
                 break;
             errors.Add(e);

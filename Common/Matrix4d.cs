@@ -1,4 +1,5 @@
 namespace Common;
+
 using System;
 using System.Numerics;
 using static Common.Maths;
