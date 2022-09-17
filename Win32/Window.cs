@@ -20,7 +20,7 @@ public abstract class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
-    public Font Font {
+    public PixelFont Font {
         get =>
             font ??= new("data/ubuntu_mono_ligaturized.txt");
         set =>
@@ -88,7 +88,7 @@ public abstract class Window:IDisposable {
     private static Window creating;
     private readonly int[] KeyState = new int[256 / 32];
     private bool disposed;
-    private Font font;
+    private PixelFont font;
 
     private static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
         if (WinMessage.Create == m) {

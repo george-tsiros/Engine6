@@ -59,7 +59,7 @@ unsafe sealed public class Dib:IDisposable {
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (ReadOnlySpan<char> str, Font font, int x, int y, uint color = ~0u) {
+    public void DrawString (ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
         var textWidth = font.WidthOf(str);
         if (x < 0 || Width <= x + textWidth)
@@ -77,9 +77,8 @@ unsafe sealed public class Dib:IDisposable {
         foreach (var c in str) {
             if (Width <= x)
                 return;
-            var charWidth = font.Width[c];
-            Blit(c, font, x, y, charWidth, color);
-            x += charWidth;
+            Blit(c, font, x, y, color);
+            x += font.Width;
         }
     }
 
@@ -139,13 +138,14 @@ unsafe sealed public class Dib:IDisposable {
         }
     }
 
-    private unsafe void Blit (char ascii, Font font, int x, int y, int charWidth, uint color) {
+    private unsafe void Blit (char ascii, PixelFont font, int x, int y, uint color) {
+        var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
-        var source = font.Offset[ascii];
+        var source = ascii * charStride;
         var offset = rowStart + x;
-        for (var row = 0; row < font.Height; ++row, offset -= Width, source += charWidth) {
+        for (var row = 0; row < font.Height; ++row, offset -= Width, source += font.Width) {
             var xpos = x;
-            for (var column = 0; xpos < Width && column < charWidth; ++column, ++xpos) {
+            for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos) {
                 raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
             }
         }
