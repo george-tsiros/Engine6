@@ -18,9 +18,9 @@ public static class Gdi32 {
     [DllImport(dll, SetLastError = true)]
     private unsafe static extern nint CreateDIBSection ([In] nint dc, BitmapInfo* info, int use, ref void* p, nint section, uint offset);
 
-    [DllImport(dll, EntryPoint = "BitBlt", ExactSpelling = true, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool BitBlt_ (nint to, int x, int y, int w, int h, nint from, int x1, int y1, uint rasterOp);
+    //[DllImport(dll, EntryPoint = "BitBlt", ExactSpelling = true, SetLastError = true)]
+    //[return: MarshalAs(UnmanagedType.Bool)]
+    //private static extern bool BitBlt_ (nint to, int x, int y, int w, int h, nint from, int x1, int y1, uint rasterOp);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -108,11 +108,11 @@ public static class Gdi32 {
             throw new WinApiException(nameof(SetPixelFormat));
     }
 
-    public static void BitBlt (DeviceContext to, DeviceContext from, in Rectangle destination, in Vector2i origin, RasterOperation op) {
-        if (!BitBlt_((nint)to, destination.Left, destination.Top, destination.Width, destination.Height, (nint)from, origin.X, origin.Y, (uint)op))
-            throw new WinApiException(nameof(BitBlt));
-    }
+    //public static void BitBlt (DeviceContext to, DeviceContext from, in Rectangle destination, in Vector2i origin, RasterOperation op) {
+    //    if (!BitBlt_((nint)to, destination.Left, destination.Top, destination.Width, destination.Height, (nint)from, origin.X, origin.Y, (uint)op))
+    //        throw new WinApiException(nameof(BitBlt));
+    //}
 
-    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, in Dib source, RasterOperation op) => 
+    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, Dib source, RasterOperation op) => 
         StretchDIBits((nint)dc, to.Left, to.Top, to.Width, to.Height, from.Left, from.Top, from.Width, from.Height, source.Pixels, source.Info, 0, (uint)op);
 }

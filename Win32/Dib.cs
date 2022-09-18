@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 unsafe sealed public class Dib:IDisposable {
 
-    public Dib (DeviceContext dc, Vector2i size) {
+    public Dib (DeviceContext dc, in Vector2i size) {
         var (w, h) = size;
         if (w < 1 || MaxBitmapDimension < w)
             throw new ArgumentOutOfRangeException(nameof(w));
@@ -59,7 +59,7 @@ unsafe sealed public class Dib:IDisposable {
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
+    public void DrawString (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
@@ -84,12 +84,12 @@ unsafe sealed public class Dib:IDisposable {
         }
     }
 
-    public void ClearU32 (Color color) {
+    public void ClearU32 (in Color color) {
         NotDisposed();
         ClearU32Internal(color.Argb);
     }
 
-    public void FillRectU32 (Rectangle r, Color color) {
+    public void FillRectU32 (in Rectangle r, in Color color) {
         NotDisposed();
         var clipped = r.Clip(new(Vector2i.Zero, new(Width, Height)));
         if (clipped.Width <= 0 || clipped.Height <= 0)
@@ -126,7 +126,7 @@ unsafe sealed public class Dib:IDisposable {
             raw[pixelCount - 1] = color;
     }
 
-    private unsafe void FillRectU32Internal (Rectangle clipped, uint color) {
+    private unsafe void FillRectU32Internal (in Rectangle clipped, uint color) {
         var y = clipped.Top;
         var h = clipped.Height;
         var w = clipped.Width;

@@ -19,7 +19,7 @@ public static class Kernel32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetModuleHandleExA (uint dwFlags, nint lpModuleName, ref nint module);
 
-    public static nint GetModuleHandle (string name) {
+    public static nint GetModuleHandle (string name = null) {
         if (name is null)
             return GetModuleHandle_(0);
         using Ascii n = new(name);

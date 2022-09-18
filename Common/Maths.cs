@@ -41,6 +41,7 @@ public static class Maths {
     public static (double, double) DoubleSinCos (double angle) => Math.SinCos(angle);
     public static (float, float) FloatSinCos (float angle) => ((float)Math.Sin(angle), (float)Math.Cos(angle)); // :(
     public static (int quotient, int remainder) IntDivRem (int a, int b) => Math.DivRem(a, b);
+    public static (uint quotient, uint remainder) UIntDivRem (uint a, uint b) => Math.DivRem(a, b);
     public static (long quotient, long remainder) LongDivRem (long a, long b) => Math.DivRem(a, b);
     public static double DoubleAbs (double a) => Math.Abs(a);
     public static double DoubleClamp (double value, double min, double max) => Math.Clamp(value, min, max);

@@ -11,7 +11,7 @@ using static Common.Maths;
 public class CubeTest:GlWindow {
 
     private const float MouseSensitivity = .0005f;
-    private const float KeyboardSensitivity = .002f;
+    private const float KeyboardSensitivity = .005f;
 
     public CubeTest (ContextConfiguration? c = null) : base(c) {
         Load += OnLoad;

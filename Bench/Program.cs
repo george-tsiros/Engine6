@@ -321,7 +321,7 @@ class Program {
         } while (!Console.KeyAvailable);
     }
 
-    private static void Foo (Stream stream, long int64, ReadOnlySpan<byte> str) {
+    private static void Foo (Stream stream, long int64, in ReadOnlySpan<byte> str) {
         Span<byte> bytes = stackalloc byte[20];
         var offset = ToChars(int64, bytes);
         stream.Write(bytes.Slice(offset));
@@ -330,7 +330,7 @@ class Program {
         stream.WriteByte((byte)'\n');
     }
 
-    private static void FooInlined (Stream stream, long int64, ReadOnlySpan<byte> str) {
+    private static void FooInlined (Stream stream, long int64, in ReadOnlySpan<byte> str) {
         Span<byte> bytes = stackalloc byte[20];
         var offset = ToCharsInlined(int64, bytes);
         stream.Write(bytes.Slice(offset));

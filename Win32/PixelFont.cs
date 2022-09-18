@@ -10,11 +10,12 @@ using static Common.Maths;
 public class PixelFont {
     public int Height { get; private init; }
     public int Width { get; private init; }
-    public ReadOnlySpan<byte> Pixels => pixels;
+    public ReadOnlySpan<byte> Pixels => 
+        pixels;
 
     private byte[] pixels;
     /// <summary>fails when strings start or end with newlines</summary>
-    public Vector2i SizeOf (ReadOnlySpan<char> str) {
+    public Vector2i SizeOf (in ReadOnlySpan<char> str) {
         if (str.Length == 0)
             return new();
 

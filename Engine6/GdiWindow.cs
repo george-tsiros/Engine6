@@ -9,16 +9,8 @@ public class GdiWindow:Window {
     public GdiWindow () : base() {
         Paint += OnPaint;
         Size += OnSize;
-        Idle += OnIdle;
     }
 
-    private void OnIdle (object sender, EventArgs _) {
-        ++idleCount;
-        using var text = idleCount.ToAscii();
-        User32.SetWindowText(this, text);
-    }
-
-    private int idleCount;
     private Dib dib;
 
     private void OnSize (object sender, SizeEventArgs _) {
@@ -27,18 +19,18 @@ public class GdiWindow:Window {
 
     private void OnPaint (object sender, PaintEventArgs _) {
         Resize();
-        var size = ClientSize;
         dib.ClearU32(Color.Black);
-        Blit(Dc, new(new(), size), dib);
+        Blit(Dc, new(new(), ClientSize), dib);
     }
 
     private void Resize () {
-        if (dib is not null && dib.Size != ClientSize) {
+        var size = ClientSize;
+        if (dib is not null && dib.Size != size) {
             dib.Dispose();
             dib = null;
         }
         if (dib is null) {
-            dib = new(Dc, ClientSize);
+            dib = new(Dc, size);
         }
     }
 

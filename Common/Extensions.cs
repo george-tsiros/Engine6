@@ -14,17 +14,17 @@ public static class Extensions {
 
     public static Ascii ToAscii (this object ob) => ob switch {
         string str => new(str),
-        //nint iptr => AsciiConversions.IntPtr(iptr),
-        //nuint uptr => AsciiConversions.UIntPtr(uptr),
-        //short i16 => AsciiConversions.Int16(i16),
+        nint iptr => AsciiConversions.IntPtr(iptr),
+        nuint uptr => AsciiConversions.UIntPtr(uptr),
+        short i16 => AsciiConversions.Int16(i16),
         int i32 => AsciiConversions.Int32(i32),
-        //long i64 => AsciiConversions.Int64(i64),
-        //ushort u16 => AsciiConversions.UInt16(u16),
-        //uint u32 => AsciiConversions.UInt32(u32),
-        //ulong u64 => AsciiConversions.UInt64(u64),
-        //DateTime dt => AsciiConversions.DateTime(dt),
-        //TimeSpan ts => AsciiConversions.TimeSpan(ts),
-        //Guid guid => AsciiConversions.Guid(guid),
+        long i64 => AsciiConversions.Int64(i64),
+        ushort u16 => AsciiConversions.UInt16(u16),
+        uint u32 => AsciiConversions.UInt32(u32),
+        ulong u64 => AsciiConversions.UInt64(u64),
+        DateTime dt => AsciiConversions.DateTime(dt),
+        TimeSpan ts => AsciiConversions.TimeSpan(ts),
+        Guid guid => AsciiConversions.Guid(guid),
         null => throw new ArgumentNullException(nameof(ob)),
         _ => new(ob.ToString())
     };

@@ -263,8 +263,8 @@ public static class User32 {
             throw new WinApiException(nameof(RegisterRawInputDevices));
     }
 
-    public static Vector2i ClientToScreen (nint windowHandle, Vector2i point) =>
-        ClientToScreen(windowHandle, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
+    public static Vector2i ClientToScreen (Window window, Vector2i point) =>
+        ClientToScreen(window.Handle, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
 
     public static unsafe bool GetRawInputData (nint lParameter, ref RawMouse data) {
         const uint RIM_TYPEMOUSE = 0u;

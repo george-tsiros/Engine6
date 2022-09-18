@@ -258,7 +258,7 @@ public class Raster:IDisposable {
     }
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
+    public void DrawString (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
