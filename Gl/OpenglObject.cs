@@ -12,17 +12,16 @@ public abstract class OpenglObject:IDisposable {
 
     protected bool Disposed { get; private set; }
 
-    public void Dispose (bool dispose) {
-        if (dispose) {
-            if (!Disposed) {
-                Delete(Id);
-                Disposed = true;
-            }
-        }
+    protected void NotDisposed () {
+        if (Disposed)
+            throw new ObjectDisposedException(GetType().Name);
     }
 
     public void Dispose () {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (!Disposed) {
+            Delete(Id);
+            Disposed = true;
+            GC.SuppressFinalize(this);
+        }
     }
 }

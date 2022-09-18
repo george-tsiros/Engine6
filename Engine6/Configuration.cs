@@ -34,16 +34,14 @@ public partial class Configuration:Form {
 
     public Configuration () {
         InitializeComponent();
-        Dc = new(Handle);
         Load += Load_self;
-        FormClosing += FormClosing_self;
+        //FormClosing += FormClosing_self;
         startButton.Click += Click_start;
         quitButton.Click += Click_quit;
+        Dc = new(Handle);
     }
 
     private void FormClosing_self (object sender, FormClosingEventArgs e) {
-        Dc.Dispose();
-        Dc = null;
     }
 
     private void Click_quit (object sender, System.EventArgs e) {

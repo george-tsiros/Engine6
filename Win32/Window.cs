@@ -2,17 +2,18 @@ namespace Win32;
 
 using Common;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
 public abstract class Window:IDisposable {
 
     public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
-        creating = this;
-        var h = User32.CreateWindow(Atom, style, styleEx);
-        Debug.Assert(h == Handle);
+        Handle = User32.CreateWindow(Atom, style, styleEx);
+        Dc = new(this);
+        if (!Windows.TryAdd(Handle, this))
+            throw new ApplicationException();
     }
 
     public nint Handle { get; private set; }
@@ -20,9 +21,9 @@ public abstract class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
-    public PixelFont Font {
+    public PixelFont PixelFont {
         get =>
-            font ??= new("data/ubuntu_mono_ligaturized.txt");
+            font ??= new("data/ibm3270.txt");
         set =>
             font = value;
     }
@@ -30,20 +31,20 @@ public abstract class Window:IDisposable {
 
     protected Rectangle Rect {
         get =>
-            User32.GetWindowRect(Handle);
+            User32.GetWindowRect(this);
         set =>
             throw new NotImplementedException();
     }
 
     protected Vector2i ClientSize {
         get =>
-            User32.GetClientAreaSize(Handle);
+            User32.GetClientAreaSize(this);
         set {
             var clientSize = ClientSize;
             if (value != clientSize) {
                 var r = Rect;
                 var (w, h) = value + r.Size - clientSize;
-                User32.MoveWindow(Handle, r.Left, r.Top, w, h, false);
+                User32.MoveWindow(this, r.Left, r.Top, w, h, false);
             }
         }
     }
@@ -54,18 +55,18 @@ public abstract class Window:IDisposable {
     }
 
     public void Run (CmdShow show = CmdShow.ShowNormal) {
-        Load?.Invoke(this, System.EventArgs.Empty);
-        User32.UpdateWindow(Handle);
+        Load?.Invoke(this, EventArgs.Empty);
+        User32.UpdateWindow(this);
         _ = User32.ShowWindow(Handle, show);
         Message m = new();
 
         while (WinMessage.Quit != m.msg) {
-            Idle?.Invoke(this, System.EventArgs.Empty);
+            Idle?.Invoke(this, EventArgs.Empty);
             while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
                 if (User32.GetMessage(ref m))
                     _ = User32.DispatchMessage(ref m);
         }
-        Closed?.Invoke(this, System.EventArgs.Empty);
+        Closed?.Invoke(this, EventArgs.Empty);
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
@@ -82,18 +83,17 @@ public abstract class Window:IDisposable {
         Atom = User32.RegisterClass(ref wc);
     }
 
-    private static readonly Dictionary<nint, Window> Windows = new();
+    private static readonly ConcurrentDictionary<nint, Window> Windows = new();
     private static readonly ushort Atom;
     private static readonly WndProc staticWndProc = StaticWndProc;
-    private static Window creating;
+    //private static Window creating;
     private readonly int[] KeyState = new int[256 / 32];
     private bool disposed;
     private PixelFont font;
 
     private static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
         if (WinMessage.Create == m) {
-            Windows.Add(creating.Handle = h, creating);
-            return creating.WndProc(h, m, w, l);
+            return h;
         }
 
         if (Windows.TryGetValue(h, out var window))
@@ -147,10 +147,9 @@ public abstract class Window:IDisposable {
             case WinMessage.Close:
                 User32.PostQuitMessage(0);
                 return 0;
-            case WinMessage.Create:
-                Dc = new(h);
-                // yes, it is different from NcCreate
-                return 0;
+            //case WinMessage.Create:
+            //    Dc = new(h);
+            //    return 0;
             case WinMessage.Size:
                 Size?.Invoke(this, new((SizeType)(int)(w & int.MaxValue), Split(l)));
                 return 0;
@@ -277,8 +276,9 @@ public abstract class Window:IDisposable {
         if (!disposed) {
             disposed = true;
             Dc.Close();
-            _ = Windows.Remove(Handle);
-            User32.DestroyWindow(Handle);
+            if (!Windows.TryRemove(Handle, out _))
+                throw new ApplicationException();
+            User32.DestroyWindow(this);
             GC.SuppressFinalize(this);
         }
     }

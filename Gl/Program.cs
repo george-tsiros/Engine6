@@ -7,12 +7,6 @@ using System.Text;
 using static GlContext;
 public abstract class Program:OpenglObject {
 
-    private static string Unpack (string base64) =>
-        Encoding.ASCII.GetString(Convert.FromBase64String(base64));
-
-    protected override Action<int> Delete { get; } = DeleteProgram;
-    protected abstract string VertexSource { get; }
-    protected abstract string FragmentSource { get; }
     public Program () {
         Id = Utilities.ProgramFromStrings(Unpack(VertexSource), Unpack(FragmentSource));
         Debug.Assert(0 < Id);
@@ -20,7 +14,7 @@ public abstract class Program:OpenglObject {
         foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             if (prop.GetCustomAttribute<GlAttribAttribute>(false) is GlAttribAttribute attr) {
                 var fi = Utilities.GetBackingField(type, prop) ?? throw new ApplicationException($"no backing field for {prop.Name} of {type.Name}");
-                var location = GetAttribLocation(Id, attr.Name);
+                var location = GetAttribLocation(this, attr.Name);
                 if (location < 0)
                     throw new ApplicationException($"could not find attribute '{attr.Name}' in {type.Name}");
                 fi.SetValue(this, location);
@@ -28,11 +22,18 @@ public abstract class Program:OpenglObject {
 
         foreach (var field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)) {
             if (field.GetCustomAttribute<GlUniformAttribute>(false) is GlUniformAttribute attr) {
-                var location = GetUniformLocation(Id, attr.Name);
+                var location = GetUniformLocation(this, attr.Name);
                 if (location < 0)
                     throw new ApplicationException($"could not find uniform '{attr.Name}' in {type.Name}");
                 field.SetValue(this, location);
             }
         }
     }
+
+    protected override Action<int> Delete { get; } = DeleteProgram;
+    protected abstract string VertexSource { get; }
+    protected abstract string FragmentSource { get; }
+
+    private static string Unpack (string base64) =>
+        Encoding.ASCII.GetString(Convert.FromBase64String(base64));
 }

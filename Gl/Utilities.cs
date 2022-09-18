@@ -18,12 +18,12 @@ public static class Utilities {
     private static byte[] Assert (byte[] bytes, int mask) =>
         (bytes.Length & mask) == 0 ? bytes : throw new ArgumentException($"{bytes.Length} not divisible by {mask + 1}");
 
-    unsafe public static void MemSet (byte[] bytes, byte b) {
+    public unsafe static void MemSet (byte[] bytes, byte b) {
         var l = bytes.Length;
         for (var i = 0; i < l; i++)
             bytes[i] = b;
     }
-    unsafe public static void MemSet (byte[] bytes, ushort us) {
+    public unsafe static void MemSet (byte[] bytes, ushort us) {
         if ((bytes.Length & 1) != 0)
             throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(ushort)}", nameof(bytes));
         var l = bytes.Length >> 1;
@@ -56,7 +56,7 @@ public static class Utilities {
                 bytes[i] = 0;
     }
 
-    unsafe public static void WipeShorts (byte[] bytes) {
+    public unsafe static void WipeShorts (byte[] bytes) {
         if ((bytes.Length & 1) != 0)
             throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(ushort)}", nameof(bytes));
         var l = bytes.Length >> 1;
@@ -65,7 +65,7 @@ public static class Utilities {
                 ((short*)bp)[i] = 0;
     }
 
-    unsafe public static void WipeInts (byte[] bytes) {
+    public unsafe static void WipeInts (byte[] bytes) {
         if ((bytes.Length & 3) != 0)
             throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(uint)}", nameof(bytes));
         var l = bytes.Length >> 2;
@@ -74,7 +74,7 @@ public static class Utilities {
                 ((int*)bp)[i] = 0;
     }
 
-    unsafe public static void WipeLongs (byte[] bytes) {
+    public unsafe static void WipeLongs (byte[] bytes) {
         if ((bytes.Length & 7) != 0)
             throw new ArgumentException($"array is {bytes.Length} bytes which is not whole divisible by {sizeof(long)}", nameof(bytes));
         var l = bytes.Length >> 4;
@@ -139,7 +139,7 @@ public static class Utilities {
         (4, 6, 0x46),
     };
 
-    unsafe public static int ShaderFromString (ShaderType type, string source) {
+    public unsafe static int ShaderFromString (ShaderType type, string source) {
         var vs = CreateShader(type);
         var (version, profile) = GetCurrentContextVersion();
         var characters = Array.Find(ValidOpenglVersions, x => x.major == version.Major && x.minor == version.Minor).characters;
@@ -152,7 +152,7 @@ public static class Utilities {
         return 0 == log.Length ? vs : throw new ApplicationException(log);
     }
 
-    unsafe public static int ProgramFromStrings (string vertexSource, string fragmentSource) {
+    public unsafe static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
         var program = CreateProgram();
@@ -167,9 +167,9 @@ public static class Utilities {
         return program;
     }
 
-    unsafe public delegate void GetInfoLog (int i, int j, ref int k, byte* p);
+    public unsafe delegate void GetInfoLog (int i, int j, ref int k, byte* p);
 
-    unsafe public static void ThrowThing (GetInfoLog f, int name, int length) {
+    public unsafe static void ThrowThing (GetInfoLog f, int name, int length) {
         Span<byte> bytes = stackalloc byte[length + 1];
         fixed (byte* ptr = bytes)
             f(name, bytes.Length, ref length, ptr);

@@ -16,7 +16,7 @@ public static class User32 {
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool ReleaseDC (nint hwnd, nint dc);
+    internal static extern bool ReleaseDC (nint windowHandle, nint dc);
 
     [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -72,7 +72,7 @@ public static class User32 {
     //public static extern nint LoadImageA (nint instance, [MarshalAs(UnmanagedType.LPStr)] string name, uint type, int cx, int cy, uint load);
 
     //[DllImport(dll, SetLastError = true)]
-    //unsafe public static extern nint CreateCursor (nint instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
+    //public unsafe static extern nint CreateCursor (nint instance, int xHotSpot, int yHotSpot, int width, int height, byte* andPlane, byte* xorPlane);
 
     /// <summary>
     /// ?
@@ -160,9 +160,9 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetClientRect (nint handle, ref Rectangle clientRect);
 
-    public static Vector2i GetClientAreaSize (nint hwnd) {
+    public static Vector2i GetClientAreaSize (Window window) {
         Rectangle r = new();
-        if (GetClientRect(hwnd, ref r))
+        if (GetClientRect(window.Handle, ref r))
             return r.Size;
         throw new WinApiException(nameof(GetClientRect));
     }
@@ -191,7 +191,7 @@ public static class User32 {
     /// In both of these cases, <paramref name="size"/> is set to the minimum size required for the <paramref name="data"/> buffer.</returns>
 
     //[DllImport(dll, SetLastError = true)]
-    //unsafe public static extern int GetRawInputDeviceInfoW (nint device, RawInputDeviceCommand command, void* data, uint* size);
+    //public unsafe static extern int GetRawInputDeviceInfoW (nint device, RawInputDeviceCommand command, void* data, uint* size);
 
     /// <param name="devices">An array of <see cref="RawInputDeviceList"/> structures for the devices attached to the system.If null, the number of devices are returned in <paramref name="count"/>.</param>
     /// <param name="count">If <paramref name="devices"/> is null, the function populates this variable with the number of devices attached to the system; otherwise, this variable specifies the number of <see cref="RawInputDeviceList"/> structures that can be contained in the buffer to which <paramref name="devices"/> points. If this value is less than the number of devices attached to the system, the function returns the actual number of devices in this variable and fails with ERROR_INSUFFICIENT_BUFFER.</param>
@@ -208,11 +208,11 @@ public static class User32 {
     [DllImport(dll, SetLastError = true)]
     private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
 
-    private static void SetWindow (nint windowHandle, SetWindowParameter index, nint value) {
+    private static void SetWindow (Window windowHandle, SetWindowParameter index, nint value) {
         var before = Kernel32.GetLastError();
         if (0 != before)
             throw new WinApiException("pre-existing error", before);
-        var previousValue = SetWindowLongPtrW(windowHandle, (int)index, value);
+        var previousValue = SetWindowLongPtrW(windowHandle.Handle, (int)index, value);
         if (0 == previousValue) {
             var after = Kernel32.GetLastError();
             if (0 != after)
@@ -223,10 +223,10 @@ public static class User32 {
     //public static void SetWindow (nint windowHandle, WndProc proc) =>
     //    SetWindow(windowHandle, SetWindowParameter.WndProc, Marshal.GetFunctionPointerForDelegate(proc));
 
-    public static void SetWindow (nint windowHandle, WindowStyleEx style) =>
+    public static void SetWindow (Window windowHandle, WindowStyleEx style) =>
         SetWindow(windowHandle, SetWindowParameter.ExStyle, (nint)style);
 
-    public static void SetWindow (nint windowHandle, WindowStyle style) =>
+    public static void SetWindow (Window windowHandle, WindowStyle style) =>
         SetWindow(windowHandle, SetWindowParameter.Style, (nint)style);
 
     public static nint LoadCursor (SystemCursor cursor) {
@@ -234,9 +234,9 @@ public static class User32 {
         return 0 != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
     }
 
-    public static Rectangle GetWindowRect (nint hwnd) {
+    public static Rectangle GetWindowRect (Window window) {
         Rectangle r = new();
-        return GetWindowRect(hwnd, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
+        return GetWindowRect(window.Handle, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
     public static void SetCursorPos (int x, int y) {
@@ -244,8 +244,8 @@ public static class User32 {
             throw new WinApiException(nameof(SetCursorPos));
     }
 
-    public static Vector2i ScreenToClient (nint hwnd, Vector2i point) =>
-        ScreenToClient(hwnd, ref point) ? point : throw new WinApiException(nameof(ScreenToClient));
+    public static Vector2i ScreenToClient (nint windowHandle, Vector2i point) =>
+        ScreenToClient(windowHandle, ref point) ? point : throw new WinApiException(nameof(ScreenToClient));
 
     public static void TrackMouseEvent (ref TrackMouseEvent tme) {
         if (0 == TrackMouseEvent_(ref tme))
@@ -263,8 +263,8 @@ public static class User32 {
             throw new WinApiException(nameof(RegisterRawInputDevices));
     }
 
-    public static Vector2i ClientToScreen (nint hwnd, Vector2i point) =>
-        ClientToScreen(hwnd, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
+    public static Vector2i ClientToScreen (nint windowHandle, Vector2i point) =>
+        ClientToScreen(windowHandle, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
 
     public static unsafe bool GetRawInputData (nint lParameter, ref RawMouse data) {
         const uint RIM_TYPEMOUSE = 0u;
@@ -289,24 +289,24 @@ public static class User32 {
         return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassW_));
     }
 
-    public static void DestroyWindow (nint hwnd) {
-        if (!DestroyWindow_(hwnd))
+    public static void DestroyWindow (Window window) {
+        if (!DestroyWindow_(window.Handle))
             throw new WinApiException(nameof(DestroyWindow));
     }
 
-    public static void UpdateWindow (nint windowHandle) {
-        if (!UpdateWindow_(windowHandle))
+    public static void UpdateWindow (Window window) {
+        if (!UpdateWindow_(window.Handle))
             throw new WinApiException(nameof(UpdateWindow));
     }
 
-    public static void MoveWindow (nint windowHandle, int x, int y, int w, int h, bool repaint) {
-        if (!MoveWindow_(windowHandle, x, y, w, h, repaint))
+    public static void MoveWindow (Window window, int x, int y, int w, int h, bool repaint) {
+        if (!MoveWindow_(window.Handle, x, y, w, h, repaint))
             throw new WinApiException(nameof(MoveWindow));
     }
 
-    public unsafe static void InvalidateRect (nint handle, in Rectangle rect, bool erase) {
+    public unsafe static void InvalidateRect (Window window, in Rectangle rect, bool erase) {
         fixed (Rectangle* r = &rect)
-            if (!InvalidateRect(handle, r, erase ? 1 : 0))
+            if (!InvalidateRect(window.Handle, r, erase ? 1 : 0))
                 throw new Exception(nameof(User32.InvalidateRect));
     }
 
@@ -324,9 +324,8 @@ public static class User32 {
     public static bool GetMessage (ref Message m) =>
         0 != GetMessageW(ref m, 0, 0, 0);
 
-    public static void SetWindowText (Window window, string text) {
-        using Ascii x = new(text);
-        if (!SetWindowTextA(window.Handle, (nint)x))
+    public static void SetWindowText (Window window, Ascii text) {
+        if (!SetWindowTextA(window.Handle, (nint)text))
             throw new WinApiException(nameof(SetWindowTextA));
     }
 }

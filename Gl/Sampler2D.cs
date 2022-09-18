@@ -22,12 +22,13 @@ public class Sampler2D:OpenglObject {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
         ActiveTexture(t);
-        BindTexture(Const.TEXTURE_2D, Id);
+        BindTexture(Const.TEXTURE_2D, this);
     }
 
     private Wrap wrap;
     public Wrap Wrap {
-        get => Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : wrap;
+        get => 
+            Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : wrap;
         set {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(Sampler2D));
@@ -38,7 +39,8 @@ public class Sampler2D:OpenglObject {
 
     private MinFilter min;
     public MinFilter Min {
-        get => Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : min;
+        get => 
+            Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : min;
         set {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(Sampler2D));
@@ -48,7 +50,8 @@ public class Sampler2D:OpenglObject {
 
     private MagFilter mag;
     public MagFilter Mag {
-        get => Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : mag;
+        get => 
+            Disposed ? throw new ObjectDisposedException(nameof(Sampler2D)) : mag;
         set {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(Sampler2D));
@@ -65,7 +68,7 @@ public class Sampler2D:OpenglObject {
         Wrap = Wrap.ClampToEdge;
     }
 
-    unsafe public static Sampler2D FromFile (string filepath) {
+    public unsafe static Sampler2D FromFile (string filepath) {
         using var raster = Raster.FromFile(filepath);
         if (raster.BytesPerChannel != 1)
             throw new ArgumentException("only 1 byte per pixel bitmaps are supported");
@@ -75,7 +78,7 @@ public class Sampler2D:OpenglObject {
         return texture;
     }
 
-    unsafe public void Upload (Raster raster) {
+    public unsafe void Upload (Raster raster) {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
 

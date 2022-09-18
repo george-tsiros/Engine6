@@ -8,40 +8,6 @@ using System.IO;
 using System.Reflection;
 using static Common.Maths;
 
-public static class Extensions {
-    public static Ascii ToAscii (this object ob) => ob switch {
-        string str => new(str),
-        //nint iptr => AsciiConversions.IntPtr(iptr),
-        //nuint uptr => AsciiConversions.UIntPtr(uptr),
-        //short i16 => AsciiConversions.Int16(i16),
-        //int i32 => AsciiConversions.Int32(i32),
-        //long i64 => AsciiConversions.Int64(i64),
-        //ushort u16 => AsciiConversions.UInt16(u16),
-        //uint u32 => AsciiConversions.UInt32(u32),
-        //ulong u64 => AsciiConversions.UInt64(u64),
-        //DateTime dt => AsciiConversions.DateTime(dt),
-        //TimeSpan ts => AsciiConversions.TimeSpan(ts),
-        //Guid guid => AsciiConversions.Guid(guid),
-        null => throw new ArgumentNullException(nameof(ob)),
-        _ => new(ob.ToString())
-    };
-
-}
-
-//internal static class AsciiConversions {
-//    public static Ascii IntPtr (nint iptr) => throw new NotImplementedException();
-//    public static Ascii UIntPtr (nuint uptr) => throw new NotImplementedException();
-//    public static Ascii Int16 (short i16) => throw new NotImplementedException();
-//    public static Ascii Int32 (int i32) => throw new NotImplementedException();
-//    public static Ascii Int64 (long i64) => throw new NotImplementedException();
-//    public static Ascii UInt16 (ushort u16) => throw new NotImplementedException();
-//    public static Ascii UInt32 (uint u32) => throw new NotImplementedException();
-//    public static Ascii UInt64 (ulong u64) => throw new NotImplementedException();
-//    public static Ascii DateTime (DateTime dt) => throw new NotImplementedException();
-//    public static Ascii TimeSpan (TimeSpan ts) => throw new NotImplementedException();
-//    public static Ascii Guid (Guid guid) => throw new NotImplementedException();
-//}
-
 public static class Functions {
 
     public static IEnumerable<string> ToFlags<T> (T value) where T : Enum {

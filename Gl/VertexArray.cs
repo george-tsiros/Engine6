@@ -12,27 +12,26 @@ public class VertexArray:OpenglObject {
         Id = CreateVertexArray();
     }
 
-    protected override Action<int> Delete { get; } = DeleteVertexArray;
-
-    public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged => Assign(this, buffer, location, divisor);
-
-    private static void Assign<T> (VertexArray vao, VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
-        BindVertexArray(vao);
-        BindBuffer(BufferTarget.Array, buffer);
-        Attrib<T>(vao, location, divisor);
+    public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
+        BindVertexArray(this);
+        buffer.Bind(BufferTarget.Array);
+        Attrib<T>(location, divisor);
     }
 
-    private static void Attrib<T> (VertexArray vao, int location, int divisor) where T : unmanaged {
+    protected override Action<int> Delete { get; } = 
+        DeleteVertexArray;
+
+    private void Attrib<T> (int location, int divisor) where T : unmanaged {
         var (size, type, isInteger) = SizeAndTypeOf(typeof(T));
         if (size > 4)
             for (var i = 0; i < 4; ++i)
-                Attrib(vao, location + i, 4, type, 16 * sizeof(float), 4 * i * sizeof(float), divisor, isInteger);
+                Attrib(location + i, 4, type, 16 * sizeof(float), 4 * i * sizeof(float), divisor, isInteger);
         else
-            Attrib(vao, location, size, type, 0, 0, divisor, isInteger);
+            Attrib(location, size, type, 0, 0, divisor, isInteger);
     }
 
-    private static void Attrib (VertexArray id, int location, int size, AttribType type, int stride, int offset, int divisor, bool isInteger) {
-        EnableVertexArrayAttrib(id, location);
+    private void Attrib (int location, int size, AttribType type, int stride, int offset, int divisor, bool isInteger) {
+        EnableVertexArrayAttrib(this, location);
         if (isInteger)
             VertexAttribIPointer(location, size, type, stride, offset);
         else
@@ -40,7 +39,8 @@ public class VertexArray:OpenglObject {
         VertexAttribDivisor(location, divisor);
     }
 
-    private static (int size, AttribType type, bool isInteger) SizeAndTypeOf (Type type) => _TYPES.TryGetValue(type, out var i) ? i : throw new ArgumentException($"unsupported type {type.Name}", nameof(type));
+    private static (int size, AttribType type, bool isInteger) SizeAndTypeOf (Type type) =>
+        _TYPES.TryGetValue(type, out var i) ? i : throw new ArgumentException($"unsupported type {type.Name}", nameof(type));
 
     private static readonly Dictionary<Type, (int, AttribType, bool)> _TYPES = new() {
         { typeof(float), (1, AttribType.Float, false) },

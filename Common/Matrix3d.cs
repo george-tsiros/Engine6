@@ -16,7 +16,7 @@ public readonly struct Matrix3d {
         M31 = m31; M32 = m32; M33 = m33;
     }
 
-    unsafe public Vector3d this[int row] {
+    public unsafe Vector3d this[int row] {
         get {
             fixed (Matrix3d* self = &this)
                 return 0 <= row && row <= 2
@@ -25,7 +25,7 @@ public readonly struct Matrix3d {
         }
     }
 
-    unsafe public double this[int row, int column] {
+    public unsafe double this[int row, int column] {
         get {
             fixed (Matrix3d* self = &this)
                 return 0 <= row && row <= 2 && 0 <= column && column <= 2

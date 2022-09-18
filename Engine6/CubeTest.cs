@@ -3,6 +3,7 @@ namespace Engine6;
 using Win32;
 using Gl;
 using Shaders;
+using System;
 using System.Numerics;
 using static Gl.GlContext;
 using static Common.Maths;
@@ -38,7 +39,7 @@ public class CubeTest:GlWindow {
         }
     }
 
-    private void OnLoad (object sender, System.EventArgs _) {
+    private void OnLoad (object sender, EventArgs _) {
         SetSwapInterval(1);
         axes = new();
         UseProgram(axes);

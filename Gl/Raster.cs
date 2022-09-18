@@ -29,11 +29,13 @@ public class Raster:IDisposable {
     }
 
     public void ClearU32 (Color color) {
+        NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(ClearU32)} only works with 4 channels, not {Channels}");
         ClearU32Internal((color.Argb << 32) | color.Argb);
     }
-    unsafe private void ClearU32Internal (ulong ul) {
+
+    private unsafe void ClearU32Internal (ulong ul) {
         fixed (byte* bp = Pixels) {
             var p = (ulong*)bp;
             if ((Pixels.Length & 7) != 0)
@@ -45,6 +47,7 @@ public class Raster:IDisposable {
     }
 
     public void FillRectU32 (Rectangle r, uint color = ~0u) {
+        NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(FillRectU32)} only works with 4 channels, not {Channels}");
         var clipped = r.Clip(new(Vector2i.Zero, Size));
@@ -53,7 +56,7 @@ public class Raster:IDisposable {
         FillRectU32Internal(clipped, color);
     }
 
-    unsafe private void FillRectU32Internal (Rectangle clipped, uint color) {
+    private unsafe void FillRectU32Internal (Rectangle clipped, uint color) {
         var y = clipped.Top;
         var h = clipped.Height;
         var w = clipped.Width;
@@ -75,7 +78,8 @@ public class Raster:IDisposable {
 
     private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
-    unsafe public void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
+    public unsafe void TriangleU32 (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
+        NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(TriangleU32)} only works with 4 channels, not {Channels}");
         if (BytesPerChannel != 1)
@@ -121,7 +125,8 @@ public class Raster:IDisposable {
         }
     }
 
-    unsafe public void TriangleU8 (Vector2i v0, Vector2i v1, Vector2i v2, byte u8) {
+    public unsafe void TriangleU8 (Vector2i v0, Vector2i v1, Vector2i v2, byte u8) {
+        NotDisposed();
         if (Channels != 1)
             throw new InvalidOperationException($"{nameof(TriangleU8)} only works with 1 channels, not {Channels}");
         if (BytesPerChannel != 1)
@@ -165,6 +170,7 @@ public class Raster:IDisposable {
     }
 
     public void PixelU32 (Vector2i p, Color color) {
+        NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(PixelU32)} only works with 4 channels, not {Channels}");
         PixelU32Internal(p, color.Argb);
@@ -180,7 +186,8 @@ public class Raster:IDisposable {
         }
     }
 
-    unsafe public void LineU32 (Vector2i a, Vector2i b, Color color) {
+    public unsafe void LineU32 (Vector2i a, Vector2i b, Color color) {
+        NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
         if (a == b) {
@@ -245,21 +252,29 @@ public class Raster:IDisposable {
         }
     }
 
+    private void NotDisposed () {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
+    }
+
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
     public void DrawString (ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
-        var textWidth = font.WidthOf(str);
+        NotDisposed();
+        var (textWidth, textHeight) = font.SizeOf(str);
+        if (textHeight != font.Height)
+            throw new ArgumentException();
         if (x < 0 || Width <= x + textWidth)
             return;
         if (y < 0 || Height <= y + font.Height)
             return;
-        //// bottom row starts at i = 0
-        //// second row (from bottom) starts at i = width
-        //// top row starts at Width * (Height - 1)
-        //// row (from bottom)    | y(from top)   | offset (as above)
-        //// 0                    | Height - 1    | 0
-        //// 1                    | Height - 2    | Width
-        //// Height - 1           | 0             | (Height - 1) * Width
-        ////                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
+        // bottom row starts at i = 0
+        // second row (from bottom) starts at i = width
+        // top row starts at Width * (Height - 1)
+        // row (from bottom)    | y(from top)   | offset (as above)
+        // 0                    | Height - 1    | 0
+        // 1                    | Height - 2    | Width
+        // Height - 1           | 0             | (Height - 1) * Width
+        //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
         foreach (var c in str) {
             if (Width <= x)
                 return;

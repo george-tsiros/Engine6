@@ -61,7 +61,9 @@ unsafe sealed public class Dib:IDisposable {
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
     public void DrawString (ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
-        var textWidth = font.WidthOf(str);
+        var (textWidth, textHeight) = font.SizeOf(str);
+        if (textHeight != font.Height)
+            throw new ArgumentException();
         if (x < 0 || Width <= x + textWidth)
             return;
         if (y < 0 || Height <= y + font.Height)

@@ -9,16 +9,16 @@ using static Gl.Utilities;
 using System.Text;
 
 class ShaderGen {
-    
+
     private static bool CreateFrom (string[] args) {
-        
+
         const int expectedArgumentCount = 2;
-        
+
         if (args.Length != expectedArgumentCount)
             throw new ArgumentException($"expected {expectedArgumentCount}, not {args.Length} arguments", nameof(args));
-        
+
         var (sourceDir, targetDir) = (args[0], args[1]);
-        
+
         if (!Directory.Exists(sourceDir))
             throw new DirectoryNotFoundException(sourceDir);
 
@@ -26,9 +26,9 @@ class ShaderGen {
             throw new DirectoryNotFoundException(targetDir);
 
         try {
-            
+
             using GlWindow window = new();
-            
+
             foreach (var vertexShaderFilepath in Directory.EnumerateFiles(sourceDir, "*.vert")) {
                 var vertexShaderFilename = Path.GetFileName(vertexShaderFilepath);
                 var shaderName = Path.GetFileNameWithoutExtension(vertexShaderFilename);
@@ -45,7 +45,7 @@ class ShaderGen {
                     Trace($"no fragment shader file (\"{fragmentShaderFilepath}\") for vertex shader file \"{vertexShaderFilename}\"");
                 }
             }
-            
+
         } catch (TypeInitializationException ex) {
             Trace($"'{ex.Message}' for '{ex.TypeName}'");
             if (ex.InnerException is MarshalDirectiveException inner)
@@ -57,14 +57,14 @@ class ShaderGen {
         }
         return true;
     }
-    
+
     private static string UppercaseFirst (string str) {
         var chars = str.ToCharArray();
         chars[0] = char.ToUpper(chars[0]);
         return new(chars);
     }
-    
-    private static bool IsPrimitive (UniformType type) => 
+
+    private static bool IsPrimitive (UniformType type) =>
         type == UniformType.Double || type == UniformType.Float || type == UniformType.Int || type == UniformType.UInt;
 
     private static string UniformTypeToTypeName (UniformType type) {
@@ -75,13 +75,13 @@ class ShaderGen {
         return type.ToString();
     }
 
-    private static bool IsKeyword (string term) => 
+    private static bool IsKeyword (string term) =>
         term == "float" || term == "double" || term == "byte" || term == "char";
 
     private static readonly char[] SplitChars = "\r\n ".ToCharArray();
 
     // really horrible
-    private static string Pack (string text) => 
+    private static string Pack (string text) =>
         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Join(' ', text.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries))));
 
     private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, StreamWriter f) {

@@ -23,7 +23,7 @@ public readonly struct Matrix4d {
         M41 = m41; M42 = m42; M43 = m43; M44 = m44;
     }
 
-    unsafe public Vector4d this[int row] {
+    public unsafe Vector4d this[int row] {
         get {
             fixed (Matrix4d* self = &this)
                 return 0 <= row && row <= 3
@@ -32,7 +32,7 @@ public readonly struct Matrix4d {
         }
     }
 
-    unsafe public double this[int row, int column] {
+    public unsafe double this[int row, int column] {
         get {
             fixed (Matrix4d* self = &this)
                 return 0 <= row && row <= 3 && 0 <= column && column <= 3

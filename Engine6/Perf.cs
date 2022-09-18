@@ -26,7 +26,7 @@ sealed class Perf<T>:IDisposable where T : struct, Enum {
         }
     }
 
-    unsafe public void Leave () {
+    public unsafe void Leave () {
         if (disposed)
             throw new ObjectDisposedException(nameof(Perf<T>));
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
@@ -37,7 +37,7 @@ sealed class Perf<T>:IDisposable where T : struct, Enum {
         writer.Write(bytes);
     }
 
-    unsafe public void Enter (int id) {
+    public unsafe void Enter (int id) {
         if (disposed)
             throw new ObjectDisposedException(nameof(Perf<T>));
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];

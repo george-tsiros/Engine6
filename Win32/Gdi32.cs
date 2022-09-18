@@ -62,6 +62,9 @@ public static class Gdi32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SwapBuffers_ (nint dc);
 
+    [DllImport(dll)]
+    private static unsafe extern int SetDIBitsToDevice (nint dc, int xT, int yT, uint w, uint h, int xS, int yS, uint scan0, uint lineCount, void* bits, ref BitmapInfo info, uint colorUse);
+
     public static void SwapBuffers (DeviceContext dc) {
         if (!SwapBuffers_((nint)dc))
             throw new WinApiException(nameof(SwapBuffers));

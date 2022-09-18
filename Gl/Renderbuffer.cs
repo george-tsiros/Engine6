@@ -4,10 +4,12 @@ using System;
 using static GlContext;
 using Common;
 
-public class Renderbuffer:OpenglObject {
+public sealed class Renderbuffer:OpenglObject {
+
     protected override Action<int> Delete { get; } = DeleteRenderbuffer;
+
     public Renderbuffer (Vector2i size, RenderbufferFormat format) {
         Id = CreateRenderbuffer();
-        NamedRenderbufferStorage(Id, format, size.X, size.Y);
+        NamedRenderbufferStorage(this, format, size.X, size.Y);
     }
 }

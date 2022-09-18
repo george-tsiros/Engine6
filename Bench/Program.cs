@@ -145,7 +145,7 @@ class Program {
         } while (!Console.KeyAvailable);
     }
 
-    unsafe private static void WithBinaryWriterUnsafe (BinaryWriter writer, long int64, int int32) {
+    private unsafe static void WithBinaryWriterUnsafe (BinaryWriter writer, long int64, int int32) {
         Span<byte> bytes = stackalloc byte[sizeof(long) + sizeof(byte)];
         fixed (byte* p = bytes) {
             *(long*)p = int64;
@@ -360,7 +360,7 @@ class Program {
     }
 
 
-    unsafe private static void CastingSequential (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void CastingSequential (Stream stream, Kind kind, long int64, string str) {
         stream.WriteByte((byte)kind);
         Span<byte> bytes = stackalloc byte[sizeof(long)];
         fixed (byte* p = bytes)
@@ -376,7 +376,7 @@ class Program {
         }
     }
 
-    unsafe private static void AsciiGetBytesSequential (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void AsciiGetBytesSequential (Stream stream, Kind kind, long int64, string str) {
         stream.WriteByte((byte)kind);
         Span<byte> bytes = stackalloc byte[sizeof(long)];
         fixed (byte* p = bytes)
@@ -391,7 +391,7 @@ class Program {
         }
     }
 
-    unsafe private static void CastingInOne (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void CastingInOne (Stream stream, Kind kind, long int64, string str) {
         const int int64_Offset = sizeof(byte);
         const int length_Offset = int64_Offset + sizeof(long);
         const int string_Offset = length_Offset + sizeof(byte);
@@ -408,7 +408,7 @@ class Program {
         stream.Write(bytes);
     }
 
-    unsafe private static void CastingInOnePointers (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void CastingInOnePointers (Stream stream, Kind kind, long int64, string str) {
         const int int64_Offset = sizeof(byte);
         const int length_Offset = int64_Offset + sizeof(long);
         const int string_Offset = length_Offset + sizeof(byte);
@@ -426,7 +426,7 @@ class Program {
     }
 
 
-    unsafe private static void AsciiGetBytesInOne (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void AsciiGetBytesInOne (Stream stream, Kind kind, long int64, string str) {
         const int int64_Offset = 1;// sizeof(byte);
         const int length_Offset = 9;// int64Offset + sizeof(long);
         const int string_Offset = 10;// strlenOffset + sizeof(byte);
@@ -442,7 +442,7 @@ class Program {
         stream.Write(bytes);
     }
 
-    unsafe private static void AsciiGetBytesInOnePointers (Stream stream, Kind kind, long int64, string str) {
+    private unsafe static void AsciiGetBytesInOnePointers (Stream stream, Kind kind, long int64, string str) {
         const int int64_Offset = 1;// sizeof(byte);
         const int length_Offset = 9;// int64Offset + sizeof(long);
         const int string_Offset = 10;// strlenOffset + sizeof(byte);

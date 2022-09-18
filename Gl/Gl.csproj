@@ -24,6 +24,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="FenceSync.cs" />
+      <Compile Remove="RenderingContext.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="FenceSync.cs" />
+      <None Include="RenderingContext.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
