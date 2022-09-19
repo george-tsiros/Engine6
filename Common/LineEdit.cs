@@ -1,107 +1,11 @@
 namespace Common;
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-//public enum EditCode {
-//    Ok,
-//    CaretIndexNegative,
-//    CaretIndexOutOfRange,
-//    ValueNotAscii,
-//}
 public sealed unsafe class LineEdit {
-
-    //public readonly struct Op {
-    //    public readonly EditOp EditOp;
-    //    public readonly ref int At;
-    //    public readonly ref int Length;
-    //    public readonly ref int Value;
-    //}
-
-
-    //public static EditCode EdOp (ref byte[] array, Op op) {
-    //    return op.EditOp switch {
-    //        EditOp.Delete => EdDelete(ref array, ref op.At, ref op.Length, ref op.Value),
-    //        EditOp.Insert => EdInsert(ref array, ref op.At, ref op.Length, ref op.Value),
-    //        EditOp.Overwrite => EdOverwrite(ref array, ref op.At, ref op.Length, ref op.Value),
-    //        EditOp.SetCaretIndex => EdSetCaretIndex(ref array, ref op.At, ref op.Length, ref op.Value),
-    //        _ => throw new InvalidOperationException(),
-    //    };
-    //}
-
-    //public static EditCode EdSetCaretIndex (ref byte[] array, ref int at, ref int length, ref int value) {
-    //    if (value < 0)
-    //        return EditCode.CaretIndexNegative;
-    //    if (length < value)
-    //        return EditCode.CaretIndexOutOfRange;
-
-    //    at = value;
-    //    return EditCode.Ok;
-    //}
-
-    //public static EditCode EdOverwrite (ref byte[] array, ref int at, ref int length, ref int value) {
-    //    if (at < 0)
-    //        return EditCode.CaretIndexNegative;
-    //    if (length <= at)
-    //        return EditCode.CaretIndexOutOfRange;
-    //    if (value < LowerBound || UpperBound < value)
-    //        return EditCode.ValueNotAscii;
-
-    //    array[at] = (byte)value;
-    //    return EditCode.Ok;
-    //}
-
-    //public static EditCode EdDelete (ref byte[] array, ref int at, ref int length, ref int value) {
-    //    /*
-    //a = { 'a', 'b', 'c', ?, ... }
-    //i = 0
-    //l = 3
-
-    //a[0] = a[1]
-    //a[1] = a[2]
-    //--l
-    //*/
-    //    if (at < 0)
-    //        return EditCode.CaretIndexNegative;
-    //    if (length <= at)
-    //        return EditCode.CaretIndexOutOfRange;
-
-    //    --length;
-    //    for (var x = at; x < length; ++x)
-    //        array[x] = array[x + 1];
-    //    return EditCode.Ok;
-    //}
-
-    //public static EditCode EdInsert (ref byte[] array, ref int at, ref int length, ref int value) {
-    //    /*
-    //a = { 'a', 'b', 'c', ?, ... }
-    //i = 0
-    //l = 3
-    //b = 'p'
-
-    //a[3] = a[2]
-    //a[2] = a[1]
-    //a[1] = a[0]
-    //a[0] = 'p'
-
-    //++l
-    //++i
-    //*/
-    //    if (at < 0)
-    //        return EditCode.CaretIndexNegative;
-    //    if (length < at)
-    //        return EditCode.CaretIndexOutOfRange;
-    //    if (value < LowerBound || UpperBound < value)
-    //        return EditCode.ValueNotAscii;
-    //    array[at] = (byte)value;
-    //    ++length;
-    //    ++at;
-    //    return EditCode.Ok;
-    //}
-
 
     public LineEdit (string text) {
         Length = Encoding.ASCII.GetByteCount(text);
@@ -119,7 +23,6 @@ public sealed unsafe class LineEdit {
     public void GetCopy (Span<byte> span) =>
         data[0..Length].CopyTo(span);
 
-
     /// <summary>RETURNED ARRAY DOES NOT INCLUDE TERMINATING NULL CHARACTER/BYTE</summary>
     public ReadOnlySpan<byte> GetCopy () =>
         new(data, 0, Length);
@@ -132,13 +35,57 @@ public sealed unsafe class LineEdit {
     public void Delete () {
         if (Length == At)
             throw new InvalidOperationException($"can not delete at end of line (yet)");
-        Op undo = new(OpType.Delete, data[At]);
+        recent.Push(new(OpType.Delete, data[At]));
+        MoveDownInternal(1);
+    }
 
+    public void Insert (byte character) {
+        if (character < LowerBound || UpperBound < character)
+            throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
+        recent.Push(new(OpType.Insert, 0));
+        MoveUpInternal(1);
+        data[At++] = character;
+    }
+
+    public void SetCaret (int position) {
+        if (position < 0 || Length < position)
+            throw new ArgumentOutOfRangeException(nameof(position), $"can not move caret outside the range [0, {Length}]");
+        recent.Push(new(OpType.SetCaretIndex, At));
+        At = position;
+    }
+
+    public void Overwrite (byte character) {
+        if (character < LowerBound || UpperBound < character)
+            throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
+        if (At == Length)
+            throw new InvalidOperationException("can not overwrite at the end of the line");
+        recent.Push(new(OpType.Overwrite, data[At]));
+        data[At] = character;
+        ++At;
     }
 
     public void Undo (int count = 1) {
         if (count < 1)
             throw new ArgumentOutOfRangeException(nameof(count));
+        var (type, parameter) = recent.Pop();
+        switch (type) {
+            case OpType.Insert:
+                --At;
+                MoveDownInternal(1);
+                break;
+            case OpType.Delete:
+                MoveUpInternal(1);
+                data[At] = (byte)parameter;
+                break;
+            case OpType.Overwrite:
+                data[--At] = (byte)parameter;
+                break;
+            case OpType.SetCaretIndex:
+                At = parameter;
+                break;
+            default:
+                throw new NotSupportedException();
+        }
     }
 
     enum OpType { Insert, Delete, Overwrite, SetCaretIndex, }
@@ -156,14 +103,6 @@ public sealed unsafe class LineEdit {
         }
         Array.Copy(data, At + value, data, At, Length - At);
         Length -= value;
-    }
-
-    private void WriteInternal (int value) {
-        data[At] = (byte)value;
-    }
-
-    private void SetCaretIndexInternal (int value) {
-        At = value;
     }
 
     private void MoveUpInternal (int value) {
