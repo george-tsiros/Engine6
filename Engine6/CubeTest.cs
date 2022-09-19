@@ -16,7 +16,7 @@ public class CubeTest:GlWindow {
     public CubeTest (ContextConfiguration? c = null) : base(c) {
         Load += OnLoad;
         Input += OnInput;
-        KeyUp += OnKeyUp;
+        KeyDown += OnKeyDown;
     }
 
     private ICamera camera = new QCamera(new(0, 0, 5));
@@ -31,7 +31,7 @@ public class CubeTest:GlWindow {
         new(.5f, 0, 0, 1),
     };
 
-    private void OnKeyUp (object sender, KeyEventArgs args) {
+    private void OnKeyDown (object sender, KeyEventArgs args) {
         switch (args.Key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);

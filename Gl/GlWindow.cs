@@ -11,16 +11,7 @@ public class GlWindow:Window {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         StartTicks = Stopwatch.GetTimestamp();
         Idle += OnIdle;
-        KeyDown += OnKeyDown;
         FocusChanged += OnFocusChanged;
-    }
-
-    private void OnKeyDown (object sender, KeyEventArgs e) {
-        switch (e.Key) {
-            case Key.Escape:
-                User32.PostQuitMessage(0);
-                break;
-        }
     }
 
     protected virtual void Render () {

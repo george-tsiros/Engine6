@@ -114,7 +114,7 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UpdateWindow_ (nint handle);
 
-    [DllImport(dll)]
+    [DllImport(dll, SetLastError = true)]
     private static extern int GetMessageW (ref Message m, nint handle, uint min, uint max);
 
     [DllImport(dll, EntryPoint = "PeekMessageW", ExactSpelling = true)]
@@ -321,8 +321,8 @@ public static class User32 {
         return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
 
-    public static bool GetMessage (ref Message m) =>
-        0 != GetMessageW(ref m, 0, 0, 0);
+    public static int GetMessage (ref Message m) =>
+        GetMessageW(ref m, 0, 0, 0);
 
     public static void SetWindowText (Window window, Ascii text) {
         if (!SetWindowTextA(window.Handle, (nint)text))

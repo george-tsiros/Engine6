@@ -4,6 +4,7 @@ using Common;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
@@ -62,9 +63,15 @@ public abstract class Window:IDisposable {
 
         while (WinMessage.Quit != m.msg) {
             Idle?.Invoke(this, EventArgs.Empty);
-            while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove))
-                if (User32.GetMessage(ref m))
-                    _ = User32.DispatchMessage(ref m);
+            while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove)) {
+                var x = User32.GetMessage(ref m);
+                Debug.Assert(-1 != x);
+                if (0 == x) {
+                    Debug.Assert(WinMessage.Quit == m.msg);
+                    break;
+                }
+                _ = User32.DispatchMessage(ref m);
+            }
         }
         Closed?.Invoke(this, EventArgs.Empty);
         foreach (var disposable in Disposables)
@@ -241,6 +248,7 @@ public abstract class Window:IDisposable {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] |= lo;
+                    Debug.Write($"down {key}\n");
                     KeyDown?.Invoke(this, new(key, 0 != (l & 0x40000000)));
                 }
                 return 0;
@@ -248,6 +256,7 @@ public abstract class Window:IDisposable {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] &= ~lo;
+                    Debug.Write($"up {key}\n");
                     KeyUp?.Invoke(this, new(key, false));
                 }
                 return 0;
