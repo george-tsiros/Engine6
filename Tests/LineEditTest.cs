@@ -40,20 +40,13 @@ public class LineEditTest {
     [TestMethod]
     public void Empty_throws_on_access () {
         LineEdit ed = new(string.Empty);
-        ThrowsException<ArgumentOutOfRangeException>(() => _ = ed[0]);
+        _ = ThrowsException<ArgumentOutOfRangeException>(() => _ = ed[0]);
     }
 
     [TestMethod]
     public void Empty_throws_on_delete () {
         LineEdit ed = new(string.Empty);
-        ThrowsException<InvalidOperationException>(ed.Delete);
-    }
-
-    [TestMethod]
-    public void Undo_throws_on_less_than_1 () {
-        LineEdit ed = new(string.Empty);
-        ThrowsException<ArgumentOutOfRangeException>(() => ed.Undo(0));
-        ThrowsException<ArgumentOutOfRangeException>(() => ed.Undo(-1));
+        _ = ThrowsException<InvalidOperationException>(ed.Delete);
     }
 
     [TestMethod]
@@ -67,7 +60,7 @@ public class LineEditTest {
     [TestMethod]
     public void Can_move_caret () {
         LineEdit ed = new("a");
-        ed.SetCaret(1);
+        ed.At = 1;
         AreEqual(1, ed.At);
         ed.Undo();
         AreEqual(0, ed.At);
@@ -103,7 +96,7 @@ public class LineEditTest {
     [TestMethod]
     public void Overwrite_with_non_printable_throws () {
         LineEdit ed = new("a");
-        ThrowsException<ArgumentOutOfRangeException>(() => ed.Overwrite((byte)'\n'));
+        _ = ThrowsException<ArgumentOutOfRangeException>(() => ed.Overwrite((byte)'\n'));
     }
 
     [TestMethod]
@@ -112,11 +105,11 @@ public class LineEditTest {
         ed.Delete();
         AreEqual(0, ed.At);
         AreEqual(0, ed.Length);
-        ThrowsException<InvalidOperationException>(() => ed.Overwrite((byte)'a'));
+        _ = ThrowsException<InvalidOperationException>(() => ed.Overwrite((byte)'a'));
     }
 
     [TestMethod]
-    public void Can_undo_delete () { 
+    public void Can_undo_delete () {
         LineEdit ed = new("a");
         ed.Delete();
         ed.Undo();
