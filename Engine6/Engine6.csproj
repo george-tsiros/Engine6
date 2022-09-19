@@ -6,14 +6,15 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <LangVersion>preview</LangVersion>
         <NoWarn>1701;1702;CS0078</NoWarn>
+        <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
         <OutputType>WinExe</OutputType>
         <PlatformTarget>x64</PlatformTarget>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject></StartupObject>
-        <UseWindowsForms>True</UseWindowsForms>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
+        <!--<UseWindowsForms>True</UseWindowsForms>-->
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -29,6 +30,8 @@
     <ItemGroup>
         <Compile Remove="AxesTest.cs" />
         <Compile Remove="BlitTest.cs" />
+        <Compile Remove="Configuration.cs" />
+        <Compile Remove="Configuration.Designer.cs" />
         <Compile Remove="DrawArraysInstancedTest.cs" />
         <Compile Remove="Ground.cs" />
         <Compile Remove="HighlightTriangle.cs" />
@@ -36,6 +39,10 @@
         <Compile Remove="NoiseTest.cs" />
         <Compile Remove="ShowTexture.cs" />
         <Compile Remove="SkyBoxTest.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Configuration.resx" />
     </ItemGroup>
 
     <ItemGroup>

@@ -56,6 +56,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixEol", "FixEol\FixEol.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{BDE32E5B-F459-4C7B-A752-0A0B83211069}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -186,6 +188,18 @@ Global
 		{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}.Release|x64.Build.0 = Release|Any CPU
 		{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF04E6B6-FAB3-4907-B17B-3B22FB125D44}.Release|x86.Build.0 = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|x64.Build.0 = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Debug|x86.Build.0 = Debug|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|x64.ActiveCfg = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|x64.Build.0 = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|x86.ActiveCfg = Release|Any CPU
+		{BDE32E5B-F459-4C7B-A752-0A0B83211069}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

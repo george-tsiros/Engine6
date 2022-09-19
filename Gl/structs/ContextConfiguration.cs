@@ -14,5 +14,6 @@ public readonly struct ContextConfiguration {
     public static readonly ContextConfiguration Default = new() {
         ColorBits = 32,
         DepthBits = 24,
+        DoubleBuffer = true,
     };
 }
