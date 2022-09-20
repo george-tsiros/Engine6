@@ -258,11 +258,11 @@ public class Raster:IDisposable {
     }
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
+    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
-            throw new ArgumentException();
+            throw new ArgumentException("does not support multiple lines yet", nameof(str));
         if (x < 0 || Width <= x + textWidth)
             return;
         if (y < 0 || Height <= y + font.Height)
@@ -275,15 +275,15 @@ public class Raster:IDisposable {
         // 1                    | Height - 2    | Width
         // Height - 1           | 0             | (Height - 1) * Width
         //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
-        foreach (var c in str) {
+        foreach (var b in str) {
             if (Width <= x)
                 return;
-            Blit(c, font, x, y, color);
+            Blit(b, font, x, y, color);
             x += font.Width;
         }
     }
 
-    private unsafe void Blit (char ascii, PixelFont font, int x, int y, uint color) {
+    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint color) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;

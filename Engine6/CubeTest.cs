@@ -14,9 +14,6 @@ public class CubeTest:GlWindow {
     private const float KeyboardSensitivity = .005f;
 
     public CubeTest (ContextConfiguration? c = null) : base(c) {
-        Load += OnLoad;
-        Input += OnInput;
-        KeyDown += OnKeyDown;
     }
 
     private ICamera camera = new QCamera(new(0, 0, 5));
@@ -31,7 +28,7 @@ public class CubeTest:GlWindow {
         new(.5f, 0, 0, 1),
     };
 
-    private void OnKeyDown (object sender, KeyEventArgs args) {
+    protected override void OnKeyDown (in KeyArgs args) {
         switch (args.Key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
@@ -39,7 +36,7 @@ public class CubeTest:GlWindow {
         }
     }
 
-    private void OnLoad (object sender, EventArgs _) {
+    protected override void OnLoad () {
         SetSwapInterval(1);
         axes = new();
         UseProgram(axes);
@@ -75,7 +72,7 @@ public class CubeTest:GlWindow {
         return x + y;
     }
 
-    private void OnInput (object sender, InputEventArgs args) {
+    protected override void OnInput (in InputArgs args) {
         var (dx, dy) = (args.Dx, args.Dy);
         camera.Rotate(-MouseSensitivity * dy, 0, -MouseSensitivity * dx);
     }

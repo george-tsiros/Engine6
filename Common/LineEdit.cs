@@ -41,6 +41,14 @@ public sealed unsafe class LineEdit {
     public ReadOnlySpan<byte> GetCopy () =>
         new(data, 0, Length);
 
+    public int GetUndoCount () {
+        var levels = 0;
+        foreach (var eh in undo)
+            if (eh.IsMark)
+                ++levels;
+        return levels;
+    }
+
     public int Length { get; private set; } = 0;
 
     public int At {
@@ -48,8 +56,10 @@ public sealed unsafe class LineEdit {
         set {
             if (value < 0 || Length < value)
                 throw new ArgumentOutOfRangeException(nameof(value), $"can not move caret to {value}, it is outside the range [0, {Length}]");
-            undo.Push(new(OpType.SetCaret, at, true));
-            at = value;
+            if (at != value) {
+                undo.Push(new(OpType.SetCaret, at, true));
+                at = value;
+            }
         }
     }
 

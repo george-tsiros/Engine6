@@ -15,7 +15,7 @@ public class PixelFont {
 
     private byte[] pixels;
     /// <summary>fails when strings start or end with newlines</summary>
-    public Vector2i SizeOf (in ReadOnlySpan<char> str) {
+    public Vector2i SizeOf (in ReadOnlySpan<byte> str) {
         if (str.Length == 0)
             return new();
 

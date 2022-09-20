@@ -235,7 +235,7 @@ public enum WinMessage:uint {
     /*0112*/
     SysCommand = 0x0112,
     /*0113*/
-    TIMER = 0x0113,
+    Timer = 0x0113,
     /*0114*/
     HScroll = 0x0114,
     /*0115*/

@@ -10,8 +10,6 @@ public class GlWindow:Window {
     public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         StartTicks = Stopwatch.GetTimestamp();
-        Idle += OnIdle;
-        FocusChanged += OnFocusChanged;
     }
 
     protected virtual void Render () {
@@ -31,12 +29,13 @@ public class GlWindow:Window {
     private readonly long StartTicks;
     private bool disposed = false;
 
-    private void OnFocusChanged (object sender, FocusChangedEventArgs e) {
+    protected override void OnFocusChanged (in FocusChangedArgs e) {
         _ = User32.ShowCursor(!e.Focused);
         User32.RegisterMouseRaw(e.Focused ? this : null);
     }
 
-    private void OnIdle (object sender, EventArgs _) {
+    // we know base methods are empty
+    protected override void OnIdle () {
         if (LastSync + 0.9 * TframeTicks < Ticks()) {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);

@@ -4,6 +4,9 @@ using System.Runtime.InteropServices;
 using System;
 using Common;
 
+public delegate void TimerProc (nint windowHandle, uint p0, nuint p1, uint p2);
+public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
+
 public static class User32 {
 
     private const string dll = nameof(User32) + ".dll";
@@ -207,6 +210,12 @@ public static class User32 {
 
     [DllImport(dll, SetLastError = true)]
     private static extern nint SetWindowLongPtrW (nint windowHandle, int index, nint value);
+
+    [DllImport(dll)]
+    private static extern short GetKeyState (int virtualKey);
+
+    public static bool IsCapsLockOn () =>
+        0 != (GetKeyState((int)Key.CapsLock) & 1);
 
     private static void SetWindow (Window windowHandle, SetWindowParameter index, nint value) {
         var before = Kernel32.GetLastError();

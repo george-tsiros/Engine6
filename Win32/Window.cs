@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
+public delegate void Handler<T> (in T t) where T : struct;
 
 public abstract class Window:IDisposable {
 
@@ -56,24 +56,24 @@ public abstract class Window:IDisposable {
     }
 
     public void Run (CmdShow show = CmdShow.ShowNormal) {
-        Load?.Invoke(this, EventArgs.Empty);
+        OnLoad();
         User32.UpdateWindow(this);
         _ = User32.ShowWindow(Handle, show);
         Message m = new();
 
         while (WinMessage.Quit != m.msg) {
-            Idle?.Invoke(this, EventArgs.Empty);
+            OnIdle();
             while (User32.PeekMessage(ref m, 0, 0, 0, PeekRemove.NoRemove)) {
                 var x = User32.GetMessage(ref m);
                 Debug.Assert(-1 != x);
+                _ = User32.DispatchMessage(ref m);
                 if (0 == x) {
                     Debug.Assert(WinMessage.Quit == m.msg);
                     break;
                 }
-                _ = User32.DispatchMessage(ref m);
             }
         }
-        Closed?.Invoke(this, EventArgs.Empty);
+        OnClosed();
         foreach (var disposable in Disposables)
             disposable.Dispose();
     }
@@ -94,7 +94,7 @@ public abstract class Window:IDisposable {
     private static readonly ushort Atom;
     private static readonly WndProc staticWndProc = StaticWndProc;
     //private static Window creating;
-    private readonly long[] KeyState = { 0,0,0,0};
+    private readonly long[] KeyState = { 0, 0, 0, 0 };
     private bool disposed;
     private PixelFont font;
 
@@ -109,19 +109,21 @@ public abstract class Window:IDisposable {
         return User32.DefWindowProc(h, m, w, l);
     }
 
-    public event EventHandler Load;
-    public event EventHandler Idle;
-    public event EventHandler Closed;
-    //public event EventHandler<SizingEventArgs> Sizing;
-    public event EventHandler<SizeEventArgs> Size;
-    public event EventHandler<MoveEventArgs> Move;
-    //public event EventHandler<MovingEventArgs> Moving;
-    public event EventHandler<ShowWindowEventArgs> ShowWindow;
-    public event EventHandler<ButtonEventArgs> ButtonDown, ButtonUp;
-    public event EventHandler<FocusChangedEventArgs> FocusChanged;
-    public event EventHandler<KeyEventArgs> KeyDown, KeyUp;
-    public event EventHandler<InputEventArgs> Input;
-    public event EventHandler<PaintEventArgs> Paint;
+    protected virtual void OnLoad () { }
+    protected virtual void OnIdle () { }
+    protected virtual void OnClosed () { }
+    protected virtual void OnSize (in SizeArgs args) { }
+    protected virtual void OnMove (in MoveArgs args) { }
+    protected virtual void OnShowWindow (in ShowWindowArgs args) { }
+    protected virtual void OnButtonDown (in ButtonArgs args) { }
+    protected virtual void OnButtonUp (in ButtonArgs args) { }
+    protected virtual void OnFocusChanged (in FocusChangedArgs args) { }
+    protected virtual void OnKeyDown (in KeyArgs args) { }
+    protected virtual void OnKeyUp (in KeyArgs args) { }
+    protected virtual void OnInput (in InputArgs args) { }
+    protected virtual void OnPaint (in PaintArgs args) { }
+    //public event EventHandler<SizingArgs> Sizing;
+    //public event EventHandler<MovingArgs> Moving;
     //private void OnActivate (bool activated, ActivateKind kind) { }
     //private void OnActivateApp (bool activated) { }
     //private void OnButtonDown (MouseButton justDepressed, PointShort p) { }
@@ -151,6 +153,9 @@ public abstract class Window:IDisposable {
 
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
+            case WinMessage.Timer:
+                //OnTimer(
+                return 0;
             case WinMessage.Close:
                 User32.PostQuitMessage(0);
                 return 0;
@@ -158,27 +163,27 @@ public abstract class Window:IDisposable {
             //    Dc = new(h);
             //    return 0;
             case WinMessage.Size:
-                Size?.Invoke(this, new((SizeType)(int)(w & int.MaxValue), Split(l)));
+                OnSize(new((SizeType)(int)(w & int.MaxValue), Split(l)));
                 return 0;
             case WinMessage.Sizing:
                 //if (0 != l) {
                 //    var r = (Rectangle*)l;
-                //    Sizing?.Invoke(this, new((SizingEdge)(w & int.MaxValue), ref *r));
+                //    OnSizing(new((SizingEdge)(w & int.MaxValue), ref *r));
                 //    return 0;
                 //}
                 break;
             case WinMessage.Move:
-                Move?.Invoke(this, new(Split(l)));
+                OnMove(new(Split(l)));
                 return 0;
             case WinMessage.Moving:
                 //if (0 != l) {
                 //    var r = (Rectangle*)l;
-                //    Moving?.Invoke(this, new(ref *r));
+                //    OnMoving(new(ref *r));
                 //    return 0;
                 //}
                 break;
             case WinMessage.ShowWindow:
-                ShowWindow?.Invoke(this, new(0 != w, (ShowWindowReason)(int)(l & int.MaxValue)));
+                OnShowWindow(new(0 != w, (ShowWindowReason)(int)(l & int.MaxValue)));
                 return 0;
             case WinMessage.ActivateApp:
                 //OnActivateApp(0 != w);
@@ -225,7 +230,7 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    ButtonDown?.Invoke(this, new(change, new(l)));
+                    OnButtonDown(new(change, new(l)));
                 }
                 break;
             case WinMessage.LButtonUp:
@@ -235,47 +240,43 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    ButtonUp?.Invoke(this, new(change, new(l)));
+                    OnButtonUp(new(change, new(l)));
                 }
                 break;
             case WinMessage.SetFocus:
-                FocusChanged?.Invoke(this, new(IsFocused = true));
+                OnFocusChanged(new(IsFocused = true));
                 return 0;
             case WinMessage.KillFocus:
-                FocusChanged?.Invoke(this, new(IsFocused = false));
+                OnFocusChanged(new(IsFocused = false));
                 return 0;
             case WinMessage.KeyDown: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] |= lo;
-                    Debug.Write($"down {key}\n");
-                    KeyDown?.Invoke(this, new(key, 0 != (l & 0x40000000)));
+                    OnKeyDown(new(key, 0 != (l & 0x40000000)));
                 }
                 return 0;
             case WinMessage.KeyUp: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] &= ~lo;
-                    Debug.Write($"up {key}\n");
-                    KeyUp?.Invoke(this, new(key, false));
+                    OnKeyUp(new(key, false));
                 }
                 return 0;
             case WinMessage.Paint:
                 PaintStruct ps = new();
                 var eh = User32.BeginPaint(Handle, ref ps);
-                Paint?.Invoke(this, new(eh, in ps));
+                OnPaint(new(eh, in ps));
                 User32.EndPaint(Handle, ref ps);
                 return 0;
             case WinMessage.Input:
-                if (Input is not null) {
-                    RawMouse data = new();
-                    if (User32.GetRawInputData(l, ref data))
-                        if (0 != data.lastX || 0 != data.lastY) {
-                            var r = Rect.Center;
-                            User32.SetCursorPos(r.X, r.Y);
-                            Input(this, new(data.lastX, data.lastY));
-                        }
-                }
+                RawMouse data = new();
+                if (User32.GetRawInputData(l, ref data))
+                    if (0 != data.lastX || 0 != data.lastY) {
+                        var r = Rect.Center;
+                        User32.SetCursorPos(r.X, r.Y);
+                        OnInput(new(data.lastX, data.lastY));
+                    }
                 break;
         }
         return User32.DefWindowProc(h, m, w, l);

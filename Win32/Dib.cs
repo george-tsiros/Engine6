@@ -59,11 +59,11 @@ unsafe sealed public class Dib:IDisposable {
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint color = ~0u) {
+    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint color = ~0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
-            throw new ArgumentException();
+            throw new ArgumentException("does not support multiple lines yet", nameof(str));
         if (x < 0 || Width <= x + textWidth)
             return;
         if (y < 0 || Height <= y + font.Height)
@@ -140,7 +140,7 @@ unsafe sealed public class Dib:IDisposable {
         }
     }
 
-    private unsafe void Blit (char ascii, PixelFont font, int x, int y, uint color) {
+    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint color) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;
