@@ -61,7 +61,7 @@ class Engine6 {
 
         Console.OutputEncoding = Encoding.ASCII;
         Console.TreatControlCAsInput = true;
-        LineEdit ed = new("");
+        LineEdit ed = new();
         Console.Clear();
         Console.SetCursorPosition(0, 0);
         string blank = new(' ', Console.WindowWidth - 1);
