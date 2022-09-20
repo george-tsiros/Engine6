@@ -31,8 +31,10 @@ public class LineEdit_basic {
         var l = ed.Length;
         Random r = new(0);
         for (var i = 0; i < 100; ++i) {
-            positions.Push(ed.At);
-            ed.At = (ed.At + r.Next(l)) % l;
+            var next = (ed.At + r.Next(l)) % l;
+            if (next != ed.At)
+                positions.Push(ed.At);
+            ed.At = next;
         }
 
         while (positions.TryPop(out var at)) {

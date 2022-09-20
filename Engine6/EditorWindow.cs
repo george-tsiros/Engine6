@@ -36,11 +36,10 @@ public class EditorWindow:GdiWindow {
 
     private void DoPrintable (Key k) {
         Debug.Assert(IsPrintable(k));
-        var bank = IsKeyDown(Key.ShiftKey) ? 1 : 0;
         var i = (int)k;
-        if ('A' <= i && i <= 'Z')
-            if (User32.IsCapsLockOn())
-                bank = 1 - bank;
+        var bank = IsKeyDown(Key.ShiftKey) ? 1 : 0;
+        if ('A' <= i && i <= 'Z' && User32.IsCapsLockOn())
+            bank = 1 - bank;
         ed.Insert(Banks[bank][i]);
     }
 
