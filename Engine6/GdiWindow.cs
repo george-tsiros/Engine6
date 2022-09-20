@@ -4,6 +4,15 @@ using System;
 using System.Diagnostics;
 using Win32;
 
+public class EditorWindow:GdiWindow {
+    public EditorWindow () : base() {
+        KeyDown += OnKeyDown;
+    }
+
+    private void OnKeyDown (object sender, KeyEventArgs e) {
+    }
+}
+
 public class GdiWindow:Window {
 
     public GdiWindow () : base() {
@@ -11,7 +20,7 @@ public class GdiWindow:Window {
         Size += OnSize;
     }
 
-    private Dib dib;
+    protected Dib Dib { get; private set; }
 
     private void OnSize (object sender, SizeEventArgs _) {
         User32.InvalidateWindow(this);
@@ -19,18 +28,18 @@ public class GdiWindow:Window {
 
     private void OnPaint (object sender, PaintEventArgs _) {
         Resize();
-        dib.ClearU32(Color.Black);
-        Blit(Dc, new(new(), ClientSize), dib);
+        Dib.ClearU32(Color.Black);
+        Blit(Dc, new(new(), ClientSize), Dib);
     }
 
     private void Resize () {
         var size = ClientSize;
-        if (dib is not null && dib.Size != size) {
-            dib.Dispose();
-            dib = null;
+        if (Dib is not null && Dib.Size != size) {
+            Dib.Dispose();
+            Dib = null;
         }
-        if (dib is null) {
-            dib = new(Dc, size);
+        if (Dib is null) {
+            Dib = new(Dc, size);
         }
     }
 

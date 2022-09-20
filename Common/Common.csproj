@@ -18,4 +18,12 @@
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     </Target>
+    <ItemGroup>
+        <ProjectReference Include="..\FixEol\FixEol.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="..\BitmapToRaster\BitmapToRaster.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+    </ItemGroup>
 </Project>

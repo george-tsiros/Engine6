@@ -23,10 +23,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="log.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
         <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
             <Private>False</Private>
@@ -36,28 +32,28 @@
 
     <ItemGroup>
         <None Update="shadersources\directionalLightFlat.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalLightFlat.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\axes.frag">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\axes.vert">
-          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\lines.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -72,22 +68,22 @@
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\plot.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\plot.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\proceduralTexture.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\proceduralTexture.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\rasterFont.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\rasterFont.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\directionalFlat.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -164,6 +160,4 @@
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     </Target>
-
-
 </Project>

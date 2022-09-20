@@ -94,7 +94,7 @@ public abstract class Window:IDisposable {
     private static readonly ushort Atom;
     private static readonly WndProc staticWndProc = StaticWndProc;
     //private static Window creating;
-    private readonly int[] KeyState = new int[256 / 32];
+    private readonly long[] KeyState = { 0,0,0,0};
     private bool disposed;
     private PixelFont font;
 
@@ -292,8 +292,8 @@ public abstract class Window:IDisposable {
         }
     }
 
-    private static (int h, int l) FindIndex (Key k) =>
-        ((int)k >> 5, 1 << ((int)k & 31));
+    private static (int h, long l) FindIndex (Key k) =>
+        ((int)k >> 6, 1l << ((int)k & 63));
 
     private static Vector2i Split (nint l) {
         var i = (int)(l & int.MaxValue);
