@@ -28,7 +28,7 @@ public sealed unsafe class LineEdit {
         new(data, 0, Length);
 
     public int Length { get; private set; } = 0;
-    
+
     public int At {
         get => at;
         set {
@@ -42,29 +42,45 @@ public sealed unsafe class LineEdit {
     public byte this[int i] =>
         i < Length ? data[i] : throw new ArgumentOutOfRangeException(nameof(i));
 
-    public void Backspace () {
-        if (0 == at)
-            throw new InvalidOperationException($"can not backspace at beginning of line (yet)");
-        undo.Push(new(OpType.SetCaret, at, true));
-        undo.Push(new(OpType.Write, data[at], false));
-        undo.Push(new(OpType.MoveUp, 1, false));
-        --at;
-        MoveDownInternal(1);
+    public void Backspace (int count = 1) {
+        if (0 == count)
+            throw new ArgumentOutOfRangeException(nameof(count), "can not backspace zero positions");
+        if (at - count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), "can not backspace beyond the beginning of the line (yet)");
+
+        for (var i = 0; i < count; ++i) {
+            undo.Push(new(OpType.SetCaret, at - i, 0 == i));
+            undo.Push(new(OpType.Write, data[at - i], false));
+        }
+        undo.Push(new(OpType.MoveUp, count, false));
+
+        at -= count;
+        MoveDownInternal(count);
     }
 
-    public void Delete () {
-        if (Length == at)
-            throw new InvalidOperationException($"can not delete at end of line (yet)");
-        undo.Push(new(OpType.Write, data[at], true));
-        undo.Push(new(OpType.MoveUp, 1, false));
+    public void Delete (int count = 1) {
+        if (0 == count)
+            throw new ArgumentOutOfRangeException(nameof(count), "can not backspace zero positions");
+        if (Length - count < at)
+            throw new ArgumentOutOfRangeException(nameof(count), "can not delete beyond the end of the line (yet)");
+
+        for (var i = 0; i < count; ++i) {
+            undo.Push(new(OpType.Write, data[at - i], 0 == i));
+            undo.Push(new(OpType.SetCaret, at - i, false));
+        }
+        undo.Push(new(OpType.SetCaret, at + count, false));
+        undo.Push(new(OpType.MoveUp, count, false));
+
         MoveDownInternal(1);
     }
 
     public void Insert (byte character) {
         if (character < LowerBound || UpperBound < character)
             throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
+
         undo.Push(new(OpType.MoveDown, 1, true));
         undo.Push(new(OpType.SetCaret, at, false));
+
         MoveUpInternal(1);
         data[at] = character;
         ++at;
@@ -75,8 +91,10 @@ public sealed unsafe class LineEdit {
             throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
         if (at == Length)
             throw new InvalidOperationException("can not overwrite at the end of the line");
+
         undo.Push(new(OpType.Write, data[at], true));
         undo.Push(new(OpType.SetCaret, at, false));
+
         data[at] = character;
         ++at;
     }

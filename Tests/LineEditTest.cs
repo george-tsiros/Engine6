@@ -46,7 +46,7 @@ public class LineEditTest {
     [TestMethod]
     public void Empty_throws_on_delete () {
         LineEdit ed = new(string.Empty);
-        _ = ThrowsException<InvalidOperationException>(ed.Delete);
+        _ = ThrowsException<ArgumentOutOfRangeException>(() => ed.Delete(1));
     }
 
     [TestMethod]
