@@ -4,26 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gl", "Gl\Gl.csproj", "{9E219483-63E8-4D2B-873C-FFF1E2C91C50}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shaders", "Shaders\Shaders.csproj", "{D5D180E8-BECE-4E87-8E00-DF94AAD400CA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-		{3C2452C0-64F1-4441-A244-101E49EE749E} = {3C2452C0-64F1-4441-A244-101E49EE749E}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen", "ShaderGen\ShaderGen.csproj", "{3C2452C0-64F1-4441-A244-101E49EE749E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Engine6", "Engine6\Engine6.csproj", "{020AE887-7D2D-4F37-9A63-AF75DC6ECA35}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40} = {C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12ADDFC7-7A07-4134-B502-14C60E662BCE}"
 	ProjectSection(SolutionItems) = preProject
@@ -33,24 +19,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bench", "Bench\Bench.csproj", "{127D34FE-F9B8-4511-A781-1C28DB1F9BB6}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf", "Perf\Perf.csproj", "{F940E229-A574-4D69-A432-88DF15C5CA48}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitmapToRaster", "BitmapToRaster\BitmapToRaster.csproj", "{C13BAF2C-6773-4281-AB1B-2B5FA1BD4E40}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Win32", "Win32\Win32.csproj", "{4D8B3D20-5344-436B-A65A-482A6C6FE8D2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2846B051-CD41-4529-8E7F-A5DDAC3286AF} = {2846B051-CD41-4529-8E7F-A5DDAC3286AF}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixEol", "FixEol\FixEol.csproj", "{2846B051-CD41-4529-8E7F-A5DDAC3286AF}"
 EndProject
