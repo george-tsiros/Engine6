@@ -1,17 +1,21 @@
 namespace Engine6;
 using Common;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Win32;
 
 public class EditorWindow:GdiWindow {
 
     public EditorWindow () : base() {
+        Editors.Add(new());
     }
 
     private bool showCaret;
-    private LineEdit ed = new();
+    //private LineEdit ed = new();
     private DateTime LastCaretBlink;
+    private Vector2i windowOffset;
+    private Vector2i caretPosition;
 
     protected override void OnIdle () {
         var now = DateTime.Now;
@@ -24,15 +28,17 @@ public class EditorWindow:GdiWindow {
 
     private void DoControl (Key k) {
         switch (k) {
-            case Key.Z:
-                if (0 < ed.GetUndoCount())
-                    ed.Undo();
-                break;
+            //case Key.Z:
+            //    if (0 < ed.GetUndoCount())
+            //        ed.Undo();
+            //    break;
             default:
                 return;
         }
         User32.InvalidateWindow(this);
     }
+
+    private readonly List<LineEdit> Editors = new();
 
     private void DoPrintable (Key k) {
         Debug.Assert(IsPrintable(k));
@@ -40,18 +46,23 @@ public class EditorWindow:GdiWindow {
         var bank = IsKeyDown(Key.ShiftKey) ? 1 : 0;
         if ('A' <= i && i <= 'Z' && User32.IsCapsLockOn())
             bank = 1 - bank;
-        ed.Insert(Banks[bank][i]);
+        Editors[caretPosition.Y].Insert(Banks[bank][i]);
     }
 
     protected override void OnPaint (in PaintArgs _) {
         Resize();
+
+        if (0 == ClientSize.X || 0 == ClientSize.Y)
+            return;
+
         Dib.ClearU32(Color.Black);
 
-        if (0 < ed.Length)
-            Dib.DrawString(ed.GetCopy(), PixelFont, 0, 0);
+        for (var y = windowOffset.Y; y < Editors.Count; ++y)
+            if (0 < Editors[y].Length)
+                Dib.DrawString(Editors[y].GetCopy(), PixelFont, 0, y * PixelFont.Height, Color.White);
 
         if (showCaret)
-            Dib.FillRectU32(new(new(ed.At * PixelFont.Width, 0), new(PixelFont.Width, PixelFont.Height)), Color.White);
+            Dib.FillRectU32(new(new(Editors[caretPosition.Y].At * PixelFont.Width, 0), new(PixelFont.Width, PixelFont.Height)), Color.White);
 
         Blit(Dc, new(new(), ClientSize), Dib);
     }
@@ -69,26 +80,26 @@ public class EditorWindow:GdiWindow {
                     User32.PostQuitMessage(0);
                     return;
                 case Key.Left:
-                    if (0 < ed.At)
-                        --ed.At;
+                    if (0 < Editors[caretPosition.Y].At)
+                        --Editors[caretPosition.Y].At;
                     break;
                 case Key.Right:
-                    if (ed.At < ed.Length)
-                        ++ed.At;
+                    if (Editors[caretPosition.Y].At < Editors[caretPosition.Y].Length)
+                        ++Editors[caretPosition.Y].At;
                     break;
                 case Key.Home:
-                    ed.At = 0;
+                    Editors[caretPosition.Y].At = 0;
                     break;
                 case Key.End:
-                    ed.At = ed.Length;
+                    Editors[caretPosition.Y].At = Editors[caretPosition.Y].Length;
                     break;
                 case Key.Delete:
-                    if (ed.At < ed.Length)
-                        ed.Delete();
+                    if (Editors[caretPosition.Y].At < Editors[caretPosition.Y].Length)
+                        Editors[caretPosition.Y].Delete();
                     break;
                 case Key.Back:
-                    if (0 < ed.At)
-                        ed.Backspace();
+                    if (0 < Editors[caretPosition.Y].At)
+                        Editors[caretPosition.Y].Backspace();
                     break;
                 default:
                     return;

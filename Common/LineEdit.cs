@@ -5,6 +5,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
+public sealed unsafe class TextEdit { 
+    //
+}
+
+
 public sealed unsafe class LineEdit {
 
     public static LineEdit FromString (string text) {

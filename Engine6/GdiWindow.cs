@@ -22,7 +22,7 @@ public class GdiWindow:Window {
             Dib.Dispose();
             Dib = null;
         }
-        if (Dib is null) {
+        if (Dib is null && 0 != size.X && 0 != size.Y) {
             Dib = new(Dc, size);
         }
     }

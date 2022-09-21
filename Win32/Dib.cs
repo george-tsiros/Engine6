@@ -58,30 +58,22 @@ unsafe sealed public class Dib:IDisposable {
     public uint* Pixels =>
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
-    /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint color = ~0u) {
+    /// <summary>renders a single line, even if string contains \n<br/><paramref name="y"/> = 0 is top of area</summary>
+    public void DrawString (in ReadOnlySpan<byte> chars, PixelFont font, int x, int y, in Color color) {
         NotDisposed();
-        var (textWidth, textHeight) = font.SizeOf(str);
-        if (textHeight != font.Height)
-            throw new ArgumentException("does not support multiple lines yet", nameof(str));
-        if (x < 0 || Width <= x + textWidth)
+
+        if (Width <= x || Height <= y)
             return;
-        if (y < 0 || Height <= y + font.Height)
+
+        var rightMostPixelColumn = x + chars.Length * font.Width;
+        var bottomPixelRow = y + font.Height;
+
+        if (rightMostPixelColumn < 0 || bottomPixelRow < 0)
             return;
-        // bottom row starts at i = 0
-        // second row (from bottom) starts at i = width
-        // top row starts at Width * (Height - 1)
-        // row (from bottom)    | y(from top)   | offset (as above)
-        // 0                    | Height - 1    | 0
-        // 1                    | Height - 2    | Width
-        // Height - 1           | 0             | (Height - 1) * Width
-        //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
-        foreach (var c in str) {
-            if (Width <= x)
-                return;
-            Blit(c, font, x, y, color);
-            x += font.Width;
-        }
+
+        for (var i = 0; i < chars.Length && x < Width; ++i, x += font.Width)
+            if (0 <= x)
+                Blit(chars[i], font, x, y, color.Argb);
     }
 
     public void ClearU32 (in Color color) {
@@ -97,19 +89,7 @@ unsafe sealed public class Dib:IDisposable {
         FillRectU32Internal(clipped, color.Argb);
     }
 
-    public void Dispose () {
-        if (!disposed) {
-            Gdi32.DeleteObject(Handle);
-            disposed = true;
-        }
-    }
-
     private const int MaxBitmapDimension = 8192;
-
-    private void NotDisposed () {
-        if (disposed)
-            throw new ObjectDisposedException(nameof(Dib));
-    }
 
     private BitmapInfo info;
     private readonly uint* raw;
@@ -145,11 +125,25 @@ unsafe sealed public class Dib:IDisposable {
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;
         var offset = rowStart + x;
-        for (var row = 0; row < font.Height; ++row, offset -= Width, source += font.Width) {
+        for (var row = 0; row < font.Height && y < Height; ++row, offset -= Width, source += font.Width, ++y) {
             var xpos = x;
-            for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos) {
-                raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
-            }
+            if (0 <= y)
+                for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos)
+                    if (0 <= xpos)
+                        raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
+
+        }
+    }
+
+    private void NotDisposed () {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(Dib));
+    }
+
+    public void Dispose () {
+        if (!disposed) {
+            Gdi32.DeleteObject(Handle);
+            disposed = true;
         }
     }
 }
