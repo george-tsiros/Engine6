@@ -1,44 +1,23 @@
-namespace Common;
+﻿namespace Common;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
-public sealed unsafe class LineEdit {
+public sealed unsafe class LineEditUtf8 {
 
-    public static LineEdit FromString (string text) {
-        const int MaxStackAlloc = 4096;
-        var length = Encoding.ASCII.GetByteCount(text);
-        if (0 == length)
-            return new(Span<byte>.Empty);
-        if (length != text.Length)
-            throw new ArgumentException("not an ascii string", nameof(text));
-        Span<byte> bytes = MaxStackAlloc < length ? new byte[length] : stackalloc byte[length];
-        var written = Encoding.ASCII.GetBytes(text, bytes);
-        Debug.Assert(written == bytes.Length);
-        return new(bytes);
+    public LineEditUtf8 () : this(Span<char>.Empty) { }
+
+    public LineEditUtf8 (ReadOnlySpan<char> chars) {
+        Length = chars.Length;
+        data = new char[Maths.IntMax(128, Length)];
+        chars.CopyTo(data);
     }
-
-    public LineEdit () : this(Span<byte>.Empty) { }
-
-    public LineEdit (ReadOnlySpan<byte> bytes) {
-        Length = bytes.Length;
-        data = new byte[Maths.IntMax(128, Length)];
-        bytes.CopyTo(data);
-        for (var i = 0; i < Length; ++i) {
-            var c = data[i];
-            if (c < LowerBound || UpperBound < c)
-                throw new ArgumentOutOfRangeException(nameof(bytes), $"{nameof(bytes)}[{i}] = 0x{bytes[i]:x2} which is outside the allowed range ['{LowerBound}', '{UpperBound}']");
-        }
-    }
-
-    /// <summary>DOES NOT INCLUDE TERMINATING NULL CHARACTER/BYTE</summary>
-    public void GetCopy (Span<byte> span) =>
+    
+    public void GetCopy (Span<char> span) =>
         data[0..Length].CopyTo(span);
 
-    /// <summary>RETURNED ARRAY DOES NOT INCLUDE TERMINATING NULL CHARACTER/BYTE</summary>
-    public ReadOnlySpan<byte> GetCopy () =>
+    public ReadOnlySpan<char> GetCopy () =>
         new(data, 0, Length);
 
     public int GetUndoCount () {
@@ -49,7 +28,7 @@ public sealed unsafe class LineEdit {
         return levels;
     }
 
-    public int Length { get; private set; } = 0;
+    public int Length { get; private set; }
 
     public int At {
         get => at;
@@ -63,8 +42,8 @@ public sealed unsafe class LineEdit {
         }
     }
 
-    public byte this[int i] =>
-        i < Length ? data[i] : throw new ArgumentOutOfRangeException(nameof(i));
+    public char this[int i] =>
+        i<Length ? data[i] : throw new ArgumentOutOfRangeException(nameof(i));
 
     public void Backspace (int count = 1) {
         if (0 == count)
@@ -102,13 +81,10 @@ public sealed unsafe class LineEdit {
         MoveDownInternal(count);
     }
 
-    public void Insert (ReadOnlySpan<byte> characters) {
+    public void Insert (ReadOnlySpan<char> characters) {
         var count = characters.Length;
         if (count == 0)
             throw new ArgumentOutOfRangeException(nameof(characters), "may not be empty");
-        for (var i = 0; i < count; ++i)
-            if (characters[i] < LowerBound || UpperBound < characters[i])
-                throw new ArgumentOutOfRangeException(nameof(characters), $"characters[{i}], is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
 
         undo.Push(new(OpType.MoveDown, count, true));
         undo.Push(new(OpType.SetCaret, at, false));
@@ -118,9 +94,7 @@ public sealed unsafe class LineEdit {
         at += count;
     }
 
-    public void Insert (byte character) {
-        if (character < LowerBound || UpperBound < character)
-            throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
+    public void Insert (char character) {
 
         undo.Push(new(OpType.MoveDown, 1, true));
         undo.Push(new(OpType.SetCaret, at, false));
@@ -130,9 +104,7 @@ public sealed unsafe class LineEdit {
         ++at;
     }
 
-    public void Overwrite (byte character) {
-        if (character < LowerBound || UpperBound < character)
-            throw new ArgumentOutOfRangeException(nameof(character), $"that, is not printable ascii. It is outside the range ['{LowerBound}' .. '{UpperBound}']");
+    public void Overwrite (char character) {
         if (at == Length)
             throw new InvalidOperationException("can not overwrite at the end of the line");
 
@@ -156,7 +128,7 @@ public sealed unsafe class LineEdit {
                     MoveDownInternal(parameter);
                     break;
                 case OpType.Write:
-                    data[at] = (byte)parameter;
+                    data[at] = (char)parameter;
                     break;
                 case OpType.SetCaret:
                     at = parameter;
@@ -174,9 +146,7 @@ public sealed unsafe class LineEdit {
 
     private int at = 0;
     private readonly Stack<Op> undo = new();
-    private byte[] data;
-    private const char LowerBound = ' ', UpperBound = '~';
-
+    private char[] data;
     private void MoveDownInternal (int value) {
         if (1024 < data.Length && Length < data.Length / 2)
             ShrinkTo(data.Length / 2);
@@ -195,14 +165,14 @@ public sealed unsafe class LineEdit {
 
     private void ShrinkTo (int newSize) {
         Debug.Write($"shrinking from {data.Length} to {newSize}\n");
-        var a2 = new byte[newSize];
+        var a2 = new char[newSize];
         Array.Copy(data, a2, Length);
         data = a2;
     }
 
     private void ExpandTo (int newSize) {
         Debug.Write($"expanding from {data.Length} to {newSize}\n");
-        var a2 = new byte[newSize];
+        var a2 = new char[newSize];
         data.CopyTo(a2, 0);
         data = a2;
     }
