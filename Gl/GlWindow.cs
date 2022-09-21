@@ -9,39 +9,47 @@ public class GlWindow:Window {
 
     public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
-        StartTicks = Stopwatch.GetTimestamp();
+        timer = Stopwatch.StartNew();
     }
 
-    protected virtual void Render () {
+    protected virtual void Render (double dt_seconds) {
         ClearColor(0.5f, 0.5f, 0.5f, 1f);
         Clear(BufferBit.ColorDepth);
     }
 
-    protected long Ticks () => Stopwatch.GetTimestamp() - StartTicks;
+    protected long Ticks () => timer.ElapsedTicks;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
     protected GlContext Ctx;
 
-    private const double FPScap = 60;
-    private const double TframeSeconds = 1 / FPScap;
-    private static readonly double TicksPerSecond = Stopwatch.Frequency;
-    private static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
-    private readonly long StartTicks;
+    protected const double FPScap = 60.0;
+    protected const double TframeSeconds = 1 / FPScap;
+    protected static readonly double TicksPerSecond = Stopwatch.Frequency;
+    protected static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
+    private readonly Stopwatch timer;
     private bool disposed = false;
 
     protected override void OnFocusChanged (in FocusChangedArgs e) {
         _ = User32.ShowCursor(!e.Focused);
+        if (e.Focused)
+            timer.Start();
+        else
+            timer.Stop();
         User32.RegisterMouseRaw(e.Focused ? this : null);
     }
 
     // we know base methods are empty
     protected override void OnIdle () {
-        if (LastSync + 0.9 * TframeTicks < Ticks()) {
+        if (LastSync + 0.9 * TframeTicks < timer.ElapsedTicks) {
+            var dt = 0.0;
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
-                LastSync = Ticks();
+                var now = timer.ElapsedTicks;
+                if (IsFocused)
+                    dt = (now - LastSync) / TicksPerSecond;
+                LastSync = now;
             }
-            Render();
+            Render(dt);
             ++FramesRendered;
         }
     }

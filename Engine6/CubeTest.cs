@@ -11,7 +11,8 @@ using static Common.Maths;
 public class CubeTest:GlWindow {
 
     private const float MouseSensitivity = .0005f;
-    private const float KeyboardSensitivity = .005f;
+    private const float KeyboardRotationSensitivity = .005f;
+    private const float KeyboardTranslationSensitivity = .05f;
 
     public CubeTest (ContextConfiguration? c = null) : base(c) {
     }
@@ -78,11 +79,14 @@ public class CubeTest:GlWindow {
     }
 
     private void Update () {
-        var yaw = KeyboardSensitivity * Axis(Key.F, Key.S);
+        var yaw = KeyboardRotationSensitivity * Axis(Key.F, Key.S);
         camera.Rotate(0, yaw, 0);
+        var dx = KeyboardTranslationSensitivity * Axis(Key.C, Key.Z);
+        var dz = KeyboardTranslationSensitivity * Axis(Key.D, Key.X);
+        camera.Walk(dx, 0, -dz);
     }
 
-    protected override void Render () {
+    protected override void Render (double _) {
         Update();
         var size = ClientSize;
         Viewport(new(), size);

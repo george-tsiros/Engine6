@@ -59,6 +59,14 @@ unsafe sealed public class Dib:IDisposable {
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
 
     /// <summary>renders a single line, even if string contains \n<br/><paramref name="y"/> = 0 is top of area</summary>
+    public void DrawString (in ReadOnlySpan<char> chars, PixelFont font, int x, int y, in Color color) {
+        const int MaxStackAlloc = 4096;
+        Span<byte> bytes = chars.Length <= MaxStackAlloc ? stackalloc byte[chars.Length] : new byte[chars.Length];
+        for (var i = 0; i < bytes.Length; ++i)
+            bytes[i] = chars[i] <= (byte)'~' ? (byte)chars[i] : byte.MinValue;
+        DrawString(bytes, font, x, y, color);
+    }
+    /// <summary>renders a single line, even if string contains \n<br/><paramref name="y"/> = 0 is top of area</summary>
     public void DrawString (in ReadOnlySpan<byte> chars, PixelFont font, int x, int y, in Color color) {
         NotDisposed();
 

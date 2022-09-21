@@ -7,6 +7,7 @@ using Gl;
 using static Gl.GlContext;
 using static Gl.Utilities;
 using System.Text;
+using System.Collections.Generic;
 
 class ShaderGen {
 
@@ -84,12 +85,58 @@ class ShaderGen {
     private static string Pack (string text) =>
         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Join(' ', text.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries))));
 
-    private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, StreamWriter f) {
-        var vertexShaderSource = File.ReadAllText(vertexShaderFilepath);
-        var fragmentShaderSource = File.ReadAllText(fragmentShaderFilepath);
-        var program = ProgramFromStrings(vertexShaderSource, fragmentShaderSource);
+    [Flags]
+    enum EnumLinesOption {
+        None = 0,
+        Trim = 1,
+        SkipBlankOrWhitespace = 2,
+    }
 
-        f.Write($"namespace Shaders;\n\nusing Gl;\nusing static Gl.GlContext;\nusing System.Numerics;\nusing Common;\n\npublic class {className}:Program {{\n#pragma warning disable CS0649\n");
+    private static IEnumerable<string> EnumLines (string filepath, EnumLinesOption option = EnumLinesOption.None) {
+        var trim = option.HasFlag(EnumLinesOption.Trim);
+        var includeBlankOrWhitespace = !option.HasFlag(EnumLinesOption.SkipBlankOrWhitespace);
+        using StreamReader reader = new(filepath);
+        while (reader.ReadLine() is string line)
+            if (includeBlankOrWhitespace || !string.IsNullOrWhiteSpace(line))
+                yield return trim ? line.Trim() : line;
+    }
+    private const string ShaderHeader = @"
+namespace Shaders;
+
+using Gl;
+using static Gl.GlContext;
+using System.Numerics;
+using Common;
+
+public class {0}:Program {{
+#pragma warning disable CS0649
+";
+    private const string AttribFormat = @"
+    //size {0}, type {1}
+    [GlAttrib(""{2}"")]
+    public int {3} {{ get; }}
+";
+    private const string UniformFormat = @"
+    //size {0}, type {1}
+    [GlUniform(""{2}"")]
+    private readonly int {3};
+    public void {4} ({5} v) => Uniform({6}, v);
+";
+    private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, StreamWriter f) {
+        List<string> vertexShaderSourceLines = new();
+        List<string> vertexShaderCommentLines = new();
+        foreach (var line in EnumLines(vertexShaderFilepath, EnumLinesOption.SkipBlankOrWhitespace | EnumLinesOption.Trim))
+            (line.StartsWith("//") ? vertexShaderCommentLines : vertexShaderSourceLines).Add(line);
+
+        List<string> fragmentShaderSourceLines = new();
+        List<string> fragmentShaderCommentLines = new();
+        foreach (var line in EnumLines(fragmentShaderFilepath, EnumLinesOption.SkipBlankOrWhitespace | EnumLinesOption.Trim)) 
+            (line.StartsWith("//") ? fragmentShaderCommentLines : fragmentShaderSourceLines).Add(line);
+
+        var vertexShaderSource = string.Join("\n", vertexShaderSourceLines);
+        var fragmentShaderSource = string.Join("\n", fragmentShaderSourceLines);
+        var program = ProgramFromStrings(vertexShaderSource, fragmentShaderSource);
+        f.Write(ShaderHeader, className);
         f.Write("    protected override string VertexSource { get; } = \"");
         f.Write(Pack(vertexShaderSource));
         f.Write("\";\n");
@@ -103,7 +150,7 @@ class ShaderGen {
             var (size, type, name) = GetActiveAttrib(program, i);
             if (name.StartsWith("gl_"))
                 continue;
-            f.Write($"\n    //size {size}, type {type}\n    [GlAttrib(\"{name}\")]\n    public int {UppercaseFirst(name)} {{ get; }}\n");
+            f.Write(AttribFormat, size, type, name, UppercaseFirst(name));
         }
 
         int uniformCount = GetProgram(program, ProgramParameter.ActiveUniforms);
@@ -112,8 +159,7 @@ class ShaderGen {
             if (name.StartsWith("gl_"))
                 continue;
             var fieldName = IsKeyword(name) ? "@" + name : name;
-            var rawTypeName = type.ToString();
-            f.Write($"\n    //size {size}, type {type}\n    [GlUniform(\"{name}\")]\n    private readonly int {fieldName};\n    public void {UppercaseFirst(name)} ({UniformTypeToTypeName(type)} v) => Uniform({fieldName}, v);\n");
+            f.Write(UniformFormat, size, type, name, fieldName, UppercaseFirst(name), UniformTypeToTypeName(type), fieldName);
         }
 
         f.Write($"\n#pragma warning restore CS0649\n}}");

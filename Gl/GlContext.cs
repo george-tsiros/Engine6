@@ -76,6 +76,18 @@ public sealed unsafe class GlContext:IDisposable {
             glActiveTexture(Const.TEXTURE0 + i);
     }
 
+    public static void MultiDrawArrays (Primitive mode, int[] first, int[] count, int calls) {
+        if (0 == calls)
+            throw new InvalidOperationException();
+        if (first.Length < calls)
+            throw new InvalidOperationException("first.Length < calls");
+        if (count.Length < calls)
+            throw new InvalidOperationException("count.Length < calls");
+        fixed (int* p = first)
+        fixed (int* q = count)
+            glMultiDrawArrays((int)mode, p, q, calls);
+    }
+
 
     public static int CreateTexture2D () {
         int i;

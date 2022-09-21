@@ -1,6 +1,7 @@
+namespace Engine6;
+
 using System.Numerics;
 
-namespace Engine6;
 interface ICamera {
     Vector3 Location { get; }
     Matrix4x4 LookAtMatrix { get; }
@@ -19,7 +20,7 @@ sealed class QCamera:ICamera {
     }
 
     public Matrix4x4 LookAtMatrix =>
-        Matrix4x4.CreateTranslation(-Location) * Matrix4x4.CreateFromQuaternion(q);
+        Matrix4x4.Transform(Matrix4x4.CreateTranslation(-Location), q);
 
     public void Rotate (float pitch, float yaw, float roll) {
         q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch));
@@ -28,5 +29,7 @@ sealed class QCamera:ICamera {
     }
 
     public void Walk (float dx, float dy, float dz) {
+        //Location += new Vector3(dx, dy, dz);
+        Location += Vector3.Transform(new Vector3(dx, dy, dz), q);
     }
 }

@@ -1,3 +1,4 @@
+
 namespace Shaders;
 
 using Gl;
@@ -14,16 +15,6 @@ public class VertexIndex:Program {
     [GlAttrib("vertexPosition")]
     public int VertexPosition { get; }
 
-    //size 1, type Vector4
-    [GlUniform("color0")]
-    private readonly int color0;
-    public void Color0 (Vector4 v) => Uniform(color0, v);
-
-    //size 1, type Vector4
-    [GlUniform("color1")]
-    private readonly int color1;
-    public void Color1 (Vector4 v) => Uniform(color1, v);
-
     //size 1, type Matrix4x4
     [GlUniform("model")]
     private readonly int model;
@@ -34,15 +25,25 @@ public class VertexIndex:Program {
     private readonly int projection;
     public void Projection (Matrix4x4 v) => Uniform(projection, v);
 
-    //size 1, type Int
-    [GlUniform("tri")]
-    private readonly int tri;
-    public void Tri (int v) => Uniform(tri, v);
-
     //size 1, type Matrix4x4
     [GlUniform("view")]
     private readonly int view;
     public void View (Matrix4x4 v) => Uniform(view, v);
+
+    //size 1, type Vector4
+    [GlUniform("color0")]
+    private readonly int color0;
+    public void Color0 (Vector4 v) => Uniform(color0, v);
+
+    //size 1, type Vector4
+    [GlUniform("color1")]
+    private readonly int color1;
+    public void Color1 (Vector4 v) => Uniform(color1, v);
+
+    //size 1, type Int
+    [GlUniform("tri")]
+    private readonly int tri;
+    public void Tri (int v) => Uniform(tri, v);
 
 #pragma warning restore CS0649
 }
