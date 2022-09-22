@@ -15,20 +15,20 @@ public class Lines:Program {
     [GlAttrib("vertexPosition")]
     public int VertexPosition { get; }
 
+    //size 1, type Vector4
+    [GlUniform("color")]
+    private readonly int color;
+    public void Color (in Vector4 v) => Uniform(color, v);
+
     //size 1, type Vector2i
     [GlUniform("offset")]
     private readonly int offset;
-    public void Offset (Vector2i v) => Uniform(offset, v);
+    public void Offset (in Vector2i v) => Uniform(offset, v);
 
     //size 1, type Vector2i
     [GlUniform("renderSize")]
     private readonly int renderSize;
-    public void RenderSize (Vector2i v) => Uniform(renderSize, v);
-
-    //size 1, type Vector4
-    [GlUniform("color")]
-    private readonly int color;
-    public void Color (Vector4 v) => Uniform(color, v);
+    public void RenderSize (in Vector2i v) => Uniform(renderSize, v);
 
 #pragma warning restore CS0649
 }

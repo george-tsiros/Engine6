@@ -22,17 +22,17 @@ public class Axes:Program {
     //size 1, type Matrix4x4
     [GlUniform("model")]
     private readonly int model;
-    public void Model (Matrix4x4 v) => Uniform(model, v);
+    public void Model (in Matrix4x4 v) => Uniform(model, v);
 
     //size 1, type Matrix4x4
     [GlUniform("projection")]
     private readonly int projection;
-    public void Projection (Matrix4x4 v) => Uniform(projection, v);
+    public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
     //size 1, type Matrix4x4
     [GlUniform("view")]
     private readonly int view;
-    public void View (Matrix4x4 v) => Uniform(view, v);
+    public void View (in Matrix4x4 v) => Uniform(view, v);
 
 #pragma warning restore CS0649
 }

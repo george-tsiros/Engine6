@@ -7,7 +7,7 @@ using static GlContext;
 
 public class GlWindow:Window {
 
-    public GlWindow (ContextConfiguration? configuration = null) : base(WindowStyle.Popup, WindowStyleEx.TopMost) {
+    public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.TopMost) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         timer = Stopwatch.StartNew();
     }
@@ -22,7 +22,7 @@ public class GlWindow:Window {
     protected long LastSync { get; private set; } = 0l;
     protected GlContext Ctx;
 
-    protected const double FPScap = 60.0;
+    protected const double FPScap = 72.0;
     protected const double TframeSeconds = 1 / FPScap;
     protected static readonly double TicksPerSecond = Stopwatch.Frequency;
     protected static readonly double TframeTicks = TicksPerSecond * TframeSeconds;

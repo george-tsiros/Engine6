@@ -104,9 +104,9 @@
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <Exec Command="rd /s/q $(outdir)" />
+        <!--<Exec Command="rd /s/q $(outdir)" />
         <Exec Command="md $(outdir)" />
-        <Exec Command="..\fixeol\bin\fixeol.exe" />
+        <Exec Command="..\fixeol\bin\fixeol.exe" />-->
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />

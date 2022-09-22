@@ -18,7 +18,7 @@ public class ProjectionOnly:Program {
     //size 1, type Matrix4x4
     [GlUniform("projection")]
     private readonly int projection;
-    public void Projection (Matrix4x4 v) => Uniform(projection, v);
+    public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
 #pragma warning restore CS0649
 }

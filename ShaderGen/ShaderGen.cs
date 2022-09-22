@@ -38,10 +38,27 @@ class ShaderGen {
                 if (File.Exists(fragmentShaderFilepath)) {
 
                     var shaderNameUppercased = UppercaseFirst(shaderName);
-                    var outputFilepath = Path.Combine(targetDir, shaderName + ".cs");
-                    Console.Write($"{sourceDir}{shaderName}(.vert,.frag) => {targetDir}{shaderNameUppercased}.cs\n");
-                    using StreamWriter f = new(outputFilepath, false, Encoding.ASCII);
-                    DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderNameUppercased, f);
+                    using (MemoryStream mem = new()) {
+                        using (StreamWriter f = new(mem, Encoding.ASCII, -1, true))
+                            DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderNameUppercased, f);
+
+
+                        var outputFilepath = Path.Combine(targetDir, shaderName + ".cs");
+                        if (File.Exists(outputFilepath) && 0 != new FileInfo(outputFilepath).Length) {
+                            var existing = File.ReadAllText(outputFilepath).Trim();
+                            var newlyCreated = Encoding.ASCII.GetString(mem.ToArray()).Trim();
+                            if (existing == newlyCreated) {
+                                Console.Write($"{targetDir}{shaderNameUppercased}.cs already exists and is the same\n");
+                                continue;
+                            }
+                        }
+
+                        Console.Write($"{sourceDir}{shaderName}(.vert,.frag) => ");
+                        mem.Position = 0;
+                        using (var f = File.Create(outputFilepath))
+                            mem.CopyTo(f);
+                        Console.Write($"{targetDir}{shaderNameUppercased}.cs\n");
+                    }
                 } else {
                     Trace($"no fragment shader file (\"{fragmentShaderFilepath}\") for vertex shader file \"{vertexShaderFilename}\"");
                 }
@@ -73,7 +90,7 @@ class ShaderGen {
             return type.ToString().ToLower();
         if (type == UniformType.Sampler2D)
             return "int";
-        return type.ToString();
+        return $"in {type}";
     }
 
     private static bool IsKeyword (string term) =>
@@ -122,7 +139,7 @@ public class {0}:Program {{
     private readonly int {3};
     public void {4} ({5} v) => Uniform({6}, v);
 ";
-    private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, StreamWriter f) {
+    private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, TextWriter f) {
         List<string> vertexShaderSourceLines = new();
         List<string> vertexShaderCommentLines = new();
         foreach (var line in EnumLines(vertexShaderFilepath, EnumLinesOption.SkipBlankOrWhitespace | EnumLinesOption.Trim))
@@ -130,7 +147,7 @@ public class {0}:Program {{
 
         List<string> fragmentShaderSourceLines = new();
         List<string> fragmentShaderCommentLines = new();
-        foreach (var line in EnumLines(fragmentShaderFilepath, EnumLinesOption.SkipBlankOrWhitespace | EnumLinesOption.Trim)) 
+        foreach (var line in EnumLines(fragmentShaderFilepath, EnumLinesOption.SkipBlankOrWhitespace | EnumLinesOption.Trim))
             (line.StartsWith("//") ? fragmentShaderCommentLines : fragmentShaderSourceLines).Add(line);
 
         var vertexShaderSource = string.Join("\n", vertexShaderSourceLines);

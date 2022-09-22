@@ -50,6 +50,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>pushd .. &amp;&amp; ..\fixeol\bin\fixeol.exe &amp;&amp; popd</PostBuildEvent>
+    <!--<PostBuildEvent>pushd .. &amp;&amp; ..\fixeol\bin\fixeol.exe &amp;&amp; popd</PostBuildEvent>-->
   </PropertyGroup>
 </Project>

@@ -13,6 +13,8 @@ namespace Engine6;
 public class Model {
     public List<Vector3i> Faces { get; private set; }
     public List<Vector3> Vertices { get; private set; }
+    private List<Vector3> normals;
+    public List<Vector3> Normals => normals ??= new(CreateNormals());
     public Vector3 Min { get; private set; }
     public Vector3 Max { get; private set; }
     protected static readonly char[] space = { ' ' };
@@ -78,10 +80,10 @@ public class Model {
         }
     }
 
-    public IEnumerable<Vector3d> CreateNormals () {
+    public IEnumerable<Vector3> CreateNormals () {
         foreach (var (a, b, c) in Faces) {
             var (v0, v1, v2) = (Vertices[a], Vertices[b], Vertices[c]);
-            yield return Vector3d.Normalize(Vector3d.Cross(v1 - v0, v2 - v0));
+            yield return  Vector3.Normalize(Vector3.Cross(v1 - v0, v2 - v0));
         }
     }
 

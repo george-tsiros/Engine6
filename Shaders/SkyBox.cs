@@ -22,12 +22,12 @@ public class SkyBox:Program {
     //size 1, type Matrix4x4
     [GlUniform("projection")]
     private readonly int projection;
-    public void Projection (Matrix4x4 v) => Uniform(projection, v);
+    public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
     //size 1, type Matrix4x4
     [GlUniform("view")]
     private readonly int view;
-    public void View (Matrix4x4 v) => Uniform(view, v);
+    public void View (in Matrix4x4 v) => Uniform(view, v);
 
     //size 1, type Sampler2D
     [GlUniform("tex")]
