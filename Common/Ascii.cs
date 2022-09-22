@@ -5,6 +5,11 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
+// this looks absolutely insane at first glance
+// i intend to pretty much replace all of System.String
+// and avoid using heap-allocated, unicode strings
+// completely, if possible. 
+
 public sealed unsafe class Ascii:IDisposable {
 
     public Ascii (string text) {

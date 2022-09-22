@@ -13,21 +13,6 @@ public class VertexIndex:Program {
     //size 1, type Vector4
     [GlAttrib]
     public int VertexPosition { get; }
-    //size 1, type Matrix4x4
-    [GlUniform]
-    private readonly int model;
-    public void Model (in Matrix4x4 v) => Uniform(model, v);
-
-    //size 1, type Matrix4x4
-    [GlUniform]
-    private readonly int projection;
-    public void Projection (in Matrix4x4 v) => Uniform(projection, v);
-
-    //size 1, type Matrix4x4
-    [GlUniform]
-    private readonly int view;
-    public void View (in Matrix4x4 v) => Uniform(view, v);
-
     //size 1, type Vector4
     [GlUniform]
     private readonly int color0;
@@ -38,10 +23,25 @@ public class VertexIndex:Program {
     private readonly int color1;
     public void Color1 (in Vector4 v) => Uniform(color1, v);
 
+    //size 1, type Matrix4x4
+    [GlUniform]
+    private readonly int model;
+    public void Model (in Matrix4x4 v) => Uniform(model, v);
+
+    //size 1, type Matrix4x4
+    [GlUniform]
+    private readonly int projection;
+    public void Projection (in Matrix4x4 v) => Uniform(projection, v);
+
     //size 1, type Int
     [GlUniform]
     private readonly int tri;
     public void Tri (int v) => Uniform(tri, v);
+
+    //size 1, type Matrix4x4
+    [GlUniform]
+    private readonly int view;
+    public void View (in Matrix4x4 v) => Uniform(view, v);
 
 #pragma warning restore CS0649
 }

@@ -14,6 +14,5 @@ public readonly struct ContextConfiguration {
         ColorBits = 32,
         DepthBits = 24,
         DoubleBuffer = true,
-        SwapMethod = Gl.SwapMethod.Swap,
     };
 }

@@ -13,6 +13,11 @@ public class SolidColor:Program {
     //size 1, type Vector4
     [GlAttrib]
     public int VertexPosition { get; }
+    //size 1, type Vector4
+    [GlUniform]
+    private readonly int color;
+    public void Color (in Vector4 v) => Uniform(color, v);
+
     //size 1, type Matrix4x4
     [GlUniform]
     private readonly int model;
@@ -27,11 +32,6 @@ public class SolidColor:Program {
     [GlUniform]
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
-
-    //size 1, type Vector4
-    [GlUniform]
-    private readonly int color;
-    public void Color (in Vector4 v) => Uniform(color, v);
 
 #pragma warning restore CS0649
 }

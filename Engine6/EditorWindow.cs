@@ -8,6 +8,8 @@ using Win32;
 public class EditorWindow:GdiWindow {
 
     public EditorWindow () : base() {
+        using Ascii str = new("does not work yet");
+        User32.SetWindowText(this, str);
     }
 
     protected override void OnIdle () {
