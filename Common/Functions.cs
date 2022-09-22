@@ -8,7 +8,27 @@ using System.IO;
 using System.Reflection;
 using static Common.Maths;
 
+[Flags]
+public enum EnumLinesOption {
+    None = 0,
+    Trim = 1,
+    SkipBlankOrWhitespace = 2,
+}
 public static class Functions {
+
+    public static string LowercaseFirst (string str) {
+        Span<char> chars = stackalloc char[str.Length];
+        str.AsSpan().CopyTo(chars);
+        chars[0] = char.ToLower(chars[0]);
+        return new(chars);
+    }
+
+    public static string UppercaseFirst (string str) {
+        Span<char> chars = stackalloc char[str.Length];
+        str.AsSpan().CopyTo(chars);
+        chars[0] = char.ToUpper(chars[0]);
+        return new(chars);
+    }
 
     public static IEnumerable<string> ToFlags<T> (T value) where T : Enum {
         Debug.Assert(typeof(T).IsEnum);
@@ -63,10 +83,15 @@ public static class Functions {
     static IEnumerable<string> ToFlagsByte<T> (T value) where T : Enum { throw new NotImplementedException(); }
     static IEnumerable<string> ToFlagsSByte<T> (T value) where T : Enum { throw new NotImplementedException(); }
 
-    public static IEnumerable<string> EnumLines (StreamReader f, bool skipBlank = false) {
-        while (f.ReadLine() is string line)
-            if (!skipBlank || !string.IsNullOrWhiteSpace(line))
-                yield return line;
+    public static IEnumerable<string> EnumLines (string filepath, EnumLinesOption option = EnumLinesOption.None) {
+        var trim = option.HasFlag(EnumLinesOption.Trim);
+        var includeBlankOrWhitespace = !option.HasFlag(EnumLinesOption.SkipBlankOrWhitespace);
+
+        using StreamReader reader = new(filepath);
+
+        while (reader.ReadLine() is string line)
+            if (includeBlankOrWhitespace || !string.IsNullOrWhiteSpace(line))
+                yield return trim ? line.Trim() : line;
     }
 
     private static void PushAscii (Span<byte> a, ref long int64, ref int offset) {

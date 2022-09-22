@@ -3,7 +3,9 @@ namespace Gl;
 using Win32;
 using System.Diagnostics;
 using System;
+using static Common.Maths;
 using static GlContext;
+using System.Collections.Generic;
 
 public class GlWindow:Window {
 
@@ -22,7 +24,7 @@ public class GlWindow:Window {
     protected long LastSync { get; private set; } = 0l;
     protected GlContext Ctx;
 
-    protected const double FPScap = 72.0;
+    protected const double FPScap = 60.0;
     protected const double TframeSeconds = 1 / FPScap;
     protected static readonly double TicksPerSecond = Stopwatch.Frequency;
     protected static readonly double TframeTicks = TicksPerSecond * TframeSeconds;

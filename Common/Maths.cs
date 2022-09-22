@@ -55,6 +55,7 @@ public static class Maths {
     public static double DoubleSqrt (double a) => Math.Sqrt(a);
     public static double DoubleTan (double angle) => Math.Tan(angle);
     public static float FloatClamp (float value, float min, float max) => Math.Clamp(value, min, max);
+    public static float FloatRound (float a, int digits) => (float)Math.Round(a, digits);
     public static float FloatRound (float a) => (float)Math.Round(a);
     public static float FloatCos (float angle) => (float)Math.Cos(angle);
     public static float FloatSin (float angle) => (float)Math.Sin(angle);

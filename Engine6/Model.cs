@@ -30,13 +30,8 @@ public class Model {
 
     Model () { }
 
-    public Model (StreamReader reader, bool center = false) {
-        Read(reader, center);
-    }
-
     public Model (string filepath, bool center = false) {
-        using StreamReader reader = new(filepath);
-        Read(reader, center);
+        Read(filepath, center);
     }
 
     static readonly Regex FaceRegex = new(@"^(\d+)(/(\d+)?)*$");
@@ -44,10 +39,10 @@ public class Model {
     static int FromFace (string part) => int.Parse(FaceRegex.Match(part).Groups[1].Value);
     static readonly Vector3 Vector3MaxValue = new(float.MaxValue, float.MaxValue, float.MaxValue);
     static readonly Vector3 Vector3MinValue = new(float.MinValue, float.MinValue, float.MinValue);
-    void Read (StreamReader reader, bool center) {
+    void Read (string filepath, bool center) {
         Faces = new();
         Vertices = new();
-        foreach (var line in Functions.EnumLines(reader, true)) {
+        foreach (var line in Functions.EnumLines(filepath, EnumLinesOption.SkipBlankOrWhitespace)) {
             if (line[0] == '#')
                 continue;
 
@@ -83,7 +78,7 @@ public class Model {
     public IEnumerable<Vector3> CreateNormals () {
         foreach (var (a, b, c) in Faces) {
             var (v0, v1, v2) = (Vertices[a], Vertices[b], Vertices[c]);
-            yield return  Vector3.Normalize(Vector3.Cross(v1 - v0, v2 - v0));
+            yield return Vector3.Normalize(Vector3.Cross(v1 - v0, v2 - v0));
         }
     }
 

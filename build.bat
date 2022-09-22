@@ -1,0 +1,1 @@
+dotnet clean -m:8 -v:m && dotnet build -m:1 -v:m

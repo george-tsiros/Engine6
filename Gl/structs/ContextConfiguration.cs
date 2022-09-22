@@ -1,7 +1,6 @@
 namespace Gl;
 
 using System;
-
 public readonly struct ContextConfiguration {
     public int? ColorBits { get; init; }
     public int? DepthBits { get; init; }
@@ -15,5 +14,6 @@ public readonly struct ContextConfiguration {
         ColorBits = 32,
         DepthBits = 24,
         DoubleBuffer = true,
+        SwapMethod = Gl.SwapMethod.Swap,
     };
 }

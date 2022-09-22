@@ -45,7 +45,4 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <!--<PreBuildEvent>pushd .. &amp;&amp; rd /s/q bin &amp;&amp; md bin &amp;&amp; ..\fixeol\bin\fixeol.exe &amp;&amp; popd</PreBuildEvent>-->
-  </PropertyGroup>
 </Project>

@@ -37,13 +37,6 @@
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <!--<Exec Command="rd /s/q $(outdir)" />
-        <Exec Command="md $(outdir)" />
-        <Exec Command="..\fixeol\bin\fixeol.exe" />-->
-    </Target>
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    </Target>
 
 
 </Project>

@@ -14,6 +14,23 @@ using Common;
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
 
 public sealed unsafe class GlContext:IDisposable {
+    private const string NoPixelFormat = "no pixel format found";
+    private const string opengl32 = "opengl32.dll";
+    private const string DriverMissingFunction = "WARNING: driver is missing {0}";
+    private const string OpenglVersionPattern = @"^(\d+\.\d+(\.\d+)?) ((Core|Compatibility) )?";
+    private const string InvalidVersionString = "'{0}' does not begin with a valid version string";
+    private const string UnexpectedAsciiLength = "expected {0} characters, not {1}";
+    private const string ArrayTooShort = "array {0} too short";
+    private const string SetBoolFormat = "failed to turn {0} {1}";
+    private const string SetInt32Format = "failed to set {0} to {1}";
+    private const string SetEnumFormat = "failed to set {0} to {1}";
+    private const string On = "on";
+    private const string Off = "off";
+    private const string ContextAlreadyExists = "context already exists";
+    private const string ContextSetFailed = "failed to make ARB context current, also failed to delete it";
+    private const string DeleteTemporaryContextFailed = "failed to delete temporary context";
+    private const string WrongContextVersion = "requested {0} got {1}";
+    private const string GetOpenglHandleFailed = $"failed to get handle for {opengl32}";
 
     public static void Uniform (int uniform, Matrix4x4 m) {
         var p = &m;
@@ -76,13 +93,14 @@ public sealed unsafe class GlContext:IDisposable {
             glActiveTexture(Const.TEXTURE0 + i);
     }
 
+
     public static void MultiDrawArrays (Primitive mode, int[] first, int[] count, int calls) {
         if (0 == calls)
             throw new InvalidOperationException();
         if (first.Length < calls)
-            throw new InvalidOperationException("first.Length < calls");
+            throw new InvalidOperationException(string.Format(ArrayTooShort, nameof(first)));
         if (count.Length < calls)
-            throw new InvalidOperationException("count.Length < calls");
+            throw new InvalidOperationException(string.Format(ArrayTooShort, nameof(count)));
         fixed (int* p = first)
         fixed (int* q = count)
             glMultiDrawArrays((int)mode, p, q, calls);
@@ -104,11 +122,12 @@ public sealed unsafe class GlContext:IDisposable {
     public static void NamedBufferStorage<T> (VertexBuffer<T> buffer, int size, nint data, int flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, flags);
     public static void NamedBufferSubData<T> (VertexBuffer<T> buffer, int offset, int size, void* data) where T : unmanaged => glNamedBufferSubData(buffer, offset, size, data);
 
+
     public static void ShaderSource (int id, string source) {
         var bytes = new byte[source.Length + 1];
         var l = Encoding.ASCII.GetBytes(source, bytes);
         if (source.Length != l)
-            throw new Exception($"expected {source.Length} characters, not {l}");
+            throw new ApplicationException(string.Format(UnexpectedAsciiLength, source.Length, l));
         bytes[source.Length] = 0;
         fixed (byte* strPtr = bytes)
             glShaderSource(id, 1, &strPtr, null);
@@ -136,13 +155,6 @@ public sealed unsafe class GlContext:IDisposable {
 
     private static int GetLocation (Program program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         using Ascii str = new(name);
-
-        //Span<byte> bytes = name.Length < 1024 ? stackalloc byte[name.Length + 1] : new byte[name.Length + 1];
-        //var l = Encoding.ASCII.GetBytes(name, bytes);
-        //if (l != name.Length)
-        //    throw new Exception($"expected {name.Length} characters, not {l}");
-        //bytes[name.Length] = 0;
-        //fixed (byte* p = bytes)
         return f(program, (byte*)str.Handle);
     }
 
@@ -152,7 +164,7 @@ public sealed unsafe class GlContext:IDisposable {
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
             glGetActiveAttrib(id, index, maxLength, &length, &size, &type, p);
-        var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
+        var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : string.Empty;
         return (size, (AttribType)type, n);
     }
 
@@ -162,7 +174,7 @@ public sealed unsafe class GlContext:IDisposable {
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
             glGetActiveUniform(id, index, maxLength, &length, &size, &type, p);
-        var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : "";
+        var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : string.Empty;
         return (size, (UniformType)type, n);
     }
 
@@ -188,13 +200,13 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     private static string SetBoolFailed (string name, bool value) =>
-        $"failed to turn {name} {(value ? "on" : "off")}";
+        string.Format(SetBoolFormat, name, value ? On : Off);
 
     private static string SetInt32Failed (string name, int value) =>
-        $"failed to set {name} to {value}";
+        string.Format(SetInt32Format, name, value);
 
     private static string SetEnumFailed<T> (T value) where T : Enum =>
-        $"failed to set {typeof(T)} to {value}";
+        string.Format(SetEnumFormat, typeof(T).Name, value);
 
     private static int GetIntegerv (IntParameter p) {
         int i;
@@ -858,7 +870,7 @@ public sealed unsafe class GlContext:IDisposable {
 
     public GlContext (DeviceContext dc, ContextConfiguration configuration) {
         if (0 != Opengl.wglGetCurrentContext())
-            throw new InvalidOperationException("context already exists");
+            throw new InvalidOperationException(ContextAlreadyExists);
         SetPixelFormat(dc, configuration);
         var rc = Opengl.CreateContext(dc);
         Opengl.MakeCurrent((nint)dc, rc);
@@ -886,24 +898,22 @@ public sealed unsafe class GlContext:IDisposable {
             Opengl.MakeCurrent((nint)dc, handle);
         } catch (WinApiException) {
             if (!Opengl.wglDeleteContext(handle))
-                Debug.WriteLine($"failed to make ARB context current, also failed to delete it");
+                Debug.WriteLine(ContextSetFailed);
             throw;
         } finally {
             if (!Opengl.wglDeleteContext(rc))
-                Debug.WriteLine($"failed to delete temporary context");
+                Debug.WriteLine(DeleteTemporaryContextFailed);
         }
 
         var (actualVersion, profile) = GetCurrentContextVersion();
         if (actualVersion.Major != requestedVersion.Major || actualVersion.Minor != requestedVersion.Minor)
-            throw new Exception($"requested {requestedVersion} got {actualVersion}");
-        Debug.WriteLine($"{actualVersion}, {profile} ({Opengl.GetString(OpenglString.Version)}, {Opengl.GetString(OpenglString.Vendor)}, {Opengl.GetString(OpenglString.Renderer)})");
+            throw new ApplicationException(string.Format(WrongContextVersion, requestedVersion, actualVersion));
 
         const BindingFlags NonPublicStatic = BindingFlags.NonPublic | BindingFlags.Static;
 
-        nint opengl32dll = 0;
-        const string opengl32 = "opengl32.dll";
-        if (!Kernel32.GetModuleHandleEx(2, opengl32, ref opengl32dll) || 0 == opengl32dll)
-            throw new WinApiException($"failed to get handle of {opengl32}");
+        Kernel32.GetModuleHandleEx(2, opengl32, out var opengl32dll);
+        if (0 == opengl32dll)
+            throw new ApplicationException(GetOpenglHandleFailed);
 
         foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
             if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
@@ -916,13 +926,12 @@ public sealed unsafe class GlContext:IDisposable {
                         if (0 != glPtr)
                             f.SetValue(null, glPtr);
                         else
-                            Debug.WriteLine($"WARNING: driver is missing {f.Name}");
+                            Debug.WriteLine(string.Format(DriverMissingFunction, f.Name));
                     }
                 }
             }
         }
     }
-
     private static nint CreateContextAttribs (DeviceContext dc, List<int> attributes) {
         var createContext = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB>(Opengl.GetProcAddress(nameof(wglCreateContextAttribsARB)));
         var asArray = attributes.ToArray();
@@ -934,9 +943,9 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
         var str = Opengl.GetString(OpenglString.Version);
-        var m = Regex.Match(str, @"^(\d+\.\d+(\.\d+)?) ((Core|Compatibility) )?");
+        var m = Regex.Match(str, OpenglVersionPattern);
         if (!m.Success)
-            throw new Exception($"'{str}' does not begin with a valid version string");
+            throw new ApplicationException(string.Format(InvalidVersionString, str));
         var version = Version.Parse(m.Groups[1].Value);
         var profile = m.Groups[4].Success && Enum.TryParse<ProfileMask>(m.Groups[4].Value, out var p) ? p : ProfileMask.Undefined;
         return (version, profile);
@@ -963,9 +972,8 @@ public sealed unsafe class GlContext:IDisposable {
                 return;
             }
         }
-        throw new Exception("no pixel format found");
+        throw new Exception(NoPixelFormat);
     }
-
     private static (PixelFlag require, PixelFlag reject) ForSwapMethod (SwapMethod? m) => m switch {
         SwapMethod.Copy => (PixelFlag.SwapCopy, PixelFlag.SwapExchange),
         SwapMethod.Swap => (PixelFlag.SwapExchange, PixelFlag.SwapCopy),

@@ -25,9 +25,4 @@
       <ProjectReference Include="..\Engine6\Engine6.csproj" />
     </ItemGroup>
 
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <!--<Exec Command="rd /s/q $(outdir)" />
-        <Exec Command="md $(outdir)" />
-        <Exec Command="..\fixeol\bin\fixeol.exe" />-->
-    </Target>
 </Project>

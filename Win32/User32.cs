@@ -220,12 +220,12 @@ public static class User32 {
     private static void SetWindow (Window windowHandle, SetWindowParameter index, nint value) {
         var before = Kernel32.GetLastError();
         if (0 != before)
-            throw new WinApiException("pre-existing error", before);
+            throw new ApplicationException($"uncaught LastError {before}");
         var previousValue = SetWindowLongPtrW(windowHandle.Handle, (int)index, value);
         if (0 == previousValue) {
             var after = Kernel32.GetLastError();
             if (0 != after)
-                throw new WinApiException($"{nameof(SetWindowLongPtrW)} failed", after);
+                throw new WinApiException(nameof(SetWindowLongPtrW), after);
         }
     }
 

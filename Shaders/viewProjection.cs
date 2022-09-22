@@ -10,18 +10,16 @@ public class ViewProjection:Program {
 #pragma warning disable CS0649
     protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgdW5pZm9ybSBtYXQ0IHZpZXcsIHByb2plY3Rpb247IHZvaWQgbWFpbiAoKSB7IGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiB2ZXJ0ZXhQb3NpdGlvbjsgfQ==";
     protected override string FragmentSource { get; } = "b3V0IHZlYzQgb3V0MDsgdm9pZCBtYWluICgpIHsgb3V0MCA9IHZlYzQoMCwxLDAsMSk7IH0=";
-
     //size 1, type Vector4
-    [GlAttrib("vertexPosition")]
+    [GlAttrib]
     public int VertexPosition { get; }
-
     //size 1, type Matrix4x4
-    [GlUniform("projection")]
+    [GlUniform]
     private readonly int projection;
     public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
     //size 1, type Matrix4x4
-    [GlUniform("view")]
+    [GlUniform]
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
 

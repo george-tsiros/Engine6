@@ -4,12 +4,14 @@ using System;
 
 public class WinApiException:Exception {
 
+    private const string ToStringFormat = "win32 says {0} '{1}' ({2})";
+
     public uint LastError { get; }
 
-    public WinApiException (string message, uint? lastError = null) : base(message) {
+    public WinApiException (string functionName, uint? lastError = null) : base(functionName) {
         LastError = lastError ?? Kernel32.GetLastError();
     }
-    //const 
+
     public override string ToString () =>
-        $"win32 says {LastError} '{Message}' ({(Win32ErrorCode)LastError})";
+        string.Format(ToStringFormat, LastError, Message, (Win32ErrorCode)LastError);
 }

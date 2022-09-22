@@ -4,8 +4,10 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Gl;
+using Common;
 using static Gl.GlContext;
 using static Gl.Utilities;
+using static Common.Functions;
 using System.Text;
 using System.Collections.Generic;
 
@@ -43,12 +45,12 @@ class ShaderGen {
                             DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderNameUppercased, f);
 
 
-                        var outputFilepath = Path.Combine(targetDir, shaderName + ".cs");
+                        var outputFilepath = Path.Combine(targetDir, shaderNameUppercased + ".cs");
                         if (File.Exists(outputFilepath) && 0 != new FileInfo(outputFilepath).Length) {
                             var existing = File.ReadAllText(outputFilepath).Trim();
                             var newlyCreated = Encoding.ASCII.GetString(mem.ToArray()).Trim();
                             if (existing == newlyCreated) {
-                                Console.Write($"{targetDir}{shaderNameUppercased}.cs already exists and is the same\n");
+                                Console.Write($"{outputFilepath}.cs already exists and is the same\n");
                                 continue;
                             }
                         }
@@ -57,7 +59,7 @@ class ShaderGen {
                         mem.Position = 0;
                         using (var f = File.Create(outputFilepath))
                             mem.CopyTo(f);
-                        Console.Write($"{targetDir}{shaderNameUppercased}.cs\n");
+                        Console.Write($"{outputFilepath}\n");
                     }
                 } else {
                     Trace($"no fragment shader file (\"{fragmentShaderFilepath}\") for vertex shader file \"{vertexShaderFilename}\"");
@@ -74,12 +76,6 @@ class ShaderGen {
             return false;
         }
         return true;
-    }
-
-    private static string UppercaseFirst (string str) {
-        var chars = str.ToCharArray();
-        chars[0] = char.ToUpper(chars[0]);
-        return new(chars);
     }
 
     private static bool IsPrimitive (UniformType type) =>
@@ -102,21 +98,6 @@ class ShaderGen {
     private static string Pack (string text) =>
         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Join(' ', text.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries))));
 
-    [Flags]
-    enum EnumLinesOption {
-        None = 0,
-        Trim = 1,
-        SkipBlankOrWhitespace = 2,
-    }
-
-    private static IEnumerable<string> EnumLines (string filepath, EnumLinesOption option = EnumLinesOption.None) {
-        var trim = option.HasFlag(EnumLinesOption.Trim);
-        var includeBlankOrWhitespace = !option.HasFlag(EnumLinesOption.SkipBlankOrWhitespace);
-        using StreamReader reader = new(filepath);
-        while (reader.ReadLine() is string line)
-            if (includeBlankOrWhitespace || !string.IsNullOrWhiteSpace(line))
-                yield return trim ? line.Trim() : line;
-    }
     private const string ShaderHeader = @"
 namespace Shaders;
 
@@ -128,16 +109,12 @@ using Common;
 public class {0}:Program {{
 #pragma warning disable CS0649
 ";
-    private const string AttribFormat = @"
-    //size {0}, type {1}
-    [GlAttrib(""{2}"")]
-    public int {3} {{ get; }}
-";
+
     private const string UniformFormat = @"
     //size {0}, type {1}
-    [GlUniform(""{2}"")]
-    private readonly int {3};
-    public void {4} ({5} v) => Uniform({6}, v);
+    [GlUniform]
+    private readonly int {2};
+    public void {3} ({4} v) => Uniform({5}, v);
 ";
     private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, TextWriter f) {
         List<string> vertexShaderSourceLines = new();
@@ -167,7 +144,17 @@ public class {0}:Program {{
             var (size, type, name) = GetActiveAttrib(program, i);
             if (name.StartsWith("gl_"))
                 continue;
-            f.Write(AttribFormat, size, type, name, UppercaseFirst(name));
+
+            var propertyName = UppercaseFirst(name);
+            f.Write("    //size {0}, type {1}\n", size, type);
+
+            // if glsl attribute name is the same as the property name with first letter lowercase, we can find it at creation.
+            if (LowercaseFirst(propertyName) == name)
+                f.Write("    [GlAttrib]\n");
+            else
+                f.Write("    [GlAttrib(\"{0}\")]\n", name);
+
+            f.Write("    public int {0} {{ get; }}", propertyName);
         }
 
         int uniformCount = GetProgram(program, ProgramParameter.ActiveUniforms);
@@ -175,8 +162,10 @@ public class {0}:Program {{
             var (size, type, name) = GetActiveUniform(program, i);
             if (name.StartsWith("gl_"))
                 continue;
+
+            // for uniforms, we can _always_ get the field name (even if it ends up starting with '@')
             var fieldName = IsKeyword(name) ? "@" + name : name;
-            f.Write(UniformFormat, size, type, name, fieldName, UppercaseFirst(name), UniformTypeToTypeName(type), fieldName);
+            f.Write(UniformFormat, size, type, fieldName, UppercaseFirst(name), UniformTypeToTypeName(type), fieldName);
         }
 
         f.Write($"\n#pragma warning restore CS0649\n}}");

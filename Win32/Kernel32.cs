@@ -9,7 +9,7 @@ public static class Kernel32 {
     [DllImport(dll, EntryPoint = "GetProcAddress", ExactSpelling = true, SetLastError = true)]
     private extern static nint GetProcAddress_ (nint module, nint name);
 
-    [DllImport(dll, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(dll)]
     public extern static uint GetLastError ();
 
     [DllImport(dll, EntryPoint = "GetModuleHandleA", ExactSpelling = true, SetLastError = true)]
@@ -26,9 +26,11 @@ public static class Kernel32 {
         return GetModuleHandle_(n);
     }
 
-    public static bool GetModuleHandleEx (uint flags, string moduleName, ref nint module) {
+    public static void GetModuleHandleEx (uint flags, string moduleName, out nint module) {
         using Ascii name = new(moduleName);
-        return GetModuleHandleExA(flags, (nint)name, ref module);
+        module = 0;
+        if (!GetModuleHandleExA(flags, (nint)name, ref module))
+            throw new WinApiException(nameof(GetModuleHandleEx));
     }
 
     public static nint GetProcAddress (nint module, string name) {

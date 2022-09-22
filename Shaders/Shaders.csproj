@@ -91,40 +91,10 @@
         <None Update="shadersources\directionalFlat.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\VertexIndex.frag">
+        <None Update="shadersources\vertexIndex.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\VertexIndex.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\drawArrays.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\drawArrays.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\gRenderColor.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\gRenderColor.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\multipleOutputs.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\multipleOutputs.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\multipleOutputsWithTranslation.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\multipleOutputsWithTranslation.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\rasterStrings.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\rasterStrings.vert">
+        <None Update="shadersources\vertexIndex.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\skyBox.frag">
@@ -145,17 +115,8 @@
         <None Update="shadersources\solidColor.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Update="unused\textureSimpleWithTranslation.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="unused\textureSimpleWithTranslation.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <!--<Exec Command="rd /s/q $(outdir)" />
-        <Exec Command="md $(outdir)" />
-        <Exec Command="..\fixeol\bin\fixeol.exe" />-->
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />
     </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

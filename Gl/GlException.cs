@@ -18,7 +18,7 @@ public class GlException:Exception {
             errors.Add(e);
         }
         if (0 < errors.Count) {
-            var strings = errors.ConvertAll(e => Glu.ErrorString((int)e));
+            var strings = errors.ConvertAll(Glu.GetErrorString);
             throw new Exception(string.Join("\n", strings));
         }
     }
@@ -30,7 +30,7 @@ public class GlException:Exception {
 
     public GlException (string message = null) : base(message ?? "") {
         GlError = GetError();
-        GlMessage = Glu.ErrorString((int)GlError);
+        GlMessage = Glu.GetErrorString(GlError);
     }
 
     public override string ToString () =>

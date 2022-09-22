@@ -10,6 +10,8 @@ public delegate void Handler<T> (in T t) where T : struct;
 
 public abstract class Window:IDisposable {
 
+    private const string DefaultFontFilepath = "data/ibm/3270.txt";
+
     public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
         Handle = User32.CreateWindow(Atom, style, styleEx);
         Dc = new(this);
@@ -24,7 +26,7 @@ public abstract class Window:IDisposable {
     public MouseButton Buttons { get; private set; }
     public PixelFont PixelFont {
         get =>
-            font ??= new("data/ibm3270.txt");
+            font ??= new(DefaultFontFilepath);
         set =>
             font = value;
     }

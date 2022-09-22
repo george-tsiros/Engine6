@@ -28,15 +28,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="AxesTest.cs" />
         <Compile Remove="BlitTest.cs" />
         <Compile Remove="Configuration.cs" />
         <Compile Remove="Configuration.Designer.cs" />
         <Compile Remove="DrawArraysInstancedTest.cs" />
         <Compile Remove="Ground.cs" />
-        <Compile Remove="HighlightTriangle.cs" />
-        <Compile Remove="MovementTest.cs" />
-        <Compile Remove="NoiseTest.cs" />
         <Compile Remove="ShowTexture.cs" />
         <Compile Remove="SkyBoxTest.cs" />
     </ItemGroup>
@@ -49,14 +45,6 @@
       <None Remove="data\font.png" />
       <None Remove="data\teapot.hits" />
       <None Remove="data\ufl2.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Include="AxesTest.cs" />
-      <None Include="BlitTest.cs" />
-      <None Include="HighlightTriangle.cs" />
-      <None Include="MovementTest.cs" />
-      <None Include="NoiseTest.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -103,11 +91,6 @@
         </None>
     </ItemGroup>
 
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <!--<Exec Command="rd /s/q $(outdir)" />
-        <Exec Command="md $(outdir)" />
-        <Exec Command="..\fixeol\bin\fixeol.exe" />-->
-    </Target>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
         <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />

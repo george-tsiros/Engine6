@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 class Program {
 
-    static readonly string[] extensions = ".cs,.cpp,.c,.h,.hpp,.md,.bat,.txt,.cap,.json,.vert,.frag,.csproj,.sql,.runsettings".Split(',');
+    static readonly string[] extensions = ".sln,.cs,.cpp,.c,.h,.hpp,.md,.bat,.txt,.cap,.json,.vert,.frag,.csproj,.sql,.runsettings".Split(',');
+    static readonly string[] skipDirectories = "obj,.git,.vs,properties,bin,TestResults".Split(',');
 
     static bool HasKnownExtension (string f) =>
         Array.Exists(extensions, e => string.Equals(Path.GetExtension(f), e, StringComparison.OrdinalIgnoreCase));
 
+
     static bool IsNotInOutputDir (string f) =>
-        f.IndexOf(@"\obj\", StringComparison.OrdinalIgnoreCase) < 0 &&
-        f.IndexOf(@"\properties\", StringComparison.OrdinalIgnoreCase) < 0 &&
-        f.IndexOf(@"\bin\", StringComparison.OrdinalIgnoreCase) < 0;
+        Array.TrueForAll(skipDirectories, x => f.IndexOf($"\\{x}\\", StringComparison.OrdinalIgnoreCase) < 0);
 
     static bool MayNeedFix (string f) =>
         HasKnownExtension(f) && IsNotInOutputDir(f);

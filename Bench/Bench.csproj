@@ -22,8 +22,4 @@
         <Optimize>True</Optimize>
     </PropertyGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <!--<Exec Command="..\fixeol\bin\fixeol.exe" />-->
-    </Target>
-
 </Project>
