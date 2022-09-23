@@ -18,42 +18,15 @@ public static class Gdi32 {
     [DllImport(dll, SetLastError = true)]
     private unsafe static extern nint CreateDIBSection ([In] nint dc, BitmapInfo* info, int use, ref void* p, nint section, uint offset);
 
-    //[DllImport(dll, EntryPoint = "BitBlt", ExactSpelling = true, SetLastError = true)]
-    //[return: MarshalAs(UnmanagedType.Bool)]
-    //private static extern bool BitBlt_ (nint to, int x, int y, int w, int h, nint from, int x1, int y1, uint rasterOp);
-
-    [DllImport(dll)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool GdiFlush ();
-
     [DllImport(dll)]
     private unsafe static extern int StretchDIBits (nint dc, int xT, int yT, int wT, int hT, int xS, int yS, int wS, int hS, void* p, in BitmapInfo info, int use, uint op);
 
-    //[DllImport(dll)]
-    //public unsafe static extern int SetDIBits (nint dc, nint bitmapHandle, uint start, uint count, void* p, in BitmapInfo info, int use);
-
-    [DllImport(dll)]
-    internal unsafe static extern nint CreateDIBitmap (nint dc, [In] ref BitmapInfoHeader header, int init, void* bits, BitmapInfo* info, int usage);
-
-    /// <summary>
-    ///</summary>
-    /// <param name="hdc">Specifies the device context.</param>
-    /// <param name="pixelFormat">Index that specifies the pixel format. The pixel formats that a device context supports are identified by positive one-based integer indexes.</param>
-    /// <param name="bytes">The size, in bytes, of the structure pointed to by ppfd. The DescribePixelFormat function stores no more than nBytes bytes of data to that structure. Set this value to sizeof(PIXELFORMATDESCRIPTOR).</param>
-    /// <param name="ppfd">the function sets the members of the PIXELFORMATDESCRIPTOR structure pointed to by ppfd according to the specified pixel format.</param>
-    /// <returns>If the function succeeds, the return value is the maximum pixel format index of the device context.If the function fails, the return value is zero. To get extended error information, call <see cref="Kernel32.GetLastError"/>.</returns>
     [DllImport(dll, SetLastError = true)]
     internal static unsafe extern int DescribePixelFormat (nint dc, int iPixelFormat, uint bytes, PixelFormatDescriptor* p);
 
     [DllImport(dll, EntryPoint = "GetPixelFormat", ExactSpelling = true, SetLastError = true)]
     private static extern int GetPixelFormat_ (nint dc);
 
-    /// <summary>
-    ///</summary>
-    /// <param name="dc"></param>
-    /// <param name="format"></param>
-    /// <param name="pfd"></param>
-    /// <returns>If the function succeeds, the return value is TRUE.If the function fails, the return value is FALSE. To get extended error information, call <see cref="Kernel32.GetLastError"/>.</returns>
     [DllImport(dll, EntryPoint = "SetPixelFormat", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetPixelFormat_ (nint dc, int format, ref PixelFormatDescriptor pfd);
@@ -61,9 +34,6 @@ public static class Gdi32 {
     [DllImport(dll, EntryPoint = "SwapBuffers", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SwapBuffers_ (nint dc);
-
-    [DllImport(dll)]
-    private static unsafe extern int SetDIBitsToDevice (nint dc, int xT, int yT, uint w, uint h, int xS, int yS, uint scan0, uint lineCount, void* bits, ref BitmapInfo info, uint colorUse);
 
     public static void SwapBuffers (DeviceContext dc) {
         if (!SwapBuffers_((nint)dc))
@@ -108,11 +78,6 @@ public static class Gdi32 {
             throw new WinApiException(nameof(SetPixelFormat));
     }
 
-    //public static void BitBlt (DeviceContext to, DeviceContext from, in Rectangle destination, in Vector2i origin, RasterOperation op) {
-    //    if (!BitBlt_((nint)to, destination.Left, destination.Top, destination.Width, destination.Height, (nint)from, origin.X, origin.Y, (uint)op))
-    //        throw new WinApiException(nameof(BitBlt));
-    //}
-
-    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, Dib source, RasterOperation op) => 
+    public unsafe static int StretchDIBits (DeviceContext dc, in Rectangle to, in Rectangle from, Dib source, RasterOperation op) =>
         StretchDIBits((nint)dc, to.Left, to.Top, to.Width, to.Height, from.Left, from.Top, from.Width, from.Height, source.Pixels, source.Info, 0, (uint)op);
 }

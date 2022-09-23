@@ -37,34 +37,10 @@
         <None Update="shadersources\directionalLightFlat.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\axes.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\axes.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\lines.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\lines.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
         <None Update="shadersources\pointLightFlat.frag">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\pointLightFlat.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\lines.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\lines.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\passThrough.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\passThrough.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
         <None Update="shadersources\plot.frag">
@@ -85,36 +61,10 @@
         <None Update="shadersources\rasterFont.vert">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Update="shadersources\directionalFlat.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\directionalFlat.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\vertexIndex.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\vertexIndex.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\skyBox.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\skyBox.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\simpleTexture.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\simpleTexture.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\solidColor.frag">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="shadersources\solidColor.vert">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="shadersources\" />
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe $(ProjectDir)shadersources\ $(ProjectDir)" />

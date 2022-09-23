@@ -11,12 +11,4 @@
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\FixEol\FixEol.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        </ProjectReference>
-        <ProjectReference Include="..\BitmapToRaster\BitmapToRaster.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        </ProjectReference>
-    </ItemGroup>
 </Project>

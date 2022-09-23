@@ -1,3 +1,3 @@
 using Engine6;
-using EditorWindow window = new();
+using GdiWindow window = new();
 window.Run();

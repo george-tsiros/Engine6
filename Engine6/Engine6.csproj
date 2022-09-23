@@ -14,7 +14,6 @@
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject></StartupObject>
         <TargetFramework>net6.0</TargetFramework>
-        <!--<UseWindowsForms>True</UseWindowsForms>-->
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -28,73 +27,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="BlitTest.cs" />
-        <Compile Remove="Configuration.cs" />
-        <Compile Remove="Configuration.Designer.cs" />
-        <Compile Remove="DrawArraysInstancedTest.cs" />
-        <Compile Remove="Ground.cs" />
-        <Compile Remove="ShowTexture.cs" />
-        <Compile Remove="SkyBoxTest.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Configuration.resx" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="data\font.png" />
-      <None Remove="data\teapot.hits" />
-      <None Remove="data\ufl2.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="BepuPhysics" Version="2.5.0-beta.8" />
-      <PackageReference Include="NAudio.WinMM" Version="2.1.0" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\Shaders\Shaders.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Properties\Resources.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Resources.resx</DependentUpon>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Update="Properties\Resources.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Update="data\checkered.png">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Update="data\ibm3270.txt">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="data\skybox.png">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="data\teapot.obj">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="data\Untitled.png">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\skybox.png $(targetdir)" />
-        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\checkered.png $(targetdir)" />
-        <Exec Command="..\BitmapToRaster\bin\BitmapToRaster.exe data\untitled.png $(targetdir)" />
-    </Target>
 
 </Project>
