@@ -13,11 +13,6 @@ public class Lines:Program {
     //size 1, type 35667
     [GlAttrib]
     public int VertexPosition { get; }
-    //size 1, type Vector4
-    [GlUniform]
-    private readonly int color;
-    public void Color (in Vector4 v) => Uniform(color, v);
-
     //size 1, type Vector2i
     [GlUniform]
     private readonly int offset;
@@ -27,6 +22,11 @@ public class Lines:Program {
     [GlUniform]
     private readonly int renderSize;
     public void RenderSize (in Vector2i v) => Uniform(renderSize, v);
+
+    //size 1, type Vector4
+    [GlUniform]
+    private readonly int color;
+    public void Color (in Vector4 v) => Uniform(color, v);
 
 #pragma warning restore CS0649
 }
