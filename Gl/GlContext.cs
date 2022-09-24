@@ -54,11 +54,12 @@ public sealed unsafe class GlContext:IDisposable {
         drawArrays();
     }
 
+    // god have mercy on our souls
     public static void Uniform (int uniform, Matrix4x4 m) {
         var p = &m;
-        // god have mercy on our souls
-        glUniformMatrix4fv(uniform, 1, 0, (float*)p);
+        glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
     }
+
     public static int CreateBuffer () => CallDelegateReturningOneInt32(glCreateBuffers);
     public static int CreateFramebuffer () => CallDelegateReturningOneInt32(glCreateFramebuffers);
     public static int CreateRenderbuffer () => CallDelegateReturningOneInt32(glCreateRenderbuffers);

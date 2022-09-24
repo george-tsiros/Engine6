@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -26,8 +26,9 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
-        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" >
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <Private>False</Private>
         </ProjectReference>
     </ItemGroup>
     <ItemGroup>
