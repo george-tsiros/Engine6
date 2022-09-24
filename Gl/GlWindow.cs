@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 public class GlWindow:Window {
 
-    public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.TopMost) : base(style, styleEx) {
+    public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         timer = Stopwatch.StartNew();
     }
@@ -24,7 +24,7 @@ public class GlWindow:Window {
     protected long LastSync { get; private set; } = 0l;
     protected GlContext Ctx;
 
-    protected const double FPScap = 60.0;
+    protected const double FPScap = 140;
     protected const double TframeSeconds = 1 / FPScap;
     protected static readonly double TicksPerSecond = Stopwatch.Frequency;
     protected static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
@@ -32,17 +32,17 @@ public class GlWindow:Window {
     private bool disposed = false;
 
     protected override void OnFocusChanged (in FocusChangedArgs e) {
-        _ = User32.ShowCursor(!e.Focused);
         if (e.Focused)
             timer.Start();
         else
             timer.Stop();
+        _ = User32.ShowCursor(!e.Focused);
         User32.RegisterMouseRaw(e.Focused ? this : null);
     }
 
     // we know base methods are empty
     protected override void OnIdle () {
-        if (LastSync + 0.9 * TframeTicks < timer.ElapsedTicks) {
+        if (LastSync + TframeTicks < timer.ElapsedTicks) {
             var dt = 0.0;
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);

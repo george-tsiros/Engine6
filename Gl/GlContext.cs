@@ -54,10 +54,25 @@ public sealed unsafe class GlContext:IDisposable {
         drawArrays();
     }
 
+    public static IEnumerable<Ascii> GetExtensions () {
+        for (var i = GetInteger(Const.NUM_EXTENSIONS); --i <= 0;)
+            yield return GetStringi(Const.EXTENSIONS, i);
+    }
+
     // god have mercy on our souls
     public static void Uniform (int uniform, Matrix4x4 m) {
         var p = &m;
         glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
+    }
+
+    public static Ascii GetStringi (int name, int index) {
+        return new(glGetStringi(name, index));
+    }
+
+    public static int GetInteger (int name) {
+        var i = 0;
+        glGetIntegerv(name, &i);
+        return i;
     }
 
     public static int CreateBuffer () => CallDelegateReturningOneInt32(glCreateBuffers);
@@ -527,7 +542,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glUniform2ui;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glVertexAttribI2i;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glVertexAttribI2ui;
-    //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, nint> glGetStringi;
+    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, nint> glGetStringi;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBeginConditionalRender;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindFramebuffer;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindRenderbuffer;

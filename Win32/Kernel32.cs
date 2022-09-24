@@ -23,18 +23,18 @@ public static class Kernel32 {
         if (name is null)
             return GetModuleHandle_(0);
         using Ascii n = new(name);
-        return GetModuleHandle_(n);
+        return GetModuleHandle_(n.Handle);
     }
 
     public static void GetModuleHandleEx (uint flags, string moduleName, out nint module) {
         using Ascii name = new(moduleName);
         module = 0;
-        if (!GetModuleHandleExA(flags, (nint)name, ref module))
+        if (!GetModuleHandleExA(flags, name.Handle, ref module))
             throw new WinApiException(nameof(GetModuleHandleEx));
     }
 
     public static nint GetProcAddress (nint module, string name) {
         using Ascii n = new(name);
-        return GetProcAddress_(module, n);
+        return GetProcAddress_(module, n.Handle);
     }
 }

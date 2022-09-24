@@ -1,4 +1,5 @@
+uniform vec4 color;
 out vec4 color0;
 void main() {
-    color0 = vec4(1,1,1,1);
+    color0 = color;
 }

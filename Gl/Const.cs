@@ -1004,6 +1004,7 @@ internal static class Const {
     internal const int DYNAMIC_STORAGE_BIT = 0x0100;
     internal const int ELEMENT_ARRAY_BUFFER = 0x8893;
     internal const int EQUAL = 0x0202;
+    internal const int EXTENSIONS = 0x1F03;
     internal const int FLOAT = 0x1406;
     internal const int FLOAT_MAT2 = 0x8B5A;
     internal const int FLOAT_MAT2x3 = 0x8B65;

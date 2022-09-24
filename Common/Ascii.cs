@@ -12,6 +12,19 @@ using System.Text;
 
 public sealed unsafe class Ascii:IDisposable {
 
+    public Ascii (nint ptr) {
+        Length = 0;
+        var p = (byte*)ptr;
+        while (0 != p[Length])
+            ++Length;
+        if (0 < Length) {
+            bytes = Marshal.AllocHGlobal(Length + 1);
+            for (var i = 0; i <= Length; ++i)
+                ((byte*)bytes)[i] = p[i];
+        } else
+            bytes = NullTextPointer;
+    }
+
     public Ascii (string text) {
         if (text is null)
             throw new ArgumentNullException(nameof(text));
@@ -34,9 +47,9 @@ public sealed unsafe class Ascii:IDisposable {
     }
 
     public nint Handle => 0 != bytes ? bytes : throw new ObjectDisposedException(nameof(Ascii));
-    public static implicit operator nint (Ascii self) => self.Handle;
-    public static implicit operator Ascii (string str) => new(str);
-
+    //public static implicit operator nint (Ascii self) => self.Handle;
+    //public static implicit operator Ascii (string str) => new(str);
+    public static implicit operator string (Ascii self) => Encoding.ASCII.GetString((byte*)self.bytes, self.Length);
     /// <summary>EXCLUDES TERMINATING NULL BYTE</summary>
     public readonly int Length;
 
