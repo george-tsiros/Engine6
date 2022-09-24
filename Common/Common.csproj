@@ -24,9 +24,4 @@
         <DefineConstants>TRACE;</DefineConstants>
         <Optimize>true</Optimize>
     </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\FixEol\FixEol.csproj" >
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        </ProjectReference>
-    </ItemGroup>
 </Project>
