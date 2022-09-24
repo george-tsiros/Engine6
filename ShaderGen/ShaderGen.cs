@@ -50,7 +50,7 @@ class ShaderGen {
                             var existing = File.ReadAllText(outputFilepath).Trim();
                             var newlyCreated = Encoding.ASCII.GetString(mem.ToArray()).Trim();
                             if (existing == newlyCreated) {
-                                Console.Write($"{outputFilepath}.cs already exists and is the same\n");
+                                Console.Write($"{outputFilepath} already exists and is the same\n");
                                 continue;
                             }
                         }

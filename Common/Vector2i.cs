@@ -18,10 +18,10 @@ public readonly struct Vector2i {
     public static readonly Vector2i UnitY = new(0, 1);
 
     public static Vector2i Min (in Vector2i a, in Vector2i b) =>
-        new(Maths.IntMin(a.X, b.X), Maths.IntMin(a.Y, b.Y));
+        new(Maths.Int32Min(a.X, b.X), Maths.Int32Min(a.Y, b.Y));
 
     public static Vector2i Max (in Vector2i a, in Vector2i b) =>
-        new(Maths.IntMax(a.X, b.X), Maths.IntMax(a.Y, b.Y));
+        new(Maths.Int32Max(a.X, b.X), Maths.Int32Max(a.Y, b.Y));
 
     public static Vector2i operator + (in Vector2i a, in Vector2i b) =>
         new(a.X + b.X, a.Y + b.Y);

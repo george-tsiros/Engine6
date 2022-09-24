@@ -36,7 +36,7 @@ public class PixelFont {
         var lineCount = lines.Length;
         Height = lineCount / 8;
         if (0 == Height)
-            throw new ArgumentException($"file is empty or has too few lines", nameof(filepath));
+            throw new ArgumentException("file is empty or has too few lines", nameof(filepath));
         if (0 != (lineCount & 0x7))
             throw new ArgumentException($"file has {lineCount} lines which is not divisible by 8", nameof(filepath));
         var lineLength = lines[0].Length;
@@ -56,7 +56,7 @@ public class PixelFont {
 
         // really hurried this one
         for (var ascii = 0; ascii < 128; ++ascii) {
-            var (row, column) = IntDivRem(ascii, 16);
+            var (row, column) = Int32DivRem(ascii, 16);
             for (var (cy, y) = (Height * row, 0); y < Height; ++y, ++cy) {
                 for (var (cx, x) = (Width * column, 0); x < Width; ++x, ++cx) {
                     m.WriteByte(lines[cy][cx] != ' ' ? byte.MaxValue : byte.MinValue);

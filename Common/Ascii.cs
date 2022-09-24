@@ -58,7 +58,7 @@ public sealed unsafe class Ascii:IDisposable {
         span.CopyTo(new Span<byte>((byte*)bytes, Length));
     }
 
-    private static nint NullTextPointer => _null != 0 ? _null : _null = CreateNull();
+    private static nint NullTextPointer => 0 != _null ? _null : _null = CreateNull();
     private static nint _null;
     private static nint CreateNull () {
         // ...
@@ -68,22 +68,22 @@ public sealed unsafe class Ascii:IDisposable {
     }
 
     private byte Get (int i) {
+        if (0 == bytes)
+            throw new ObjectDisposedException(nameof(Ascii));
         if (i < 0)
             throw new ArgumentOutOfRangeException(nameof(i));
         if (Length <= i)
             throw new ArgumentOutOfRangeException(nameof(i));
-        if (0 == bytes)
-            throw new ObjectDisposedException(nameof(Ascii));
         return ((byte*)bytes)[i];
     }
 
     private byte Set (int i, byte value) {
+        if (0 == bytes)
+            throw new ObjectDisposedException(nameof(Ascii));
         if (i < 0)
             throw new ArgumentOutOfRangeException(nameof(i));
         if (Length <= i)
             throw new ArgumentOutOfRangeException(nameof(i));
-        if (0 == bytes)
-            throw new ObjectDisposedException(nameof(Ascii));
         if (0 == value)
             throw new ArgumentOutOfRangeException("no.", nameof(value));
         return ((byte*)bytes)[i] = value;

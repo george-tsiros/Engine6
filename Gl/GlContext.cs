@@ -39,7 +39,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Foo_DrawArrays (Primitive primitive, int start, int count) {
         if (drawArrays is null) {
             Debug.Assert(0 < (nint)glDrawArrays);
-            DynamicMethod function = new("", typeof(void), null);
+            DynamicMethod function = new(string.Empty, typeof(void), null);
             var ilgen = function.GetILGenerator();
             ilgen.Emit(OpCodes.Ldc_I4, (int)primitive);
             ilgen.Emit(OpCodes.Ldc_I4, start);
@@ -167,7 +167,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static string GetShaderInfoLog (int id) {
         int actualLogLength = 0;
         glGetShaderiv(id, (int)ShaderParameter.InfoLogLength, &actualLogLength);
-        var bufferLength = Maths.IntMin(1024, actualLogLength);
+        var bufferLength = Maths.Int32Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             glGetShaderInfoLog(id, bufferLength, null, p);
@@ -177,7 +177,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static string GetProgramInfoLog (int id) {
         int actualLogLength = 0;
         glGetProgramiv(id, (int)ProgramParameter.InfoLogLength, &actualLogLength);
-        var bufferLength = Maths.IntMin(1024, actualLogLength);
+        var bufferLength = Maths.Int32Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             glGetProgramInfoLog(id, bufferLength, null, p);

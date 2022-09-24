@@ -5,7 +5,6 @@
         <AssemblyName>FixEol</AssemblyName>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
         <Deterministic>true</Deterministic>
         <ErrorReport>prompt</ErrorReport>
         <FileAlignment>512</FileAlignment>
@@ -13,7 +12,8 @@
         <NoWarn>CS0078</NoWarn>
         <OutputPath>bin\</OutputPath>
         <OutputType>Exe</OutputType>
-        <PlatformTarget>x86</PlatformTarget>
+        <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+        <PlatformTarget>x64</PlatformTarget>
         <ProjectGuid>{2846B051-CD41-4529-8E7F-A5DDAC3286AF}</ProjectGuid>
         <RootNamespace>FixEol</RootNamespace>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -49,6 +49,6 @@
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <PropertyGroup>
-        <PostBuildEvent>pushd ..\..\ &amp;&amp; popd fixeol\bin\fixeol.exe &amp;&amp; popd</PostBuildEvent>
+        <PostBuildEvent>pushd ..\..\ &amp;&amp; fixeol\bin\fixeol.exe &amp;&amp; popd</PostBuildEvent>
     </PropertyGroup>
 </Project>

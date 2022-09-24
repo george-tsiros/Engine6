@@ -194,7 +194,7 @@ public class Raster:IDisposable {
             PixelU32Internal(a, color.Argb);
         } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
             var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
-            var (x0, x1) = (Maths.IntClamp(x0unbounded, 0, Width - 1), Maths.IntClamp(x1unbounded, 0, Width - 1));
+            var (x0, x1) = (Maths.Int32Clamp(x0unbounded, 0, Width - 1), Maths.Int32Clamp(x1unbounded, 0, Width - 1));
             fixed (byte* bytes = Pixels) {
                 uint* p = (uint*)bytes;
                 var line = a.Y * Width; // NOT stride
@@ -205,7 +205,7 @@ public class Raster:IDisposable {
             }
         } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
             var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
-            var (y0, y1) = (Maths.IntClamp(y0unbound, 0, Height - 1), Maths.IntClamp(y1unbound, 0, Height - 1));
+            var (y0, y1) = (Maths.Int32Clamp(y0unbound, 0, Height - 1), Maths.Int32Clamp(y1unbound, 0, Height - 1));
             fixed (byte* bp = Pixels) {
                 var p = (uint*)bp;
                 for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
@@ -216,7 +216,7 @@ public class Raster:IDisposable {
             var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
             var dp = p1 - p0;
 
-            if (Maths.IntAbs(dp.X) < Maths.IntAbs(dp.Y)) {
+            if (Maths.Int32Abs(dp.X) < Maths.Int32Abs(dp.Y)) {
 
             } else {
 

@@ -95,7 +95,7 @@ public static class Functions {
     }
 
     private static void PushAscii (Span<byte> a, ref long int64, ref int offset) {
-        (int64, var d) = LongDivRem(int64, 10);
+        (int64, var d) = Int64DivRem(int64, 10);
         a[--offset] = (byte)(d + '0');
     }
 
