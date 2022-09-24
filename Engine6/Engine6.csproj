@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -9,33 +8,31 @@
         <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
         <OutputType>WinExe</OutputType>
-        <PlatformTarget>x64</PlatformTarget>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject></StartupObject>
         <TargetFramework>net6.0</TargetFramework>
+        <Platforms>x86;x64</Platforms>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <DefineConstants>DEBUG;TRACE;</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <DefineConstants>TRACE;</DefineConstants>
         <Optimize>true</Optimize>
     </PropertyGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" >
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
         <ProjectReference Include="..\Shaders\Shaders.csproj" />
     </ItemGroup>
-
     <ItemGroup>
         <None Update="data\ibm3270.txt">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-
 </Project>

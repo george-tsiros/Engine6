@@ -1,3 +1,3 @@
 using Engine6;
-using GdiWindow window = new();
+using Experiment window = new();
 window.Run();

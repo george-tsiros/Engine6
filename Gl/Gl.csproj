@@ -1,42 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <LangVersion>preview</LangVersion>
         <NoWarn>1701;1702;CS0078</NoWarn>
+        <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
-        <PlatformTarget>x64</PlatformTarget>
+        <OutputType>Library</OutputType>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+        <!--<StartupObject></StartupObject>-->
         <TargetFramework>net6.0</TargetFramework>
+        <Platforms>x86;x64</Platforms>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DefineConstants>DEBUG;TRACE;</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>TRACE</DefineConstants>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <DefineConstants>TRACE;</DefineConstants>
         <Optimize>true</Optimize>
     </PropertyGroup>
-
     <ItemGroup>
-      <Compile Remove="FenceSync.cs" />
-      <Compile Remove="RenderingContext.cs" />
+        <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\Win32\Win32.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <None Include="FenceSync.cs" />
-      <None Include="RenderingContext.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Common\Common.csproj" />
-      <ProjectReference Include="..\Win32\Win32.csproj" />
-    </ItemGroup>
-
-
 </Project>

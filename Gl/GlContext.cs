@@ -10,6 +10,7 @@ using System.Text;
 using Win32;
 using System.Numerics;
 using Common;
+using System.Reflection.Emit;
 
 public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
 
@@ -31,6 +32,36 @@ public sealed unsafe class GlContext:IDisposable {
     private const string DeleteTemporaryContextFailed = "failed to delete temporary context";
     private const string WrongContextVersion = "requested {0} got {1}";
     private const string GetOpenglHandleFailed = $"failed to get handle for {opengl32}";
+
+    //EXPERIMENT FOR CALLING THROUGH FUNCTIONS GENERATED AT RUNTIME
+    private static Action drawArrays;
+    private static readonly Type[] Int32_Int32_Int32 = { typeof(int), typeof(int), typeof(int), };
+    public static void Foo_DrawArrays (Primitive primitive, int start, int count) {
+        if (drawArrays is null) {
+            Debug.Assert(0 < (nint)glDrawArrays);
+            DynamicMethod function = new("", typeof(void), null);
+            var ilgen = function.GetILGenerator();
+            ilgen.Emit(OpCodes.Ldc_I4, (int)primitive);
+            ilgen.Emit(OpCodes.Ldc_I4, start);
+            ilgen.Emit(OpCodes.Ldc_I4, count);
+            switch (IntPtr.Size) {
+                case 4:
+                    Debug.Assert((nint)glDrawArrays < int.MaxValue);
+                    ilgen.Emit(OpCodes.Ldc_I4, (int)glDrawArrays);
+                    break;
+                case 8:
+                    ilgen.Emit(OpCodes.Ldc_I8, (long)glDrawArrays);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+            ilgen.Emit(OpCodes.Conv_I);
+            ilgen.EmitCalli(OpCodes.Calli, CallingConvention.StdCall, typeof(void), Int32_Int32_Int32);
+            ilgen.Emit(OpCodes.Ret);
+            drawArrays = function.CreateDelegate<Action>();
+        }
+        drawArrays();
+    }
 
     public static void Uniform (int uniform, Matrix4x4 m) {
         var p = &m;
@@ -916,6 +947,9 @@ public sealed unsafe class GlContext:IDisposable {
             throw new ApplicationException(GetOpenglHandleFailed);
 
         foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
+            //if (f.Name == nameof(glDrawArrays))
+            //    Debugger.Break();
+
             if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
                 if (attr.MinimumVersion.Major <= actualVersion.Major && attr.MinimumVersion.Minor <= actualVersion.Minor) {
                     var extPtr = Opengl.GetProcAddress(f.Name);
@@ -939,7 +973,7 @@ public sealed unsafe class GlContext:IDisposable {
             return createContext((nint)dc, 0, p);
     }
 
-    delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
+    private delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
 
     public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
         var str = Opengl.GetString(OpenglString.Version);

@@ -155,76 +155,20 @@ public abstract class Window:IDisposable {
 
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
-            case WinMessage.Timer:
-                //OnTimer(
-                return 0;
             case WinMessage.Close:
                 User32.PostQuitMessage(0);
                 return 0;
-            //case WinMessage.Create:
-            //    Dc = new(h);
-            //    return 0;
             case WinMessage.Size:
                 OnSize(new((SizeType)(int)(w & int.MaxValue), Split(l)));
                 return 0;
-            case WinMessage.Sizing:
-                //if (0 != l) {
-                //    var r = (Rectangle*)l;
-                //    OnSizing(new((SizingEdge)(w & int.MaxValue), ref *r));
-                //    return 0;
-                //}
-                break;
             case WinMessage.Move:
                 OnMove(new(Split(l)));
                 return 0;
-            case WinMessage.Moving:
-                //if (0 != l) {
-                //    var r = (Rectangle*)l;
-                //    OnMoving(new(ref *r));
-                //    return 0;
-                //}
-                break;
             case WinMessage.ShowWindow:
                 OnShowWindow(new(0 != w, (ShowWindowReason)(int)(l & int.MaxValue)));
                 return 0;
-            case WinMessage.ActivateApp:
-                //OnActivateApp(0 != w);
-                return 0;
-            case WinMessage.Activate:
-                //OnActivate(0 != (w & 0xffff0000), (ActivateKind)(0xffff & w));
-                return 0;
-            case WinMessage.CaptureChanged:
-                //OnCaptureChanged(h);
-                return 0;
-            case WinMessage.EnterSizeMove:
-                //OnEnterSizeMove();
-                return 0;
-            case WinMessage.ExitSizeMove:
-                //OnExitSizeMove();
-                return 0;
             case WinMessage.EraseBkgnd:
                 return 1;
-            case WinMessage.WindowPosChanging:
-                //if (0 != l) {
-                //    var p = (WindowPos*)l;
-                //    OnWindowPosChanging(ref *p);
-                //    return 0;
-                //}
-                break;
-            case WinMessage.WindowPosChanged:
-                //if (0 != l) {
-                //    var p = (WindowPos*)l;
-                //    OnWindowPosChanged(ref *p);
-                //    return 0;
-                //}
-                break;
-            case WinMessage.GetMinMaxInfo:
-                //if (0 != l) {
-                //    var p = (MinMaxInfo*)l;
-                //    OnGetMinMaxInfo(ref *p);
-                //    return 0;
-                //}
-                break;
             case WinMessage.LButtonDown:
             case WinMessage.RButtonDown:
             case WinMessage.MButtonDown:
