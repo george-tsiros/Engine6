@@ -31,13 +31,13 @@ public class GlWindow:Window {
     private readonly Stopwatch timer;
     private bool disposed = false;
 
-    protected override void OnFocusChanged (in FocusChangedArgs e) {
-        if (e.Focused)
+    protected override void OnFocusChanged (in FocusChangedArgs args) {
+        if (args.Focused)
             timer.Start();
         else
             timer.Stop();
-        _ = User32.ShowCursor(!e.Focused);
-        User32.RegisterMouseRaw(e.Focused ? this : null);
+        _ = User32.ShowCursor(!args.Focused);
+        User32.RegisterMouseRaw(args.Focused ? this : null);
     }
 
     // we know base methods are empty

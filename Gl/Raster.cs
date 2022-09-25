@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using Win32;
 using Common;
+using System.Diagnostics;
 
 public class Raster:IDisposable {
 
@@ -46,7 +47,7 @@ public class Raster:IDisposable {
         }
     }
 
-    public void FillRectU32 (Rectangle r, uint color = ~0u) {
+    public void FillRectU32 (Rectangle r, uint color) {
         NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(FillRectU32)} only works with 4 channels, not {Channels}");
@@ -57,19 +58,14 @@ public class Raster:IDisposable {
     }
 
     private unsafe void FillRectU32Internal (Rectangle clipped, uint color) {
-        var y = clipped.Top;
-        var h = clipped.Height;
-        var w = clipped.Width;
-        var offset = (Height - y - 1) * Width + clipped.Left;
-
+        Debug.Assert(clipped.Left < clipped.Right);
+        Debug.Assert(clipped.Top < clipped.Bottom);
+        Debug.Assert((Pixels.Length & 3) == 0);
         fixed (byte* bp = Pixels) {
-            uint* p = (uint*)bp;
-            while (--h >= 0) {
-                var x = offset;
-                for (var i = 0; i < w; ++i)
-                    p[x++] = color;
-                offset -= Width;
-            }
+            var up = (uint*)bp;
+            for (var y = clipped.Top; y < clipped.Bottom; ++y)
+                for (var x = clipped.Left; x < clipped.Right; ++x)
+                    up[y * Width + x] = color;
         }
     }
 

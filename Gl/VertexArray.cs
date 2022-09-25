@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using static GlContext;
 using Common;
+using System.Diagnostics;
 
 public class VertexArray:OpenglObject {
 
@@ -12,9 +13,10 @@ public class VertexArray:OpenglObject {
         Id = CreateVertexArray();
     }
 
-    public void Assign<T> (VertexBuffer<T> buffer, int location, int divisor = 0) where T : unmanaged {
+    public void Assign<T> (BufferObject<T> buffer, int location, int divisor = 0) where T : unmanaged {
+        Debug.Assert(BufferTarget.Array == buffer.Target);
         BindVertexArray(this);
-        buffer.Bind(BufferTarget.Array);
+        buffer.Bind();
         Attrib<T>(location, divisor);
     }
 

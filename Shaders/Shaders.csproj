@@ -31,9 +31,6 @@
             <Private>False</Private>
         </ProjectReference>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="shadersources\" />
-    </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe shadersources ." />
     </Target>

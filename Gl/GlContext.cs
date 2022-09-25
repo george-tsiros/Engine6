@@ -99,7 +99,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static int GetUniformLocation (Program p, string name) => GetLocation(p, name, glGetUniformLocation);
 
     public static int GetSwapInterval () => wglGetSwapIntervalEXT();
-    public static void BindBuffer<T> (BufferTarget target, VertexBuffer<T> buffer) where T : unmanaged => glBindBuffer((int)target, buffer.Id);
+    public static void BindBuffer<T> (BufferTarget target, BufferObject<T> buffer) where T : unmanaged => glBindBuffer((int)target, buffer.Id);
     public static void Clear (BufferBit mask) => glClear((int)mask);
     public static void ClearColor (float r, float g, float b, float a) => glClearColor(r, g, b, a);
     public static void DepthFunc (DepthFunction function) => glDepthFunc((int)function);
@@ -157,8 +157,8 @@ public sealed unsafe class GlContext:IDisposable {
     public static void NamedFramebufferTexture (Framebuffer framebuffer, FramebufferAttachment attachment, Sampler2D texture) => glNamedFramebufferTexture(framebuffer, (int)attachment, (int)texture, 0);
     public static void NamedFramebufferRenderbuffer (Framebuffer framebuffer, FramebufferAttachment attachment, int renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
     public static GlErrorCode GetError () => (GlErrorCode)glGetError();
-    public static void NamedBufferStorage<T> (VertexBuffer<T> buffer, int size, nint data, int flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, flags);
-    public static void NamedBufferSubData<T> (VertexBuffer<T> buffer, int offset, int size, void* data) where T : unmanaged => glNamedBufferSubData(buffer, offset, size, data);
+    public static void NamedBufferStorage<T> (BufferObject<T> buffer, int size, nint data, int flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, flags);
+    public static void NamedBufferSubData<T> (BufferObject<T> buffer, int offset, int size, void* data) where T : unmanaged => glNamedBufferSubData(buffer, offset, size, data);
 
 
     public static void ShaderSource (int id, string source) {
@@ -331,6 +331,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDeleteQueries;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDeleteTextures;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDrawBuffers;
+    ///<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenBuffers.xhtml"/></summary>
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenBuffers;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenQueries;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenTextures;
@@ -792,6 +793,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 4)] private static delegate* unmanaged[Stdcall]<int, nint, void*, int, void> glBufferStorage;
 
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, byte> glUnmapNamedBuffer;
+    ///<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateBuffers.xhtml"/></summary>
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int*, void> glCreateBuffers;
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int*, void> glCreateFramebuffers;
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int*, void> glCreateProgramPipelines;

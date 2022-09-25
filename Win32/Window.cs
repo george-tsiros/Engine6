@@ -138,7 +138,6 @@ public abstract class Window:IDisposable {
     //private void OnFocusChanged (bool isFocused) { }
     //private void OnGetMinMaxInfo (ref MinMaxInfo x) { }
     //private void OnIdle () { }
-    //private void OnInput (int dx, int dy) { }
     //private void OnKeyDown (Key k) { }
     //private void OnKeyUp (Key k) { }
     //private void OnLoad () { }

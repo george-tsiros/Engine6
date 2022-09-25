@@ -4,12 +4,19 @@ using System;
 using System.Runtime.InteropServices;
 using static GlContext;
 
-public class VertexBuffer<T>:OpenglObject where T : unmanaged {
+public class BufferObject<T>:OpenglObject where T : unmanaged {
 
-    public VertexBuffer (int capacityInElements) : this() =>
+    public static int ElementSize { get; } = Marshal.SizeOf<T>();
+    public int Capacity { get; }
+    public BufferTarget Target { get; }
+
+    private BufferObject (BufferTarget target) => 
+        (Target, Id) = (target, CreateBuffer());
+
+    public BufferObject (int capacityInElements, BufferTarget target = BufferTarget.Array) : this(target) =>
         NamedBufferStorage(this, ElementSize * (Capacity = capacityInElements), 0, Const.DYNAMIC_STORAGE_BIT);
 
-    public VertexBuffer (in ReadOnlySpan<T> data) : this(data.Length) =>
+    public BufferObject (in ReadOnlySpan<T> data, BufferTarget target = BufferTarget.Array) : this(data.Length, target) =>
         BufferData(data, data.Length, 0, 0);
 
     public unsafe void BufferData (in ReadOnlySpan<T> data, int count, int sourceOffset, int targetOffset) {
@@ -18,17 +25,7 @@ public class VertexBuffer<T>:OpenglObject where T : unmanaged {
             NamedBufferSubData(this, ElementSize * targetOffset, ElementSize * count, ptr + sourceOffset);
     }
 
-    public void Bind (BufferTarget target) =>
-        BindBuffer(target, this);
-
-    public static int ElementSize { get; } = 
-        Marshal.SizeOf<T>();
-
-    public int Capacity { get; }
-
-    private VertexBuffer () : base() {
-        Id = CreateBuffer();
-    }
+    public void Bind () => BindBuffer(Target, this);
 
     private void Check (int sourceOffset, int targetOffset, int count, int dataLength) {
         if (Disposed)
@@ -39,6 +36,5 @@ public class VertexBuffer<T>:OpenglObject where T : unmanaged {
             throw new ArgumentException("overflow", nameof(targetOffset));
     }
 
-    protected override Action<int> Delete { get; } = 
-        DeleteBuffer;
+    protected override Action<int> Delete { get; } = DeleteBuffer;
 }

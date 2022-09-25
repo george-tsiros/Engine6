@@ -5,13 +5,16 @@ namespace Win32;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Color {
     [FieldOffset(0)] public readonly uint Argb;
-    public static implicit operator uint (Color c) =>
-        c.Argb;
+    [FieldOffset(0)] public readonly byte A;
+    [FieldOffset(1)] public readonly byte R;
+    [FieldOffset(2)] public readonly byte G;
+    [FieldOffset(3)] public readonly byte B;
+    public static implicit operator uint (Color c) => c.Argb;
 
-    private Color (uint argb) =>
-        Argb = argb;
+    private Color (uint argb) => Argb = argb;
 
     public static Color FromRgb (int red, int green, int blue) => new(0xff000000u | ((uint)red << 16) | ((uint)green << 8) | ((uint)blue));
+    public static readonly Color Transparent = new(0);
     public static readonly Color Black = new(0xff000000);
     public static readonly Color White = new(0xffffffff);
     public static readonly Color Red = new(0xffff0000);
