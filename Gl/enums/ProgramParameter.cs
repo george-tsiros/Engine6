@@ -10,6 +10,7 @@ public enum ProgramParameter {
     ActiveAttributes = Const.ACTIVE_ATTRIBUTES,
     ActiveAttributeMaxLength = Const.ACTIVE_ATTRIBUTE_MAX_LENGTH,
     ActiveUniforms = Const.ACTIVE_UNIFORMS,
+    ActiveUniformBlocks = Const.ACTIVE_UNIFORM_BLOCKS,
     ActiveUniformMaxLength = Const.ACTIVE_UNIFORM_MAX_LENGTH,
     TransformFeedbackBufferMode = Const.TRANSFORM_FEEDBACK_BUFFER_MODE,
     TransformFeedbackVaryings = Const.TRANSFORM_FEEDBACK_VARYINGS,

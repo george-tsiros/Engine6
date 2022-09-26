@@ -12,6 +12,7 @@ public abstract class Program:OpenglObject {
         Id = Utilities.ProgramFromStrings(Unpack(VertexSource), Unpack(FragmentSource));
         Debug.Assert(0 < Id);
         var type = GetType();
+
         foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             if (prop.GetCustomAttribute<GlAttribAttribute>(false) is GlAttribAttribute attr) {
                 var fi = Utilities.GetBackingField(type, prop) ?? throw new ApplicationException($"no backing field for {prop.Name} of {type.Name}");
@@ -25,7 +26,7 @@ public abstract class Program:OpenglObject {
             if (field.GetCustomAttribute<GlUniformAttribute>(false) is GlUniformAttribute attr) {
                 var location = GetUniformLocation(this, attr.Name ?? field.Name);
                 if (location < 0)
-                    throw new ApplicationException($"could not find uniform '{attr.Name}' in {type.Name}");
+                    throw new ApplicationException($"could not find uniform '{attr.Name ?? field.Name}' in {type.Name}");
                 field.SetValue(this, location);
             }
         }

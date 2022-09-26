@@ -139,6 +139,14 @@ public class {0}:Program {{
         f.Write(Pack(fragmentShaderSource));
         f.Write("\";\n");
 
+        var outCount = GetProgramInterfaceiv(program, ProgramInterface.ProgramOutput, InterfaceParameter.ActiveResources);
+        if (1 < outCount) {
+            for (var i = 0; i < outCount; ++i) {
+                var name = GetProgramResourceName(program, i);
+                Console.WriteLine(name);
+            }
+        }
+
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {
             var (size, type, name) = GetActiveAttrib(program, i);

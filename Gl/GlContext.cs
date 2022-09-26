@@ -126,6 +126,27 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     public static void Viewport (Vector2i location, Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
 
+    public static int GetProgramInterfaceiv (int program, ProgramInterface name, InterfaceParameter parameter) {
+        var i = 0;
+        glGetProgramInterfaceiv(program, (int)name, (int)parameter, &i);
+        return i;
+    }
+
+    public static string GetProgramResourceName (int program, int index) {
+        var maxLength = 0;
+        glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
+        if (maxLength<=0)
+            throw new GlException("zero length?");
+        Debug.Assert(maxLength < 1024);
+        Span<byte> bytes = stackalloc byte[maxLength];
+        var actualLength = 0;
+        fixed (byte* p = bytes)
+            glGetProgramResourceName(program, (int)ProgramInterface.ProgramOutput, index, maxLength, &actualLength, p);
+        Debug.Assert(0 < actualLength);
+        return Encoding.ASCII.GetString(bytes[..^1]);
+    }
+
+
     public static void ActiveTexture (int i) {
         if (i != GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0)
             glActiveTexture(Const.TEXTURE0 + i);
@@ -216,7 +237,6 @@ public sealed unsafe class GlContext:IDisposable {
         return (size, (UniformType)type, n);
     }
 
-
     public static int GetProgram (int id, ProgramParameter p) {
         int i;
         glGetProgramiv(id, (int)p, &i);
@@ -269,6 +289,29 @@ public sealed unsafe class GlContext:IDisposable {
                 throw new GlException(SetInt32Failed(nameof(wglSwapIntervalEXT), value));
         }
     }
+
+    public static int GetuniformBlockIndex (int program, Ascii name) =>
+        glGetUniformBlockIndex(program, (byte*)name.Handle);
+
+    public static int GetActiveUniformBlockiv (int program, int blockIndex, UniformBlockParameter name) {
+        var i = 0;
+        glGetActiveUniformBlockiv(program, blockIndex, (int)name, &i);
+        return i;
+    }
+
+    public static Ascii GetActiveUniformBlockName (int program, int blockIndex) {
+        var reportedLength = GetActiveUniformBlockiv(program, blockIndex, UniformBlockParameter.NameLength);
+        Span<byte> bytes = stackalloc byte[reportedLength];
+
+        var actualLength = 0;
+        fixed (byte* p = bytes)
+            glGetActiveUniformBlockName(program, blockIndex, reportedLength, &actualLength, p);
+        Debug.Assert(actualLength + 1 == reportedLength);
+        return new(bytes[..^1]);
+    }
+
+    public static void UniformBlockBinding (int program, int index, int binding) =>
+        glUniformBlockBinding(program, index, binding);
 
 #pragma warning disable IDE0044 // Make fields readonly
 #pragma warning disable CS0649
@@ -564,17 +607,16 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, void> glGenerateMipmap;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndConditionalRender;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndTransformFeedback;
-
-    //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformBlockIndex;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformBlockIndex;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glGetUniformIndices;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int*, int, int*, void> glGetActiveUniformsiv;
-    //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformBlockName;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformBlockName;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformName;
-    //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetActiveUniformBlockiv;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetActiveUniformBlockiv;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glDrawArraysInstanced;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void*, int, void> glDrawElementsInstanced;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glTexBuffer;
-    //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glUniformBlockBinding;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glUniformBlockBinding;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, nint, nint, nint, void> glCopyBufferSubData;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, void> glPrimitiveRestartIndex;
 
@@ -750,8 +792,8 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, byte*, void> glPushDebugGroup;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, byte, int, void> glVertexAttribFormat;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetObjectLabel;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetProgramInterfaceiv;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, byte*, void> glGetProgramResourceName;
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetProgramInterfaceiv;
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, byte*, void> glGetProgramResourceName;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, byte, void> glDebugMessageControl;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, int, int*, int*, void> glGetProgramResourceiv;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, byte*, void> glDebugMessageInsert;

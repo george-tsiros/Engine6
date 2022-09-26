@@ -31,16 +31,15 @@ public class GlWindow:Window {
     private readonly Stopwatch timer;
     private bool disposed = false;
 
-    protected override void OnFocusChanged (in FocusChangedArgs args) {
-        if (args.Focused)
+    protected override void OnFocusChanged () {
+        if (IsFocused)
             timer.Start();
         else
             timer.Stop();
-        _ = User32.ShowCursor(!args.Focused);
-        User32.RegisterMouseRaw(args.Focused ? this : null);
+        _ = User32.ShowCursor(!IsFocused);
+        User32.RegisterMouseRaw(IsFocused ? this : null);
     }
 
-    // we know base methods are empty
     protected override void OnIdle () {
         if (LastSync + TframeTicks < timer.ElapsedTicks) {
             var dt = 0.0;

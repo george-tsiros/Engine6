@@ -12,7 +12,7 @@ public class Experiment:GlWindow {
 
     private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
     private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
-    private bool guiCursor = false;
+    private bool guiActive = false;
     private Vector2i cursorPosition;
 
     private Line lines;
@@ -42,7 +42,6 @@ public class Experiment:GlWindow {
         lines = new();
         BindVertexArray(va = new());
         va.Assign(points = new(pts), lines.VertexPosition);
-
         tex = new();
         BindVertexArray(quadArray = new());
         var quad = new Vector2[] { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1) };
@@ -51,7 +50,8 @@ public class Experiment:GlWindow {
         guiSampler.BindTo(0);
         tex.Tex0(0);
         guiRaster = new(guiSampler.Size, 4, 1);
-
+        guiRaster.ClearU32(Color.Transparent);
+        guiRaster.FillRectU32(new(new(), new(100, 100)), ~0u);
         Disposables.Add(va);
         Disposables.Add(quadArray);
         Disposables.Add(quadBuffer);
@@ -61,16 +61,22 @@ public class Experiment:GlWindow {
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
     }
-    protected override void OnKeyDown (in KeyArgs args) {
-        switch (args.Key) {
+    protected override void OnKeyDown (Key key, bool repeat) {
+        switch (key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
+        }
+        base.OnKeyDown(key, repeat);
+    }
+
+    protected override void OnKeyUp (Key key) {
+        switch (key) {
             case Key.Tab:
-                guiCursor = !guiCursor;
+                guiActive = !guiActive;
                 return;
         }
-        base.OnKeyDown(args);
+        base.OnKeyUp(key);
     }
 
     private int Axis (Key positive, Key negative) {
@@ -78,8 +84,8 @@ public class Experiment:GlWindow {
         return IsKeyDown(negative) ? d - 1 : d;
     }
 
-    protected override void OnInput (in InputArgs args) {
-        if (guiCursor)
+    protected override void OnInput (int dx, int dy) {
+        if (guiActive)
             return;
     }
 
@@ -102,7 +108,8 @@ public class Experiment:GlWindow {
     }
 
     protected override void Render (double dt) {
-        Update(dt);
+        if (!guiActive)
+            Update(dt);
         var size = ClientSize;
         Viewport(new(), size);
         ClearColor(0, 0, 0, 1);
@@ -115,14 +122,14 @@ public class Experiment:GlWindow {
         lines.View(Matrix4x4.CreateTranslation(-cameraLocation));
         lines.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, (float)size.X / size.Y, 1f, 100f));
         DrawArrays(Primitive.Lines, 0, 2 * C3_lines.Length);
-        Viewport(new(), size);
-        BindVertexArray(quadArray);
-        UseProgram(tex);
-        guiRaster.ClearU32(Color.Transparent);
-        guiRaster.FillRectU32(new(0, 0, 10, 10), ~0u);
-        guiSampler.Upload(guiRaster);
-        Disable(Capability.DepthTest);
-        DrawArrays(Primitive.Triangles, 0, 6);
+        if (guiActive) {
+            Viewport(new(), size);
+            BindVertexArray(quadArray);
+            UseProgram(tex);
+            guiSampler.Upload(guiRaster);
+            Disable(Capability.DepthTest);
+            DrawArrays(Primitive.Triangles, 0, 6);
+        }
     }
 
     static void GetCoordinateSystem (Quaternion q, out Vector3 ux, out Vector3 uy, out Vector3 uz) {

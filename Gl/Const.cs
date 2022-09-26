@@ -5,7 +5,6 @@ internal static class Const {
     //internal const int ABGR_EXT = 0x8000;
     //internal const int ACCUM_BUFFER_BIT = 0x0200;
     //internal const int ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH = 0x8A35;
-    //internal const int ACTIVE_UNIFORM_BLOCKS = 0x8A36;
     //internal const int ALIASED_LINE_WIDTH_RANGE = 0x846E;
     //internal const int ALIASED_POINT_SIZE_RANGE = 0x846D;
     //internal const int ALPHA = 0x1906;
@@ -917,6 +916,7 @@ internal static class Const {
     internal const int ACTIVE_TEXTURE = 0x84E0;
     internal const int ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87;
     internal const int ACTIVE_UNIFORMS = 0x8B86;
+    internal const int ACTIVE_UNIFORM_BLOCKS = 0x8A36;
     internal const int ALWAYS = 0x207;
     internal const int ARRAY_BUFFER = 0x8892;
     internal const int ARRAY_BUFFER_BINDING = 0x8894;
@@ -1138,6 +1138,8 @@ internal static class Const {
     internal const int TRIANGLES_ADJACENCY = 0x0C;
     internal const int UNIFORM = 0x92E1;
     internal const int UNIFORM_BUFFER = 0x8A11;
+    internal const int UNIFORM_BLOCK_NAME_LENGTH = 0x8A41;
+    internal const int UNIFORM_BLOCK_ACTIVE_UNIFORMS = 0x8A42;
     internal const int UNSIGNED_BYTE = 0x1401;
     internal const int UNSIGNED_INT = 0x1405;
     internal const int UNSIGNED_INT_VEC2 = 0x8DC6;

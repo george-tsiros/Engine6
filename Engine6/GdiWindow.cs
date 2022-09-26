@@ -1,12 +1,15 @@
 namespace Engine6;
+
+using Common;
 using System.Diagnostics;
 using Win32;
+
 public class GdiWindow:Window {
     protected Dib Dib { get; private set; }
-    protected override void OnSize (in SizeArgs _) {
+    protected override void OnSize (SizeType sizeType, in Vector2i size) {
         User32.InvalidateWindow(this);
     }
-    protected override void OnPaint (in PaintArgs _) {
+    protected override void OnPaint (nint dc, in PaintStruct ps) {
         Resize();
         Dib.ClearU32(Color.Black);
         Blit(Dc, new(new(), ClientSize), Dib);

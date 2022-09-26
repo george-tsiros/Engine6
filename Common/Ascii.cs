@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
+
 // this looks absolutely insane at first glance
 // i intend to pretty much replace all of System.String
 // and avoid using heap-allocated, unicode strings
@@ -21,6 +22,17 @@ public sealed unsafe class Ascii:IDisposable {
             bytes = Marshal.AllocHGlobal(Length + 1);
             for (var i = 0; i <= Length; ++i)
                 ((byte*)bytes)[i] = p[i];
+            ((byte*)bytes)[Length] = 0;
+        } else
+            bytes = NullTextPointer;
+    }
+
+    public Ascii (Span<byte> span) {
+        Length = span.Length;
+        if (0 < Length) {
+            bytes = Marshal.AllocHGlobal(Length + 1);
+            span.CopyTo(new Span<byte>((byte*)bytes, Length));
+            ((byte*)bytes)[Length] = 0;
         } else
             bytes = NullTextPointer;
     }
@@ -49,7 +61,9 @@ public sealed unsafe class Ascii:IDisposable {
     public nint Handle => 0 != bytes ? bytes : throw new ObjectDisposedException(nameof(Ascii));
     //public static implicit operator nint (Ascii self) => self.Handle;
     //public static implicit operator Ascii (string str) => new(str);
-    public static implicit operator string (Ascii self) => Encoding.ASCII.GetString((byte*)self.bytes, self.Length);
+    public static implicit operator string (Ascii self) =>
+        0 != self.bytes ? Encoding.ASCII.GetString((byte*)self.bytes, self.Length) : throw new ObjectDisposedException(nameof(self));
+
     /// <summary>EXCLUDES TERMINATING NULL BYTE</summary>
     public readonly int Length;
 
@@ -62,7 +76,7 @@ public sealed unsafe class Ascii:IDisposable {
         }
     }
 
-    /// <summary>SPAN EXCLUDES TERMINATING NULL BYTE</summary>
+    /// <summary>INCOMING SPAN EXCLUDES TERMINATING NULL BYTE</summary>
     internal Ascii (in ReadOnlySpan<byte> span) {
         Debug.Assert(0 != span.Length);
         Length = span.Length;

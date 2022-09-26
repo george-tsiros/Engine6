@@ -11,12 +11,12 @@ public delegate void Handler<T> (in T t) where T : struct;
 public abstract class Window:IDisposable {
 
     private const string DefaultFontFilepath = "data/ibm3270.txt";
-
+    private static Window Instance;
     public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
+        Debug.Assert(Instance is null);
+        Instance = this;
         Handle = User32.CreateWindow(Atom, style, styleEx);
         Dc = new(this);
-        if (!Windows.TryAdd(Handle, this))
-            throw new ApplicationException();
     }
 
     public nint Handle { get; private set; }
@@ -92,7 +92,6 @@ public abstract class Window:IDisposable {
         Atom = User32.RegisterClass(ref wc);
     }
 
-    private static readonly ConcurrentDictionary<nint, Window> Windows = new();
     private static readonly ushort Atom;
     private static readonly WndProc staticWndProc = StaticWndProc;
     //private static Window creating;
@@ -105,25 +104,23 @@ public abstract class Window:IDisposable {
             return h;
         }
 
-        if (Windows.TryGetValue(h, out var window))
-            return window.WndProc(h/*wat*/, m, w, l);
+        return Instance.WndProc(h/*wat*/, m, w, l);
 
-        return User32.DefWindowProc(h, m, w, l);
     }
 
     protected virtual void OnLoad () { }
     protected virtual void OnIdle () { }
     protected virtual void OnClosed () { }
-    protected virtual void OnSize (in SizeArgs args) { }
-    protected virtual void OnMove (in MoveArgs args) { }
-    protected virtual void OnShowWindow (in ShowWindowArgs args) { }
-    protected virtual void OnButtonDown (in ButtonArgs args) { }
-    protected virtual void OnButtonUp (in ButtonArgs args) { }
-    protected virtual void OnFocusChanged (in FocusChangedArgs args) { }
-    protected virtual void OnKeyDown (in KeyArgs args) { }
-    protected virtual void OnKeyUp (in KeyArgs args) { }
-    protected virtual void OnInput (in InputArgs args) { }
-    protected virtual void OnPaint (in PaintArgs args) { }
+    protected virtual void OnSize (SizeType sizeType, in Vector2i size) { }
+    protected virtual void OnMove (in Vector2i clientRelativePosition) { }
+    protected virtual void OnShowWindow (bool shown, ShowWindowReason reason) { }
+    protected virtual void OnButtonDown (MouseButton button, in PointShort location) { }
+    protected virtual void OnButtonUp (MouseButton button, in PointShort location) { }
+    protected virtual void OnFocusChanged () { }
+    protected virtual void OnKeyDown (Key key, bool repeat) { }
+    protected virtual void OnKeyUp (Key key) { }
+    protected virtual void OnInput (int dx, int dy) { }
+    protected virtual void OnPaint (nint dc, in PaintStruct ps) { }
     //public event EventHandler<SizingArgs> Sizing;
     //public event EventHandler<MovingArgs> Moving;
     //private void OnActivate (bool activated, ActivateKind kind) { }
@@ -158,13 +155,13 @@ public abstract class Window:IDisposable {
                 User32.PostQuitMessage(0);
                 return 0;
             case WinMessage.Size:
-                OnSize(new((SizeType)(int)(w & int.MaxValue), Split(l)));
+                OnSize((SizeType)(int)(w & int.MaxValue), Split(l));
                 return 0;
             case WinMessage.Move:
-                OnMove(new(Split(l)));
+                OnMove(Split(l));
                 return 0;
             case WinMessage.ShowWindow:
-                OnShowWindow(new(0 != w, (ShowWindowReason)(int)(l & int.MaxValue)));
+                OnShowWindow(0 != w, (ShowWindowReason)(int)(l & int.MaxValue));
                 return 0;
             case WinMessage.EraseBkgnd:
                 return 1;
@@ -175,7 +172,7 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    OnButtonDown(new(change, new(l)));
+                    OnButtonDown(change, new(l));
                 }
                 break;
             case WinMessage.LButtonUp:
@@ -185,33 +182,35 @@ public abstract class Window:IDisposable {
                     var wAsShort = (MouseButton)(ushort.MaxValue & w);
                     var change = wAsShort ^ Buttons;
                     Buttons = wAsShort;
-                    OnButtonUp(new(change, new(l)));
+                    OnButtonUp(change, new(l));
                 }
                 break;
             case WinMessage.SetFocus:
-                OnFocusChanged(new(IsFocused = true));
+                IsFocused = true;
+                OnFocusChanged();
                 return 0;
             case WinMessage.KillFocus:
-                OnFocusChanged(new(IsFocused = false));
+                IsFocused = false;
+                OnFocusChanged();
                 return 0;
             case WinMessage.KeyDown: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] |= lo;
-                    OnKeyDown(new(key, 0 != (l & 0x40000000)));
+                    OnKeyDown(key, 0 != (l & 0x40000000));
                 }
                 return 0;
             case WinMessage.KeyUp: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
                     KeyState[hi] &= ~lo;
-                    OnKeyUp(new(key, false));
+                    OnKeyUp(key);
                 }
                 return 0;
             case WinMessage.Paint:
                 PaintStruct ps = new();
-                var eh = User32.BeginPaint(Handle, ref ps);
-                OnPaint(new(eh, in ps));
+                var dc = User32.BeginPaint(Handle, ref ps);
+                OnPaint(dc, in ps);
                 User32.EndPaint(Handle, ref ps);
                 return 0;
             case WinMessage.Input:
@@ -220,7 +219,7 @@ public abstract class Window:IDisposable {
                     if (0 != data.lastX || 0 != data.lastY) {
                         var r = Rect.Center;
                         User32.SetCursorPos(r.X, r.Y);
-                        OnInput(new(data.lastX, data.lastY));
+                        OnInput(data.lastX, data.lastY);
                     }
                 break;
         }
@@ -231,8 +230,6 @@ public abstract class Window:IDisposable {
         if (!disposed) {
             disposed = true;
             Dc.Close();
-            if (!Windows.TryRemove(Handle, out _))
-                throw new ApplicationException();
             User32.DestroyWindow(this);
             GC.SuppressFinalize(this);
         }
