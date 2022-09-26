@@ -99,6 +99,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static int GetUniformLocation (Program p, string name) => GetLocation(p, name, glGetUniformLocation);
 
     public static int GetSwapInterval () => wglGetSwapIntervalEXT();
+    public static void BlendFunc (BlendSourceFactor source, BlendDestinationFactor destination) => glBlendFunc((int)source, (int)destination);
     public static void BindBuffer<T> (BufferTarget target, BufferObject<T> buffer) where T : unmanaged => glBindBuffer((int)target, buffer.Id);
     public static void Clear (BufferBit mask) => glClear((int)mask);
     public static void ClearColor (float r, float g, float b, float a) => glClearColor(r, g, b, a);
@@ -464,7 +465,7 @@ public sealed unsafe class GlContext:IDisposable {
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindBuffer;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindTexture;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBlendEquationSeparate;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBlendFunc;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBlendFunc;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glDetachShader;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glHint;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glPixelStorei;

@@ -7,28 +7,13 @@ using Gl;
 using static Gl.GlContext;
 using System.Numerics;
 using Shaders;
-
+using System.Text;
+using Common;
 public class GlWindow:Window {
 
-    public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
+    unsafe public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         timer = Stopwatch.StartNew();
-        tex = new();
-        BindVertexArray(quadArray = new());
-        var quad = new Vector2[] { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1) };
-        quadArray.Assign(quadBuffer = new(quad), tex.VertexPosition);
-        guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
-        guiSampler.BindTo(0);
-        tex.Tex0(0);
-        guiRaster = new(guiSampler.Size, 4, 1);
-        guiRaster.ClearU32(Color.Transparent);
-        guiRaster.FillRectU32(new(new(), new(100, 100)), ~0u);
-        Disposables.Add(quadArray);
-        Disposables.Add(quadBuffer);
-        Disposables.Add(tex);
-        Disposables.Add(guiSampler);
-        Disposables.Add(guiRaster);
-
     }
 
     protected virtual void Render (double dt_seconds) {
@@ -55,7 +40,8 @@ public class GlWindow:Window {
     private BufferObject<Vector2> quadBuffer;
     private Sampler2D guiSampler;
     private Raster guiRaster;
-
+    static readonly BlendSourceFactor[] sourceFactors = Enum.GetValues<BlendSourceFactor>();
+    static readonly BlendDestinationFactor[] destinationFactors = Enum.GetValues<BlendDestinationFactor>();
 
     protected override void OnKeyDown (Key key, bool repeat) {
         switch (key) {
@@ -73,22 +59,18 @@ public class GlWindow:Window {
     }
 
     private void SetGuiActive (bool active) {
-        if (GuiActive != active) {
-            Debug.WriteLine($"was {GuiActive}, changing to {active} ");
-            GuiActive = active;
-            _ = User32.ShowCursor(GuiActive);
-            User32.RegisterMouseRaw(GuiActive ? null : this);
-            if (!GuiActive) {
-                var r = Rect.Center;
-                User32.SetCursorPos(r.X, r.Y);
-            }
-        } else {
-            Debug.WriteLine($"already {GuiActive} == {active}");
+        if (GuiActive == active)
+            return;
+        GuiActive = active;
+        _ = User32.ShowCursor(GuiActive);
+        User32.RegisterMouseRaw(GuiActive ? null : this);
+        if (!GuiActive) {
+            var r = Rect.Center;
+            User32.SetCursorPos(r.X, r.Y);
         }
     }
 
     protected override void OnFocusChanged () {
-        Debug.WriteLine(DateTime.Now.ToString("ss.fff"));
         if (IsFocused) {
             timer.Start();
         } else {
@@ -97,35 +79,52 @@ public class GlWindow:Window {
         }
     }
 
-    //  focused rawInput    event       >   focused rawInput    what i should do
-    //  1       1           focus loss      0       0           disable raw, show cursor
-    //  1       1           tab pressed     1       0           disable raw, show cursor
-    //  1       0           tab pressed     1       1           enable raw, hide cursor
-
     protected override void OnIdle () {
         if (LastSync + TframeTicks < timer.ElapsedTicks) {
             var dt = 0.0;
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
                 var now = timer.ElapsedTicks;
-                if (IsFocused)
+                if (IsFocused && !GuiActive)
                     dt = (now - LastSync) / TicksPerSecond;
                 LastSync = now;
             }
             Render(dt);
             if (GuiActive) {
+                if (tex is null)
+                    Prepare();
                 Viewport(new(), ClientSize);
                 BindVertexArray(quadArray);
                 UseProgram(tex);
                 guiSampler.Upload(guiRaster);
                 Disable(Capability.DepthTest);
+                Enable(Capability.Blend);
                 DrawArrays(Primitive.Triangles, 0, 6);
             }
 
             ++FramesRendered;
         }
     }
+    static readonly byte[] title = { (byte)'t', (byte)'a', (byte)'b', (byte)' ', (byte)'g', (byte)'r', (byte)'a', (byte)'b', (byte)'s', (byte)'/', (byte)'r', (byte)'e', (byte)'l', (byte)'e', (byte)'a', (byte)'s', (byte)'e', (byte)'s', (byte)' ', (byte)'m', (byte)'o', (byte)'u', (byte)'s', (byte)'e', (byte)',', (byte)' ', (byte)'e', (byte)'s', (byte)'c', (byte)' ', (byte)'q', (byte)'u', (byte)'i', (byte)'t', (byte)'s', };
 
+    private void Prepare () {
+        tex = new();
+        BindVertexArray(quadArray = new());
+        var quad = new Vector2[] { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1) };
+        quadArray.Assign(quadBuffer = new(quad), tex.VertexPosition);
+        guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
+        guiSampler.BindTo(0);
+        tex.Tex0(0);
+        guiRaster = new(guiSampler.Size, 4, 1);
+        guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
+        guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu); 
+                BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
+        Disposables.Add(quadArray);
+        Disposables.Add(quadBuffer);
+        Disposables.Add(tex);
+        Disposables.Add(guiSampler);
+        Disposables.Add(guiRaster);
+    }
     public override void Dispose () {
         if (!disposed) {
             disposed = true;

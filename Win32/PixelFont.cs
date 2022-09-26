@@ -32,13 +32,15 @@ public class PixelFont {
     public PixelFont (string filepath) {
 
         var lines = File.ReadAllLines(filepath);
-
         var lineCount = lines.Length;
-        Height = lineCount / 8;
+        Height = lineCount / 16;
+
         if (0 == Height)
             throw new ArgumentException("file is empty or has too few lines", nameof(filepath));
-        if (0 != (lineCount & 0x7))
+
+        if (0 != (lineCount & 0xf))
             throw new ArgumentException($"file has {lineCount} lines which is not divisible by 8", nameof(filepath));
+
         var lineLength = lines[0].Length;
 
         for (var i = 0; i < lines.Length; ++i)

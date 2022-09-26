@@ -78,6 +78,7 @@ public class Experiment:GlWindow {
     }
 
     protected override void Render (double dt) {
+        Update(dt);
         var size = ClientSize;
         Viewport(new(), size);
         ClearColor(0, 0, 0, 1);

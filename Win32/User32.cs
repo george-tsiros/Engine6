@@ -4,9 +4,13 @@ using System;
 using Common;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
+unsafe public delegate int MonitorEnumProc (nint monitorHandle, nint dc, Rectangle* rect,nint parameter);
 
 public static class User32 {
     private const string dll = nameof(User32) + ".dll";
+
+    [DllImport(dll, EntryPoint = "GetSystemMetrics", ExactSpelling = true, SetLastError = true)]
+    internal static extern int GetSystemMetrics_ (int metric);
 
     [DllImport(dll, SetLastError = true)]
     internal static extern nint GetDC (nint windowHandle);
@@ -96,6 +100,23 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool InvalidateRect (nint handle, Rectangle* rect, nint erase);
 
+    [DllImport(dll, EntryPoint ="EnumDisplayMonitors", ExactSpelling =true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private unsafe static extern bool EnumDisplayMonitors_ (nint dc, Rectangle* rect, MonitorEnumProc callback, nint param);
+
+    public unsafe static bool EnumDisplayMonitors (MonitorEnumProc callback) {
+        return EnumDisplayMonitors_(0, null, callback, 0);
+    }
+
+    public unsafe static bool EnumDisplayMonitors (DeviceContext dc, MonitorEnumProc callback) {
+        return EnumDisplayMonitors_((nint)dc, null, callback, 0);
+    }
+
+    public static int GetSystemMetrics (SystemMetric metric) {
+        var x = GetSystemMetrics_((int)metric);
+        return 0 != x ? x : throw new WinApiException(nameof(GetSystemMetrics));
+    }
+
     public static nint LoadCursor (SystemCursor cursor) {
         var ptr = LoadCursor(0, (nint)cursor);
         return 0 != ptr ? ptr : throw new WinApiException(nameof(LoadCursor));
@@ -120,7 +141,7 @@ public static class User32 {
 
     public static Vector2i ScreenToClient (nint windowHandle, Vector2i point) =>
         ScreenToClient(windowHandle, ref point) ? point : throw new WinApiException(nameof(ScreenToClient));
-    
+
     public static unsafe void RegisterMouseRaw (Window window) {
         RawInputDevice device = new() {
             flags = window is null ? RawInputDeviceFlag.Remove : RawInputDeviceFlag.InputSink,
@@ -131,10 +152,10 @@ public static class User32 {
         if (!RegisterRawInputDevices(&device, 1, (uint)RawInputDevice.Size))
             throw new WinApiException(nameof(RegisterRawInputDevices));
     }
-    
+
     public static Vector2i ClientToScreen (Window window, Vector2i point) =>
         ClientToScreen(window.Handle, ref point) ? point : throw new WinApiException(nameof(ClientToScreen));
-    
+
     public static unsafe bool GetRawInputData (nint lParameter, ref RawMouse data) {
         const uint RIM_TYPEMOUSE = 0u;
         RawInput rawData = new();
@@ -147,44 +168,44 @@ public static class User32 {
         data = rawData.mouse;
         return true;
     }
-    
+
     public static ushort RegisterClass (ref WindowClassW windowClass) {
         var atom = RegisterClassW_(ref windowClass);
         return atom != 0 ? atom : throw new WinApiException(nameof(RegisterClassW_));
     }
-    
+
     public static void DestroyWindow (Window window) {
         if (!DestroyWindow_(window.Handle))
             throw new WinApiException(nameof(DestroyWindow));
     }
-    
+
     public static void UpdateWindow (Window window) {
         if (!UpdateWindow_(window.Handle))
             throw new WinApiException(nameof(UpdateWindow));
     }
-    
+
     public static void MoveWindow (Window window, int x, int y, int w, int h, bool repaint) {
         if (!MoveWindow_(window.Handle, x, y, w, h, repaint))
             throw new WinApiException(nameof(MoveWindow));
     }
-    
+
     public unsafe static void InvalidateRect (Window window, ref Rectangle rect, bool erase) {
         fixed (Rectangle* r = &rect)
             if (!InvalidateRect(window.Handle, r, erase ? 1 : 0))
                 throw new Exception(nameof(User32.InvalidateRect));
     }
-    
+
     public unsafe static void InvalidateWindow (Window window) {
         if (!InvalidateRect(window.Handle, null, 0))
             throw new Exception(nameof(User32.InvalidateRect));
     }
-    
+
     public static nint CreateWindow (ushort atom, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None, Vector2i? size = null, nint? moduleHandle = null) {
         var (w, h) = size is Vector2i s ? (s.X, s.Y) : (640, 480);
         var p = CreateWindowEx(styleEx, (nint)atom, 0, style, 10, 10, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
         return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
     }
-    
+
     public static int GetMessage (ref Message m) =>
         GetMessageW(ref m, 0, 0, 0);
 }

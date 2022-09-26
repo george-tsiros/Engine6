@@ -13,6 +13,7 @@ public readonly struct Color {
 
     private Color (uint argb) => Argb = argb;
 
+    public static Color FromArgb (int alpha, int red, int green, int blue) => new((uint)((alpha & 0xff) << 24) | ((uint)(red & 0xff) << 16) | ((uint)(green & 0xff) << 8) | ((uint)(blue & 0xff)));
     public static Color FromRgb (int red, int green, int blue) => new(0xff000000u | ((uint)red << 16) | ((uint)green << 8) | ((uint)blue));
     public static readonly Color Transparent = new(0);
     public static readonly Color Black = new(0xff000000);

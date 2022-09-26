@@ -37,6 +37,8 @@ public sealed unsafe class Ascii:IDisposable {
             bytes = NullTextPointer;
     }
 
+    public ReadOnlySpan<byte> AsSpan () => new Span<byte>((byte*)bytes, Length);
+
     public Ascii (string text) {
         if (text is null)
             throw new ArgumentNullException(nameof(text));

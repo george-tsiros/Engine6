@@ -33,17 +33,17 @@ public class Raster:IDisposable {
         NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(ClearU32)} only works with 4 channels, not {Channels}");
-        ClearU32Internal((color.Argb << 32) | color.Argb);
+        ClearU32Internal(color.Argb);
     }
 
-    private unsafe void ClearU32Internal (ulong ul) {
+    private unsafe void ClearU32Internal (uint ui) {
         fixed (byte* bp = Pixels) {
-            var p = (ulong*)bp;
+            var p = (uint*)bp;
             if ((Pixels.Length & 7) != 0)
                 throw new InvalidOperationException("???");
-            var count = Pixels.Length >> 3;
+            var count = Pixels.Length >> 2;
             for (var i = 0; i < count; ++i)
-                p[i] = ul;
+                p[i] = ui;
         }
     }
 
@@ -254,7 +254,7 @@ public class Raster:IDisposable {
     }
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint color = ~0u) {
+    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
@@ -274,12 +274,12 @@ public class Raster:IDisposable {
         foreach (var b in str) {
             if (Width <= x)
                 return;
-            Blit(b, font, x, y, color);
+            Blit(b, font, x, y, fore, back);
             x += font.Width;
         }
     }
 
-    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint color) {
+    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint fore, uint back) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;
@@ -291,7 +291,7 @@ public class Raster:IDisposable {
                 var xpos = x;
                 for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos) {
 
-                    p[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
+                    p[offset + column] = font.Pixels[source + column] != 0 ? fore : back;
 
                 }
             }
