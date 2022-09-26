@@ -29,9 +29,9 @@ class ShaderGen {
             throw new DirectoryNotFoundException(targetDir);
 
         try {
-
-            using GlWindow window = new();
-
+            
+            using Win32.Window window = new();
+            using GlContext ctx = new(window.Dc);
             foreach (var vertexShaderFilepath in Directory.EnumerateFiles(sourceDir, "*.vert")) {
                 var vertexShaderFilename = Path.GetFileName(vertexShaderFilepath);
                 var shaderName = Path.GetFileNameWithoutExtension(vertexShaderFilename);
@@ -65,7 +65,6 @@ class ShaderGen {
                     Trace($"no fragment shader file (\"{fragmentShaderFilepath}\") for vertex shader file \"{vertexShaderFilename}\"");
                 }
             }
-
         } catch (TypeInitializationException ex) {
             Trace($"'{ex.Message}' for '{ex.TypeName}'");
             if (ex.InnerException is MarshalDirectiveException inner)

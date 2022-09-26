@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 public delegate void Handler<T> (in T t) where T : struct;
 
-public abstract class Window:IDisposable {
+public class Window:IDisposable {
 
     private const string DefaultFontFilepath = "data/ibm3270.txt";
     private static Window Instance;
