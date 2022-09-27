@@ -231,6 +231,7 @@ public class Window:IDisposable {
             disposed = true;
             Dc.Close();
             User32.DestroyWindow(this);
+            Instance = null;
             GC.SuppressFinalize(this);
         }
     }

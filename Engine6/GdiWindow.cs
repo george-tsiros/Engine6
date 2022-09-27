@@ -6,7 +6,17 @@ using Win32;
 
 public class GdiWindow:Window {
 
+    public Color BackgroundColor { get; set; }
     protected Dib Dib { get; private set; }
+
+    protected override void OnKeyDown (Key key, bool repeated) {
+        switch (key) {
+            case Key.Escape:
+                User32.PostQuitMessage(0);
+                return;
+        }
+        base.OnKeyDown(key, repeated);
+    }
 
     protected override void OnSize (SizeType sizeType, in Vector2i size) {
         User32.InvalidateWindow(this);
@@ -16,7 +26,7 @@ public class GdiWindow:Window {
         Resize();
         if (Dib is null)
             return;
-        Dib.ClearU32(Color.Black);
+        Dib.ClearU32(BackgroundColor);
         Blit(Dc, ClientSize, Dib);
     }
 
