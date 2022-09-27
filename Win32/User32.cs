@@ -124,6 +124,18 @@ public static class User32 {
     [DllImport(dll, SetLastError = true)]
     private static extern nint SetWindowLongPtrA (nint windowHandle, int index, nint value);
 
+    [DllImport(dll, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos (nint windowHandle, nint insertAfter, int x, int y, int w, int h, uint flags);
+
+    public static void SetWindowPos (Window window, WindowPosFlags flags) =>
+        SetWindowPos(window, 0, 0, 0, 0, flags | WindowPosFlags.NoMove | WindowPosFlags.NoSize | WindowPosFlags.NoZorder | WindowPosFlags.DrawFrame);
+
+    public static void SetWindowPos (Window window, int x, int y, int w, int h, WindowPosFlags flags) {
+        if (!SetWindowPos(window.Handle, 0, x, y, w, h, (uint)flags))
+            throw new WinApiException(nameof(SetWindowPos));
+    }
+
     private static nint SetWindow (nint windowHandle, int index, nint value) {
         var lastError = Kernel32.GetLastError();
         Debug.Assert(0 == lastError);
@@ -148,10 +160,10 @@ public static class User32 {
     public static WindowStyle GetWindowStyle (Window window) =>
         (WindowStyle)GetWindowLongPtrA(window.Handle, -16);
 
-    public unsafe static bool EnumDisplaySettings (byte* name, out DeviceModeA info) {
+    public unsafe static bool EnumDisplaySettings (MonitorInfoExA monitor, out DeviceModeA info) {
         info = new();
         fixed (DeviceModeA* p = &info)
-            return EnumDisplaySettingsA(name, -1, p);
+            return EnumDisplaySettingsA(monitor.name, -1, p);
     }
 
     public unsafe static int GetMonitorCount () {
@@ -179,9 +191,11 @@ public static class User32 {
     private unsafe static readonly MonitorEnumProc getMonitorInfoEx = (monitorHandle, dc, rectPtr, parameter) => {
 
         MonitorInfoExA** pp = (MonitorInfoExA**)parameter;
+        // *pp is a MonitorInfoExA*
+        // **pp is a MonitorInfoExA
         (*pp)->size = MonitorInfoExA.Size;
         if (GetMonitorInfoA(monitorHandle, *pp)) {
-            ++pp; // who said c# has no ptr arithmetic
+            ++*pp; // who said c# has no ptr arithmetic
             return 1;
         }
         return 0;
@@ -263,7 +277,12 @@ public static class User32 {
             throw new WinApiException(nameof(UpdateWindow));
     }
 
-    public static void MoveWindow (Window window, int x, int y, int w, int h, bool repaint) {
+    public static void MoveWindow (Window window, in Rectangle rect, bool repaint = false) {
+        if (!MoveWindow_(window.Handle, rect.Left, rect.Top, rect.Width, rect.Height, repaint))
+            throw new WinApiException(nameof(MoveWindow));
+    }
+
+    public static void MoveWindow (Window window, int x, int y, int w, int h, bool repaint = false) {
         if (!MoveWindow_(window.Handle, x, y, w, h, repaint))
             throw new WinApiException(nameof(MoveWindow));
     }

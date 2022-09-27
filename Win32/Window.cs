@@ -31,10 +31,6 @@ public class Window:IDisposable {
 
     protected Rectangle GetWindowRectangle () => User32.GetWindowRect(this);
 
-    protected bool GetTopMost () {
-        throw new NotImplementedException();
-    }
-
     protected Vector2i ClientSize {
         get => User32.GetClientAreaSize(this);
         set {
@@ -42,7 +38,7 @@ public class Window:IDisposable {
             if (value != clientSize) {
                 var r = GetWindowRectangle();
                 var (w, h) = value + r.Size - clientSize;
-                User32.MoveWindow(this, r.Left, r.Top, w, h, false);
+                User32.MoveWindow(this, r.Left, r.Top, w, h);
             }
         }
     }

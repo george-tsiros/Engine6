@@ -14,6 +14,8 @@ public class GlWindow:Window {
     public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         timer = Stopwatch.StartNew();
+        ClientSize = DefaultWindowedSize;
+        backupWindowStyleEx = User32.GetWindowStyleEx(this);
     }
 
     protected virtual void Render (double dt_seconds) {
@@ -21,31 +23,71 @@ public class GlWindow:Window {
         Clear(BufferBit.ColorDepth);
     }
 
+    protected GlContext Ctx;
     protected long Ticks () => timer.ElapsedTicks;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
-    protected GlContext Ctx;
 
-    protected const double FPScap = 140;
-    protected const double TframeSeconds = 1 / FPScap;
+    protected double FPScap = 60;
+    protected double TframeSeconds () => 1 / FPScap;
     protected static readonly double TicksPerSecond = Stopwatch.Frequency;
-    protected static readonly double TframeTicks = TicksPerSecond * TframeSeconds;
+    protected double TframeTicks () => TicksPerSecond * TframeSeconds();
+    protected bool GuiActive { get; private set; } = true;
+
     private readonly Stopwatch timer;
     private bool disposed = false;
-    public bool GuiActive { get; private set; } = true;
-
     private Tex tex;
     private VertexArray quadArray;
     private BufferObject<Vector2> quadBuffer;
     private Sampler2D guiSampler;
     private Raster guiRaster;
+    private static readonly Vector2i DefaultWindowedSize = new(800, 600);
+    private bool fullscreen = false;
+    private WindowStyleEx backupWindowStyleEx;
+    private Rectangle windowedRectangle;
+    private void ToggleFullscreen () {
+        foreach (var x in Disposables)
+            x.Dispose();
+
+        if (fullscreen) {
+            _ = User32.SetWindowStyleEx(this, backupWindowStyleEx);
+            User32.SetWindowPos(this, WindowPosFlags.None);
+            User32.MoveWindow(this, windowedRectangle);
+            FPScap = 60;
+            fullscreen = false;
+            title = windowedText;
+        } else {
+            windowedRectangle = GetWindowRectangle();
+
+            var monitors = User32.GetMonitorInfo();
+            var (maxIndex, maxArea) = (-1, 0);
+            for (var i = 0; i < monitors.Length; ++i) {
+                var m = monitors[i].entireDisplay;
+                var area = m.Width * m.Height;
+                if (maxArea < area)
+                    (maxIndex, maxArea) = (i, area);
+            }
+            Debug.Assert(0 <= maxIndex);
+            var monitor = monitors[maxIndex];
+            if (User32.EnumDisplaySettings(monitor, out var monitorInfo)) {
+                User32.MoveWindow(this, monitor.entireDisplay);
+                FPScap = monitorInfo.dmDisplayFrequency;
+                title = fullscreenText;
+                fullscreen = true;
+            } else {
+                title = toggleFailedText;
+                SetGuiActive(true);
+            }
+        }
+        OnLoad();
+    }
 
     protected override void OnKeyDown (Key key, bool repeat) {
         if (!repeat)
             switch (key) {
                 case Key.Return:
                     if (IsKeyDown(Key.Menu)) {
-
+                        ToggleFullscreen();
                         return;
                     }
                     break;
@@ -81,7 +123,7 @@ public class GlWindow:Window {
     }
 
     protected override void OnIdle () {
-        if (LastSync + TframeTicks < timer.ElapsedTicks) {
+        if (LastSync + TframeTicks() < timer.ElapsedTicks) {
             var dt = 0.0;
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
@@ -92,11 +134,11 @@ public class GlWindow:Window {
             }
             Render(dt);
             if (GuiActive) {
-                if (tex is null)
-                    Prepare();
                 Viewport(new(), ClientSize);
                 BindVertexArray(quadArray);
                 UseProgram(tex);
+                guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
+                guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
                 guiSampler.Upload(guiRaster);
                 Disable(Capability.DepthTest);
                 Enable(Capability.Blend);
@@ -107,9 +149,14 @@ public class GlWindow:Window {
             ++FramesRendered;
         }
     }
-    static readonly byte[] title = { (byte)'t', (byte)'a', (byte)'b', (byte)' ', (byte)'g', (byte)'r', (byte)'a', (byte)'b', (byte)'s', (byte)'/', (byte)'r', (byte)'e', (byte)'l', (byte)'e', (byte)'a', (byte)'s', (byte)'e', (byte)'s', (byte)' ', (byte)'m', (byte)'o', (byte)'u', (byte)'s', (byte)'e', (byte)',', (byte)' ', (byte)'e', (byte)'s', (byte)'c', (byte)' ', (byte)'q', (byte)'u', (byte)'i', (byte)'t', (byte)'s', };
+    private byte[] title = helpText;
+    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab graps/releases cursor alt-enter toggles fullscreen, esc quits");
+    private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
+    private static readonly byte[] windowedText = Encoding.ASCII.GetBytes("windowed");
+    private static readonly byte[] fullscreenText = Encoding.ASCII.GetBytes("fullscreen");
 
-    private void Prepare () {
+    protected override void OnLoad () {
+        base.OnLoad();
         tex = new();
         BindVertexArray(quadArray = new());
         var quad = new Vector2[] { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1) };
@@ -118,8 +165,6 @@ public class GlWindow:Window {
         guiSampler.BindTo(0);
         tex.Tex0(0);
         guiRaster = new(guiSampler.Size, 4, 1);
-        guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
-        guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(quadArray);
         Disposables.Add(quadBuffer);

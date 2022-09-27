@@ -20,34 +20,21 @@ public class Experiment:GlWindow {
     private Vector3 modelPosition = new();
     private Quaternion modelOrientation = Quaternion.Identity;
     private Vector3 cameraLocation = 2 * Vector3.UnitZ;
-    //private static readonly Vector2i windowedSize = new(800, 600);
-    //private readonly Vector2i fullscreenSize;
-    //private bool fullscreen = false;
 
-    //public Experiment () {
-    //    var monitors = User32.GetMonitorInfo();
-    //    var (maxIndex, maxArea) = (-1, 0);
-    //    for (var i = 0; i < monitors.Length; ++i) {
-    //        var m = monitors[i].monitor;
-    //        var area = m.Width * m.Height;
-    //        if (maxArea < area)
-    //            (maxIndex, maxArea) = (i, area);
-    //    }
-    //    Debug.Assert(0 <= maxIndex);
-    //    fullscreenSize = monitors[maxIndex].monitor.Size;
-    //}
-    //User32.MoveWindow(this, 0, 0, windowedSize.X, windowedSize.Y, false);
-    //Debug.Assert(windowedSize == ClientSize);
-
-    protected override void OnLoad () {
-        SetSwapInterval(0);
-        var pts = new Vector4[C3_lines.Length * 2];
+    private readonly Vector4[] pts = new Vector4[C3_lines.Length * 2];
+    
+    public Experiment () {
         var vertices = Array.ConvertAll(C3_vertices, v => new Vector4(v / 128, 1));
         for (var i = 0; i < C3_lines.Length; ++i) {
             var (j, k) = C3_lines[i];
             pts[2 * i] = vertices[j];
             pts[2 * i + 1] = vertices[k];
         }
+        SetSwapInterval(0);
+    }
+
+    protected override void OnLoad () {
+        base.OnLoad();
         lines = new();
         BindVertexArray(va = new());
         va.Assign(points = new(pts), lines.VertexPosition);
@@ -81,7 +68,7 @@ public class Experiment:GlWindow {
             return;
         const float Velocity = 1; // /s, implied length unit is whatever opengl considers it to be
         const float AngularVelocity = Maths.fPi / 2;
-        var timeScale = (float)(dt * dt / TframeSeconds); //
+        var timeScale = (float)(dt * dt / TframeSeconds()); //
         Vector3 cameraMovement = new(Axis(Key.C, Key.Z), Axis(Key.Q, Key.A), Axis(Key.X, Key.D));
         cameraLocation += timeScale * Velocity * cameraMovement;
         var yaw = Axis(Key.Left, Key.Right) * timeScale * AngularVelocity;
