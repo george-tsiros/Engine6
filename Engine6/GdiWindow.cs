@@ -14,8 +14,10 @@ public class GdiWindow:Window {
 
     protected override void OnPaint (nint dc, in PaintStruct ps) {
         Resize();
+        if (Dib is null)
+            return;
         Dib.ClearU32(Color.Black);
-        Blit(Dc, new(new(), ClientSize), Dib);
+        Blit(Dc, ClientSize, Dib);
     }
 
     protected void Resize () {
@@ -29,8 +31,8 @@ public class GdiWindow:Window {
         }
     }
 
-    protected static void Blit (DeviceContext dc, in Rectangle rect, Dib dib) {
-        Debug.Assert(rect.Size == dib.Size);
-        _ = Gdi32.StretchDIBits(dc, rect, new(new(), dib.Size), dib, RasterOperation.SrcCopy);
+    protected static void Blit (DeviceContext dc, in Vector2i targetSize, Dib dib) {
+        Debug.Assert(targetSize == dib.Size);
+        _ = Gdi32.StretchDIBits(dc, new(new(),targetSize), new(new(), dib.Size), dib, RasterOperation.SrcCopy);
     }
 }

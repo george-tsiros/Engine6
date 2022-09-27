@@ -1,4 +1,7 @@
 using Engine6;
-
-using Experiment window = new();
-window.Run();
+using System.Diagnostics;
+unsafe {
+    var data = Win32.User32.GetMonitorInfo();
+    using GlWindow window = new();
+    window.Run();
+}

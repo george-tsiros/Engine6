@@ -49,7 +49,7 @@ unsafe sealed public class Dib:IDisposable {
         NotDisposed();
         ClearU32Internal(color.Argb);
     }
-    public void DrawString (in ReadOnlySpan<byte> chars, PixelFont font, int x, int y, in Color color) {
+    public void DrawString (in ReadOnlySpan<byte> chars, PixelFont font, int x, int y, in Color fore, in Color back) {
         NotDisposed();
 
         if (Width <= x || Height <= y)
@@ -61,10 +61,25 @@ unsafe sealed public class Dib:IDisposable {
         if (rightMostPixelColumn < 0 || bottomPixelRow < 0)
             return;
 
-        for (var i = 0; i < chars.Length && x < Width; ++i, x += font.Width)
+        var charStride = font.Width * font.Height;
+        var rowStart = (Height - y - 1) * Width;
+
+        for (var i = 0; i < chars.Length && x < Width; ++i, x += font.Width) {
+            var source = chars[i] * charStride;
+            var offset = rowStart + x;
+
             if (0 <= x)
-                Blit(chars[i], font, x, y, color.Argb);
+                for (var row = 0; row < font.Height && y < Height; ++row, offset -= Width, source += font.Width, ++y) {
+                    var xpos = x;
+                    if (0 <= y)
+                        for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos)
+                            if (0 <= xpos)
+                                raw[offset + column] = font.Pixels[source + column] != 0 ? fore : back;
+
+                }
+        }
     }
+
     private const int MaxBitmapDimension = 8192;
     private BitmapInfo info;
     private readonly uint* raw;
@@ -78,21 +93,6 @@ unsafe sealed public class Dib:IDisposable {
             p[i] = ul;
         if ((pixelCount & 1) != 0)
             raw[pixelCount - 1] = color;
-    }
-    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint color) {
-        var charStride = font.Width * font.Height;
-        var rowStart = (Height - y - 1) * Width;
-        var source = ascii * charStride;
-        var offset = rowStart + x;
-
-        for (var row = 0; row < font.Height && y < Height; ++row, offset -= Width, source += font.Width, ++y) {
-            var xpos = x;
-            if (0 <= y)
-                for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos)
-                    if (0 <= xpos)
-                        raw[offset + column] = font.Pixels[source + column] != 0 ? color : 0xff000000u;
-
-        }
     }
     private void NotDisposed () {
         if (disposed)

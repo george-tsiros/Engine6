@@ -4,7 +4,8 @@ using System;
 using Common;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
-unsafe public delegate int MonitorEnumProc (nint monitorHandle, nint dc, Rectangle* rect,nint parameter);
+unsafe public delegate int MonitorEnumProc (nint monitorHandle, nint dc, Rectangle* rect, nint parameter);
+
 
 public static class User32 {
     private const string dll = nameof(User32) + ".dll";
@@ -100,13 +101,46 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool InvalidateRect (nint handle, Rectangle* rect, nint erase);
 
-    [DllImport(dll, EntryPoint ="EnumDisplayMonitors", ExactSpelling =true)]
+    [DllImport(dll)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private unsafe static extern bool GetMonitorInfoA (nint monitorHandle, MonitorInfoExA* p);
+
+    [DllImport(dll, EntryPoint = "EnumDisplayMonitors", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool EnumDisplayMonitors_ (nint dc, Rectangle* rect, MonitorEnumProc callback, nint param);
 
-    public unsafe static bool EnumDisplayMonitors (MonitorEnumProc callback) {
-        return EnumDisplayMonitors_(0, null, callback, 0);
+    public unsafe static int GetMonitorCount () {
+        int monitorCount = 0;
+
+        if (!EnumDisplayMonitors_(0, null, (a, b, c, d) => { ++*(int*)d; return 1; }, (nint)(&monitorCount)))
+            throw new WinApiException(nameof(EnumDisplayMonitors));
+        return monitorCount;
     }
+
+    public unsafe static MonitorInfoExA[] GetMonitorInfo () {
+        var monitorCount = GetMonitorCount();
+        if (0 == monitorCount)
+            return Array.Empty<MonitorInfoExA>();
+
+        var monitors = new MonitorInfoExA[monitorCount];
+
+        fixed (MonitorInfoExA* p = monitors)
+            if (!EnumDisplayMonitors_(0, null, getMonitorInfoEx, (nint)(&p)))
+                throw new WinApiException(nameof(EnumDisplayMonitors));
+
+        return monitors;
+    }
+    //monitorHandle, nint dc, Rectangle* rect, nint parameter
+    private unsafe static readonly MonitorEnumProc getMonitorInfoEx = (monitorHandle, dc, rectPtr, parameter) => {
+
+        MonitorInfoExA** pp = (MonitorInfoExA**)parameter;
+        (*pp)->size = MonitorInfoExA.Size;
+        if (GetMonitorInfoA(monitorHandle, *pp)) {
+            ++pp; // who said c# has no ptr arithmetic
+            return 1;
+        }
+        return 0;
+    };
 
     public unsafe static bool EnumDisplayMonitors (DeviceContext dc, MonitorEnumProc callback) {
         return EnumDisplayMonitors_((nint)dc, null, callback, 0);
