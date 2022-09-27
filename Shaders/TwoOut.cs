@@ -6,10 +6,10 @@ using static Gl.GlContext;
 using System.Numerics;
 using Common;
 
-public class Line:Program {
+public class TwoOut:Program {
 #pragma warning disable CS0649
     protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgdW5pZm9ybSBtYXQ0IG1vZGVsLCB2aWV3LCBwcm9qZWN0aW9uOyB2b2lkIG1haW4oKSB7IGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHZlcnRleFBvc2l0aW9uOyB9";
-    protected override string FragmentSource { get; } = "dW5pZm9ybSB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBjb2xvcjA7IHZvaWQgbWFpbigpIHsgY29sb3IwID0gY29sb3I7IH0=";
+    protected override string FragmentSource { get; } = "dW5pZm9ybSB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBjb2xvcjAsIGNvbG9yMTsgdm9pZCBtYWluKCkgeyBjb2xvcjAgPSBjb2xvcjsgY29sb3IxID0gdmVjNCh2ZWMzKDEpIC0gY29sb3IucmdiLDEpOyB9";
     //size 1, type Vector4
     [GlAttrib]
     public int VertexPosition { get; }

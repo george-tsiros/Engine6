@@ -105,9 +105,19 @@ public static class User32 {
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool GetMonitorInfoA (nint monitorHandle, MonitorInfoExA* p);
 
+    [DllImport(dll)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private unsafe static extern bool EnumDisplaySettingsA (byte* deviceName, int modeNumber, DeviceModeA* deviceMode);
+
     [DllImport(dll, EntryPoint = "EnumDisplayMonitors", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool EnumDisplayMonitors_ (nint dc, Rectangle* rect, MonitorEnumProc callback, nint param);
+
+    public unsafe static bool EnumDisplaySettings (byte* name, out DeviceModeA info) {
+        info = new();
+        fixed (DeviceModeA* p = &info)
+            return EnumDisplaySettingsA(name, -1, p);
+    }
 
     public unsafe static int GetMonitorCount () {
         int monitorCount = 0;

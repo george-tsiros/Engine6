@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 
 using Win32;
 using System.Diagnostics;
