@@ -2,6 +2,7 @@ namespace Win32;
 using System.Runtime.InteropServices;
 using System;
 using Common;
+using System.Diagnostics;
 
 public delegate nint WndProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 unsafe public delegate int MonitorEnumProc (nint monitorHandle, nint dc, Rectangle* rect, nint parameter);
@@ -57,14 +58,14 @@ public static class User32 {
     private static extern nint CreateWindowEx (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
 
     [DllImport(dll, EntryPoint = "DefWindowProcW", ExactSpelling = true, CharSet = CharSet.Unicode)]
-    public static extern nint DefWindowProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
+    internal static extern nint DefWindowProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
 
     [DllImport(dll)]
     public static extern void PostQuitMessage (int code);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ShowWindow (nint handle, CmdShow cmdShow);
+    internal static extern bool ShowWindow (nint handle, CmdShow cmdShow);
 
     [DllImport(dll)]
     public static extern int ShowCursor ([In, MarshalAs(UnmanagedType.Bool)] bool show);
@@ -78,10 +79,14 @@ public static class User32 {
 
     [DllImport(dll, EntryPoint = "PeekMessageW", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PeekMessage (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
+    internal static extern bool PeekMessage (ref Message m, nint handle, uint min, uint max, PeekRemove remove);
+
+    [DllImport(dll, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool TranslateMessageW (ref Message m);
 
     [DllImport(dll, EntryPoint = "DispatchMessageW", ExactSpelling = true)]
-    public static extern nint DispatchMessage (ref Message m);
+    internal static extern nint DispatchMessage (ref Message m);
 
     [DllImport(dll, EntryPoint = "MoveWindow", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -92,10 +97,10 @@ public static class User32 {
     private static extern bool GetClientRect (nint handle, ref Rectangle clientRect);
 
     [DllImport(dll)]
-    public static extern nint BeginPaint (nint hWnd, [In, Out] ref PaintStruct paint);
+    internal static extern nint BeginPaint (nint hWnd, [In, Out] ref PaintStruct paint);
 
     [DllImport(dll)]
-    public static extern void EndPaint (nint hWnd, [In] ref PaintStruct paint);
+    internal static extern void EndPaint (nint hWnd, [In] ref PaintStruct paint);
 
     [DllImport(dll)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -112,6 +117,36 @@ public static class User32 {
     [DllImport(dll, EntryPoint = "EnumDisplayMonitors", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private unsafe static extern bool EnumDisplayMonitors_ (nint dc, Rectangle* rect, MonitorEnumProc callback, nint param);
+
+    [DllImport(dll, SetLastError = true)]
+    private static extern nint GetWindowLongPtrA (nint windowHandle, int index);
+
+    [DllImport(dll, SetLastError = true)]
+    private static extern nint SetWindowLongPtrA (nint windowHandle, int index, nint value);
+
+    private static nint SetWindow (nint windowHandle, int index, nint value) {
+        var lastError = Kernel32.GetLastError();
+        Debug.Assert(0 == lastError);
+        var previousValue = SetWindowLongPtrA(windowHandle, index, value);
+        if (0 == previousValue) {
+            var possibleError = Kernel32.GetLastError();
+            if (0 != possibleError)
+                throw new WinApiException(nameof(SetWindowLongPtrA), possibleError);
+        }
+        return previousValue;
+    }
+
+    public static WindowStyleEx SetWindowStyleEx (Window window, WindowStyleEx style) =>
+        (WindowStyleEx)SetWindow(window.Handle, -20, (nint)style);
+
+    public static WindowStyle SetWindowStyle (Window window, WindowStyle style) =>
+        (WindowStyle)SetWindow(window.Handle, -16, (nint)style);
+
+    public static WindowStyleEx GetWindowStyleEx (Window window) =>
+        (WindowStyleEx)GetWindowLongPtrA(window.Handle, -20);
+
+    public static WindowStyle GetWindowStyle (Window window) =>
+        (WindowStyle)GetWindowLongPtrA(window.Handle, -16);
 
     public unsafe static bool EnumDisplaySettings (byte* name, out DeviceModeA info) {
         info = new();

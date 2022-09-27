@@ -8,10 +8,10 @@ using static Common.Maths;
 public class PixelFont {
     public int Height { get; private init; }
     public int Width { get; private init; }
-    public ReadOnlySpan<byte> Pixels => 
-        pixels;
+    public ReadOnlySpan<byte> Pixels => pixels;
 
-    private byte[] pixels;
+    private readonly byte[] pixels;
+
     /// <summary>fails when strings start or end with newlines</summary>
     public Vector2i SizeOf (in ReadOnlySpan<byte> str) {
         if (str.Length == 0)
@@ -28,6 +28,8 @@ public class PixelFont {
                 maxLineLength = currentLineLength;
         return new(maxLineLength * Width, lineCount * Height);
     }
+
+    public ReadOnlySpan<byte> this[char c] => c < 256 ? pixels.AsSpan(c * Width * Height, Width * Height) : throw new ArgumentOutOfRangeException(nameof(c), "must be 0 <= c <= 255");
 
     public PixelFont (string filepath) {
 
@@ -54,17 +56,15 @@ public class PixelFont {
         if (0 != (lineLength & 0xf))
             throw new ArgumentException($"{lineLength} is not divisible by 16", nameof(filepath));
 
-        using MemoryStream m = new(128 * Width * Height);
+        pixels = new byte[256 * Width * Height];
 
-        // really hurried this one
-        for (var ascii = 0; ascii < 128; ++ascii) {
+
+        for (var (i, ascii) = (0, 0); ascii < 256; ++ascii) {
             var (row, column) = Int32DivRem(ascii, 16);
-            for (var (cy, y) = (Height * row, 0); y < Height; ++y, ++cy) {
-                for (var (cx, x) = (Width * column, 0); x < Width; ++x, ++cx) {
-                    m.WriteByte(lines[cy][cx] != ' ' ? byte.MaxValue : byte.MinValue);
-                }
-            }
+            for (var (cy, y) = (Height * row, 0); y < Height; ++y, ++cy)
+                for (var (cx, x) = (Width * column, 0); x < Width; ++x, ++cx, ++i)
+                    if (' ' != lines[cy][cx])
+                        pixels[i] = 0xff;
         }
-        pixels = m.ToArray();
     }
 }

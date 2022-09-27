@@ -20,11 +20,27 @@ public class Experiment:GlWindow {
     private Vector3 modelPosition = new();
     private Quaternion modelOrientation = Quaternion.Identity;
     private Vector3 cameraLocation = 2 * Vector3.UnitZ;
+    //private static readonly Vector2i windowedSize = new(800, 600);
+    //private readonly Vector2i fullscreenSize;
+    //private bool fullscreen = false;
+
+    //public Experiment () {
+    //    var monitors = User32.GetMonitorInfo();
+    //    var (maxIndex, maxArea) = (-1, 0);
+    //    for (var i = 0; i < monitors.Length; ++i) {
+    //        var m = monitors[i].monitor;
+    //        var area = m.Width * m.Height;
+    //        if (maxArea < area)
+    //            (maxIndex, maxArea) = (i, area);
+    //    }
+    //    Debug.Assert(0 <= maxIndex);
+    //    fullscreenSize = monitors[maxIndex].monitor.Size;
+    //}
+    //User32.MoveWindow(this, 0, 0, windowedSize.X, windowedSize.Y, false);
+    //Debug.Assert(windowedSize == ClientSize);
 
     protected override void OnLoad () {
         SetSwapInterval(0);
-        User32.MoveWindow(this, 0, 0, 800, 600, false);
-        Debug.Assert(new Vector2i(800, 600) == ClientSize);
         var pts = new Vector4[C3_lines.Length * 2];
         var vertices = Array.ConvertAll(C3_vertices, v => new Vector4(v / 128, 1));
         for (var i = 0; i < C3_lines.Length; ++i) {

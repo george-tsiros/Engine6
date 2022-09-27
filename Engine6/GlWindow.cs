@@ -11,7 +11,7 @@ using System.Text;
 using Common;
 public class GlWindow:Window {
 
-    unsafe public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
+    public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
         timer = Stopwatch.StartNew();
     }
@@ -33,28 +33,29 @@ public class GlWindow:Window {
     private readonly Stopwatch timer;
     private bool disposed = false;
     public bool GuiActive { get; private set; } = true;
-    private bool pause;
 
     private Tex tex;
     private VertexArray quadArray;
     private BufferObject<Vector2> quadBuffer;
     private Sampler2D guiSampler;
     private Raster guiRaster;
-    static readonly BlendSourceFactor[] sourceFactors = Enum.GetValues<BlendSourceFactor>();
-    static readonly BlendDestinationFactor[] destinationFactors = Enum.GetValues<BlendDestinationFactor>();
 
     protected override void OnKeyDown (Key key, bool repeat) {
-        switch (key) {
-            case Key.Pause:
-                pause = !pause;
-                return;
-            case Key.Tab:
-                SetGuiActive(!GuiActive);
-                return;
-            case Key.Escape:
-                User32.PostQuitMessage(0);
-                return;
-        }
+        if (!repeat)
+            switch (key) {
+                case Key.Return:
+                    if (IsKeyDown(Key.Menu)) {
+
+                        return;
+                    }
+                    break;
+                case Key.Tab:
+                    SetGuiActive(!GuiActive);
+                    return;
+                case Key.Escape:
+                    User32.PostQuitMessage(0);
+                    return;
+            }
         base.OnKeyDown(key, repeat);
     }
 
@@ -65,7 +66,7 @@ public class GlWindow:Window {
         _ = User32.ShowCursor(GuiActive);
         User32.RegisterMouseRaw(GuiActive ? null : this);
         if (!GuiActive) {
-            var r = Rect.Center;
+            var r = GetWindowRectangle().Center;
             User32.SetCursorPos(r.X, r.Y);
         }
     }
@@ -100,6 +101,7 @@ public class GlWindow:Window {
                 Disable(Capability.DepthTest);
                 Enable(Capability.Blend);
                 DrawArrays(Primitive.Triangles, 0, 6);
+                Disable(Capability.Blend);
             }
 
             ++FramesRendered;
@@ -117,14 +119,15 @@ public class GlWindow:Window {
         tex.Tex0(0);
         guiRaster = new(guiSampler.Size, 4, 1);
         guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
-        guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu); 
-                BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
+        guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
+        BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(quadArray);
         Disposables.Add(quadBuffer);
         Disposables.Add(tex);
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
     }
+
     public override void Dispose () {
         if (!disposed) {
             disposed = true;

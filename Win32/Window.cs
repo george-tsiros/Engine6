@@ -2,11 +2,8 @@ namespace Win32;
 
 using Common;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-
-public delegate void Handler<T> (in T t) where T : struct;
 
 public class Window:IDisposable {
 
@@ -24,28 +21,26 @@ public class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
+    private PixelFont pixelFont;
     public PixelFont PixelFont {
-        get =>
-            font ??= new(DefaultFontFilepath);
-        set =>
-            font = value;
+        get => pixelFont ??= new(DefaultFontFilepath);
+        set => pixelFont = value;
     }
+
     protected List<IDisposable> Disposables { get; } = new();
 
-    protected Rectangle Rect {
-        get =>
-            User32.GetWindowRect(this);
-        set =>
-            throw new NotImplementedException();
+    protected Rectangle GetWindowRectangle () => User32.GetWindowRect(this);
+
+    protected bool GetTopMost () {
+        throw new NotImplementedException();
     }
 
     protected Vector2i ClientSize {
-        get =>
-            User32.GetClientAreaSize(this);
+        get => User32.GetClientAreaSize(this);
         set {
             var clientSize = ClientSize;
             if (value != clientSize) {
-                var r = Rect;
+                var r = GetWindowRectangle();
                 var (w, h) = value + r.Size - clientSize;
                 User32.MoveWindow(this, r.Left, r.Top, w, h, false);
             }
@@ -57,10 +52,10 @@ public class Window:IDisposable {
         return (KeyState[h] & l) != 0;
     }
 
-    public void Run (CmdShow show = CmdShow.ShowNormal) {
+    public void Run () {
         OnLoad();
         User32.UpdateWindow(this);
-        _ = User32.ShowWindow(Handle, show);
+        _ = User32.ShowWindow(Handle, CmdShow.ShowNormal);
         Message m = new();
 
         while (WinMessage.Quit != m.msg) {
@@ -97,7 +92,6 @@ public class Window:IDisposable {
     //private static Window creating;
     private readonly long[] KeyState = { 0, 0, 0, 0 };
     private bool disposed;
-    private PixelFont font;
 
     private static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
         if (WinMessage.Create == m) {
@@ -121,33 +115,6 @@ public class Window:IDisposable {
     protected virtual void OnKeyUp (Key key) { }
     protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnPaint (nint dc, in PaintStruct ps) { }
-    //public event EventHandler<SizingArgs> Sizing;
-    //public event EventHandler<MovingArgs> Moving;
-    //private void OnActivate (bool activated, ActivateKind kind) { }
-    //private void OnActivateApp (bool activated) { }
-    //private void OnButtonDown (MouseButton justDepressed, PointShort p) { }
-    //private void OnButtonUp (MouseButton justReleased, PointShort p) { }
-    //private void OnCaptureChanged (nint windowOwningMouse) { }
-    //private void OnClosed () { }
-    //private void OnCreate (ref CreateStructW cs) { }
-    //private void OnEnterSizeMove () { }
-    //private void OnExitSizeMove () { }
-    //private void OnFocusChanged (bool isFocused) { }
-    //private void OnGetMinMaxInfo (ref MinMaxInfo x) { }
-    //private void OnIdle () { }
-    //private void OnKeyDown (Key k) { }
-    //private void OnKeyUp (Key k) { }
-    //private void OnLoad () { }
-    //private void OnMouseLeave () { }
-    //private void OnMouseMove (in Vector2i currentPosition) { }
-    //private void OnMove (in Vector2i clientRelativePosition) { }
-    //private void OnMoving (ref Rectangle topLeft) { }
-    //private void OnPaint () { }
-    //private void OnShowWindow (bool shown, ShowWindow reason) { }
-    //private void OnSize (SizeType type, Vector2i size) { }
-    //private void OnSizing (SizingEdge edge, ref Rectangle r) { }
-    //private void OnWindowPosChanged (ref WindowPos p) { }
-    //private void OnWindowPosChanging (ref WindowPos p) { }
 
     protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
@@ -193,6 +160,7 @@ public class Window:IDisposable {
                 IsFocused = false;
                 OnFocusChanged();
                 return 0;
+            case WinMessage.SysKeyDown:
             case WinMessage.KeyDown: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
@@ -200,6 +168,7 @@ public class Window:IDisposable {
                     OnKeyDown(key, 0 != (l & 0x40000000));
                 }
                 return 0;
+            case WinMessage.SysKeyUp:
             case WinMessage.KeyUp: {
                     var key = (Key)(w & byte.MaxValue);
                     var (hi, lo) = FindIndex(key);
@@ -217,7 +186,7 @@ public class Window:IDisposable {
                 RawMouse data = new();
                 if (User32.GetRawInputData(l, ref data))
                     if (0 != data.lastX || 0 != data.lastY) {
-                        var r = Rect.Center;
+                        var r = GetWindowRectangle().Center;
                         User32.SetCursorPos(r.X, r.Y);
                         OnInput(data.lastX, data.lastY);
                     }
