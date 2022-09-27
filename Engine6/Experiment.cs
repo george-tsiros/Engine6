@@ -22,7 +22,7 @@ public class Experiment:GlWindow {
     private Vector3 cameraLocation = 2 * Vector3.UnitZ;
 
     private readonly Vector4[] pts = new Vector4[C3_lines.Length * 2];
-    
+
     public Experiment () {
         var vertices = Array.ConvertAll(C3_vertices, v => new Vector4(v / 128, 1));
         for (var i = 0; i < C3_lines.Length; ++i) {
@@ -62,22 +62,22 @@ public class Experiment:GlWindow {
             return;
     }
 
-    private void Update (double dt) {
+    private void Update (double dt_seconds) {
         // if less time than 10 us has passed, it is assumed that we've stopped
-        if (dt < 10e-6)
+        if (dt_seconds < 10e-6)
             return;
+        var dt = (float)dt_seconds;
         const float Velocity = 1; // /s, implied length unit is whatever opengl considers it to be
-        const float AngularVelocity = Maths.fPi / 2;
-        var timeScale = (float)(dt * dt / TframeSeconds()); //
+        const float AngularVelocity = (float)(Maths.dPi / 2);
         Vector3 cameraMovement = new(Axis(Key.C, Key.Z), Axis(Key.Q, Key.A), Axis(Key.X, Key.D));
-        cameraLocation += timeScale * Velocity * cameraMovement;
-        var yaw = Axis(Key.Left, Key.Right) * timeScale * AngularVelocity;
-        var pitch = Axis(Key.Up, Key.Down) * timeScale * AngularVelocity;
+        cameraLocation += dt * Velocity * cameraMovement;
+        var yaw = Axis(Key.Left, Key.Right) * dt * AngularVelocity;
+        var pitch = Axis(Key.Up, Key.Down) * dt * AngularVelocity;
         modelOrientation = Quaternion.Concatenate(modelOrientation, Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0));
         GetCoordinateSystem(modelOrientation, out var xLocal, out var yLocal, out var zLocal);
-        modelPosition += timeScale * xLocal * Axis(Key.Insert, Key.Delete);
-        modelPosition += timeScale * yLocal * Axis(Key.Home, Key.End);
-        modelPosition += timeScale * zLocal * Axis(Key.PageUp, Key.PageDown);
+        modelPosition += dt * xLocal * Axis(Key.Insert, Key.Delete);
+        modelPosition += dt * yLocal * Axis(Key.Home, Key.End);
+        modelPosition += dt * zLocal * Axis(Key.PageUp, Key.PageDown);
     }
 
     protected override void Render (double dt) {

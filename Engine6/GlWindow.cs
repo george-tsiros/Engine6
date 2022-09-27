@@ -28,12 +28,12 @@ public class GlWindow:Window {
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
 
-    protected double FPScap = 60;
-    protected double TframeSeconds () => 1 / FPScap;
-    protected static readonly double TicksPerSecond = Stopwatch.Frequency;
-    protected double TframeTicks () => TicksPerSecond * TframeSeconds();
     protected bool GuiActive { get; private set; } = true;
 
+    private double FPScap = 60;
+    private double TframeSeconds () => 1 / FPScap;
+    private static readonly double TicksPerSecond = Stopwatch.Frequency;
+    private double TframeTicks () => TicksPerSecond * TframeSeconds();
     private readonly Stopwatch timer;
     private bool disposed = false;
     private Tex tex;
@@ -55,7 +55,7 @@ public class GlWindow:Window {
             User32.MoveWindow(this, windowedRectangle);
             FPScap = 60;
             fullscreen = false;
-            title = windowedText;
+            title = Encoding.ASCII.GetBytes("windowed, 60 Hz");
         } else {
             windowedRectangle = GetWindowRectangle();
 
@@ -72,7 +72,7 @@ public class GlWindow:Window {
             if (User32.EnumDisplaySettings(monitor, out var monitorInfo)) {
                 User32.MoveWindow(this, monitor.entireDisplay);
                 FPScap = monitorInfo.dmDisplayFrequency;
-                title = fullscreenText;
+                title = Encoding.ASCII.GetBytes($"fullscreen, {monitorInfo.dmDisplayFrequency} Hz");
                 fullscreen = true;
             } else {
                 title = toggleFailedText;
@@ -130,6 +130,7 @@ public class GlWindow:Window {
                 var now = timer.ElapsedTicks;
                 if (IsFocused && !GuiActive)
                     dt = (now - LastSync) / TicksPerSecond;
+                dt = dt * dt / TframeSeconds();
                 LastSync = now;
             }
             Render(dt);
