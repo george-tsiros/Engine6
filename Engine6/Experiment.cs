@@ -12,7 +12,6 @@ public class Experiment:GlWindow {
 
     private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
     private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
-    private static readonly Vector2[] PresentationTriangle = { Vector2.Zero, Vector2.UnitX, Vector2.UnitY };
 
     private BufferObject<Vector4> modelVertices;
     private BufferObject<Vector2> presentationVertices;
@@ -48,15 +47,15 @@ public class Experiment:GlWindow {
 
         presentation = new();
         BindVertexArray(pa = new());
-        pa.Assign(presentationVertices = new(PresentationTriangle), presentation.VertexPosition);
+        pa.Assign(presentationVertices = new(PresentationQuad), presentation.VertexPosition);
 
         framebuffer = new();
         renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
-        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24);// Stencil8);
+        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);
         framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);
-        framebuffer.Attach(depthbuffer, FramebufferAttachment.Depth);// Stencil);
-        Debug.Assert(FramebufferStatus.Complete == framebuffer.CheckStatus());
+        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);
 
+        Debug.Assert(FramebufferStatus.Complete == framebuffer.CheckStatus());
         Disposables.Add(modelVertices);
         Disposables.Add(presentationVertices);
         Disposables.Add(framebuffer);
@@ -108,7 +107,6 @@ public class Experiment:GlWindow {
     protected override void Render (double dt) {
         Update(dt);
         var size = ClientSize;
-        BindFramebuffer(framebuffer, FramebufferTarget.Framebuffer);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
         Viewport(new(), size);
@@ -122,7 +120,6 @@ public class Experiment:GlWindow {
         lines.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, (float)size.X / size.Y, 1f, 100f));
         DrawArrays(Primitive.Lines, 0, 2 * C3_lines.Length);
 
-        BindDefaultFramebuffer(FramebufferTarget.Framebuffer);
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
         Viewport(new(), size);
@@ -132,7 +129,7 @@ public class Experiment:GlWindow {
         UseProgram(presentation);
         presentation.Tex0(0);
         renderTexture.BindTo(0);
-        DrawArrays(Primitive.Triangles, 0, 3);
+        DrawArrays(Primitive.Triangles, 0, 6);
     }
 
     static void GetCoordinateSystem (Quaternion q, out Vector3 ux, out Vector3 uy, out Vector3 uz) {

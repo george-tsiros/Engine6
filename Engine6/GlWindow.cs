@@ -45,6 +45,7 @@ public class GlWindow:Window {
     private bool fullscreen = false;
     private WindowStyleEx backupWindowStyleEx;
     private Rectangle windowedRectangle;
+
     private void ToggleFullscreen () {
         foreach (var x in Disposables)
             x.Dispose();
@@ -128,9 +129,10 @@ public class GlWindow:Window {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
                 var now = timer.ElapsedTicks;
-                if (IsFocused && !GuiActive)
+                if (IsFocused && !GuiActive) {
                     dt = (now - LastSync) / TicksPerSecond;
-                dt = dt * dt / TframeSeconds();
+                    dt = dt * dt / TframeSeconds();
+                }
                 LastSync = now;
             }
             Render(dt);
@@ -139,7 +141,7 @@ public class GlWindow:Window {
                 guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
                 guiSampler.Upload(guiRaster);
 
-                BindDefaultFramebuffer(FramebufferTarget.Framebuffer);
+                BindDefaultFramebuffer(FramebufferTarget.Draw);
                 Disable(Capability.DepthTest);
                 Enable(Capability.Blend);
                 Viewport(new(), ClientSize);
@@ -159,16 +161,17 @@ public class GlWindow:Window {
         }
     }
     private byte[] title = helpText;
-    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab graps/releases cursor alt-enter toggles fullscreen, esc quits");
+    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
     private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
     private static readonly byte[] windowedText = Encoding.ASCII.GetBytes("windowed");
     private static readonly byte[] fullscreenText = Encoding.ASCII.GetBytes("fullscreen");
+    protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
 
     protected override void OnLoad () {
         base.OnLoad();
         presentation = new();
         BindVertexArray(quadArray = new());
-        quadArray.Assign(presentationVertices = new(new Vector2[] { Vector2.Zero, Vector2.UnitX, Vector2.UnitY }), presentation.VertexPosition);
+        quadArray.Assign(presentationVertices = new(PresentationQuad), presentation.VertexPosition);
         guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
         guiRaster = new(guiSampler.Size, 4, 1);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);

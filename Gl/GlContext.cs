@@ -12,7 +12,7 @@ using System.Numerics;
 using Common;
 using System.Reflection.Emit;
 
-public delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, nint message, nint userParam);
+public unsafe delegate void DebugProc (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, byte* message, nint userParam);
 
 public sealed unsafe class GlContext:IDisposable {
     private const string NoPixelFormat = "no pixel format found";
@@ -126,12 +126,13 @@ public sealed unsafe class GlContext:IDisposable {
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, (void*)ptr);
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     public static void Viewport (Vector2i location, Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
+    public static void NamedFramebufferDrawBuffer (Framebuffer framebuffer, Renderbuffer renderbuffer) => glNamedFramebufferDrawBuffer(framebuffer, renderbuffer);
 
     public static void BindDefaultFramebuffer (FramebufferTarget target) =>
-        glBindFramebuffer(0, (int)target);
+        glBindFramebuffer((int)target, 0);
 
     public static void BindFramebuffer (Framebuffer framebuffer, FramebufferTarget target) =>
-        glBindFramebuffer(framebuffer, (int)target);
+        glBindFramebuffer((int)target, framebuffer);
     
     public static int GetProgramInterfaceiv (int program, ProgramInterface name, InterfaceParameter parameter) {
         var i = 0;
@@ -153,12 +154,10 @@ public sealed unsafe class GlContext:IDisposable {
         return Encoding.ASCII.GetString(bytes[..^1]);
     }
 
-
     public static void ActiveTexture (int i) {
         if (i != GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0)
             glActiveTexture(Const.TEXTURE0 + i);
     }
-
 
     public static void MultiDrawArrays (Primitive mode, int[] first, int[] count, int calls) {
         if (0 == calls)
@@ -172,7 +171,6 @@ public sealed unsafe class GlContext:IDisposable {
             glMultiDrawArrays((int)mode, p, q, calls);
     }
 
-
     public static int CreateTexture2D () {
         int i;
         glCreateTextures(Const.TEXTURE_2D, 1, &i);
@@ -183,11 +181,10 @@ public sealed unsafe class GlContext:IDisposable {
     public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => glVertexAttribIPointer(index, size, (int)type, stride, (void*)ptr);
     public static FramebufferStatus CheckNamedFramebufferStatus (Framebuffer framebuffer, FramebufferTarget target) => (FramebufferStatus)glCheckNamedFramebufferStatus(framebuffer, (int)target);
     public static void NamedFramebufferTexture (Framebuffer framebuffer, FramebufferAttachment attachment, Sampler2D texture) => glNamedFramebufferTexture(framebuffer, (int)attachment, (int)texture, 0);
-    public static void NamedFramebufferRenderbuffer (Framebuffer framebuffer, FramebufferAttachment attachment, int renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
+    public static void NamedFramebufferRenderbuffer (Framebuffer framebuffer, FramebufferAttachment attachment, Renderbuffer renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
     public static GlErrorCode GetError () => (GlErrorCode)glGetError();
     public static void NamedBufferStorage<T> (BufferObject<T> buffer, int size, nint data, int flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, flags);
     public static void NamedBufferSubData<T> (BufferObject<T> buffer, int offset, int size, void* data) where T : unmanaged => glNamedBufferSubData(buffer, offset, size, data);
-
 
     public static void ShaderSource (int id, string source) {
         var bytes = new byte[source.Length + 1];
@@ -319,6 +316,147 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static void UniformBlockBinding (int program, int index, int binding) =>
         glUniformBlockBinding(program, index, binding);
+
+    private static readonly DebugProc debugProc = (DebugSource sourceEnum, DebugType typeEnum, int id, DebugSeverity severityEnum, int length, byte* messagePtr, nint userParam) => {
+        Debug.WriteLine(sourceEnum);
+        Debug.WriteLine(typeEnum);
+        Debug.WriteLine(id);
+        Debug.WriteLine(severityEnum);
+        Debug.Assert(length < 1024);
+        var message = Encoding.ASCII.GetString(messagePtr, length);
+        Debug.Assert(false, message);
+    };
+
+    public GlContext (DeviceContext dc) : this(dc, ContextConfiguration.Default) { }
+
+    public GlContext (DeviceContext dc, ContextConfiguration configuration) {
+        if (0 != Opengl.wglGetCurrentContext())
+            throw new InvalidOperationException(ContextAlreadyExists);
+        SetPixelFormat(dc, configuration);
+        var rc = Opengl.CreateContext(dc);
+        Opengl.MakeCurrent((nint)dc, rc);
+        var requestedVersion = configuration.Version ?? GetCurrentContextVersion().Version;
+        List<int> attributes = new() {
+            (int)ContextAttrib.MajorVersion,
+            requestedVersion.Major,
+            (int)ContextAttrib.MinorVersion,
+            requestedVersion.Minor
+        };
+
+        if (configuration.Flags is ContextFlag flags) {
+            attributes.Add((int)ContextAttrib.ContextFlags);
+            attributes.Add((int)flags);
+        }
+        if (configuration.Profile is ProfileMask mask) {
+            attributes.Add((int)ContextAttrib.ProfileMask);
+            attributes.Add((int)mask);
+        }
+        attributes.Add(0);
+        var handle = CreateContextAttribs(dc, attributes);
+        try {
+            if (0 == handle)
+                throw new Exception(nameof(wglCreateContextAttribsARB));
+            Opengl.MakeCurrent((nint)dc, handle);
+        } catch (WinApiException) {
+            if (!Opengl.wglDeleteContext(handle))
+                Debug.WriteLine(ContextSetFailed);
+            throw;
+        } finally {
+            if (!Opengl.wglDeleteContext(rc))
+                Debug.WriteLine(DeleteTemporaryContextFailed);
+        }
+
+        var (actualVersion, profile) = GetCurrentContextVersion();
+        if (actualVersion.Major != requestedVersion.Major || actualVersion.Minor != requestedVersion.Minor)
+            throw new ApplicationException(string.Format(WrongContextVersion, requestedVersion, actualVersion));
+
+        const BindingFlags NonPublicStatic = BindingFlags.NonPublic | BindingFlags.Static;
+
+        Kernel32.GetModuleHandleEx(2, opengl32, out var opengl32dll);
+        if (0 == opengl32dll)
+            throw new ApplicationException(GetOpenglHandleFailed);
+
+        foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
+            //if (f.Name == nameof(glDrawArrays))
+            //    Debugger.Break();
+
+            if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
+                if (attr.MinimumVersion.Major <= actualVersion.Major && attr.MinimumVersion.Minor <= actualVersion.Minor) {
+                    var extPtr = Opengl.GetProcAddress(f.Name);
+                    if (0 != extPtr) {
+                        f.SetValue(null, extPtr);
+                    } else {
+                        var glPtr = Kernel32.GetProcAddress(opengl32dll, f.Name);
+                        if (0 != glPtr)
+                            f.SetValue(null, glPtr);
+                        else
+                            Debug.WriteLine(string.Format(DriverMissingFunction, f.Name));
+                    }
+                }
+            }
+        }
+        glDebugMessageCallback(debugProc, null);
+    }
+    private static nint CreateContextAttribs (DeviceContext dc, List<int> attributes) {
+        var createContext = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB>(Opengl.GetProcAddress(nameof(wglCreateContextAttribsARB)));
+        var asArray = attributes.ToArray();
+        fixed (int* p = asArray)
+            return createContext((nint)dc, 0, p);
+    }
+
+    private delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
+
+    public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
+        var str = Opengl.GetString(OpenglString.Version);
+        var m = Regex.Match(str, OpenglVersionPattern);
+        if (!m.Success)
+            throw new ApplicationException(string.Format(InvalidVersionString, str));
+        var version = Version.Parse(m.Groups[1].Value);
+        var profile = m.Groups[4].Success && Enum.TryParse<ProfileMask>(m.Groups[4].Value, out var p) ? p : ProfileMask.Undefined;
+        return (version, profile);
+    }
+
+    private static void SetPixelFormat (DeviceContext dc, ContextConfiguration configuration) {
+        const PixelFlag RequiredFlags = PixelFlag.SupportOpengl | PixelFlag.DrawToWindow;
+        const PixelFlag RejectedFlags = PixelFlag.GenericAccelerated | PixelFlag.GenericFormat;
+        var requireDoubleBuffer = configuration.DoubleBuffer is bool _0 && _0 ? PixelFlag.DoubleBuffer : PixelFlag.None;
+        var rejectDoubleBuffer = configuration.DoubleBuffer is bool _1 && !_1 ? PixelFlag.DoubleBuffer : PixelFlag.None;
+        var requireComposited = configuration.Composited is bool _2 && _2 ? PixelFlag.SupportComposition : PixelFlag.None;
+        var rejectComposited = configuration.Composited is bool _3 && !_3 ? PixelFlag.SupportComposition : PixelFlag.None;
+        var (requireSwapMethod, rejectSwapMethod) = ForSwapMethod(configuration.SwapMethod);
+        var required = RequiredFlags | requireDoubleBuffer | requireComposited | requireSwapMethod;
+        var rejected = RejectedFlags | rejectDoubleBuffer | rejectComposited | rejectSwapMethod;
+        var colorBits = configuration.ColorBits ?? 32;
+        var depthBits = configuration.DepthBits ?? 24;
+        PixelFormatDescriptor p = new();
+        var count = Gdi32.GetPixelFormatCount(dc);
+        for (var i = 1; i <= count; i++) {
+            Gdi32.DescribePixelFormat(dc, i, ref p);
+            if (colorBits == p.colorBits && depthBits <= p.depthBits && required == (p.flags & required) && 0 == (p.flags & rejected)) {
+                Gdi32.SetPixelFormat(dc, i, ref p);
+                return;
+            }
+        }
+        throw new Exception(NoPixelFormat);
+    }
+    private static (PixelFlag require, PixelFlag reject) ForSwapMethod (SwapMethod? m) => m switch {
+        SwapMethod.Copy => (PixelFlag.SwapCopy, PixelFlag.SwapExchange),
+        SwapMethod.Swap => (PixelFlag.SwapExchange, PixelFlag.SwapCopy),
+        SwapMethod.Undefined => (PixelFlag.None, PixelFlag.SwapExchange | PixelFlag.SwapCopy),
+        _ => (PixelFlag.None, PixelFlag.None)
+    };
+
+    private bool disposed = false;
+    public void Dispose () {
+        if (disposed)
+            return;
+        disposed = true;
+        var ctx = Opengl.wglGetCurrentContext();
+        if (0 == ctx)
+            throw new InvalidOperationException();
+        if (!Opengl.wglDeleteContext(ctx))
+            throw new WinApiException(nameof(Opengl.wglDeleteContext));
+    }
 
 #pragma warning disable IDE0044 // Make fields readonly
 #pragma warning disable CS0649
@@ -787,7 +925,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glDrawTransformFeedbackInstanced;
     //[GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, void> glMemoryBarrier;
 
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<DebugProc, void*, void> glDebugMessageCallback;
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<DebugProc, void*, void> glDebugMessageCallback;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceIndex;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocation;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocationIndex;
@@ -938,7 +1076,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glClipControl;
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glDisableVertexArrayAttrib;
     [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glEnableVertexArrayAttrib;
-    //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferDrawBuffer;
+    [GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferDrawBuffer;
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glNamedFramebufferReadBuffer;
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, int, void> glVertexArrayElementBuffer;
     //[GlVersion(4, 5)] private static delegate* unmanaged[Stdcall]<int, nint, nint, int, void*> glMapNamedBufferRange;
@@ -954,134 +1092,4 @@ public sealed unsafe class GlContext:IDisposable {
 #pragma warning restore IDE0044 // Make fields readonly
 #pragma warning restore CS0169// Remove unused private members
 #pragma warning restore CS0649
-
-    public GlContext (DeviceContext dc) : this(dc, ContextConfiguration.Default) { }
-
-    public GlContext (DeviceContext dc, ContextConfiguration configuration) {
-        if (0 != Opengl.wglGetCurrentContext())
-            throw new InvalidOperationException(ContextAlreadyExists);
-        SetPixelFormat(dc, configuration);
-        var rc = Opengl.CreateContext(dc);
-        Opengl.MakeCurrent((nint)dc, rc);
-        var requestedVersion = configuration.Version ?? GetCurrentContextVersion().Version;
-        List<int> attributes = new() {
-            (int)ContextAttrib.MajorVersion,
-            requestedVersion.Major,
-            (int)ContextAttrib.MinorVersion,
-            requestedVersion.Minor
-        };
-
-        if (configuration.Flags is ContextFlag flags) {
-            attributes.Add((int)ContextAttrib.ContextFlags);
-            attributes.Add((int)flags);
-        }
-        if (configuration.Profile is ProfileMask mask) {
-            attributes.Add((int)ContextAttrib.ProfileMask);
-            attributes.Add((int)mask);
-        }
-        attributes.Add(0);
-        var handle = CreateContextAttribs(dc, attributes);
-        try {
-            if (0 == handle)
-                throw new Exception(nameof(wglCreateContextAttribsARB));
-            Opengl.MakeCurrent((nint)dc, handle);
-        } catch (WinApiException) {
-            if (!Opengl.wglDeleteContext(handle))
-                Debug.WriteLine(ContextSetFailed);
-            throw;
-        } finally {
-            if (!Opengl.wglDeleteContext(rc))
-                Debug.WriteLine(DeleteTemporaryContextFailed);
-        }
-
-        var (actualVersion, profile) = GetCurrentContextVersion();
-        if (actualVersion.Major != requestedVersion.Major || actualVersion.Minor != requestedVersion.Minor)
-            throw new ApplicationException(string.Format(WrongContextVersion, requestedVersion, actualVersion));
-
-        const BindingFlags NonPublicStatic = BindingFlags.NonPublic | BindingFlags.Static;
-
-        Kernel32.GetModuleHandleEx(2, opengl32, out var opengl32dll);
-        if (0 == opengl32dll)
-            throw new ApplicationException(GetOpenglHandleFailed);
-
-        foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
-            //if (f.Name == nameof(glDrawArrays))
-            //    Debugger.Break();
-
-            if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
-                if (attr.MinimumVersion.Major <= actualVersion.Major && attr.MinimumVersion.Minor <= actualVersion.Minor) {
-                    var extPtr = Opengl.GetProcAddress(f.Name);
-                    if (0 != extPtr) {
-                        f.SetValue(null, extPtr);
-                    } else {
-                        var glPtr = Kernel32.GetProcAddress(opengl32dll, f.Name);
-                        if (0 != glPtr)
-                            f.SetValue(null, glPtr);
-                        else
-                            Debug.WriteLine(string.Format(DriverMissingFunction, f.Name));
-                    }
-                }
-            }
-        }
-    }
-    private static nint CreateContextAttribs (DeviceContext dc, List<int> attributes) {
-        var createContext = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB>(Opengl.GetProcAddress(nameof(wglCreateContextAttribsARB)));
-        var asArray = attributes.ToArray();
-        fixed (int* p = asArray)
-            return createContext((nint)dc, 0, p);
-    }
-
-    private delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
-
-    public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
-        var str = Opengl.GetString(OpenglString.Version);
-        var m = Regex.Match(str, OpenglVersionPattern);
-        if (!m.Success)
-            throw new ApplicationException(string.Format(InvalidVersionString, str));
-        var version = Version.Parse(m.Groups[1].Value);
-        var profile = m.Groups[4].Success && Enum.TryParse<ProfileMask>(m.Groups[4].Value, out var p) ? p : ProfileMask.Undefined;
-        return (version, profile);
-    }
-
-    private static void SetPixelFormat (DeviceContext dc, ContextConfiguration configuration) {
-        const PixelFlag RequiredFlags = PixelFlag.SupportOpengl | PixelFlag.DrawToWindow;
-        const PixelFlag RejectedFlags = PixelFlag.GenericAccelerated | PixelFlag.GenericFormat;
-        var requireDoubleBuffer = configuration.DoubleBuffer is bool _0 && _0 ? PixelFlag.DoubleBuffer : PixelFlag.None;
-        var rejectDoubleBuffer = configuration.DoubleBuffer is bool _1 && !_1 ? PixelFlag.DoubleBuffer : PixelFlag.None;
-        var requireComposited = configuration.Composited is bool _2 && _2 ? PixelFlag.SupportComposition : PixelFlag.None;
-        var rejectComposited = configuration.Composited is bool _3 && !_3 ? PixelFlag.SupportComposition : PixelFlag.None;
-        var (requireSwapMethod, rejectSwapMethod) = ForSwapMethod(configuration.SwapMethod);
-        var required = RequiredFlags | requireDoubleBuffer | requireComposited | requireSwapMethod;
-        var rejected = RejectedFlags | rejectDoubleBuffer | rejectComposited | rejectSwapMethod;
-        var colorBits = configuration.ColorBits ?? 32;
-        var depthBits = configuration.DepthBits ?? 24;
-        PixelFormatDescriptor p = new();
-        var count = Gdi32.GetPixelFormatCount(dc);
-        for (var i = 1; i <= count; i++) {
-            Gdi32.DescribePixelFormat(dc, i, ref p);
-            if (colorBits == p.colorBits && depthBits <= p.depthBits && required == (p.flags & required) && 0 == (p.flags & rejected)) {
-                Gdi32.SetPixelFormat(dc, i, ref p);
-                return;
-            }
-        }
-        throw new Exception(NoPixelFormat);
-    }
-    private static (PixelFlag require, PixelFlag reject) ForSwapMethod (SwapMethod? m) => m switch {
-        SwapMethod.Copy => (PixelFlag.SwapCopy, PixelFlag.SwapExchange),
-        SwapMethod.Swap => (PixelFlag.SwapExchange, PixelFlag.SwapCopy),
-        SwapMethod.Undefined => (PixelFlag.None, PixelFlag.SwapExchange | PixelFlag.SwapCopy),
-        _ => (PixelFlag.None, PixelFlag.None)
-    };
-
-    private bool disposed = false;
-    public void Dispose () {
-        if (disposed)
-            return;
-        disposed = true;
-        var ctx = Opengl.wglGetCurrentContext();
-        if (0 == ctx)
-            throw new InvalidOperationException();
-        if (!Opengl.wglDeleteContext(ctx))
-            throw new WinApiException(nameof(Opengl.wglDeleteContext));
-    }
 }
