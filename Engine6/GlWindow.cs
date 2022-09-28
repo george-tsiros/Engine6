@@ -36,9 +36,9 @@ public class GlWindow:Window {
     private double TframeTicks () => TicksPerSecond * TframeSeconds();
     private readonly Stopwatch timer;
     private bool disposed = false;
-    private Tex tex;
+    private Presentation presentation;
     private VertexArray quadArray;
-    private BufferObject<Vector2> quadBuffer;
+    private BufferObject<Vector2> presentationVertices;
     private Sampler2D guiSampler;
     private Raster guiRaster;
     private static readonly Vector2i DefaultWindowedSize = new(800, 600);
@@ -135,15 +135,23 @@ public class GlWindow:Window {
             }
             Render(dt);
             if (GuiActive) {
-                Viewport(new(), ClientSize);
-                BindVertexArray(quadArray);
-                UseProgram(tex);
                 guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
                 guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
                 guiSampler.Upload(guiRaster);
+
+                BindDefaultFramebuffer(FramebufferTarget.Framebuffer);
                 Disable(Capability.DepthTest);
                 Enable(Capability.Blend);
+                Viewport(new(), ClientSize);
+
+                BindVertexArray(quadArray);
+                UseProgram(presentation);
+
+                guiSampler.BindTo(10);
+                presentation.Tex0(10);
+
                 DrawArrays(Primitive.Triangles, 0, 6);
+
                 Disable(Capability.Blend);
             }
 
@@ -158,18 +166,15 @@ public class GlWindow:Window {
 
     protected override void OnLoad () {
         base.OnLoad();
-        tex = new();
+        presentation = new();
         BindVertexArray(quadArray = new());
-        var quad = new Vector2[] { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1) };
-        quadArray.Assign(quadBuffer = new(quad), tex.VertexPosition);
+        quadArray.Assign(presentationVertices = new(new Vector2[] { Vector2.Zero, Vector2.UnitX, Vector2.UnitY }), presentation.VertexPosition);
         guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
-        guiSampler.BindTo(0);
-        tex.Tex0(0);
         guiRaster = new(guiSampler.Size, 4, 1);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(quadArray);
-        Disposables.Add(quadBuffer);
-        Disposables.Add(tex);
+        Disposables.Add(presentationVertices);
+        Disposables.Add(presentation);
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
     }

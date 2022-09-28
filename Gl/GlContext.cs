@@ -127,6 +127,12 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     public static void Viewport (Vector2i location, Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
 
+    public static void BindDefaultFramebuffer (FramebufferTarget target) =>
+        glBindFramebuffer(0, (int)target);
+
+    public static void BindFramebuffer (Framebuffer framebuffer, FramebufferTarget target) =>
+        glBindFramebuffer(framebuffer, (int)target);
+    
     public static int GetProgramInterfaceiv (int program, ProgramInterface name, InterfaceParameter parameter) {
         var i = 0;
         glGetProgramInterfaceiv(program, (int)name, (int)parameter, &i);
@@ -589,7 +595,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glVertexAttribI2ui;
     [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, nint> glGetStringi;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBeginConditionalRender;
-    //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindFramebuffer;
+    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindFramebuffer;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glBindRenderbuffer;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glClampColor;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glDisablei;

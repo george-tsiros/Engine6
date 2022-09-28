@@ -68,7 +68,7 @@ public class Window:IDisposable {
         }
         OnClosed();
         foreach (var disposable in Disposables)
-            disposable.Dispose();
+            disposable?.Dispose();
     }
 
     private const string ClassName = nameof(Window);

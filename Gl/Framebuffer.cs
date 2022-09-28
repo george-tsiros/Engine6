@@ -18,6 +18,6 @@ public class Framebuffer:OpenglObject {
         NamedFramebufferTexture(this, attachment, texture);
 
     public void Attach (Renderbuffer renderbuffer, FramebufferAttachment attachment) =>
-        NamedFramebufferRenderbuffer(this, attachment, renderbuffer.Id);
+        NamedFramebufferRenderbuffer(this, attachment, renderbuffer);
 
 }
