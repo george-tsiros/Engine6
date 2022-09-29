@@ -16,6 +16,9 @@ public class GlWindow:Window {
         timer = Stopwatch.StartNew();
         ClientSize = DefaultWindowedSize;
         backupWindowStyleEx = User32.GetWindowStyleEx(this);
+        
+        TotalTicksSinceLastRead  = new long[AxisKeys.Length];
+        LastPressTimestamp = new long[AxisKeys.Length];
 
         Recyclables.Add(presentation = new());
         Recyclables.Add(presentationVertices = new(PresentationQuad));
@@ -86,7 +89,14 @@ public class GlWindow:Window {
         OnLoad();
     }
 
+    protected override void OnKeyUp (Key key) {
+        if (IsAxis(key, Ticks(), false))
+            return;
+        base.OnKeyUp(key);
+    }
+
     protected override void OnKeyDown (Key key, bool repeat) {
+        var now = Ticks();
         if (!repeat)
             switch (key) {
                 case Key.Return:
@@ -102,8 +112,46 @@ public class GlWindow:Window {
                     User32.PostQuitMessage(0);
                     return;
             }
+        if (!repeat && IsAxis(key, now, true))
+            return;
         base.OnKeyDown(key, repeat);
     }
+
+    protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
+
+    private readonly long[] TotalTicksSinceLastRead;// = new long[AxisKeys.Length];
+    private readonly long[] LastPressTimestamp;//
+
+    private bool IsAxis (Key key, long now, bool depressed) {
+        var i = Array.IndexOf(AxisKeys, key);
+        if (i < 0)
+            return false;
+        if (depressed) {
+            Debug.Assert(0 == LastPressTimestamp[i]);
+            LastPressTimestamp[i] = now;
+        } else {
+            TotalTicksSinceLastRead[i] += now - LastPressTimestamp[i];
+            LastPressTimestamp[i] = 0;
+        }
+        return true;
+    }
+
+    private long Pop (Key key, long ticks) {
+        var i = Array.IndexOf(AxisKeys, key);
+        Debug.Assert(0 <= i);
+        var total = TotalTicksSinceLastRead[i];
+        var t = LastPressTimestamp[i];
+        if (0 < t) {
+            // simulate button released and pressed the same instant
+            total += ticks - t;
+            LastPressTimestamp[i] = ticks;
+        }
+        TotalTicksSinceLastRead[i] = 0;
+        return total;
+    }
+
+    protected float Axis (Key positive, Key negative, long ticks) =>
+        (float)((Pop(positive, ticks) - Pop(negative, ticks)) / TframeTicks());
 
     private void SetGuiActive (bool active) {
         if (GuiActive == active)

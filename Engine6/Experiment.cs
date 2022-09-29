@@ -13,6 +13,8 @@ public class Experiment:GlWindow {
     private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
     private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
 
+    protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.Left, Key.Right, Key.Up, Key.Down, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
+
     private BufferObject<Vector4> modelVertices;
     private BufferObject<Vector2> presentationVertices;
     private Framebuffer framebuffer;
@@ -60,62 +62,17 @@ public class Experiment:GlWindow {
         Disposables.Add(renderTexture);
     }
 
-    protected override void OnKeyUp (Key key) {
-        if (IsAxis(key, Ticks(), false))
-            return;
-        base.OnKeyUp(key);
-    }
     protected override void OnKeyDown (Key key, bool repeat) {
-        var now = Ticks();
         switch (key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
         }
-        if (!repeat && IsAxis(key, now, true))
-            return;
         base.OnKeyDown(key, repeat);
     }
 
-    private static readonly Key[] AxisKeys = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.Left, Key.Right, Key.Up, Key.Down, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
-
-    private readonly long[] TotalTicksSinceLastRead = new long[AxisKeys.Length];
-    private readonly long[] LastPressTimestamp = new long[AxisKeys.Length];
-
-    private bool IsAxis (Key key, long now, bool depressed) {
-        var i = Array.IndexOf(AxisKeys, key);
-        if (i < 0)
-            return false;
-        if (depressed) {
-            Debug.Assert(0 == LastPressTimestamp[i]);
-            LastPressTimestamp[i] = now;
-        } else {
-            TotalTicksSinceLastRead[i] += now - LastPressTimestamp[i];
-            LastPressTimestamp[i] = 0;
-        }
-        return true;
-    }
-
-    private long Pop (Key key, long ticks) {
-        var i = Array.IndexOf(AxisKeys, key);
-        Debug.Assert(0 <= i);
-        var total = TotalTicksSinceLastRead[i];
-        var t = LastPressTimestamp[i];
-        if (0 < t) {
-            // simulate button released and pressed the same instant
-            total += ticks - t;
-            LastPressTimestamp[i] = ticks;
-        }
-        TotalTicksSinceLastRead[i] = 0;
-        return total;
-    }
-
-    private float Axis (Key positive, Key negative, long ticks) =>
-        (float)((Pop(positive, ticks) - Pop(negative, ticks)) / TframeTicks());
 
     protected override void OnInput (int dx, int dy) {
-        if (GuiActive)
-            return;
     }
 
     private void Update (long ticks) {
