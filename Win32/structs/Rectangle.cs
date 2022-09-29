@@ -12,7 +12,7 @@ public struct Rectangle {
     public Rectangle (int l, int t, int r, int b) =>
             (Left, Top, Right, Bottom) = (l, t, r, b);
 
-    public Rectangle (Vector2i position, Vector2i size) : this() {
+    public Rectangle (in Vector2i position, in Vector2i size) : this() {
         Left = position.X;
         Right = position.X + size.X;
         Top = position.Y;
@@ -25,10 +25,10 @@ public struct Rectangle {
     public int Height =>
         Bottom - Top;
 
-    public Rectangle Clip (Rectangle r) =>
+    public Rectangle Clip (in Rectangle r) =>
         new(Maths.Int32Clamp(Left, r.Left, r.Right), Maths.Int32Clamp(Top, r.Top, r.Bottom), Maths.Int32Clamp(Right, r.Left, r.Right), Maths.Int32Clamp(Bottom, r.Top, r.Bottom));
 
-    public Vector2i Location => 
+    public Vector2i Location =>
         new(Left, Top);
 
     public Vector2i Size =>

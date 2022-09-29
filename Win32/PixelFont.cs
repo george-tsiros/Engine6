@@ -15,7 +15,7 @@ public class PixelFont {
     /// <summary>fails when strings start or end with newlines</summary>
     public Vector2i SizeOf (in ReadOnlySpan<byte> str) {
         if (str.Length == 0)
-            return new();
+            return Vector2i.Zero;
 
         var lineCount = 1;
         var maxLineLength = 0;

@@ -16,6 +16,10 @@ public class GlWindow:Window {
         timer = Stopwatch.StartNew();
         ClientSize = DefaultWindowedSize;
         backupWindowStyleEx = User32.GetWindowStyleEx(this);
+
+        Recyclables.Add(presentation = new());
+        Recyclables.Add(presentationVertices = new(PresentationQuad));
+        Recyclables.Add(quadArray = new());
     }
 
     protected virtual void Render (double dt_seconds) {
@@ -27,13 +31,12 @@ public class GlWindow:Window {
     protected long Ticks () => timer.ElapsedTicks;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; } = 0l;
-
+    protected double TframeTicks () => TicksPerSecond * TframeSeconds();
     protected bool GuiActive { get; private set; } = true;
 
     private double FPScap = 60;
     private double TframeSeconds () => 1 / FPScap;
     private static readonly double TicksPerSecond = Stopwatch.Frequency;
-    private double TframeTicks () => TicksPerSecond * TframeSeconds();
     private readonly Stopwatch timer;
     private bool disposed = false;
     private Presentation presentation;
@@ -144,7 +147,7 @@ public class GlWindow:Window {
                 BindDefaultFramebuffer(FramebufferTarget.Draw);
                 Disable(Capability.DepthTest);
                 Enable(Capability.Blend);
-                Viewport(new(), ClientSize);
+                Viewport(in Vector2i.Zero, ClientSize);
 
                 BindVertexArray(quadArray);
                 UseProgram(presentation);
@@ -169,15 +172,10 @@ public class GlWindow:Window {
 
     protected override void OnLoad () {
         base.OnLoad();
-        presentation = new();
-        BindVertexArray(quadArray = new());
-        quadArray.Assign(presentationVertices = new(PresentationQuad), presentation.VertexPosition);
+        quadArray.Assign(presentationVertices, presentation.VertexPosition);
         guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
         guiRaster = new(guiSampler.Size, 4, 1);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
-        Disposables.Add(quadArray);
-        Disposables.Add(presentationVertices);
-        Disposables.Add(presentation);
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
     }

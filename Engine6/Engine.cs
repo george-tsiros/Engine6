@@ -1,2 +1,3 @@
-using Engine6.Experiment window = new() { PixelFont=new( "data/ibm3270.txt") };
+using Engine6;
+using Experiment window = new();
 window.Run();

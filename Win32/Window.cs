@@ -28,7 +28,7 @@ public class Window:IDisposable {
     }
 
     protected List<IDisposable> Disposables { get; } = new();
-
+    protected List<IDisposable> Recyclables { get; } = new();
     protected Rectangle GetWindowRectangle () => User32.GetWindowRect(this);
 
     protected Vector2i ClientSize {
@@ -69,6 +69,8 @@ public class Window:IDisposable {
         OnClosed();
         foreach (var disposable in Disposables)
             disposable?.Dispose();
+        foreach (var recyclable in Recyclables)
+            recyclable?.Dispose();
     }
 
     private const string ClassName = nameof(Window);
@@ -93,9 +95,7 @@ public class Window:IDisposable {
         if (WinMessage.Create == m) {
             return h;
         }
-
         return Instance.WndProc(h/*wat*/, m, w, l);
-
     }
 
     protected virtual void OnLoad () { }

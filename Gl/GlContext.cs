@@ -119,13 +119,13 @@ public sealed unsafe class GlContext:IDisposable {
     public static void BindTexture (int type, Sampler2D sampler) => glBindTexture(type, sampler);
     public static void Uniform (int uniform, float f) => glUniform1f(uniform, f);
     public static void Uniform (int uniform, int i) => glUniform1i(uniform, i);
-    public static void Uniform (int uniform, Vector2 v) => glUniform2f(uniform, v.X, v.Y);
-    public static void Uniform (int uniform, Vector2i v) => glUniform2i(uniform, v.X, v.Y);
-    public static void Uniform (int uniform, Vector4 v) => glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
+    public static void Uniform (int uniform, in Vector2 v) => glUniform2f(uniform, v.X, v.Y);
+    public static void Uniform (int uniform, in Vector2i v) => glUniform2i(uniform, v.X, v.Y);
+    public static void Uniform (int uniform, in Vector4 v) => glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
     public static void VertexAttribDivisor (int index, int divisor) => glVertexAttribDivisor(index, divisor);
     public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, (void*)ptr);
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
-    public static void Viewport (Vector2i location, Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
+    public static void Viewport (in Vector2i location, in Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
     public static void NamedFramebufferDrawBuffer (Framebuffer framebuffer, Renderbuffer renderbuffer) => glNamedFramebufferDrawBuffer(framebuffer, renderbuffer);
 
     public static void BindDefaultFramebuffer (FramebufferTarget target) =>
@@ -133,7 +133,7 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static void BindFramebuffer (Framebuffer framebuffer, FramebufferTarget target) =>
         glBindFramebuffer((int)target, framebuffer);
-    
+
     public static int GetProgramInterfaceiv (int program, ProgramInterface name, InterfaceParameter parameter) {
         var i = 0;
         glGetProgramInterfaceiv(program, (int)name, (int)parameter, &i);
@@ -143,7 +143,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static string GetProgramResourceName (int program, int index) {
         var maxLength = 0;
         glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
-        if (maxLength<=0)
+        if (maxLength <= 0)
             throw new GlException("zero length?");
         Debug.Assert(maxLength < 1024);
         Span<byte> bytes = stackalloc byte[maxLength];

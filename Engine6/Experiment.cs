@@ -36,80 +36,110 @@ public class Experiment:GlWindow {
             pts[2 * i + 1] = vertices[k];
         }
         SetSwapInterval(0);
+        Recyclables.Add(modelVertices = new(pts));
+        Recyclables.Add(presentationVertices = new(PresentationQuad));
+        Recyclables.Add(framebuffer = new());
+        Recyclables.Add(presentation = new());
+        Recyclables.Add(lines = new());
+        Recyclables.Add(va = new());
+        Recyclables.Add(pa = new());
+        va.Assign(modelVertices, lines.VertexPosition);
+        pa.Assign(presentationVertices, presentation.VertexPosition);
     }
 
     protected override void OnLoad () {
         base.OnLoad();
 
-        lines = new();
-        BindVertexArray(va = new());
-        va.Assign(modelVertices = new(pts), lines.VertexPosition);
-
-        presentation = new();
-        BindVertexArray(pa = new());
-        pa.Assign(presentationVertices = new(PresentationQuad), presentation.VertexPosition);
-
-        framebuffer = new();
-        renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
-        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);
-        framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);
-        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);
-
+        renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };// 1627, 0.0001627
+        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);// 802, 8.02E-05
+        framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);// 59, 5.9E-06
+        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);// 10, 1E-06
         Debug.Assert(FramebufferStatus.Complete == framebuffer.CheckStatus());
-        Disposables.Add(modelVertices);
-        Disposables.Add(presentationVertices);
-        Disposables.Add(framebuffer);
-        Disposables.Add(presentation);
-        Disposables.Add(lines);
+
         Disposables.Add(depthbuffer);
         Disposables.Add(renderTexture);
-        Disposables.Add(va);
-        Disposables.Add(pa);
     }
 
+    protected override void OnKeyUp (Key key) {
+        if (IsAxis(key, Ticks(), false))
+            return;
+        base.OnKeyUp(key);
+    }
     protected override void OnKeyDown (Key key, bool repeat) {
+        var now = Ticks();
         switch (key) {
             case Key.Escape:
                 User32.PostQuitMessage(0);
                 return;
         }
+        if (!repeat && IsAxis(key, now, true))
+            return;
         base.OnKeyDown(key, repeat);
     }
 
-    private int Axis (Key positive, Key negative) {
-        var d = IsKeyDown(positive) ? 1 : 0;
-        return IsKeyDown(negative) ? d - 1 : d;
+    private static readonly Key[] AxisKeys = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.Left, Key.Right, Key.Up, Key.Down, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
+
+    private readonly long[] TotalTicksSinceLastRead = new long[AxisKeys.Length];
+    private readonly long[] LastPressTimestamp = new long[AxisKeys.Length];
+
+    private bool IsAxis (Key key, long now, bool depressed) {
+        var i = Array.IndexOf(AxisKeys, key);
+        if (i < 0)
+            return false;
+        if (depressed) {
+            Debug.Assert(0 == LastPressTimestamp[i]);
+            LastPressTimestamp[i] = now;
+        } else {
+            TotalTicksSinceLastRead[i] += now - LastPressTimestamp[i];
+            LastPressTimestamp[i] = 0;
+        }
+        return true;
     }
+
+    private long Pop (Key key, long ticks) {
+        var i = Array.IndexOf(AxisKeys, key);
+        Debug.Assert(0 <= i);
+        var total = TotalTicksSinceLastRead[i];
+        var t = LastPressTimestamp[i];
+        if (0 < t) {
+            // simulate button released and pressed the same instant
+            total += ticks - t;
+            LastPressTimestamp[i] = ticks;
+        }
+        TotalTicksSinceLastRead[i] = 0;
+        return total;
+    }
+
+    private float Axis (Key positive, Key negative, long ticks) =>
+        (float)((Pop(positive, ticks) - Pop(negative, ticks)) / TframeTicks());
 
     protected override void OnInput (int dx, int dy) {
         if (GuiActive)
             return;
     }
 
-    private void Update (double dt_seconds) {
-        // if less time than 10 us has passed, it is assumed that we've stopped
-        if (dt_seconds < 10e-6)
-            return;
-        var dt = (float)dt_seconds;
+    private void Update (long ticks) {
+
         const float Velocity = 1; // /s, implied length unit is whatever opengl considers it to be
         const float AngularVelocity = (float)(Maths.dPi / 2);
-        Vector3 cameraMovement = new(Axis(Key.C, Key.Z), Axis(Key.Q, Key.A), Axis(Key.X, Key.D));
-        cameraLocation += dt * Velocity * cameraMovement;
-        var yaw = Axis(Key.Left, Key.Right) * dt * AngularVelocity;
-        var pitch = Axis(Key.Up, Key.Down) * dt * AngularVelocity;
+        Vector3 cameraMovement = new(Axis(Key.C, Key.Z, ticks), Axis(Key.Q, Key.A, ticks), Axis(Key.X, Key.D, ticks));
+        cameraLocation += Velocity * cameraMovement;
+        var yaw = Axis(Key.Left, Key.Right, ticks) * AngularVelocity;
+        var pitch = Axis(Key.Up, Key.Down, ticks) * AngularVelocity;
         modelOrientation = Quaternion.Concatenate(modelOrientation, Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0));
         GetCoordinateSystem(modelOrientation, out var xLocal, out var yLocal, out var zLocal);
-        modelPosition += dt * xLocal * Axis(Key.Insert, Key.Delete);
-        modelPosition += dt * yLocal * Axis(Key.Home, Key.End);
-        modelPosition += dt * zLocal * Axis(Key.PageUp, Key.PageDown);
+        modelPosition += xLocal * Axis(Key.Insert, Key.Delete, ticks);
+        modelPosition += yLocal * Axis(Key.Home, Key.End, ticks);
+        modelPosition += zLocal * Axis(Key.PageUp, Key.PageDown, ticks);
     }
 
     protected override void Render (double dt) {
-        Update(dt);
+        // if less time than 10 us has passed, it is assumed that we've stopped
+        Update(Ticks());
         var size = ClientSize;
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
-        Viewport(new(), size);
+        Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
@@ -122,7 +152,7 @@ public class Experiment:GlWindow {
 
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
-        Viewport(new(), size);
+        Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         BindVertexArray(pa);
