@@ -68,9 +68,9 @@ public class Window:IDisposable {
         }
         OnClosed();
         foreach (var disposable in Disposables)
-            disposable?.Dispose();
+            disposable.Dispose();
         foreach (var recyclable in Recyclables)
-            recyclable?.Dispose();
+            recyclable.Dispose();
     }
 
     private const string ClassName = nameof(Window);
@@ -180,12 +180,10 @@ public class Window:IDisposable {
                 return 0;
             case WinMessage.Input:
                 RawMouse data = new();
-                if (User32.GetRawInputData(l, ref data))
-                    if (0 != data.lastX || 0 != data.lastY) {
-                        var r = GetWindowRectangle().Center;
-                        User32.SetCursorPos(r.X, r.Y);
-                        OnInput(data.lastX, data.lastY);
-                    }
+                if (User32.GetRawInputData(l, ref data) && (0 != data.lastX || 0 != data.lastY)) {
+                    User32.SetCursorPos(GetWindowRectangle().Center);
+                    OnInput(data.lastX, data.lastY);
+                }
                 break;
         }
         return User32.DefWindowProc(h, m, w, l);

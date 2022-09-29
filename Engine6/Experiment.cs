@@ -7,55 +7,86 @@ using System.Numerics;
 using Shaders;
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 public class Experiment:GlWindow {
 
-    private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
-    private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
+    //private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
+    //private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
 
-    protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.Left, Key.Right, Key.Up, Key.Down, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
+    protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
 
-    private BufferObject<Vector4> modelVertices;
+    private Directional directional;
+    private VertexArray sa;
+    private BufferObject<Vector4> sphereVertices;
+    private BufferObject<Vector4> sphereNormals;
+    private Presentation presentation;
+    private VertexArray pa;
     private BufferObject<Vector2> presentationVertices;
     private Framebuffer framebuffer;
-    private Presentation presentation;
-    private Line lines;
+
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
-    private VertexArray va;
-    private VertexArray pa;
 
-    private readonly Vector4[] pts = new Vector4[C3_lines.Length * 2];
-    private Vector3 cameraLocation = 2 * Vector3.UnitZ;
-    private Vector3 modelPosition = new();
-    private Quaternion modelOrientation = Quaternion.Identity;
+    private Vector3 cameraLocation = new(EarthLunaDistance / 2, 0, EarthLunaDistance);
+    private Quaternion cameraOrientation = Quaternion.Identity;
+
+    private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
+    private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
+    private static readonly int loPolySphereVertexCount = 3 * SphereTriangleCount(loPolySphereSubdivisions);
+    private static readonly int highPolySphereVertexCount = 3 * SphereTriangleCount(highPolySphereSubdivisions);
+
+    private readonly struct Body {
+        public Vector3 Position { get; init; }
+        public float Radius { get; init; }
+        public Vector4 Color { get; init; }
+        public float Mass { get; init; }
+    };
+
+    private static readonly Body Earth = new() { Position = new(), Radius = EarthRadius, Color = new(0, .6f, .7f, 1), Mass = EarthMass, };
+    private static readonly Body Luna = new() { Position = new(EarthLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
+    private static readonly Body What = new() { Position = new(EarthLunaDistance / 2, 0, EarthLunaDistance - 10 * NearPlane), Radius = WhatRadius, Color = Vector4.One, Mass = 1 };
+    private static readonly Body[] EarthLunaSystem = { Luna, Earth, What };
+
+    private const float EarthLunaDistance = 3.844e8f * .001f;
+    private const float EarthRadius = 6.371e6f * .001f;
+    private const float LunaRadius = 1.737e6f * .001f;
+    private const float WhatRadius = 1e3f * .001f;
+    private const float EarthMass = 5.972e24f * .001f;
+    private const float LunaMass = 7.342e22f * .001f;
+    private const float NearPlane = 1e3f * .001f;
+    private const float FarPlane = 1e9f * .001f;
 
     public Experiment () {
-        var vertices = Array.ConvertAll(C3_vertices, v => new Vector4(v / 128, 1));
-        for (var i = 0; i < C3_lines.Length; ++i) {
-            var (j, k) = C3_lines[i];
-            pts[2 * i] = vertices[j];
-            pts[2 * i + 1] = vertices[k];
-        }
-        SetSwapInterval(0);
-        Recyclables.Add(modelVertices = new(pts));
+
+        var allVertices = new Vector4[loPolySphereVertexCount + highPolySphereVertexCount];
+        Sphere(loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
+        Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
+
+        Recyclables.Add(sphereVertices = new(allVertices));
+        for (var i = 0; i < allVertices.Length; ++i)
+            allVertices[i] = new(allVertices[i].Xyz(), 0);
+
+        Recyclables.Add(sphereNormals = new(allVertices));
         Recyclables.Add(presentationVertices = new(PresentationQuad));
         Recyclables.Add(framebuffer = new());
         Recyclables.Add(presentation = new());
-        Recyclables.Add(lines = new());
-        Recyclables.Add(va = new());
         Recyclables.Add(pa = new());
-        va.Assign(modelVertices, lines.VertexPosition);
+        Recyclables.Add(sa = new());
+        Recyclables.Add(directional = new());
         pa.Assign(presentationVertices, presentation.VertexPosition);
+        sa.Assign(sphereVertices, directional.VertexPosition);
+        sa.Assign(sphereNormals, directional.VertexNormal);
+        SetSwapInterval(1);
     }
 
     protected override void OnLoad () {
         base.OnLoad();
 
-        renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };// 1627, 0.0001627
-        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);// 802, 8.02E-05
-        framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);// 59, 5.9E-06
-        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);// 10, 1E-06
+        renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
+        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);
+        framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);
+        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);
         Debug.Assert(FramebufferStatus.Complete == framebuffer.CheckStatus());
 
         Disposables.Add(depthbuffer);
@@ -71,42 +102,51 @@ public class Experiment:GlWindow {
         base.OnKeyDown(key, repeat);
     }
 
+    private void Update () {
+        var roll = IsKeyDown(Key.Z) ? 1 : 0;
+        if (IsKeyDown(Key.C))
+            roll -= 1;
+        var pitch = IsKeyDown(Key.D) ? 1 : 0;
+        if (IsKeyDown(Key.X))
+            pitch -= 1;
 
-    protected override void OnInput (int dx, int dy) {
+        if (roll != 0) 
+            cameraOrientation = Quaternion.Concatenate(cameraOrientation, Quaternion.CreateFromAxisAngle(-Vector3.UnitZ, .01f * roll));
+
+        if (pitch != 0) 
+            cameraOrientation = Quaternion.Concatenate(cameraOrientation, Quaternion.CreateFromAxisAngle(Vector3.UnitX, .01f * pitch));
     }
 
-    private void Update (long ticks) {
-
-        const float Velocity = 1; // /s, implied length unit is whatever opengl considers it to be
-        const float AngularVelocity = (float)(Maths.dPi / 2);
-        Vector3 cameraMovement = new(Axis(Key.C, Key.Z, ticks), Axis(Key.Q, Key.A, ticks), Axis(Key.X, Key.D, ticks));
-        cameraLocation += Velocity * cameraMovement;
-        var yaw = Axis(Key.Left, Key.Right, ticks) * AngularVelocity;
-        var pitch = Axis(Key.Up, Key.Down, ticks) * AngularVelocity;
-        modelOrientation = Quaternion.Concatenate(modelOrientation, Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0));
-        GetCoordinateSystem(modelOrientation, out var xLocal, out var yLocal, out var zLocal);
-        modelPosition += xLocal * Axis(Key.Insert, Key.Delete, ticks);
-        modelPosition += yLocal * Axis(Key.Home, Key.End, ticks);
-        modelPosition += zLocal * Axis(Key.PageUp, Key.PageDown, ticks);
-    }
-
-    protected override void Render (double dt) {
-        // if less time than 10 us has passed, it is assumed that we've stopped
-        Update(Ticks());
+    protected override void Render () {
+        Update();
         var size = ClientSize;
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
-        Disable(Capability.DepthTest);
         Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        BindVertexArray(va);
-        UseProgram(lines);
-        lines.Color(Vector4.One);
-        lines.Model(Matrix4x4.CreateFromQuaternion(modelOrientation) * Matrix4x4.CreateTranslation(modelPosition));
-        lines.View(Matrix4x4.CreateTranslation(-cameraLocation));
-        lines.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, (float)size.X / size.Y, 1f, 100f));
-        DrawArrays(Primitive.Lines, 0, 2 * C3_lines.Length);
 
+        Enable(Capability.DepthTest);
+        DepthFunc(DepthFunction.LessEqual);
+        Enable(Capability.CullFace);
+        BindVertexArray(sa);
+        UseProgram(directional);
+        directional.LightDirection(-Vector4.UnitZ);
+        directional.View(Matrix4x4.CreateTranslation(-cameraLocation) * Matrix4x4.CreateFromQuaternion(cameraOrientation));
+        directional.Projection(projection);
+
+        foreach (var body in EarthLunaSystem) {
+            var translation = Matrix4x4.CreateTranslation(body.Position);
+            var scale = Matrix4x4.CreateScale(body.Radius);
+            var model = scale * translation;
+            directional.Color(body.Color);
+            directional.Model(model);
+            var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
+            if (cameraDistanceFromSphere < 120f * body.Radius)
+                DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
+            else
+                DrawArrays(Primitive.Triangles, 0, loPolySphereVertexCount);
+        }
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
         Viewport(in Vector2i.Zero, size);
@@ -119,9 +159,86 @@ public class Experiment:GlWindow {
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 
-    static void GetCoordinateSystem (Quaternion q, out Vector3 ux, out Vector3 uy, out Vector3 uz) {
+    private static void GetCoordinateSystem (Quaternion q, out Vector3 ux, out Vector3 uy, out Vector3 uz) {
         ux = Vector3.Transform(Vector3.UnitX, q);
         uy = Vector3.Transform(Vector3.UnitY, q);
         uz = Vector3.Transform(Vector3.UnitZ, q);
+    }
+
+    public static int SphereTriangleCount (Vector2i n) =>
+        2 * n.X * (n.Y - 1);
+
+    public static void Sphere (Vector2i n, float radius, Span<Vector4> vertices) {
+        var (nTheta, nPhi) = n;
+        var spherePointCount = 2 + nTheta * (nPhi - 1);
+        var triangleCount = 2 * nTheta * (nPhi - 1);
+        var vertexCount = 3 * triangleCount;
+        if (vertices.Length != vertexCount)
+            throw new ArgumentException($"expected size {vertexCount} exactly, got {vertices.Length} instead", nameof(vertices));
+        var dTheta = 2 * Maths.dPi / nTheta;
+        var dPhi = Maths.dPi / nPhi;
+        var vectors = new Vector4[spherePointCount];
+        vectors[0] = new(radius * Vector3.UnitY, 1f);
+        vectors[spherePointCount - 1] = new(-radius * Vector3.UnitY, 1);
+
+        var phi = dPhi;
+        for (int vi = 1, i = 1; vi < nPhi; ++vi, phi += dPhi) {
+            var (sp, cp) = Maths.DoubleSinCos(phi);
+            var theta = 0.0;
+            for (var hi = 0; hi < nTheta; ++hi, ++i, theta += dTheta) {
+                var (st, ct) = Maths.DoubleSinCos(theta);
+                vectors[i] = new((float)(radius * sp * ct), (float)(radius * cp), (float)(radius * sp * st), 1);
+            }
+        }
+        var indices = new int[triangleCount * 3];
+
+        var faceIndex = 0;
+
+        // top 
+        for (var i = 1; i <= nTheta; ++i, ++faceIndex) {
+            indices[3 * faceIndex] = 0;
+            indices[3 * faceIndex + 2] = i;
+            indices[3 * faceIndex + 1] = i % nTheta + 1; // i = nTheta
+        }
+
+        for (var y = 1; y < nPhi - 1; ++y)
+            for (var x = 1; x <= nTheta; ++x) {
+                // a--d
+                // |\ |
+                // | \|
+                // b--c
+                var a = (y - 1) * nTheta + x;
+                var b = y * nTheta + x;
+                var c = y * nTheta + x % nTheta + 1;
+                var d = (y - 1) * nTheta + x % nTheta + 1;
+
+                indices[3 * faceIndex] = a;
+                indices[3 * faceIndex + 2] = b;
+                indices[3 * faceIndex + 1] = c;
+                ++faceIndex;
+                indices[3 * faceIndex] = a;
+                indices[3 * faceIndex + 2] = c;
+                indices[3 * faceIndex + 1] = d;
+                ++faceIndex;
+            }
+
+        for (var i = 1; i <= nTheta; ++i) {
+            // y = 0 => 1 vertex
+            // y = 1 ntheta vertices, starting from '1' = (y-1) * nTheta + 1
+            // y = nphi-2 , second to last, starting from (nphi-3) * ntheta +1
+            // y = nphi - 1, last row, 1 vertex (the last one)
+
+            var a = (nPhi - 2) * nTheta + i;
+            var b = (nPhi - 2) * nTheta + i % nTheta + 1;
+
+            Debug.Assert(a < vectors.Length);
+            Debug.Assert(b < vectors.Length);
+            indices[3 * faceIndex] = a;
+            indices[3 * faceIndex + 2] = vectors.Length - 1;
+            indices[3 * faceIndex + 1] = b;
+            ++faceIndex;
+        }
+        for (var i = 0; i < indices.Length; ++i)
+            vertices[i] = vectors[indices[i]];
     }
 }

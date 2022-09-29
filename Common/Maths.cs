@@ -39,7 +39,7 @@ public static class Maths {
     public const double dTau = Math.Tau;
     public const float fPi = (float)Math.PI;
     public const float fTau = (float)Math.Tau;
-    public static (double, double) DoubleSinCos (double angle) => Math.SinCos(angle);
+    public static (double sin, double cos) DoubleSinCos (double angle) => Math.SinCos(angle);
     public static (float, float) SingleSinCos (float angle) => ((float)Math.Sin(angle), (float)Math.Cos(angle)); // :(
     public static (int quotient, int remainder) Int32DivRem (int a, int b) => Math.DivRem(a, b);
     public static (uint quotient, uint remainder) UInt32DivRem (uint a, uint b) => Math.DivRem(a, b);

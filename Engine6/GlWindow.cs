@@ -13,11 +13,12 @@ public class GlWindow:Window {
 
     public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
         Ctx = new(Dc, configuration ?? ContextConfiguration.Default);
-        timer = Stopwatch.StartNew();
+        SimulationTime = Stopwatch.StartNew();
+        WallTime = Stopwatch.StartNew();
         ClientSize = DefaultWindowedSize;
         backupWindowStyleEx = User32.GetWindowStyleEx(this);
-        
-        TotalTicksSinceLastRead  = new long[AxisKeys.Length];
+
+        TotalTicksSinceLastRead = new long[AxisKeys.Length];
         LastPressTimestamp = new long[AxisKeys.Length];
 
         Recyclables.Add(presentation = new());
@@ -25,78 +26,65 @@ public class GlWindow:Window {
         Recyclables.Add(quadArray = new());
     }
 
-    protected virtual void Render (double dt_seconds) {
+    protected virtual void Render () {
         ClearColor(0.5f, 0.5f, 0.5f, 1f);
         Clear(BufferBit.ColorDepth);
     }
 
     protected GlContext Ctx;
-    protected long Ticks () => timer.ElapsedTicks;
     protected long FramesRendered { get; private set; } = 0l;
-    protected long LastSync { get; private set; } = 0l;
-    protected double TframeTicks () => TicksPerSecond * TframeSeconds();
+    protected long LastSync { get; private set; }
+    protected double TicksPerFrame () => TicksPerSecond * SecondsPerFrame();
     protected bool GuiActive { get; private set; } = true;
+    protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
+    protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
 
-    private double FPScap = 60;
-    private double TframeSeconds () => 1 / FPScap;
-    private static readonly double TicksPerSecond = Stopwatch.Frequency;
-    private readonly Stopwatch timer;
+    protected readonly Stopwatch WallTime;
+    protected readonly Stopwatch SimulationTime;
+    private double FramesPerSecond = 60;
+    private double SecondsPerFrame () => 1 / FramesPerSecond;
+    private static readonly long TicksPerSecond = Stopwatch.Frequency;
+    private readonly long[] TotalTicksSinceLastRead;
+    private readonly long[] LastPressTimestamp;
+
+    private byte[] title = helpText;
+    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
+    private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
     private bool disposed = false;
-    private Presentation presentation;
-    private VertexArray quadArray;
-    private BufferObject<Vector2> presentationVertices;
+    private readonly Presentation presentation;
+    private readonly VertexArray quadArray;
+    private readonly BufferObject<Vector2> presentationVertices;
     private Sampler2D guiSampler;
     private Raster guiRaster;
     private static readonly Vector2i DefaultWindowedSize = new(800, 600);
     private bool fullscreen = false;
-    private WindowStyleEx backupWindowStyleEx;
+    private readonly WindowStyleEx backupWindowStyleEx;
     private Rectangle windowedRectangle;
 
-    private void ToggleFullscreen () {
-        foreach (var x in Disposables)
-            x.Dispose();
-
-        if (fullscreen) {
-            _ = User32.SetWindowStyleEx(this, backupWindowStyleEx);
-            User32.SetWindowPos(this, WindowPosFlags.None);
-            User32.MoveWindow(this, windowedRectangle);
-            FPScap = 60;
-            fullscreen = false;
-            title = Encoding.ASCII.GetBytes("windowed, 60 Hz");
-        } else {
-            windowedRectangle = GetWindowRectangle();
-
-            var monitors = User32.GetMonitorInfo();
-            var (maxIndex, maxArea) = (-1, 0);
-            for (var i = 0; i < monitors.Length; ++i) {
-                var m = monitors[i].entireDisplay;
-                var area = m.Width * m.Height;
-                if (maxArea < area)
-                    (maxIndex, maxArea) = (i, area);
-            }
-            Debug.Assert(0 <= maxIndex);
-            var monitor = monitors[maxIndex];
-            if (User32.EnumDisplaySettings(monitor, out var monitorInfo)) {
-                User32.MoveWindow(this, monitor.entireDisplay);
-                FPScap = monitorInfo.dmDisplayFrequency;
-                title = Encoding.ASCII.GetBytes($"fullscreen, {monitorInfo.dmDisplayFrequency} Hz");
-                fullscreen = true;
-            } else {
-                title = toggleFailedText;
-                SetGuiActive(true);
-            }
-        }
-        OnLoad();
+    protected override void OnLoad () {
+        quadArray.Assign(presentationVertices, presentation.VertexPosition);
+        guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
+        guiRaster = new(guiSampler.Size, 4, 1);
+        BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
+        Disposables.Add(guiSampler);
+        Disposables.Add(guiRaster);
     }
 
-    protected override void OnKeyUp (Key key) {
-        if (IsAxis(key, Ticks(), false))
-            return;
-        base.OnKeyUp(key);
+    protected override void OnIdle () {
+        if (0 == LastSync || LastSync + (long)(0.99 * TicksPerFrame()) < WallTime.ElapsedTicks) {
+            if (0 < FramesRendered) {
+                Gdi32.SwapBuffers(Dc);
+                LastSync = WallTime.ElapsedTicks;
+            }
+            Render();
+            if (GuiActive)
+                RenderGui();
+            ++FramesRendered;
+        }
     }
 
     protected override void OnKeyDown (Key key, bool repeat) {
-        var now = Ticks();
+        var now = SimulationTime.ElapsedTicks;
         if (!repeat)
             switch (key) {
                 case Key.Return:
@@ -117,10 +105,58 @@ public class GlWindow:Window {
         base.OnKeyDown(key, repeat);
     }
 
-    protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
+    protected override void OnKeyUp (Key key) {
+        if (IsAxis(key, SimulationTime.ElapsedTicks, false))
+            return;
+        base.OnKeyUp(key);
+    }
 
-    private readonly long[] TotalTicksSinceLastRead;// = new long[AxisKeys.Length];
-    private readonly long[] LastPressTimestamp;//
+    protected override void OnFocusChanged () {
+        if (IsFocused) {
+            SimulationTime.Start();
+        } else {
+            SimulationTime.Stop();
+            SetGuiActive(true);
+        }
+    }
+
+    private void ToggleFullscreen () {
+        foreach (var x in Disposables)
+            x.Dispose();
+        Disposables.Clear();
+
+        if (fullscreen) {
+            _ = User32.SetWindowStyleEx(this, backupWindowStyleEx);
+            User32.SetWindowPos(this, WindowPosFlags.None);
+            User32.MoveWindow(this, windowedRectangle);
+            FramesPerSecond = 60;
+            fullscreen = false;
+            title = Encoding.ASCII.GetBytes("windowed, 60 Hz");
+        } else {
+            windowedRectangle = GetWindowRectangle();
+
+            var monitors = User32.GetMonitorInfo();
+            var (maxIndex, maxArea) = (-1, 0);
+            for (var i = 0; i < monitors.Length; ++i) {
+                var m = monitors[i].entireDisplay;
+                var area = m.Width * m.Height;
+                if (maxArea < area)
+                    (maxIndex, maxArea) = (i, area);
+            }
+            Debug.Assert(0 <= maxIndex);
+            var monitor = monitors[maxIndex];
+            if (User32.EnumDisplaySettings(monitor, out var monitorInfo)) {
+                User32.MoveWindow(this, monitor.entireDisplay);
+                FramesPerSecond = monitorInfo.dmDisplayFrequency;
+                title = Encoding.ASCII.GetBytes($"fullscreen, {monitorInfo.dmDisplayFrequency} Hz");
+                fullscreen = true;
+            } else {
+                title = toggleFailedText;
+                SetGuiActive(true);
+            }
+        }
+        OnLoad();
+    }
 
     private bool IsAxis (Key key, long now, bool depressed) {
         var i = Array.IndexOf(AxisKeys, key);
@@ -136,7 +172,8 @@ public class GlWindow:Window {
         return true;
     }
 
-    private long Pop (Key key, long ticks) {
+    private long Pop (Key key) {
+        var ticks = SimulationTime.ElapsedTicks;
         var i = Array.IndexOf(AxisKeys, key);
         Debug.Assert(0 <= i);
         var total = TotalTicksSinceLastRead[i];
@@ -150,82 +187,38 @@ public class GlWindow:Window {
         return total;
     }
 
-    protected float Axis (Key positive, Key negative, long ticks) =>
-        (float)((Pop(positive, ticks) - Pop(negative, ticks)) / TframeTicks());
+    protected float Axis (Key positive, Key negative) =>
+        (float)((Pop(positive) - Pop(negative)) / (double)TicksPerSecond);
 
     private void SetGuiActive (bool active) {
-        if (GuiActive == active)
-            return;
-        GuiActive = active;
-        _ = User32.ShowCursor(GuiActive);
-        User32.RegisterMouseRaw(GuiActive ? null : this);
-        if (!GuiActive) {
-            var r = GetWindowRectangle().Center;
-            User32.SetCursorPos(r.X, r.Y);
+        if (GuiActive != active) {
+            GuiActive = active;
+            _ = User32.ShowCursor(GuiActive);
+            User32.RegisterMouseRaw(GuiActive ? null : this);
+            if (!GuiActive)
+                User32.SetCursorPos(GetWindowRectangle().Center);
         }
     }
 
-    protected override void OnFocusChanged () {
-        if (IsFocused) {
-            timer.Start();
-        } else {
-            timer.Stop();
-            SetGuiActive(true);
-        }
-    }
+    private void RenderGui () {
+        guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
+        guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
+        guiSampler.Upload(guiRaster);
 
-    protected override void OnIdle () {
-        if (LastSync + TframeTicks() < timer.ElapsedTicks) {
-            var dt = 0.0;
-            if (0 < FramesRendered) {
-                Gdi32.SwapBuffers(Dc);
-                var now = timer.ElapsedTicks;
-                if (IsFocused && !GuiActive) {
-                    dt = (now - LastSync) / TicksPerSecond;
-                    dt = dt * dt / TframeSeconds();
-                }
-                LastSync = now;
-            }
-            Render(dt);
-            if (GuiActive) {
-                guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
-                guiRaster.DrawString(title, PixelFont, 3, 3, ~0u, 0x8080807fu);
-                guiSampler.Upload(guiRaster);
+        BindDefaultFramebuffer(FramebufferTarget.Draw);
+        Disable(Capability.DepthTest);
+        Enable(Capability.Blend);
+        Viewport(in Vector2i.Zero, ClientSize);
 
-                BindDefaultFramebuffer(FramebufferTarget.Draw);
-                Disable(Capability.DepthTest);
-                Enable(Capability.Blend);
-                Viewport(in Vector2i.Zero, ClientSize);
+        BindVertexArray(quadArray);
+        UseProgram(presentation);
 
-                BindVertexArray(quadArray);
-                UseProgram(presentation);
+        guiSampler.BindTo(10);
+        presentation.Tex0(10);
 
-                guiSampler.BindTo(10);
-                presentation.Tex0(10);
+        DrawArrays(Primitive.Triangles, 0, 6);
 
-                DrawArrays(Primitive.Triangles, 0, 6);
-
-                Disable(Capability.Blend);
-            }
-
-            ++FramesRendered;
-        }
-    }
-    private byte[] title = helpText;
-    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
-    private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
-    private static readonly byte[] windowedText = Encoding.ASCII.GetBytes("windowed");
-    private static readonly byte[] fullscreenText = Encoding.ASCII.GetBytes("fullscreen");
-    protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
-
-    protected override void OnLoad () {
-        base.OnLoad();
-        quadArray.Assign(presentationVertices, presentation.VertexPosition);
-        guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
-        guiRaster = new(guiSampler.Size, 4, 1);
-        BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
-        Disposables.Add(guiSampler);
-        Disposables.Add(guiRaster);
+        Disable(Capability.Blend);
     }
 
     public override void Dispose () {

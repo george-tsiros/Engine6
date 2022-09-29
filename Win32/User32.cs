@@ -220,6 +220,11 @@ public static class User32 {
         return GetWindowRect(window.Handle, ref r) ? r : throw new WinApiException(nameof(GetWindowRect));
     }
 
+    public static void SetCursorPos (in Vector2i p) { 
+        if (!SetCursorPos_(p.X, p.Y))
+            throw new WinApiException(nameof(SetCursorPos));
+    }
+
     public static void SetCursorPos (int x, int y) {
         if (!SetCursorPos_(x, y))
             throw new WinApiException(nameof(SetCursorPos));
