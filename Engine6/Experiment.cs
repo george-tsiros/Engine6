@@ -28,7 +28,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Vector3 cameraLocation = new(0, 0, EarthLunaDistance);
+    private Vector3 cameraLocation = new(0, 0, TerraLunaDistance);
     private Quaternion cameraOrientation = Quaternion.Identity;
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
@@ -43,16 +43,16 @@ public class Experiment:GlWindow {
         public float Mass { get; init; }
     };
 
-    private static readonly Body Earth = new() { Position = new(), Radius = EarthRadius, Color = new(0, .6f, .7f, 1), Mass = EarthMass, };
-    private static readonly Body Luna = new() { Position = new(EarthLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
-    private static readonly Body What = new() { Position = new(0, 0, EarthLunaDistance - 10 * NearPlane), Radius = WhatRadius, Color = Vector4.One, Mass = 1 };
-    private static readonly Body[] EarthLunaSystem = { Luna, Earth, What };
+    private static readonly Body Terra = new() { Position = new(), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
+    private static readonly Body Luna = new() { Position = new(TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
+    private static readonly Body What = new() { Position = new(0, 0, TerraLunaDistance - 10 * NearPlane), Radius = WhatRadius, Color = Vector4.One, Mass = 1 };
+    private static readonly Body[] TerraLunaSystem = { Luna, Terra, What };
 
-    private const float EarthLunaDistance = 3.844e8f * .001f;
-    private const float EarthRadius = 6.371e6f * .001f;
+    private const float TerraLunaDistance = 3.844e8f * .001f;
+    private const float TerraRadius = 6.371e6f * .001f;
     private const float LunaRadius = 1.737e6f * .001f;
     private const float WhatRadius = 1e3f * .001f;
-    private const float EarthMass = 5.972e24f * .001f;
+    private const float TerraMass = 5.972e24f * .001f;
     private const float LunaMass = 7.342e22f * .001f;
     private const float NearPlane = 1e3f * .001f;
     private const float FarPlane = 1e9f * .001f;
@@ -144,7 +144,7 @@ public class Experiment:GlWindow {
         directional.View(Matrix4x4.CreateRotationY(theta)* Matrix4x4.CreateTranslation(-cameraLocation));
         directional.Projection(projection);
 
-        foreach (var body in EarthLunaSystem) {
+        foreach (var body in TerraLunaSystem) {
             var translation = Matrix4x4.CreateTranslation(body.Position);
             //var scale = Matrix4x4.CreateScale(body.Radius);
             var model = translation;
