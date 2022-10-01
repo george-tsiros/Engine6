@@ -1,4 +1,5 @@
 namespace Engine6;
+
 using Win32;
 using Common;
 using Gl;
@@ -7,18 +8,14 @@ using System.Numerics;
 using Shaders;
 using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-public class Experiment:GlWindow {
 
-    //private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
-    //private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
+public class Experiment:GlWindow {
 
     protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
 
-    private DirectionalFullbright directional;
+    private FlatColor flatColor;
     private VertexArray sa;
     private BufferObject<Vector4> sphereVertices;
-    //private BufferObject<Vector4> sphereNormals;
     private Presentation presentation;
     private VertexArray pa;
     private BufferObject<Vector2> presentationVertices;
@@ -27,7 +24,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Vector3 cameraLocation = new(0, 0, TerraLunaDistance);
+    private Vector3 cameraLocation = new(TerraLunaDistance/2, 0, TerraLunaDistance);
     private Quaternion cameraOrientation = Quaternion.Identity;
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
@@ -46,15 +43,15 @@ public class Experiment:GlWindow {
     private static readonly Body Luna = new() { Position = new(TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
     private static readonly Body What = new() { Position = new(0, 0, TerraLunaDistance - 10 * NearPlane), Radius = WhatRadius, Color = Vector4.One, Mass = 1 };
     private static readonly Body[] TerraLunaSystem = { Luna, Terra, What };
-
-    private const float TerraLunaDistance = 3.844e8f * .001f;
-    private const float TerraRadius = 6.371e6f * .001f;
-    private const float LunaRadius = 1.737e6f * .001f;
-    private const float WhatRadius = 1e3f * .001f;
-    private const float TerraMass = 5.972e24f * .001f;
-    private const float LunaMass = 7.342e22f * .001f;
-    private const float NearPlane = 1e3f * .001f;
-    private const float FarPlane = 1e9f * .001f;
+    private const float Scale = .001f;
+    private const float TerraLunaDistance = 384.4f;// 3.844e8f * Scale;
+    private const float TerraRadius = 6.371f;// 6.371e6f * Scale;
+    private const float LunaRadius = 1.737f;// 1.737e6f * Scale;
+    private const float WhatRadius = 1f;// 1e3f * Scale;
+    private const float TerraMass = 1f;// 5.972e24f * Scale;
+    private const float LunaMass = 1f;// 7.342e22f * Scale;
+    private const float NearPlane = 1f;// 1e3f * Scale;
+    private const float FarPlane = 1000f;// 1e9f * Scale;
 
     public Experiment () {
 
@@ -63,19 +60,14 @@ public class Experiment:GlWindow {
         Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
 
         Recyclables.Add(sphereVertices = new(allVertices));
-        //for (var i = 0; i < allVertices.Length; ++i)
-        //    allVertices[i] = new(allVertices[i].Xyz(), 0);
-
-        //Recyclables.Add(sphereNormals = new(allVertices));
         Recyclables.Add(presentationVertices = new(PresentationQuad));
         Recyclables.Add(framebuffer = new());
         Recyclables.Add(presentation = new());
         Recyclables.Add(pa = new());
         Recyclables.Add(sa = new());
-        Recyclables.Add(directional = new());
+        Recyclables.Add(flatColor = new());
         pa.Assign(presentationVertices, presentation.VertexPosition);
-        sa.Assign(sphereVertices, directional.VertexPosition);
-        //sa.Assign(sphereNormals, directional.VertexNormal);
+        sa.Assign(sphereVertices, flatColor.VertexPosition);
         SetSwapInterval(1);
     }
 
@@ -101,54 +93,47 @@ public class Experiment:GlWindow {
         base.OnKeyDown(key, repeat);
     }
 
-    private void Update () {
-        //var roll = IsKeyDown(Key.Z) ? 1 : 0;
-        //if (IsKeyDown(Key.C))
-        //    roll -= 1;
-        //var pitch = IsKeyDown(Key.D) ? 1 : 0;
-        //if (IsKeyDown(Key.X))
-        //    pitch -= 1;
-
-        //if (roll != 0) 
-        //    cameraOrientation = Quaternion.Concatenate(cameraOrientation, Quaternion.CreateFromAxisAngle(-Vector3.UnitZ, .01f * roll));
-
-        //if (pitch != 0) 
-        //    cameraOrientation = Quaternion.Concatenate(cameraOrientation, Quaternion.CreateFromAxisAngle(Vector3.UnitX, .01f * pitch));
-
-        var dx = Axis(Key.C, Key.Z);
-        var dz = Axis(Key.D, Key.X);
-        cameraLocation += new Vector3(dx, 0, -dz);
-
+    static void Rotate (ref Quaternion q, float yaw, float pitch, float roll) { 
+        var newX = Vector3.Transform(Vector3.UnitX, q);
+        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newX, pitch));
+        var newY = Vector3.Transform(Vector3.UnitY, q);
+        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newY, yaw));
+        var newZ = Vector3.Transform(Vector3.UnitZ, q);
+        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newZ, roll));
+    
     }
-    float theta = 0.0f;
+
+    static void Translate (ref Vector4 p, ref Quaternion q, in Vector3 dr) {
+        var dx = dr.X * Vector3.Transform(Vector3.UnitX, q);
+        var dy = dr.Y * Vector3.Transform(Vector3.UnitY, q);
+        var dz = dr.Z * Vector3.Transform(Vector3.UnitZ, q);
+        p += new Vector4(dx + dy + dz, 0);
+    }
+
+    protected override void OnInput (int dx, int dy) {
+        Rotate(ref cameraOrientation, 0, .001f * dy, .001f * dx);
+    }
+
     protected override void Render () {
-        Update();
         var size = ClientSize;
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        theta += .0001f;
-        if (Maths.fTau < theta)
-            theta -= Maths.fTau;
-        //cameraOrientation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, theta);
-        //cameraOrientation = Quaternion.Concatenate(cameraOrientation, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, .001f));
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
         BindVertexArray(sa);
-        UseProgram(directional);
-        //directional.LightDirection(-Vector4.UnitZ);
-        directional.View(Matrix4x4.CreateRotationY(theta) * Matrix4x4.CreateTranslation(-cameraLocation));
-        directional.Projection(projection);
+        UseProgram(flatColor);
+        flatColor.View(Matrix4x4.CreateTranslation(-cameraLocation) * Matrix4x4.CreateFromQuaternion(cameraOrientation));
+        flatColor.Projection(projection);
 
         foreach (var body in TerraLunaSystem) {
             var translation = Matrix4x4.CreateTranslation(body.Position);
-            //var scale = Matrix4x4.CreateScale(body.Radius);
             var model = translation;
-            directional.Color(body.Color);
-            directional.Model(model);
+            flatColor.Color(body.Color);
+            flatColor.Model(model);
             var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
             if (cameraDistanceFromSphere < 120f * body.Radius)
                 DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
