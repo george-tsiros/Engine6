@@ -30,6 +30,9 @@
         <ProjectReference Include="..\Shaders\Shaders.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <None Update="data\skybox.bin">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="data\ufl1.txt">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

@@ -183,6 +183,7 @@ public class Raster:IDisposable {
     }
 
     public unsafe void LineU32 (Vector2i a, Vector2i b, Color color) {
+        throw new NotImplementedException();
         NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
@@ -226,9 +227,9 @@ public class Raster:IDisposable {
         var height = r.ReadInt32();
         var channels = r.ReadInt32();
         var bytesPerChannel = r.ReadInt32();
-        if (bytesPerChannel != 1)
+        if (1 != bytesPerChannel)
             throw new ArgumentOutOfRangeException(nameof(bytesPerChannel), "only 1Bpp bitmaps are currently supported");
-        var length = r.ReadInt32();
+        //var length = r.ReadInt32();
         return new Raster(new(width, height), channels, bytesPerChannel);
     }
 
@@ -236,8 +237,17 @@ public class Raster:IDisposable {
         using var f = File.OpenRead(filepath);
         var raster = FromStream(f);
         using DeflateStream unzip = new(f, CompressionMode.Decompress);
-        var read = unzip.Read(raster.Pixels, 0, raster.Pixels.Length);
-        return read == raster.Pixels.Length ? raster : throw new ApplicationException($"{filepath}: expected to read {raster.Pixels.Length} bytes, read {read} instead");
+        var i = 0;
+        var remaining = raster.Pixels.Length;
+        while (0 < remaining) {
+            var read = unzip.Read(raster.Pixels, i, remaining);
+            if (0 == read)
+                throw new Exception($"failed to read any bytes, expected {remaining} more");
+            i += read;
+            remaining -= read;
+            Debug.Assert(0 <= remaining);
+        }
+        return raster;
     }
 
     private bool disposed;

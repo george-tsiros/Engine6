@@ -1,7 +1,9 @@
 namespace Gl;
 using System;
+
 using static GlContext;
 using Common;
+
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteTexture;
     public Vector2i Size { get; }
@@ -42,6 +44,7 @@ public class Sampler2D:OpenglObject {
             TextureFilter(this, mag = value);
         }
     }
+
     public Sampler2D (Vector2i size, TextureFormat sizedFormat) {
         Id = CreateTexture2D();
         (Size, SizedFormat) = (size, sizedFormat);

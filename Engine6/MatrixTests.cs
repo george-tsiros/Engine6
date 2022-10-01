@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using Win32;
 using Common;
 using Gl;
@@ -14,9 +14,9 @@ public class MatrixTests:GlWindow {
         ClientSize = new(1600, 1200);
     }
 
-    protected override Key[] AxisKeys { get; } = { Key.Z, Key.X, Key.C, Key.D, Key.Q, Key.A, Key.Insert, Key.Home, Key.PageUp, Key.Delete, Key.End, Key.PageDown };
+    protected override Key[] AxisKeys { get; } = { Key.Z, Key.X, Key.C, Key.D, Key.Q, Key.A, Key.Insert, Key.Home, Key.PageUp, Key.Delete, Key.End, Key.PageDown, Key.Up, Key.Down, Key.Left, Key.Right };
 
-    Diy diy;
+    FlatColor flatColor;
     VertexArray va;
     BufferObject<Vector4> vertices;
     static readonly Vector4[] lineSegments = { new(Vector3.Zero, 1), new(Vector3.UnitX, 1), new(Vector3.Zero, 1), new(Vector3.UnitY, 1), new(Vector3.Zero, 1), new(Vector3.UnitZ, 1), };
@@ -24,39 +24,51 @@ public class MatrixTests:GlWindow {
     protected override void OnLoad () {
         base.OnLoad();
 
-        Recyclables.Add(va = new());
-        Recyclables.Add(diy = new());
-        Recyclables.Add(vertices = new(lineSegments));
-        va.Assign(vertices, diy.VertexPosition);
+        Reusables.Add(va = new());
+        Reusables.Add(flatColor = new());
+        Reusables.Add(vertices = new(lineSegments));
+        va.Assign(vertices, flatColor.VertexPosition);
     }
 
-    static void Update (ref Vector4 p, ref Quaternion q, in Vector3 dr, in Vector3 rot) {
-        var newX = Vector3.Transform(Vector3.UnitX, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newX, rot.X));
-        var newY = Vector3.Transform(Vector3.UnitY, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newY, rot.Y));
-        var newZ = Vector3.Transform(Vector3.UnitZ, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newZ, rot.Z));
-        var dx = dr.X * Vector3.Transform(Vector3.UnitX, q);
-        var dy = dr.Y * Vector3.Transform(Vector3.UnitY, q);
-        var dz = dr.Z * Vector3.Transform(Vector3.UnitZ, q);
-        p += new Vector4(dx + dy + dz, 0);
+    protected override void OnKeyDown (Key key, bool repeat) {
+        switch (key) {
+            case Key.Space:
+                cameraPosition = new(0, 0, 5, 1);
+                cameraOrientation = Quaternion.Identity;
+                modelPosition = new(0, 0, -2, 1);
+                modelOrientation = Quaternion.Identity;
+                return;
+
+        }
+        base.OnKeyDown(key, repeat);
     }
 
-    Vector4 position = new(0, 0, -2, 1);
-    Quaternion orientation = Quaternion.Identity;
+    Vector4 cameraPosition = new(0, 0, 2, 1);
+    Quaternion cameraOrientation = Quaternion.Identity;
+
+    Vector4 modelPosition = new(0, 0, 0, 1);
+    Quaternion modelOrientation = Quaternion.Identity;
+
+    Vector2i cumulativeCursorMovement;
+
+    protected override void OnInput (int dx, int dy) {
+        cumulativeCursorMovement += new Vector2i(dx, dy);
+    }
 
     const float AngularVelocity = Maths.fTau / 8;
     protected override void Render () {
         var size = ClientSize;
 
-        Vector3 translation = new((float)Axis(Key.C, Key.Z), (float)Axis(Key.Q, Key.A), (float)Axis(Key.X, Key.D));
-        var rotation = AngularVelocity * new Vector3((float)Axis(Key.Insert, Key.Delete), (float)Axis(Key.Home, Key.End), (float)Axis(Key.PageUp, Key.PageDown));
+        Vector3 modelTranslation = new((float)Axis(Key.C, Key.Z), (float)Axis(Key.Q, Key.A), (float)Axis(Key.X, Key.D));
+        var modelRotation = AngularVelocity * new Vector3((float)Axis(Key.Insert, Key.Delete), (float)Axis(Key.Home, Key.End), (float)Axis(Key.PageUp, Key.PageDown));
+        Experiment.Rotate(ref modelOrientation, modelRotation.Y, modelRotation.X, modelRotation.Z);
+        Experiment.Translate(ref modelPosition, in modelOrientation, in modelTranslation);
 
-        Update(ref position, ref orientation, in translation, in rotation);
+        Experiment.CameraRotate(ref cameraOrientation, 0, .001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
+        cumulativeCursorMovement = Vector2i.Zero;
 
-        var model = Matrix4x4.CreateFromQuaternion(orientation) * Matrix4x4.CreateTranslation(position.Xyz());
-        var view = Matrix4x4.CreateTranslation(0, 0, -2);
+        var model = Matrix4x4.CreateFromQuaternion(modelOrientation) * Matrix4x4.CreateTranslation(modelPosition.Xyz());
+        var view = Matrix4x4.CreateTranslation(-cameraPosition.Xyz()) * Matrix4x4.CreateFromQuaternion(cameraOrientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, (float)size.X / size.Y, 1f, 100f);
 
         Vector2i sectionSize = new(size.X / 2, size.Y / 2);
@@ -64,14 +76,17 @@ public class MatrixTests:GlWindow {
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
 
-        UseProgram(diy);
+        UseProgram(flatColor);
         BindVertexArray(va);
 
-        diy.Matrix(model * view * projection);
+        flatColor.Model(model);
+        flatColor.View(view);
+        flatColor.Projection(projection);
         for (var i = 0; i < 3; ++i) {
-            diy.Color(Colors[i]);
+            flatColor.Color(Colors[i]);
             DrawArrays(Primitive.Lines, 2 * i, 2);
         }
 
     }
 }
+

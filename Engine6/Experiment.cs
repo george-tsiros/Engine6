@@ -11,20 +11,25 @@ using System.Diagnostics;
 
 public class Experiment:GlWindow {
 
-    protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, };
+    protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, Key.Left, Key.Right, Key.Up, Key.Down };
 
-    private FlatColor flatColor;
+    private FlatColorRadius flatColor;
     private VertexArray sa;
     private BufferObject<Vector4> sphereVertices;
     private Presentation presentation;
     private VertexArray pa;
     private BufferObject<Vector2> presentationVertices;
     private Framebuffer framebuffer;
-
+    private Sampler2D skyboxSampler;
+    private Raster skyboxRaster;
+    private Skybox skybox;
+    private VertexArray skyboxArray;
+    private BufferObject<Vector4> skyboxVertices;
+    private BufferObject<Vector2> skyboxTexCoords;
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Vector3 cameraLocation = new(TerraLunaDistance/2, 0, TerraLunaDistance);
+    private Vector3 cameraLocation = new(0, 0, 2 * TerraRadius);
     private Quaternion cameraOrientation = Quaternion.Identity;
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
@@ -41,17 +46,16 @@ public class Experiment:GlWindow {
 
     private static readonly Body Terra = new() { Position = new(), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
     private static readonly Body Luna = new() { Position = new(TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
-    private static readonly Body What = new() { Position = new(0, 0, TerraLunaDistance - 10 * NearPlane), Radius = WhatRadius, Color = Vector4.One, Mass = 1 };
-    private static readonly Body[] TerraLunaSystem = { Luna, Terra, What };
-    private const float Scale = .001f;
-    private const float TerraLunaDistance = 384.4f;// 3.844e8f * Scale;
-    private const float TerraRadius = 6.371f;// 6.371e6f * Scale;
-    private const float LunaRadius = 1.737f;// 1.737e6f * Scale;
-    private const float WhatRadius = 1f;// 1e3f * Scale;
-    private const float TerraMass = 1f;// 5.972e24f * Scale;
-    private const float LunaMass = 1f;// 7.342e22f * Scale;
-    private const float NearPlane = 1f;// 1e3f * Scale;
-    private const float FarPlane = 1000f;// 1e9f * Scale;
+    private static readonly Body[] TerraLunaSystem = { Luna, Terra };
+    private const float Scale = 1.0e-6f;
+    private const float TerraLunaDistance = 384.4e6f * Scale;
+    private const float TerraRadius = 6.371e6f * Scale;
+    private const float LunaRadius = 1.737e6f * Scale;
+    private const float NearPlane = 1.0e6f * Scale;
+    private const float FarPlane = 1.0e9f * Scale;
+
+    private const float TerraMass = 5.972e24f;
+    private const float LunaMass = 7.342e22f;
 
     public Experiment () {
 
@@ -59,21 +63,46 @@ public class Experiment:GlWindow {
         Sphere(loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
         Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
 
-        Recyclables.Add(sphereVertices = new(allVertices));
-        Recyclables.Add(presentationVertices = new(PresentationQuad));
-        Recyclables.Add(framebuffer = new());
-        Recyclables.Add(presentation = new());
-        Recyclables.Add(pa = new());
-        Recyclables.Add(sa = new());
-        Recyclables.Add(flatColor = new());
+        var centerCube = Matrix4x4.CreateTranslation(-.5f * Vector3.One) * Matrix4x4.CreateScale(100f);
+        var cv = Cube.Vertices();
+        for (var i = 0; i < cv.Length; ++i)
+            cv[i] = Vector4.Transform(cv[i], centerCube);
+        var cuv = Cube.UvVectors();
+
+        var cubeIndices = Cube.Indices();
+        Debug.Assert(36 == cubeIndices.Length);
+        var cubeUvIndices = Cube.UvIndices();
+        Debug.Assert(36 == cubeUvIndices.Length);
+        var cubeVertices = new Vector4[cubeIndices.Length];
+        var cubeTexCoords = new Vector2[cubeIndices.Length];
+        for (var i = 0; i < cubeVertices.Length; ++i) {
+            cubeVertices[i] = cv[cubeIndices[i]];
+            cubeTexCoords[i] = cuv[cubeUvIndices[i]];
+        }
+
+        Reusables.Add(sphereVertices = new(allVertices));
+        Reusables.Add(presentationVertices = new(PresentationQuad));
+        Reusables.Add(skyboxVertices = new(cubeVertices));
+        Reusables.Add(skyboxTexCoords = new(cubeTexCoords));
+        Reusables.Add(framebuffer = new());
+        Reusables.Add(presentation = new());
+        Reusables.Add(pa = new());
+        Reusables.Add(sa = new());
+        Reusables.Add(skyboxArray = new());
+        Reusables.Add(flatColor = new());
+        Reusables.Add(skybox = new());
+        Reusables.Add(skyboxRaster = Raster.FromFile("data\\skybox.bin"));
+        Reusables.Add(skyboxSampler = new(skyboxRaster.Size, TextureFormat.Rgba8) { Mag = MagFilter.Linear, Min = MinFilter.Linear, Wrap = Wrap.ClampToEdge } );
+        skyboxSampler.Upload(skyboxRaster);
         pa.Assign(presentationVertices, presentation.VertexPosition);
         sa.Assign(sphereVertices, flatColor.VertexPosition);
+        skyboxArray.Assign(skyboxVertices, skybox.VertexPosition);
+        skyboxArray.Assign(skyboxTexCoords, skybox.TexCoords);
         SetSwapInterval(1);
     }
 
     protected override void OnLoad () {
         base.OnLoad();
-
         renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
         depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);
         framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);
@@ -93,45 +122,79 @@ public class Experiment:GlWindow {
         base.OnKeyDown(key, repeat);
     }
 
-    static void Rotate (ref Quaternion q, float yaw, float pitch, float roll) { 
-        var newX = Vector3.Transform(Vector3.UnitX, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newX, pitch));
-        var newY = Vector3.Transform(Vector3.UnitY, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newY, yaw));
-        var newZ = Vector3.Transform(Vector3.UnitZ, q);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(newZ, roll));
-    
+    public static void Rotate (ref Quaternion q, float yaw, float pitch, float roll) {
+        var localXaxis = Vector3.Transform(Vector3.UnitX, q);
+        var qPitch = Quaternion.CreateFromAxisAngle(localXaxis, pitch);
+        q = Quaternion.Concatenate(q, qPitch);
+        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, q);
+        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
+        q = Quaternion.Concatenate(q, qYaw);
+        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, q);
+        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
+        q = Quaternion.Concatenate(q, qRoll);
+
     }
 
-    static void Translate (ref Vector4 p, ref Quaternion q, in Vector3 dr) {
+    public static void Translate (ref Vector4 p, in Quaternion q, in Vector3 dr) {
         var dx = dr.X * Vector3.Transform(Vector3.UnitX, q);
         var dy = dr.Y * Vector3.Transform(Vector3.UnitY, q);
         var dz = dr.Z * Vector3.Transform(Vector3.UnitZ, q);
         p += new Vector4(dx + dy + dz, 0);
     }
 
+    public static void CameraRotate (ref Quaternion q, float yaw, float pitch, float roll) {
+        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
+        q = Quaternion.Concatenate(q, qPitch);
+        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, qPitch);
+        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
+        q = Quaternion.Concatenate(q, qYaw);
+        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, qPitch);
+        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
+        q = Quaternion.Concatenate(q, qRoll);
+
+    }
+
+    Vector2i cumulativeCursorMovement;
+
     protected override void OnInput (int dx, int dy) {
-        Rotate(ref cameraOrientation, 0, .001f * dy, .001f * dx);
+        cumulativeCursorMovement += new Vector2i(dx, dy);
     }
 
     protected override void Render () {
         var size = ClientSize;
+        //(float)Axis(Key.Left, Key.Right)
+        CameraRotate(ref cameraOrientation, (float)Axis(Key.Right, Key.Left), -.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
+        cumulativeCursorMovement = Vector2i.Zero;
+
+        var viewRotation = Matrix4x4.CreateFromQuaternion(cameraOrientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
+        
+        Disable(Capability.DepthTest);
+        Disable(Capability.CullFace);
+        BindVertexArray(skyboxArray);
+        UseProgram(skybox);
+        skyboxSampler.BindTo(0);
+        skybox.Tex0(0);
+        skybox.Projection(projection);
+        skybox.Orientation(viewRotation);
+        DrawArrays(Primitive.Triangles, 0, 36);
+
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
         BindVertexArray(sa);
         UseProgram(flatColor);
-        flatColor.View(Matrix4x4.CreateTranslation(-cameraLocation) * Matrix4x4.CreateFromQuaternion(cameraOrientation));
+        flatColor.View(Matrix4x4.CreateTranslation(-cameraLocation) * viewRotation);
         flatColor.Projection(projection);
 
         foreach (var body in TerraLunaSystem) {
             var translation = Matrix4x4.CreateTranslation(body.Position);
             var model = translation;
+            flatColor.Scale(body.Radius);
             flatColor.Color(body.Color);
             flatColor.Model(model);
             var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();

@@ -21,9 +21,9 @@ public class GlWindow:Window {
         TotalTicksSinceLastRead = new long[AxisKeys.Length];
         LastPressTimestamp = new long[AxisKeys.Length];
 
-        Recyclables.Add(presentation = new());
-        Recyclables.Add(presentationVertices = new(PresentationQuad));
-        Recyclables.Add(quadArray = new());
+        Reusables.Add(presentation = new());
+        Reusables.Add(presentationVertices = new(PresentationQuad));
+        Reusables.Add(quadArray = new());
     }
 
     protected virtual void Render () {
