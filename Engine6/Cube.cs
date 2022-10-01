@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using System.Numerics;
 
 static class Cube {
