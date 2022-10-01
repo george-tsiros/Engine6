@@ -36,7 +36,7 @@ class Engine {
         //M();
 
 
-        using Experiment window = new();
+        using MatrixTests window = new();
         window.Run();
 
         //_ = Console.ReadLine();

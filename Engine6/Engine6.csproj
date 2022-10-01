@@ -8,7 +8,7 @@
         <NoWarn>1701;1702;CS0078</NoWarn>
         <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
-        <OutputType>Exe</OutputType>
+        <OutputType>WinExe</OutputType>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
         <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
         <StartupObject></StartupObject>

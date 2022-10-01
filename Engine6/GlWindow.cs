@@ -38,7 +38,7 @@ public class GlWindow:Window {
     protected bool GuiActive { get; private set; } = true;
     protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
     protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
-
+    protected double LastFramesInterval { get; private set; }
     protected readonly Stopwatch WallTime;
     protected readonly Stopwatch SimulationTime;
     private double FramesPerSecond = 60;
@@ -74,7 +74,9 @@ public class GlWindow:Window {
         if (0 == LastSync || LastSync + (long)(0.99 * TicksPerFrame()) < WallTime.ElapsedTicks) {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
-                LastSync = WallTime.ElapsedTicks;
+                var now = WallTime.ElapsedTicks;
+                LastFramesInterval = (now - LastSync) / (double)TicksPerSecond;
+                LastSync = now;
             }
             Render();
             if (GuiActive)
