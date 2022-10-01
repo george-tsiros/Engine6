@@ -68,6 +68,7 @@ public class GlWindow:Window {
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
+        SetGuiActive(false);
     }
 
     protected override void OnIdle () {
