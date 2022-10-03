@@ -10,6 +10,8 @@ public class Diy:Program {
 #pragma warning disable CS0649
     protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgdW5pZm9ybSBtYXQ0IG1hdHJpeDsgdm9pZCBtYWluKCkgeyBnbF9Qb3NpdGlvbiA9IG1hdHJpeCAqIHZlcnRleFBvc2l0aW9uOyB9";
     protected override string FragmentSource { get; } = "dW5pZm9ybSB2ZWM0IGNvbG9yOyBvdXQgdmVjNCBjb2xvcjA7IHZvaWQgbWFpbigpIHsgY29sb3IwID0gY29sb3I7IH0=";
+    [GlFragOut]
+    public int Color0 { get; }
     //size 1, type Vector4
     [GlAttrib]
     public int VertexPosition { get; }

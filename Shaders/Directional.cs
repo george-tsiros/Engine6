@@ -10,6 +10,8 @@ public class Directional:Program {
 #pragma warning disable CS0649
     protected override string VertexSource { get; } = "aW4gdmVjNCB2ZXJ0ZXhQb3NpdGlvbjsgaW4gdmVjNCB2ZXJ0ZXhOb3JtYWw7IHVuaWZvcm0gbWF0NCBtb2RlbCwgdmlldywgcHJvamVjdGlvbjsgb3V0IHZlYzQgbjsgdm9pZCBtYWluKCkgeyBuID0gbW9kZWwgKiB2ZXJ0ZXhOb3JtYWw7IGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHZlcnRleFBvc2l0aW9uOyB9";
     protected override string FragmentSource { get; } = "dW5pZm9ybSB2ZWM0IGNvbG9yOyB1bmlmb3JtIHZlYzQgbGlnaHREaXJlY3Rpb247IGluIHZlYzQgbjsgb3V0IHZlYzQgY29sb3IwOyB2b2lkIG1haW4oKSB7IHZlYzQgbm4gPSBub3JtYWxpemUobik7IHZlYzQgbmwgPSBub3JtYWxpemUobGlnaHREaXJlY3Rpb24pOyBjb2xvcjAgPSB2ZWM0KG1heCgwLjAsIGRvdChubiwgLW5sKSkgKiBjb2xvci5yZ2IsIDEuMCk7IH0=";
+    [GlFragOut]
+    public int Color0 { get; }
     //size 1, type Vector4
     [GlAttrib]
     public int VertexNormal { get; }    //size 1, type Vector4

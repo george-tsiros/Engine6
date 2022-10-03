@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using static Common.Functions;
 using static GlContext;
+
 public abstract class Program:OpenglObject {
 
     public Program () {
@@ -16,9 +17,17 @@ public abstract class Program:OpenglObject {
         foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             if (prop.GetCustomAttribute<GlAttribAttribute>(false) is GlAttribAttribute attr) {
                 var fi = Utilities.GetBackingField(type, prop) ?? throw new ApplicationException($"no backing field for {prop.Name} of {type.Name}");
-                var location = GetAttribLocation(this, attr.Name ?? LowercaseFirst(prop.Name));
+                var name = attr.Name ?? LowercaseFirst(prop.Name);
+                var location = GetAttribLocation(this, name);
                 if (location < 0)
-                    throw new ApplicationException($"could not find attribute '{attr.Name}' in {type.Name}");
+                    throw new ApplicationException($"could not find attribute '{name}' in {type.Name}");
+                fi.SetValue(this, location);
+            } else if (prop.GetCustomAttribute<GlFragOutAttribute>(false) is GlFragOutAttribute fragOut) {
+                var fi = Utilities.GetBackingField(type, prop) ?? throw new ApplicationException($"no backing field for {prop.Name} of {type.Name}");
+                var name = fragOut.Name ?? LowercaseFirst(prop.Name);
+                var location = GetFragDataLocation(this, name);
+                if (location < 0)
+                    throw new ApplicationException($"could not find fragOut '{name}' in {type.Name}");
                 fi.SetValue(this, location);
             }
 

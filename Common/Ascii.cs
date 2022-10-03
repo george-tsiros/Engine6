@@ -64,7 +64,10 @@ public sealed unsafe class Ascii:IDisposable {
     //public static implicit operator nint (Ascii self) => self.Handle;
     //public static implicit operator Ascii (string str) => new(str);
     public static implicit operator string (Ascii self) =>
-        0 != self.bytes ? Encoding.ASCII.GetString((byte*)self.bytes, self.Length) : throw new ObjectDisposedException(nameof(self));
+        self.ToString();
+
+    public override string ToString() => 
+        0 != bytes ? Encoding.ASCII.GetString((byte*)bytes, Length) : throw new ObjectDisposedException(nameof(Ascii));
 
     /// <summary>EXCLUDES TERMINATING NULL BYTE</summary>
     public readonly int Length;
@@ -76,6 +79,34 @@ public sealed unsafe class Ascii:IDisposable {
             Marshal.FreeHGlobal(bytes);
             bytes = 0;
         }
+    }
+    
+    public static bool operator != (Ascii left, Ascii right) {
+        if (left.Handle == right.Handle)
+            return false;
+
+        if (left.Length != right.Length)
+            return true;
+        
+        for (var i = 0; i < left.Length; ++i)
+            if (left[i] != right[i])
+                return true;
+
+        return false;
+    }
+
+    public static bool operator == (Ascii left, Ascii right) {
+        if (left.Handle == right.Handle)
+            return true;
+
+        if (left.Length != right.Length)
+            return false;
+
+        for (var i = 0; i < left.Length; ++i)
+            if (left[i] != right[i])
+                return false;
+
+        return true;
     }
 
     /// <summary>INCOMING SPAN EXCLUDES TERMINATING NULL BYTE</summary>

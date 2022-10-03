@@ -139,12 +139,30 @@ public class {0}:Program {{
         f.Write("\";\n");
 
         var outCount = GetProgramInterfaceiv(program, ProgramInterface.ProgramOutput, InterfaceParameter.ActiveResources);
-        if (1 < outCount) {
-            for (var i = 0; i < outCount; ++i) {
-                var name = GetProgramResourceName(program, i);
-                Console.WriteLine(name);
-            }
+        //if (1 < outCount) {
+        for (var i = 0; i < outCount; ++i) {
+            using var name = GetProgramResourceName(program, i);
+            using var propertyName = UppercaseFirst(name);
+            using var lowercaseFirst = LowercaseFirst(propertyName);
+
+            if (lowercaseFirst == name)
+                f.Write("    [GlFragOut]\n");
+            else
+                f.Write("    [GlFragOut(\"{0}\")]\n", name);
+            
+            f.Write("    public int {0} {{ get; }}\n", propertyName);
+
+            //var fragOut = GetFragDataLocation(program, name);
+            //var locationIndex = GetProgramResourceLocationIndex(program, n);
+            //if (-1 == locationIndex)
+            //    throw new Exception($"GetProgramResourceLocationIndex({program}, \"{name}\") returned -1");
+            //var location = GetProgramResourceLocation(program, ProgramInterface.ProgramOutput, n);
+            //if (-1 == location)
+            //    throw new Exception($"GetProgramResourceLocation({program}, ProgramInterface.ProgramOutput, \"{name}\") returned -1");
+            //var index = GetProgramResourceIndex(program, ProgramInterface.ProgramOutput, n);
+            //Console.Write($"{program} \"{name}\" => LocationIndex = {locationIndex}, Location = {location}, Index = {index}\r\n");
         }
+        //}
 
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {

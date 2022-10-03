@@ -140,7 +140,24 @@ public sealed unsafe class GlContext:IDisposable {
         return i;
     }
 
-    public static string GetProgramResourceName (int program, int index) {
+    public static int GetFragDataLocation (int program, string name) {
+        using Ascii n = new(name);
+        return glGetFragDataLocation(program, (byte*)n.Handle);
+    }
+
+    //public static int GetProgramResourceIndex (int program, ProgramInterface interfaceName, Ascii name) {
+    //    return glGetProgramResourceIndex(program, (int)interfaceName, (byte*)name.Handle);
+    //}
+
+    //public static int GetProgramResourceLocation (int program, ProgramInterface interfaceName, Ascii name) {
+    //    return glGetProgramResourceLocation(program, (int)interfaceName, (byte*)name.Handle);
+    //}
+
+    //public static int GetProgramResourceLocationIndex (int program, Ascii name) {
+    //    return glGetProgramResourceLocationIndex(program, (int)ProgramInterface.ProgramOutput, (byte*)name.Handle);
+    //}
+
+    public static Ascii GetProgramResourceName (int program, int index) {
         var maxLength = 0;
         glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
         if (maxLength <= 0)
@@ -151,7 +168,7 @@ public sealed unsafe class GlContext:IDisposable {
         fixed (byte* p = bytes)
             glGetProgramResourceName(program, (int)ProgramInterface.ProgramOutput, index, maxLength, &actualLength, p);
         Debug.Assert(0 < actualLength);
-        return Encoding.ASCII.GetString(bytes[..^1]);
+        return new(bytes[..^1]);
     }
 
     public static void ActiveTexture (int i) {
@@ -667,8 +684,8 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix3x4fv;
     //[GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x2fv;
     //[GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x3fv;
-
-    //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetFragDataLocation;
+    ///<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetFragDataLocation.xhtml"/></summary>
+    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetFragDataLocation;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glVertexAttribI4ubv;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte, byte, byte, byte, void> glColorMaski;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte> glIsFramebuffer;
@@ -926,9 +943,12 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 2)] private static delegate* unmanaged[Stdcall]<int, void> glMemoryBarrier;
 
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<DebugProc, void*, void> glDebugMessageCallback;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceIndex;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocation;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocationIndex;
+    /// <summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramResourceIndex.xhtml"/></summary>
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceIndex;
+    /// <summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramResourceLocation.xhtml"/></summary>
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocation;
+    /// <summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramResourceLocationIndex.xhtml"/></summary>
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, byte*, int> glGetProgramResourceLocationIndex;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int*, int*, int*, int*, int*, byte*, int> glGetDebugMessageLog;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int*, int, int, int, int, void> glInvalidateSubFramebuffer;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int*, void> glGetFramebufferParameteriv;
@@ -937,6 +957,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, byte*, void> glPushDebugGroup;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, byte, int, void> glVertexAttribFormat;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetObjectLabel;
+    /// <summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramInterface.xhtml"/></summary>
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetProgramInterfaceiv;
     [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, byte*, void> glGetProgramResourceName;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int*, byte, void> glDebugMessageControl;

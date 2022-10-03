@@ -56,7 +56,7 @@ public class Experiment:GlWindow {
 
     private const float TerraMass = 5.972e24f;
     private const float LunaMass = 7.342e22f;
-
+    Thingie<FlatColorRadius> thingie;
     public Experiment () {
 
         var allVertices = new Vector4[loPolySphereVertexCount + highPolySphereVertexCount];
@@ -79,7 +79,9 @@ public class Experiment:GlWindow {
             cubeVertices[i] = cv[cubeIndices[i]];
             cubeTexCoords[i] = cuv[cubeUvIndices[i]];
         }
-
+        //var f0 = new FlatColor();
+        //var f1 = new FlatColor();
+        // x.Assign(p=> p.Meh
         Reusables.Add(sphereVertices = new(allVertices));
         Reusables.Add(presentationVertices = new(PresentationQuad));
         Reusables.Add(skyboxVertices = new(cubeVertices));
@@ -90,9 +92,11 @@ public class Experiment:GlWindow {
         Reusables.Add(sa = new());
         Reusables.Add(skyboxArray = new());
         Reusables.Add(flatColor = new());
+        Reusables.Add(thingie = new(flatColor));
+        thingie.Assign(p => p.VPos, sphereVertices);
         Reusables.Add(skybox = new());
         Reusables.Add(skyboxRaster = Raster.FromFile("data\\skybox.bin"));
-        Reusables.Add(skyboxSampler = new(skyboxRaster.Size, TextureFormat.Rgba8) { Mag = MagFilter.Linear, Min = MinFilter.Linear, Wrap = Wrap.ClampToEdge } );
+        Reusables.Add(skyboxSampler = new(skyboxRaster.Size, TextureFormat.Rgba8) { Mag = MagFilter.Linear, Min = MinFilter.Linear, Wrap = Wrap.ClampToEdge });
         skyboxSampler.Upload(skyboxRaster);
         pa.Assign(presentationVertices, presentation.VertexPosition);
         sa.Assign(sphereVertices, flatColor.VertexPosition);
@@ -172,7 +176,7 @@ public class Experiment:GlWindow {
         Viewport(in Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        
+
         Disable(Capability.DepthTest);
         Disable(Capability.CullFace);
         BindVertexArray(skyboxArray);
