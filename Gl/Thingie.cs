@@ -2,6 +2,7 @@ namespace Gl;
 
 using System.Diagnostics;
 using System;
+using static GlContext;
 
 public class FragOut {
     internal int location;
@@ -33,6 +34,33 @@ public class Thingie<T>:IDisposable where T : Program, new() {
         var F = f.Compile();
         VertexArray.Assign(buffer, F(Program), divisor);
     }
+
+    public void Enable (Capability cap) => Active[Array.IndexOf(Capabilities, cap)] = 1;
+    public void Disable (Capability cap) => Active[Array.IndexOf(Capabilities, cap)] = -1;
+    public void Ignore (Capability cap) => Active[Array.IndexOf(Capabilities, cap)] = 0;
+
+    public void Use () {
+        UseProgram(Program);
+        BindVertexArray(VertexArray);
+        for (var i = 0; i < Capabilities.Length; ++i) {
+            var active = Active[i];
+            if (0 == active)
+                continue;
+            var c = Capabilities[i];
+            var isEnabled = IsEnabled(c);
+            var mustBe = 0 < active;
+            if (isEnabled == mustBe)
+                continue;
+            if (mustBe)
+                Enable(c);
+            else
+                Disable(c);
+        }
+    }
+
+    private readonly int[] Active = new int[Capabilities.Length];
+
+    private static readonly Capability[] Capabilities = { };
 
     bool disposed = false;
     public void Dispose () {

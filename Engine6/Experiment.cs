@@ -13,7 +13,7 @@ public class Experiment:GlWindow {
 
     protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, Key.Left, Key.Right, Key.Up, Key.Down };
 
-    private FlatColorRadius flatColor;
+    private FlatColor flatColor;
     private VertexArray sa;
     private BufferObject<Vector4> sphereVertices;
     private Presentation presentation;
@@ -44,18 +44,24 @@ public class Experiment:GlWindow {
         public float Mass { get; init; }
     };
 
-    private static readonly Body Terra = new() { Position = new(), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
-    private static readonly Body Luna = new() { Position = new(TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
-    private static readonly Body[] TerraLunaSystem = { Luna, Terra };
-    private const float Scale = 1.0e-6f;
-    private const float TerraLunaDistance = 384.4e6f * Scale;
-    private const float TerraRadius = 6.371e6f * Scale;
-    private const float LunaRadius = 1.737e6f * Scale;
-    private const float NearPlane = 1.0e6f * Scale;
-    private const float FarPlane = 1.0e9f * Scale;
+    private static readonly Body Sol = new() { Position = Vector3.Zero, Radius = SolRadius, Color = new(1, 1, .5f, 1), Mass = SolMass };
+    private static readonly Body Terra = new() { Position = new(-TerraLunaDistance / 2, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
+    private static readonly Body Luna = new() { Position = new(TerraLunaDistance / 2, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
+    private static readonly Body[] Solar = { Sol, Terra, Luna };
+    private const float Km = 1e3f;
+    private const float Kg = 1f;
+    private const float SolTerraDistance = 1.50e8f * Km;
+    private const float TerraLunaDistance = 3.844e5f * Km;
+    private const float SolRadius = 6.957e5f * Km;
+    private const float TerraRadius = 6.371e3f * Km;
+    private const float LunaRadius = 1.737e3f * Km;
 
-    private const float TerraMass = 5.972e24f;
-    private const float LunaMass = 7.342e22f;
+    private const float SolMass = 1.989e30f * Kg;
+    private const float TerraMass = 5.972e24f * Kg;
+    private const float LunaMass = 7.342e22f * Kg;
+
+    private const float NearPlane = 1 * Km;
+    private const float FarPlane = 1.0e7f * Km;
 
     public Experiment () {
 
@@ -63,7 +69,8 @@ public class Experiment:GlWindow {
         Sphere(loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
         Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
 
-        var centerCube = Matrix4x4.CreateTranslation(-.5f * Vector3.One) * Matrix4x4.CreateScale(100f);
+        var centerCube = Matrix4x4.CreateTranslation(-.5f * Vector3.One);
+        centerCube *= Matrix4x4.CreateScale(FarPlane / 10);
         var cv = Cube.Vertices();
         for (var i = 0; i < cv.Length; ++i)
             cv[i] = Vector4.Transform(cv[i], centerCube);
@@ -114,13 +121,17 @@ public class Experiment:GlWindow {
         Disposables.Add(depthbuffer);
         Disposables.Add(renderTexture);
     }
-
+    bool mode = true;
     protected override void OnKeyDown (Key key, bool repeat) {
-        switch (key) {
-            case Key.Escape:
-                User32.PostQuitMessage(0);
-                return;
-        }
+        if (!repeat)
+            switch (key) {
+                case Key.Escape:
+                    User32.PostQuitMessage(0);
+                    return;
+                case Key.Space:
+                    mode = !mode;
+                    return;
+            }
         base.OnKeyDown(key, repeat);
     }
 
@@ -164,7 +175,7 @@ public class Experiment:GlWindow {
 
     protected override void Render () {
         var size = ClientSize;
-        //(float)Axis(Key.Left, Key.Right)
+
         CameraRotate(ref cameraOrientation, (float)Axis(Key.Right, Key.Left), -.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
         cumulativeCursorMovement = Vector2i.Zero;
 
@@ -192,18 +203,14 @@ public class Experiment:GlWindow {
         UseProgram(flatColor);
         flatColor.View(Matrix4x4.CreateTranslation(-cameraLocation) * viewRotation);
         flatColor.Projection(projection);
-
-        foreach (var body in TerraLunaSystem) {
-            var translation = Matrix4x4.CreateTranslation(body.Position);
-            var model = translation;
-            flatColor.Scale(body.Radius);
+        foreach (var body in Solar) {
             flatColor.Color(body.Color);
-            flatColor.Model(model);
-            var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
-            if (cameraDistanceFromSphere < 120f * body.Radius)
-                DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
-            else
-                DrawArrays(Primitive.Triangles, 0, loPolySphereVertexCount);
+            flatColor.Model(Matrix4x4.CreateScale(body.Radius) * Matrix4x4.CreateTranslation(body.Position));
+            DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
+            //var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
+            //if (cameraDistanceFromSphere < 120f * body.Radius)
+            //else
+            //    DrawArrays(Primitive.Triangles, 0, loPolySphereVertexCount);
         }
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
@@ -226,10 +233,13 @@ public class Experiment:GlWindow {
     public static int SphereTriangleCount (Vector2i n) =>
         2 * n.X * (n.Y - 1);
 
+    public static int SpherePointCount (Vector2i n) =>
+        2 + n.X * (n.Y - 1);
+
     public static void Sphere (Vector2i n, float radius, Span<Vector4> vertices) {
         var (nTheta, nPhi) = n;
-        var spherePointCount = 2 + nTheta * (nPhi - 1);
-        var triangleCount = 2 * nTheta * (nPhi - 1);
+        var spherePointCount = SpherePointCount(n);
+        var triangleCount = SphereTriangleCount(n);
         var vertexCount = 3 * triangleCount;
         if (vertices.Length != vertexCount)
             throw new ArgumentException($"expected size {vertexCount} exactly, got {vertices.Length} instead", nameof(vertices));
@@ -248,7 +258,7 @@ public class Experiment:GlWindow {
                 vectors[i] = new((float)(radius * sp * ct), (float)(radius * cp), (float)(radius * sp * st), 1);
             }
         }
-        var indices = new int[triangleCount * 3];
+        var indices = new int[vertexCount];
 
         var faceIndex = 0;
 

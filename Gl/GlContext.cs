@@ -107,6 +107,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Disable (Capability cap) => glDisable((int)cap);
     public static void DrawArrays (Primitive mode, int first, int count) => glDrawArrays((int)mode, first, count);
     public static void Enable (Capability cap) => glEnable((int)cap);
+    public static bool IsEnabled (Capability cap) => 0 != glIsEnabled((int)cap);
     public static void EnableVertexArrayAttrib (VertexArray vertexArray, int i) => glEnableVertexArrayAttrib(vertexArray, i);
     public static void NamedRenderbufferStorage (Renderbuffer renderbuffer, RenderbufferFormat format, int width, int height) => glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
     public static void TextureBaseLevel (Sampler2D texture, int level) => glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
