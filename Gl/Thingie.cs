@@ -1,10 +1,16 @@
-﻿namespace Gl;
+namespace Gl;
 
 using System.Diagnostics;
 using System;
 
-public class FragOut { }
-public class Attrib<T> where T: unmanaged {
+public class FragOut {
+    internal int location;
+    internal FragOut (int i) => location = i;
+    public static implicit operator int (FragOut self) => self.location;
+    public static implicit operator FragOut (int i) => new(i);
+}
+
+public class Attrib<T> where T : unmanaged {
     internal int location;
     internal Attrib (int i) => location = i;
     public static implicit operator int (Attrib<T> self) => self.location;

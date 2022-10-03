@@ -1,13 +1,18 @@
 namespace Gl;
+
 using System;
 using System.Diagnostics;
 using System.Reflection;
 using static GlContext;
+
 public static class Utilities {
+
     public static string VisualStudioLink (StackFrame sf) =>
         $">{sf.GetFileName()}({sf.GetFileLineNumber()},{sf.GetFileColumnNumber()}):";
+
     public static string Method (int skip = 0) =>
         VisualStudioLink(new StackFrame(skip + 1, true));
+
     public static void Trace (string message) {
         var formatted = TraceFormat(message, 1);
         if (Debugger.IsAttached)
@@ -15,10 +20,13 @@ public static class Utilities {
         else
             Console.Error.WriteLine(formatted);
     }
+
     private static string TraceFormat (string message, int skip = 0) =>
         $"{Method(skip + 2)} {message}";
+    
     public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) =>
         type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
+    
     private static readonly (byte major, byte minor, byte characters)[] ValidOpenglVersions = {
         (2, 0, 0x11),
         (2, 1, 0x12),
@@ -34,6 +42,7 @@ public static class Utilities {
         (4, 5, 0x45),
         (4, 6, 0x46),
     };
+    
     public unsafe static int ShaderFromString (ShaderType type, string source) {
         var vs = CreateShader(type);
         var (version, profile) = GetCurrentContextVersion();
@@ -46,6 +55,7 @@ public static class Utilities {
         var log = GetShaderInfoLog(vs);
         return 0 == log.Length ? vs : throw new ApplicationException(log);
     }
+    
     public unsafe static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
@@ -60,5 +70,4 @@ public static class Utilities {
         DeleteShader(fragmentShader);
         return program;
     }
-    public unsafe delegate void GetInfoLog (int i, int j, ref int k, byte* p);
 }

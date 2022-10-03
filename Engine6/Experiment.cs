@@ -56,7 +56,7 @@ public class Experiment:GlWindow {
 
     private const float TerraMass = 5.972e24f;
     private const float LunaMass = 7.342e22f;
-    Thingie<FlatColorRadius> thingie;
+
     public Experiment () {
 
         var allVertices = new Vector4[loPolySphereVertexCount + highPolySphereVertexCount];
@@ -92,8 +92,6 @@ public class Experiment:GlWindow {
         Reusables.Add(sa = new());
         Reusables.Add(skyboxArray = new());
         Reusables.Add(flatColor = new());
-        Reusables.Add(thingie = new(flatColor));
-        thingie.Assign(p => p.VPos, sphereVertices);
         Reusables.Add(skybox = new());
         Reusables.Add(skyboxRaster = Raster.FromFile("data\\skybox.bin"));
         Reusables.Add(skyboxSampler = new(skyboxRaster.Size, TextureFormat.Rgba8) { Mag = MagFilter.Linear, Min = MinFilter.Linear, Wrap = Wrap.ClampToEdge });

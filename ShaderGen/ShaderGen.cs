@@ -10,6 +10,7 @@ using static Gl.Utilities;
 using static Common.Functions;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 class ShaderGen {
 
@@ -29,7 +30,7 @@ class ShaderGen {
             throw new DirectoryNotFoundException(targetDir);
 
         try {
-            
+
             using Win32.Window window = new();
             using GlContext ctx = new(window.Dc);
             foreach (var vertexShaderFilepath in Directory.EnumerateFiles(sourceDir, "*.vert")) {
@@ -77,8 +78,19 @@ class ShaderGen {
         return true;
     }
 
+    private static readonly UniformType[] PrimitiveUniformTypes = { UniformType.Double, UniformType.Float, UniformType.Int, UniformType.UInt, };
+    private static readonly AttribType[] PrimitiveAttribTypes = { AttribType.SByte, AttribType.Byte, AttribType.Short, AttribType.UShort, AttribType.Int, AttribType.UInt, AttribType.Float, AttribType.Double, };
+
+    private static bool IsPrimitive (AttribType type) =>
+        0 <= Array.IndexOf(PrimitiveAttribTypes, type);
+
     private static bool IsPrimitive (UniformType type) =>
-        type == UniformType.Double || type == UniformType.Float || type == UniformType.Int || type == UniformType.UInt;
+        0 <= Array.IndexOf(PrimitiveUniformTypes, type);
+
+    private static string AttribTypeToTypeName (AttribType type) {
+        var str = type.ToString();
+        return IsPrimitive(type) ? str.ToLower() : str;
+    }
 
     private static string UniformTypeToTypeName (UniformType type) {
         if (IsPrimitive(type))
@@ -88,17 +100,13 @@ class ShaderGen {
         return $"in {type}";
     }
 
-    private static bool IsKeyword (string term) =>
-        term == "float" || term == "double" || term == "byte" || term == "char";
-
-    private static readonly char[] SplitChars = "\r\n ".ToCharArray();
+    private static readonly char[] SplitChars = { ' ', '\r', '\n' };
 
     // really horrible
     private static string Pack (string text) =>
         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Join(' ', text.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries))));
 
-    private const string ShaderHeader = @"
-namespace Shaders;
+    private const string ShaderHeader = @"namespace Shaders;
 
 using Gl;
 using static Gl.GlContext;
@@ -107,14 +115,14 @@ using Common;
 
 public class {0}:Program {{
 #pragma warning disable CS0649
+
 ";
 
-    private const string UniformFormat = @"
-    //size {0}, type {1}
-    [GlUniform]
-    private readonly int {2};
-    public void {3} ({4} v) => Uniform({5}, v);
+    private const string UniformFormat = @"    private readonly int {0};
+    public void {1} ({2} v) => Uniform({3}, v);
+
 ";
+
     private static void DoProgram (string vertexShaderFilepath, string fragmentShaderFilepath, string className, TextWriter f) {
         List<string> vertexShaderSourceLines = new();
         List<string> vertexShaderCommentLines = new();
@@ -136,33 +144,24 @@ public class {0}:Program {{
 
         f.Write("    protected override string FragmentSource { get; } = \"");
         f.Write(Pack(fragmentShaderSource));
-        f.Write("\";\n");
+        f.Write("\";\n\n");
+
+        Stack<string> ctorStatements = new();
+
 
         var outCount = GetProgramInterfaceiv(program, ProgramInterface.ProgramOutput, InterfaceParameter.ActiveResources);
-        //if (1 < outCount) {
         for (var i = 0; i < outCount; ++i) {
             using var name = GetProgramResourceName(program, i);
+
+            // needs improvement
+            if (2 < name.Length && 'g' == name[0] && 'l' == name[1] && '_' == name[2])
+                continue;
+
             using var propertyName = UppercaseFirst(name);
-            using var lowercaseFirst = LowercaseFirst(propertyName);
-
-            if (lowercaseFirst == name)
-                f.Write("    [GlFragOut]\n");
-            else
-                f.Write("    [GlFragOut(\"{0}\")]\n", name);
-            
-            f.Write("    public int {0} {{ get; }}\n", propertyName);
-
-            //var fragOut = GetFragDataLocation(program, name);
-            //var locationIndex = GetProgramResourceLocationIndex(program, n);
-            //if (-1 == locationIndex)
-            //    throw new Exception($"GetProgramResourceLocationIndex({program}, \"{name}\") returned -1");
-            //var location = GetProgramResourceLocation(program, ProgramInterface.ProgramOutput, n);
-            //if (-1 == location)
-            //    throw new Exception($"GetProgramResourceLocation({program}, ProgramInterface.ProgramOutput, \"{name}\") returned -1");
-            //var index = GetProgramResourceIndex(program, ProgramInterface.ProgramOutput, n);
-            //Console.Write($"{program} \"{name}\" => LocationIndex = {locationIndex}, Location = {location}, Index = {index}\r\n");
+            Debug.Assert(name != propertyName);
+            f.Write("    public FragOut {0} {{ get; }}\n\n", propertyName);
+            ctorStatements.Push(string.Format("{0} = GetFragDataLocation(this, \"{1}\");\n", propertyName, name));
         }
-        //}
 
         int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
         for (var i = 0; i < attrCount; ++i) {
@@ -171,15 +170,9 @@ public class {0}:Program {{
                 continue;
 
             var propertyName = UppercaseFirst(name);
-            f.Write("    //size {0}, type {1}\n", size, type);
-
-            // if glsl attribute name is the same as the property name with first letter lowercase, we can find it at creation.
-            if (LowercaseFirst(propertyName) == name)
-                f.Write("    [GlAttrib]\n");
-            else
-                f.Write("    [GlAttrib(\"{0}\")]\n", name);
-
-            f.Write("    public int {0} {{ get; }}", propertyName);
+            Debug.Assert(name != propertyName);
+            f.Write("    public Attrib<{0}> {1} {{ get; }}\n\n", AttribTypeToTypeName(type), propertyName);
+            ctorStatements.Push(string.Format("{0} = GetAttribLocation(this, \"{1}\");\n", propertyName, name));
         }
 
         int uniformCount = GetProgram(program, ProgramParameter.ActiveUniforms);
@@ -188,12 +181,22 @@ public class {0}:Program {{
             if (name.StartsWith("gl_"))
                 continue;
 
-            // for uniforms, we can _always_ get the field name (even if it ends up starting with '@')
             var fieldName = IsKeyword(name) ? "@" + name : name;
-            f.Write(UniformFormat, size, type, fieldName, UppercaseFirst(name), UniformTypeToTypeName(type), fieldName);
+            f.Write(UniformFormat, fieldName, UppercaseFirst(name), UniformTypeToTypeName(type), fieldName);
+            ctorStatements.Push(string.Format("{0} = GetUniformLocation(this, nameof({1}));\n", fieldName, name));
         }
 
-        f.Write($"\n#pragma warning restore CS0649\n}}");
+        if (0 < ctorStatements.Count) {
+            f.Write("    public {0} () {{\n", className);
+            const string pad = "        ";
+            while (ctorStatements.TryPop(out var statement)) {
+                f.Write(pad);
+                f.Write(statement);
+            }
+            f.Write("    }\n");
+        }
+
+        f.Write("\n#pragma warning restore CS0649\n}");
 
         DeleteProgram(program);
     }

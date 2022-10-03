@@ -1,13 +1,15 @@
 namespace Gl;
 
 public enum AttribType {
-    Byte = Const.BYTE,
-    UByte = Const.UNSIGNED_BYTE,
+    SByte = Const.BYTE,
+    Byte = Const.UNSIGNED_BYTE,
     Short = Const.SHORT,
     UShort = Const.UNSIGNED_SHORT,
     Int = Const.INT,
     UInt = Const.UNSIGNED_INT,
     Float = Const.FLOAT,
     Double = Const.DOUBLE,
-    Vector4 = Const.FLOAT_VEC4
+    Vector2 = Const.FLOAT_VEC2,
+    Vector3 = Const.FLOAT_VEC3,
+    Vector4 = Const.FLOAT_VEC4,
 }

@@ -1,8 +1,8 @@
 namespace Gl;
-using System;
 
-using static GlContext;
+using System;
 using Common;
+using static GlContext;
 
 public class Sampler2D:OpenglObject {
     protected override Action<int> Delete { get; } = DeleteTexture;

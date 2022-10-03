@@ -1,4 +1,5 @@
 namespace Gl;
+
 using System.Runtime.InteropServices;
 
 public static class Glu {
