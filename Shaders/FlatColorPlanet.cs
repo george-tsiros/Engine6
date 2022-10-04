@@ -15,9 +15,6 @@ public class FlatColorPlanet:Program {
 
     public Attrib<Vector4> VertexPosition { get; }
 
-    private readonly int color;
-    public void Color (in Vector4 v) => Uniform(color, v);
-
     private readonly int model;
     public void Model (in Matrix4x4 v) => Uniform(model, v);
 
@@ -30,12 +27,15 @@ public class FlatColorPlanet:Program {
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
 
+    private readonly int color;
+    public void Color (in Vector4 v) => Uniform(color, v);
+
     public FlatColorPlanet () {
+        color = GetUniformLocation(this, nameof(color));
         view = GetUniformLocation(this, nameof(view));
         radius = GetUniformLocation(this, nameof(radius));
         projection = GetUniformLocation(this, nameof(projection));
         model = GetUniformLocation(this, nameof(model));
-        color = GetUniformLocation(this, nameof(color));
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         Color0 = GetFragDataLocation(this, "color0");
     }

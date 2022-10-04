@@ -49,12 +49,11 @@ public class Experiment:GlWindow {
     private static readonly Body Luna = new() { Position = new(SolTerraDistance + TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
     private static readonly Body[] Solar = { Sol, Terra, Luna };
     
-    private const double Km = 1e3;
-    private const double SolTerraDistance = 1.50e8 * Km;
-    private const double TerraLunaDistance = 3.844e5 * Km;
-    private const double SolRadius = 6.957e5f * Km;
-    private const double TerraRadius = 6.371e3f * Km;
-    private const double LunaRadius = 1.737e3f * Km;
+    private const double SolTerraDistance = 150e9;
+    private const double TerraLunaDistance = 384.4e6;
+    private const double SolRadius = 695.7e6;
+    private const double TerraRadius = 6.371e6;
+    private const double LunaRadius = 1.737e3;
 
     private const float SolMass = 1.989e30f;
     private const float TerraMass = 5.972e24f;
