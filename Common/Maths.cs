@@ -10,6 +10,7 @@ public static class Maths {
     public const float fTau = float.Tau;
     public static (double, double) DoubleSinCos (double angle) => double.SinCos(angle);
     public static (float, float) SingleSinCos (float angle) => float.SinCos(angle);
+    public static (int quotient, int remainder) Int32DivRem (int a, int b) => int.DivRem(a, b);
     public static (long quotient, long remainder) Int64DivRem (long a, long b) => long.DivRem(a, b);
     public static (ulong quotient, ulong remainder) UInt64DivRem (ulong a, ulong b) => ulong.DivRem(a, b);
     public static double DoubleAbs (double a) => double.Abs(a);
