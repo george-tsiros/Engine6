@@ -2,8 +2,10 @@ namespace Common;
 
 using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static Maths;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct Vector2d {
 
     public readonly double X, Y;

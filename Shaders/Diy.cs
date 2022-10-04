@@ -15,15 +15,15 @@ public class Diy:Program {
 
     public Attrib<Vector4> VertexPosition { get; }
 
-    private readonly int matrix;
-    public void Matrix (in Matrix4x4 v) => Uniform(matrix, v);
-
     private readonly int color;
     public void Color (in Vector4 v) => Uniform(color, v);
 
+    private readonly int matrix;
+    public void Matrix (in Matrix4x4 v) => Uniform(matrix, v);
+
     public Diy () {
-        color = GetUniformLocation(this, nameof(color));
         matrix = GetUniformLocation(this, nameof(matrix));
+        color = GetUniformLocation(this, nameof(color));
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         Color0 = GetFragDataLocation(this, "color0");
     }

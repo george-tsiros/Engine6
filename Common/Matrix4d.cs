@@ -2,15 +2,33 @@ namespace Common;
 
 using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static Common.Maths;
 
+[StructLayout(LayoutKind.Explicit)]
 public readonly struct Matrix4d {
 
-    public readonly double
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44;
+    [FieldOffset(0 * sizeof(double))] public readonly double M11;
+    [FieldOffset(1 * sizeof(double))] public readonly double M12;
+    [FieldOffset(2 * sizeof(double))] public readonly double M13;
+    [FieldOffset(3 * sizeof(double))] public readonly double M14;
+    [FieldOffset(4 * sizeof(double))] public readonly double M21;
+    [FieldOffset(5 * sizeof(double))] public readonly double M22;
+    [FieldOffset(6 * sizeof(double))] public readonly double M23;
+    [FieldOffset(7 * sizeof(double))] public readonly double M24;
+    [FieldOffset(8 * sizeof(double))] public readonly double M31;
+    [FieldOffset(9 * sizeof(double))] public readonly double M32;
+    [FieldOffset(10 * sizeof(double))] public readonly double M33;
+    [FieldOffset(11 * sizeof(double))] public readonly double M34;
+    [FieldOffset(12 * sizeof(double))] public readonly double M41;
+    [FieldOffset(13 * sizeof(double))] public readonly double M42;
+    [FieldOffset(14 * sizeof(double))] public readonly double M43;
+    [FieldOffset(15 * sizeof(double))] public readonly double M44;
+
+    [FieldOffset(0 * 4 * sizeof(double))] public readonly Vector4d Row1;
+    [FieldOffset(1 * 4 * sizeof(double))] public readonly Vector4d Row2;
+    [FieldOffset(2 * 4 * sizeof(double))] public readonly Vector4d Row3;
+    [FieldOffset(3 * 4 * sizeof(double))] public readonly Vector4d Row4;
 
     public Matrix4d (
         double m11, double m12, double m13, double m14,
@@ -41,21 +59,16 @@ public readonly struct Matrix4d {
         }
     }
 
-    public Vector4d Row1 => new(M11, M12, M13, M14);
-    public Vector4d Row2 => new(M21, M22, M23, M24);
-    public Vector4d Row3 => new(M31, M32, M33, M34);
-    public Vector4d Row4 => new(M41, M42, M43, M44);
-
     public Vector4d Col1 => new(M11, M21, M31, M41);
     public Vector4d Col2 => new(M12, M22, M32, M42);
     public Vector4d Col3 => new(M13, M23, M33, M43);
     public Vector4d Col4 => new(M14, M24, M34, M44);
 
     public static Matrix4d operator * (Matrix4d a, Matrix4d b) {
-        var m11 = Vector4d.Dot(a.Row1, b.Col1); var m12 = Vector4d.Dot(a.Row1, b.Col2); var m13 = Vector4d.Dot(a.Row1, b.Col3); var m14 = Vector4d.Dot(a.Row1, b.Col4);
-        var m21 = Vector4d.Dot(a.Row2, b.Col1); var m22 = Vector4d.Dot(a.Row2, b.Col2); var m23 = Vector4d.Dot(a.Row2, b.Col3); var m24 = Vector4d.Dot(a.Row2, b.Col4);
-        var m31 = Vector4d.Dot(a.Row3, b.Col1); var m32 = Vector4d.Dot(a.Row3, b.Col2); var m33 = Vector4d.Dot(a.Row3, b.Col3); var m34 = Vector4d.Dot(a.Row3, b.Col4);
-        var m41 = Vector4d.Dot(a.Row4, b.Col1); var m42 = Vector4d.Dot(a.Row4, b.Col2); var m43 = Vector4d.Dot(a.Row4, b.Col3); var m44 = Vector4d.Dot(a.Row4, b.Col4);
+        var m11 = Vector4d.Dot(in a.Row1, b.Col1); var m12 = Vector4d.Dot(in a.Row1, b.Col2); var m13 = Vector4d.Dot(in a.Row1, b.Col3); var m14 = Vector4d.Dot(in a.Row1, b.Col4);
+        var m21 = Vector4d.Dot(in a.Row2, b.Col1); var m22 = Vector4d.Dot(in a.Row2, b.Col2); var m23 = Vector4d.Dot(in a.Row2, b.Col3); var m24 = Vector4d.Dot(in a.Row2, b.Col4);
+        var m31 = Vector4d.Dot(in a.Row3, b.Col1); var m32 = Vector4d.Dot(in a.Row3, b.Col2); var m33 = Vector4d.Dot(in a.Row3, b.Col3); var m34 = Vector4d.Dot(in a.Row3, b.Col4);
+        var m41 = Vector4d.Dot(in a.Row4, b.Col1); var m42 = Vector4d.Dot(in a.Row4, b.Col2); var m43 = Vector4d.Dot(in a.Row4, b.Col3); var m44 = Vector4d.Dot(in a.Row4, b.Col4);
         return new(
             m11, m12, m13, m14,
             m21, m22, m23, m24,

@@ -56,7 +56,7 @@ class ShaderGen {
                             }
                         }
 
-                        Console.Write($"{sourceDir}{shaderName}(.vert,.frag) => ");
+                        Console.Write($"{sourceDir}\\{shaderName}(.vert,.frag) => ");
                         mem.Position = 0;
                         using (var f = File.Create(outputFilepath))
                             mem.CopyTo(f);

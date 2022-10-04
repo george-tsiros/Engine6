@@ -1,8 +1,10 @@
 namespace Common;
 
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static Common.Maths;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct Matrix3x3 {
     public readonly float M11;
     public readonly float M12;

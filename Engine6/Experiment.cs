@@ -13,21 +13,23 @@ public class Experiment:GlWindow {
 
     protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, Key.Left, Key.Right, Key.Up, Key.Down };
 
-    private FlatColor flatColor;
+    private BufferObject<Vector2> presentationBuffer;
+    private VertexArray presentationVertexArray;
+    private Presentation presentationProgram;
+
+    private BufferObject<Vector4> sphereBuffer;
+    private VertexArray sphereVertexArray;
+    private FlatColor sphereProgram;
+
+    private BufferObject<Vector4> starBuffer;
+    private VertexArray starVertexArray;
     private PointStar starProgram;
-    private VertexArray sa;
-    private BufferObject<Vector4> sphereVertices;
-    private Presentation presentation;
-    private VertexArray pa;
-    private BufferObject<Vector2> presentationVertices;
+
     private Framebuffer framebuffer;
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
-    private BufferObject<Vector4> starBuffer;
-    private VertexArray starVertexArray;
 
-    private Vector3d cameraLocation = new(SolTerraDistance + 0.5 * TerraLunaDistance, 0, 10 * TerraRadius);
-    private Quaternion cameraOrientation = Quaternion.Identity;
+    private Pose player = new() { Orientation = Quaternion.Identity, Position = new(SolTerraDistance+TerraLunaDistance, 0, 10 * LunaRadius) };
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
     private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
@@ -59,31 +61,11 @@ public class Experiment:GlWindow {
     private const float FarPlane = 1000e9f;
 
     public Experiment () {
-
+        ClientSize = new(1280, 720);
         var allVertices = new Vector4[loPolySphereVertexCount + highPolySphereVertexCount];
         Sphere(loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
         Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
 
-        var centerCube = Matrix4x4.CreateTranslation(-.5f * Vector3.One);
-        centerCube *= Matrix4x4.CreateScale(FarPlane / 10);
-        var cv = Cube.Vertices();
-        for (var i = 0; i < cv.Length; ++i)
-            cv[i] = Vector4.Transform(cv[i], centerCube);
-        var cuv = Cube.UvVectors();
-
-        var cubeIndices = Cube.Indices();
-        Debug.Assert(36 == cubeIndices.Length);
-        var cubeUvIndices = Cube.UvIndices();
-        Debug.Assert(36 == cubeUvIndices.Length);
-        var cubeVertices = new Vector4[cubeIndices.Length];
-        var cubeTexCoords = new Vector2[cubeIndices.Length];
-        for (var i = 0; i < cubeVertices.Length; ++i) {
-            cubeVertices[i] = cv[cubeIndices[i]];
-            cubeTexCoords[i] = cuv[cubeUvIndices[i]];
-        }
-        //var f0 = new FlatColor();
-        //var f1 = new FlatColor();
-        // x.Assign(p=> p.Meh
         Reusables.Add(starVertexArray = new());
         Reusables.Add(starProgram = new());
         var stars = new Vector4[1000];
@@ -98,15 +80,15 @@ public class Experiment:GlWindow {
         }
         Reusables.Add(starBuffer = new(stars));
         starVertexArray.Assign(starBuffer, starProgram.VertexPosition);
-        Reusables.Add(sphereVertices = new(allVertices));
-        Reusables.Add(presentationVertices = new(PresentationQuad));
+        Reusables.Add(sphereBuffer = new(allVertices));
+        Reusables.Add(presentationBuffer = new(PresentationQuad));
         Reusables.Add(framebuffer = new());
-        Reusables.Add(presentation = new());
-        Reusables.Add(pa = new());
-        Reusables.Add(sa = new());
-        Reusables.Add(flatColor = new());
-        pa.Assign(presentationVertices, presentation.VertexPosition);
-        sa.Assign(sphereVertices, flatColor.VertexPosition);
+        Reusables.Add(presentationProgram = new());
+        Reusables.Add(presentationVertexArray = new());
+        Reusables.Add(sphereVertexArray = new());
+        Reusables.Add(sphereProgram = new());
+        presentationVertexArray.Assign(presentationBuffer, presentationProgram.VertexPosition);
+        sphereVertexArray.Assign(sphereBuffer, sphereProgram.VertexPosition);
         //SetSwapInterval(-1);
     }
 
@@ -144,13 +126,13 @@ public class Experiment:GlWindow {
         Debug.Assert(minPointSize <= pointSize && pointSize <= maxPointSize);
         PointSize(pointSize);
 
-        CameraRotate(ref cameraOrientation, (float)Axis(Key.Right, Key.Left), -.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
+        CameraRotate(ref player.Orientation, new(-.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X, (float)Axis(Key.Right, Key.Left)));
         cumulativeCursorMovement = Vector2i.Zero;
 
-        var viewRotation = Matrix4x4.CreateFromQuaternion(cameraOrientation);
+        var viewRotation = Matrix4x4.CreateFromQuaternion(player.Orientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
-        Viewport(in Vector2i.Zero, size);
+        Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
 
@@ -165,50 +147,41 @@ public class Experiment:GlWindow {
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
         Enable(Capability.CullFace);
-        BindVertexArray(sa);
-        UseProgram(flatColor);
-        flatColor.View(Matrix4x4.CreateTranslation(-(Vector3)cameraLocation) * viewRotation);
-        flatColor.Projection(projection);
+        BindVertexArray(sphereVertexArray);
+        UseProgram(sphereProgram);
+        sphereProgram.View(Matrix4x4.CreateTranslation(-(Vector3)player.Position) * viewRotation);
+        sphereProgram.Projection(projection);
         foreach (var body in Solar) {
-            flatColor.Color(body.Color);
-            flatColor.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
+            sphereProgram.Color(body.Color);
+            sphereProgram.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
             DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
         }
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
-        Viewport(in Vector2i.Zero, size);
+        Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
-        BindVertexArray(pa);
-        UseProgram(presentation);
-        presentation.Tex0(0);
+        BindVertexArray(presentationVertexArray);
+        UseProgram(presentationProgram);
+        presentationProgram.Tex0(0);
         renderTexture.BindTo(0);
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 
-    public static void RotateQuaternion (ref Quaternion q, in Vector3 rotation) {
-        var localXaxis = Vector3.Transform(Vector3.UnitX, q);
-        var qPitch = Quaternion.CreateFromAxisAngle(localXaxis, rotation.X);
-        q = Quaternion.Concatenate(q, qPitch);
-        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, q);
-        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, rotation.Y);
-        q = Quaternion.Concatenate(q, qYaw);
-        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, q);
-        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, rotation.Z);
-        q = Quaternion.Concatenate(q, qRoll);
+    public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)
+        => Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(axis, q), amount));
+
+    public static void RotateQuaternion (ref Quaternion q, in Vector3 pitchYawRoll) {
+        q = Append(in q, Vector3.UnitX, pitchYawRoll.X);
+        q = Append(in q, Vector3.UnitY, pitchYawRoll.Y);
+        q = Append(in q, Vector3.UnitZ, pitchYawRoll.Z);
     }
 
-
-    public static void CameraRotate (ref Quaternion q, float yaw, float pitch, float roll) {
-        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
+    public static void CameraRotate (ref Quaternion q, in Vector3 pitchYawRoll) {
+        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitchYawRoll.X);
         q = Quaternion.Concatenate(q, qPitch);
-        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, qPitch);
-        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
-        q = Quaternion.Concatenate(q, qYaw);
-        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, qPitch);
-        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
-        q = Quaternion.Concatenate(q, qRoll);
-
+        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.UnitY, qPitch), pitchYawRoll.Y));
+        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.UnitZ, qPitch), pitchYawRoll.Z));
     }
 
     public static int SphereTriangleCount (Vector2i n) =>
