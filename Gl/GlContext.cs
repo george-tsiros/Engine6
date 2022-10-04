@@ -60,14 +60,11 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     // god have mercy on our souls
-    public static void Uniform (int uniform, Matrix4x4 m) {
-        var p = &m;
+    public static void Uniform (int uniform, Matrix4x4 m) => 
         glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
-    }
 
-    public static Ascii GetStringi (int name, int index) {
-        return new(glGetStringi(name, index));
-    }
+    public static Ascii GetStringi (int name, int index) => 
+        new(glGetStringi(name, index));
 
     public static int GetInteger (int name) {
         var i = 0;
@@ -237,6 +234,21 @@ public sealed unsafe class GlContext:IDisposable {
     private static int GetLocation (Program program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
         using Ascii str = new(name);
         return f(program, (byte*)str.Handle);
+    }
+
+    public unsafe static float GetFloatv (FloatParameter parameter) {
+        float f = 0;
+        glGetFloatv((int)parameter, &f);
+        return f;
+    }
+
+    public static void PointSize (float f) => 
+        glPointSize(f);
+
+    public unsafe static (float xrange, float yrange) GetPointSizeRange () {
+        float* f = stackalloc float[2];
+        glGetFloatv(Const.POINT_SIZE_RANGE, f);
+        return (f[0], f[1]);
     }
 
     public static (int size, AttribType type, string name) GetActiveAttrib (int id, int index) {
@@ -492,7 +504,7 @@ public sealed unsafe class GlContext:IDisposable {
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, float, float, float, void> glClearColor;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, float, void> glPolygonOffset;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, void> glLineWidth;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, void> glPointSize;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, void> glPointSize;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetAttribLocation;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformLocation;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glGetBooleanv;
@@ -515,7 +527,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, double, double, double, void> glVertexAttrib3d;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, double, double, void> glVertexAttrib2d;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, double, void> glVertexAttrib1d;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glGetFloatv;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glGetFloatv;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glPointParameterfv;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glVertexAttrib1fv;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, float*, void> glVertexAttrib2fv;

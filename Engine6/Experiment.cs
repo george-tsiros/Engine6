@@ -14,22 +14,19 @@ public class Experiment:GlWindow {
     protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, Key.Left, Key.Right, Key.Up, Key.Down };
 
     private FlatColor flatColor;
+    private PointStar starProgram;
     private VertexArray sa;
     private BufferObject<Vector4> sphereVertices;
     private Presentation presentation;
     private VertexArray pa;
     private BufferObject<Vector2> presentationVertices;
     private Framebuffer framebuffer;
-    private Sampler2D skyboxSampler;
-    private Raster skyboxRaster;
-    private Skybox skybox;
-    private VertexArray skyboxArray;
-    private BufferObject<Vector4> skyboxVertices;
-    private BufferObject<Vector2> skyboxTexCoords;
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
+    private BufferObject<Vector4> starBuffer;
+    private VertexArray starVertexArray;
 
-    private Vector3d cameraLocation = new(SolTerraDistance, 0, 2 * TerraRadius);
+    private Vector3d cameraLocation = new(SolTerraDistance + 0.5 * TerraLunaDistance, 0, 10 * TerraRadius);
     private Quaternion cameraOrientation = Quaternion.Identity;
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
@@ -48,18 +45,18 @@ public class Experiment:GlWindow {
     private static readonly Body Terra = new() { Position = new(SolTerraDistance, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
     private static readonly Body Luna = new() { Position = new(SolTerraDistance + TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
     private static readonly Body[] Solar = { Sol, Terra, Luna };
-    
+
     private const double SolTerraDistance = 150e9;
     private const double TerraLunaDistance = 384.4e6;
     private const double SolRadius = 695.7e6;
     private const double TerraRadius = 6.371e6;
-    private const double LunaRadius = 1.737e3;
+    private const double LunaRadius = 1.737e6;
 
     private const float SolMass = 1.989e30f;
     private const float TerraMass = 5.972e24f;
     private const float LunaMass = 7.342e22f;
     private const float NearPlane = 1.0e3f;
-    private const float FarPlane = 1.0e10f;
+    private const float FarPlane = 1000e9f;
 
     public Experiment () {
 
@@ -87,25 +84,30 @@ public class Experiment:GlWindow {
         //var f0 = new FlatColor();
         //var f1 = new FlatColor();
         // x.Assign(p=> p.Meh
+        Reusables.Add(starVertexArray = new());
+        Reusables.Add(starProgram = new());
+        var stars = new Vector4[1000];
+        Random random = new(1);
+
+        for (var i = 0; i < stars.Length; ++i) {
+
+            Vector3 star = new(random.RandomSign() * random.NextFloat(), random.RandomSign() * random.NextFloat(), random.RandomSign() * random.NextFloat());
+            while (star.LengthSquared() < .0001f)
+                star = new(random.RandomSign() * random.NextFloat(), random.RandomSign() * random.NextFloat(), random.RandomSign() * random.NextFloat());
+            stars[i] = new(10 * NearPlane * Vector3.Normalize(star), 1);
+        }
+        Reusables.Add(starBuffer = new(stars));
+        starVertexArray.Assign(starBuffer, starProgram.VertexPosition);
         Reusables.Add(sphereVertices = new(allVertices));
         Reusables.Add(presentationVertices = new(PresentationQuad));
-        Reusables.Add(skyboxVertices = new(cubeVertices));
-        Reusables.Add(skyboxTexCoords = new(cubeTexCoords));
         Reusables.Add(framebuffer = new());
         Reusables.Add(presentation = new());
         Reusables.Add(pa = new());
         Reusables.Add(sa = new());
-        Reusables.Add(skyboxArray = new());
         Reusables.Add(flatColor = new());
-        Reusables.Add(skybox = new());
-        Reusables.Add(skyboxRaster = Raster.FromFile("data\\skybox.bin"));
-        Reusables.Add(skyboxSampler = new(skyboxRaster.Size, TextureFormat.Rgba8) { Mag = MagFilter.Linear, Min = MinFilter.Linear, Wrap = Wrap.ClampToEdge });
-        skyboxSampler.Upload(skyboxRaster);
         pa.Assign(presentationVertices, presentation.VertexPosition);
         sa.Assign(sphereVertices, flatColor.VertexPosition);
-        skyboxArray.Assign(skyboxVertices, skybox.VertexPosition);
-        skyboxArray.Assign(skyboxTexCoords, skybox.TexCoords);
-        SetSwapInterval(1);
+        //SetSwapInterval(-1);
     }
 
     protected override void OnLoad () {
@@ -129,38 +131,6 @@ public class Experiment:GlWindow {
         base.OnKeyDown(key, repeat);
     }
 
-    public static void Rotate (ref Quaternion q, float yaw, float pitch, float roll) {
-        var localXaxis = Vector3.Transform(Vector3.UnitX, q);
-        var qPitch = Quaternion.CreateFromAxisAngle(localXaxis, pitch);
-        q = Quaternion.Concatenate(q, qPitch);
-        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, q);
-        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
-        q = Quaternion.Concatenate(q, qYaw);
-        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, q);
-        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
-        q = Quaternion.Concatenate(q, qRoll);
-
-    }
-
-    public static void Translate (ref Vector4 p, in Quaternion q, in Vector3 dr) {
-        var dx = dr.X * Vector3.Transform(Vector3.UnitX, q);
-        var dy = dr.Y * Vector3.Transform(Vector3.UnitY, q);
-        var dz = dr.Z * Vector3.Transform(Vector3.UnitZ, q);
-        p += new Vector4(dx + dy + dz, 0);
-    }
-
-    public static void CameraRotate (ref Quaternion q, float yaw, float pitch, float roll) {
-        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
-        q = Quaternion.Concatenate(q, qPitch);
-        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, qPitch);
-        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
-        q = Quaternion.Concatenate(q, qYaw);
-        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, qPitch);
-        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
-        q = Quaternion.Concatenate(q, qRoll);
-
-    }
-
     Vector2i cumulativeCursorMovement;
 
     protected override void OnInput (int dx, int dy) {
@@ -169,6 +139,10 @@ public class Experiment:GlWindow {
 
     protected override void Render () {
         var size = ClientSize;
+        var (minPointSize, maxPointSize) = GetPointSizeRange();
+        var pointSize = size.Y / 108f;
+        Debug.Assert(minPointSize <= pointSize && pointSize <= maxPointSize);
+        PointSize(pointSize);
 
         CameraRotate(ref cameraOrientation, (float)Axis(Key.Right, Key.Left), -.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
         cumulativeCursorMovement = Vector2i.Zero;
@@ -182,13 +156,11 @@ public class Experiment:GlWindow {
 
         Disable(Capability.DepthTest);
         Disable(Capability.CullFace);
-        BindVertexArray(skyboxArray);
-        UseProgram(skybox);
-        skyboxSampler.BindTo(0);
-        skybox.Tex0(0);
-        skybox.Projection(projection);
-        skybox.Orientation(viewRotation);
-        DrawArrays(Primitive.Triangles, 0, 36);
+        BindVertexArray(starVertexArray);
+        UseProgram(starProgram);
+        starProgram.View(viewRotation);
+        starProgram.Projection(projection);
+        DrawArrays(Primitive.Points, 0, 1000);
 
         Enable(Capability.DepthTest);
         DepthFunc(DepthFunction.LessEqual);
@@ -201,10 +173,6 @@ public class Experiment:GlWindow {
             flatColor.Color(body.Color);
             flatColor.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
             DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
-            //var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
-            //if (cameraDistanceFromSphere < 120f * body.Radius)
-            //else
-            //    DrawArrays(Primitive.Triangles, 0, loPolySphereVertexCount);
         }
         BindDefaultFramebuffer(FramebufferTarget.Draw);
         Disable(Capability.DepthTest);
@@ -218,10 +186,29 @@ public class Experiment:GlWindow {
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 
-    private static void GetCoordinateSystem (Quaternion q, out Vector3 ux, out Vector3 uy, out Vector3 uz) {
-        ux = Vector3.Transform(Vector3.UnitX, q);
-        uy = Vector3.Transform(Vector3.UnitY, q);
-        uz = Vector3.Transform(Vector3.UnitZ, q);
+    public static void RotateQuaternion (ref Quaternion q, in Vector3 rotation) {
+        var localXaxis = Vector3.Transform(Vector3.UnitX, q);
+        var qPitch = Quaternion.CreateFromAxisAngle(localXaxis, rotation.X);
+        q = Quaternion.Concatenate(q, qPitch);
+        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, q);
+        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, rotation.Y);
+        q = Quaternion.Concatenate(q, qYaw);
+        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, q);
+        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, rotation.Z);
+        q = Quaternion.Concatenate(q, qRoll);
+    }
+
+
+    public static void CameraRotate (ref Quaternion q, float yaw, float pitch, float roll) {
+        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
+        q = Quaternion.Concatenate(q, qPitch);
+        var localYaxisAfterPitch = Vector3.Transform(Vector3.UnitY, qPitch);
+        var qYaw = Quaternion.CreateFromAxisAngle(localYaxisAfterPitch, yaw);
+        q = Quaternion.Concatenate(q, qYaw);
+        var localZaxisAfterYawPitch = Vector3.Transform(Vector3.UnitZ, qPitch);
+        var qRoll = Quaternion.CreateFromAxisAngle(localZaxisAfterYawPitch, roll);
+        q = Quaternion.Concatenate(q, qRoll);
+
     }
 
     public static int SphereTriangleCount (Vector2i n) =>

@@ -502,7 +502,6 @@ internal static class Const {
     //internal const int POINT_FADE_THRESHOLD_SIZE = 0x8128;
     //internal const int POINT_SIZE_MAX = 0x8127;
     //internal const int POINT_SIZE_MIN = 0x8126;
-    //internal const int POINT_SIZE_RANGE = 0x0B12;
     //internal const int POINT_SMOOTH = 0x0B10;
     //internal const int POINT_SPRITE = 0x8861;
     //internal const int POLYGON_MODE = 0x0B40;
@@ -1072,6 +1071,7 @@ internal static class Const {
     internal const int PIXEL_PACK_BUFFER = 0x88EB;
     internal const int PIXEL_UNPACK_BUFFER = 0x88EC;
     internal const int POINT_SIZE = 0x0B11;
+    internal const int POINT_SIZE_RANGE = 0x0B12;
     internal const int POINT_SIZE_GRANULARITY = 0x0B13;
     internal const int POINTS = 0x0;
     internal const int PROGRAM_INPUT = 0x92E3;

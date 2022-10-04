@@ -23,7 +23,6 @@ public class MatrixTests:GlWindow {
     static readonly Vector4[] Colors = { new(1, 0, 0, 1), new(0, 1, 0, 1), new(0, 0, 1, 1), };
     protected override void OnLoad () {
         base.OnLoad();
-
         Reusables.Add(va = new());
         Reusables.Add(flatColor = new());
         Reusables.Add(vertices = new(lineSegments));
@@ -61,17 +60,18 @@ public class MatrixTests:GlWindow {
 
         Vector3 modelTranslation = new((float)Axis(Key.C, Key.Z), (float)Axis(Key.Q, Key.A), (float)Axis(Key.X, Key.D));
         var modelRotation = AngularVelocity * new Vector3((float)Axis(Key.Insert, Key.Delete), (float)Axis(Key.Home, Key.End), (float)Axis(Key.PageUp, Key.PageDown));
-        Experiment.Rotate(ref modelOrientation, modelRotation.Y, modelRotation.X, modelRotation.Z);
-        Experiment.Translate(ref modelPosition, in modelOrientation, in modelTranslation);
+        Experiment.RotateQuaternion(ref modelOrientation, modelRotation);
+        var dr = Vector3.Transform(modelTranslation, modelOrientation);
+        modelPosition += new Vector4(dr, 0);
+        //Experiment.Translate(ref modelPosition, in modelOrientation, in modelTranslation);
 
         Experiment.CameraRotate(ref cameraOrientation, 0, .001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X);
         cumulativeCursorMovement = Vector2i.Zero;
 
         var model = Matrix4x4.CreateFromQuaternion(modelOrientation) * Matrix4x4.CreateTranslation(modelPosition.Xyz());
         var view = Matrix4x4.CreateTranslation(-cameraPosition.Xyz()) * Matrix4x4.CreateFromQuaternion(cameraOrientation);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, (float)size.X / size.Y, 1f, 100f);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 1f, 100f);
 
-        Vector2i sectionSize = new(size.X / 2, size.Y / 2);
         Viewport(Vector2i.Zero, size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
