@@ -29,7 +29,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Vector3 cameraLocation = new(0, 0, 2 * TerraRadius);
+    private Vector3d cameraLocation = new(SolTerraDistance, 0, 2 * TerraRadius);
     private Quaternion cameraOrientation = Quaternion.Identity;
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
@@ -38,30 +38,29 @@ public class Experiment:GlWindow {
     private static readonly int highPolySphereVertexCount = 3 * SphereTriangleCount(highPolySphereSubdivisions);
 
     private readonly struct Body {
-        public Vector3 Position { get; init; }
-        public float Radius { get; init; }
+        public Vector3d Position { get; init; }
+        public double Radius { get; init; }
         public Vector4 Color { get; init; }
         public float Mass { get; init; }
     };
 
-    private static readonly Body Sol = new() { Position = Vector3.Zero, Radius = SolRadius, Color = new(1, 1, .5f, 1), Mass = SolMass };
-    private static readonly Body Terra = new() { Position = new(-TerraLunaDistance / 2, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
-    private static readonly Body Luna = new() { Position = new(TerraLunaDistance / 2, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
+    private static readonly Body Sol = new() { Position = Vector3d.Zero, Radius = SolRadius, Color = new(1, 1, .5f, 1), Mass = SolMass };
+    private static readonly Body Terra = new() { Position = new(SolTerraDistance, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
+    private static readonly Body Luna = new() { Position = new(SolTerraDistance + TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
     private static readonly Body[] Solar = { Sol, Terra, Luna };
-    private const float Km = 1e3f;
-    private const float Kg = 1f;
-    private const float SolTerraDistance = 1.50e8f * Km;
-    private const float TerraLunaDistance = 3.844e5f * Km;
-    private const float SolRadius = 6.957e5f * Km;
-    private const float TerraRadius = 6.371e3f * Km;
-    private const float LunaRadius = 1.737e3f * Km;
+    
+    private const double Km = 1e3;
+    private const double SolTerraDistance = 1.50e8 * Km;
+    private const double TerraLunaDistance = 3.844e5 * Km;
+    private const double SolRadius = 6.957e5f * Km;
+    private const double TerraRadius = 6.371e3f * Km;
+    private const double LunaRadius = 1.737e3f * Km;
 
-    private const float SolMass = 1.989e30f * Kg;
-    private const float TerraMass = 5.972e24f * Kg;
-    private const float LunaMass = 7.342e22f * Kg;
-
-    private const float NearPlane = 1 * Km;
-    private const float FarPlane = 1.0e7f * Km;
+    private const float SolMass = 1.989e30f;
+    private const float TerraMass = 5.972e24f;
+    private const float LunaMass = 7.342e22f;
+    private const float NearPlane = 1.0e3f;
+    private const float FarPlane = 1.0e10f;
 
     public Experiment () {
 
@@ -121,15 +120,11 @@ public class Experiment:GlWindow {
         Disposables.Add(depthbuffer);
         Disposables.Add(renderTexture);
     }
-    bool mode = true;
     protected override void OnKeyDown (Key key, bool repeat) {
         if (!repeat)
             switch (key) {
                 case Key.Escape:
                     User32.PostQuitMessage(0);
-                    return;
-                case Key.Space:
-                    mode = !mode;
                     return;
             }
         base.OnKeyDown(key, repeat);
@@ -201,11 +196,11 @@ public class Experiment:GlWindow {
         Enable(Capability.CullFace);
         BindVertexArray(sa);
         UseProgram(flatColor);
-        flatColor.View(Matrix4x4.CreateTranslation(-cameraLocation) * viewRotation);
+        flatColor.View(Matrix4x4.CreateTranslation(-(Vector3)cameraLocation) * viewRotation);
         flatColor.Projection(projection);
         foreach (var body in Solar) {
             flatColor.Color(body.Color);
-            flatColor.Model(Matrix4x4.CreateScale(body.Radius) * Matrix4x4.CreateTranslation(body.Position));
+            flatColor.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
             DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
             //var cameraDistanceFromSphere = (body.Position - cameraLocation).Length();
             //if (cameraDistanceFromSphere < 120f * body.Radius)

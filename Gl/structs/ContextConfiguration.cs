@@ -12,7 +12,7 @@ public readonly struct ContextConfiguration {
     public ContextFlag? Flags { get; init; }
     public static readonly ContextConfiguration Default = new() {
         ColorBits = 32,
-        DepthBits = 24,
+        DepthBits = 32,
         DoubleBuffer = true,
         Profile = ProfileMask.Core,
         Flags = ContextFlag.Debug
