@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static GlContext;
 
@@ -21,8 +22,11 @@ public class BufferObject<T>:OpenglObject where T : unmanaged {
 
     public unsafe void BufferData (in ReadOnlySpan<T> data, int count, int sourceOffset, int targetOffset) {
         Check(sourceOffset, targetOffset, count, data.Length);
-        fixed (T* ptr = data)
+        fixed (T* ptr = data) {
+            var start = ptr + sourceOffset;
+            Debug.Assert((nint)start == (nint)ptr + (nint)(sourceOffset * ElementSize) );
             NamedBufferSubData(this, ElementSize * targetOffset, ElementSize * count, ptr + sourceOffset);
+        }
     }
 
     public void Bind () => BindBuffer(Target, this);

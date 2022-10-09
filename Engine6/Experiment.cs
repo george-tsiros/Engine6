@@ -63,8 +63,8 @@ public class Experiment:GlWindow {
     public Experiment () {
         ClientSize = new(1280, 720);
         var allVertices = new Vector4[loPolySphereVertexCount + highPolySphereVertexCount];
-        Sphere(loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
-        Sphere(highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
+        Sphere(in loPolySphereSubdivisions, 1, allVertices.AsSpan(0, loPolySphereVertexCount));
+        Sphere(in highPolySphereSubdivisions, 1, allVertices.AsSpan(loPolySphereVertexCount, highPolySphereVertexCount));
 
         Reusables.Add(starVertexArray = new());
         Reusables.Add(starProgram = new());
@@ -184,16 +184,16 @@ public class Experiment:GlWindow {
         q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.UnitZ, qPitch), pitchYawRoll.Z));
     }
 
-    public static int SphereTriangleCount (Vector2i n) =>
+    public static int SphereTriangleCount (in Vector2i n) =>
         2 * n.X * (n.Y - 1);
 
-    public static int SpherePointCount (Vector2i n) =>
+    public static int SpherePointCount (in Vector2i n) =>
         2 + n.X * (n.Y - 1);
 
-    public static void Sphere (Vector2i n, float radius, Span<Vector4> vertices) {
+    public static void Sphere (in Vector2i n, float radius, in Span<Vector4> vertices) {
         var (nTheta, nPhi) = n;
-        var spherePointCount = SpherePointCount(n);
-        var triangleCount = SphereTriangleCount(n);
+        var spherePointCount = SpherePointCount(in n);
+        var triangleCount = SphereTriangleCount(in n);
         var vertexCount = 3 * triangleCount;
         if (vertices.Length != vertexCount)
             throw new ArgumentException($"expected size {vertexCount} exactly, got {vertices.Length} instead", nameof(vertices));

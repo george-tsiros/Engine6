@@ -1,3 +1,3 @@
 using Engine6;
-using Experiment window = new();
+using MatrixTests window = new();
 window.Run();

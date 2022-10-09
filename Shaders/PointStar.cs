@@ -9,7 +9,7 @@ public class PointStar:Program {
 #pragma warning disable CS0649
 
     protected override string VertexSource { get; } = "dW5pZm9ybSBtYXQ0IHZpZXcsIHByb2plY3Rpb247IGluIHZlYzQgdmVydGV4UG9zaXRpb247IHZvaWQgbWFpbigpIHsgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uICogdmlldyAqIHZlcnRleFBvc2l0aW9uOyB9";
-    protected override string FragmentSource { get; } = "b3V0IHZlYzQgY29sb3IwOyB2b2lkIG1haW4oKSB7IGNvbnN0IGZsb2F0IHBpID0gMy4xNDE1OTI2NTM1ODk3OTMxOyB2ZWMyIHBwID0gcGkgKiBnbF9Qb2ludENvb3JkLnh5OyBmbG9hdCBicmlnaHRuZXNzID0gcG93KChzaW4ocHAueCkrc2luKHBwLnkpKS8yLCAxMC4wKTsgY29sb3IwID0gdmVjNCh2ZWMzKGJyaWdodG5lc3MpLDEpOyB9";
+    protected override string FragmentSource { get; } = "b3V0IHZlYzQgY29sb3IwOyB2b2lkIG1haW4oKSB7IGNvbnN0IGZsb2F0IHBpID0gMy4xNDE1OTI2NTM1ODk3OTMxOyB2ZWMyIHBwID0gcGkgKiBnbF9Qb2ludENvb3JkLnh5OyBmbG9hdCBpbnRlbnNpdHkgPSAocG93KHNpbihwcC55KSwxMCkgKyBwb3coc2luKHBwLngpLDEwKSkgKiAwLjU7IGNvbG9yMCA9IHZlYzQodmVjMyhpbnRlbnNpdHkpLDEpOyB9";
 
     public FragOut Color0 { get; }
 

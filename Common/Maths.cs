@@ -63,6 +63,7 @@ public static class Maths {
     public static float SingleRound (float a) => (float)Math.Round(a);
     public static float SingleCos (float angle) => (float)Math.Cos(angle);
     public static float SingleSin (float angle) => (float)Math.Sin(angle);
+    public static float SingleTan (float angle) => (float)Math.Tan(angle);
     public static float SingleSqrt (float a) => (float)Math.Sqrt(a);
     public static int Int32Abs (int a) => Math.Abs(a);
     public static int Int32Clamp (int value, int min, int max) => Math.Clamp(value, min, max);

@@ -1,3 +1,4 @@
+//precision highp float;
 in vec4 vertexPosition;
 in vec4 vertexNormal;
 uniform mat4 model, view, projection;

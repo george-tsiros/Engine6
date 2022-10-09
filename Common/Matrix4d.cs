@@ -110,14 +110,28 @@ public readonly struct Matrix4d {
     n/r
 
 */
-    public static Matrix4d Project (double fov, double ar, double n, double f) {
-        var t = 1 / DoubleTan(fov / 2);
-        return new(
-            t / ar, 0, 0, 0,
-            0, t, 0, 0,
-            0, 0, (n + f) / (n - f), -1,
-            0, 0, 2 * n * f / (n - f), 0
-        );
+    public static Matrix4d CreatePerspectiveFieldOfView (double fieldOfView, double aspectRatio, double nearPlaneDistance, double farPlaneDistance) {
+        if (fieldOfView <= 0.0 || fieldOfView >= Maths.dPi)
+            throw new ArgumentOutOfRangeException(nameof(fieldOfView));
+
+        if (nearPlaneDistance <= 0.0)
+            throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+
+        if (farPlaneDistance <= 0.0)
+            throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
+
+        if (nearPlaneDistance >= farPlaneDistance)
+            throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+
+        var yScale = 1.0f / Maths.DoubleTan(fieldOfView * 0.5);
+        var xScale = yScale / aspectRatio;
+
+        var negFarRange = double.IsPositiveInfinity(farPlaneDistance) ? -1.0 : farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
+        return new Matrix4d(
+            xScale, 0, 0, 0, 
+            0, yScale, 0, 0, 
+            0, 0, negFarRange, -1, 
+            0, 0, nearPlaneDistance * negFarRange, 0);
     }
 
     public static Matrix4d Transpose (Matrix4d m) => new(
