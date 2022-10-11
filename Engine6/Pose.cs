@@ -10,5 +10,6 @@ public class Pose {
     public Pose () {
         Orientation = Quaternion.Identity;
     }
+    public Matrix4x4 CreateModelMatrix() => Matrix4x4.CreateFromQuaternion(Orientation) * Matrix4x4.CreateTranslation((Vector3)Position);
 }
 

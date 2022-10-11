@@ -29,7 +29,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Pose player = new() { Orientation = Quaternion.Identity, Position = new(SolTerraDistance+TerraLunaDistance, 0, 10 * LunaRadius) };
+    private Pose player = new() { Orientation = Quaternion.Identity, Position = new(SolTerraDistance + TerraLunaDistance, 0, 10 * LunaRadius) };
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
     private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
@@ -171,11 +171,11 @@ public class Experiment:GlWindow {
     public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)
         => Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(axis, q), amount));
 
-    public static void RotateQuaternion (ref Quaternion q, in Vector3 pitchYawRoll) {
-        q = Append(in q, Vector3.UnitX, pitchYawRoll.X);
-        q = Append(in q, Vector3.UnitY, pitchYawRoll.Y);
-        q = Append(in q, Vector3.UnitZ, pitchYawRoll.Z);
-    }
+    //public static void RotateQuaternion (ref Quaternion q, in Vector3 pitchYawRoll) {
+    //    q = Append(in q, Vector3.UnitX, pitchYawRoll.X);
+    //    q = Append(in q, Vector3.UnitY, pitchYawRoll.Y);
+    //    q = Append(in q, Vector3.UnitZ, pitchYawRoll.Z);
+    //}
 
     public static void CameraRotate (ref Quaternion q, in Vector3 pitchYawRoll) {
         var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitchYawRoll.X);
@@ -262,5 +262,39 @@ public class Experiment:GlWindow {
         }
         for (var i = 0; i < indices.Length; ++i)
             vertices[i] = vectors[indices[i]];
+    }
+
+    public static int CylinderTriangleCount (int faceCount) =>
+        3 <= faceCount ? 4 * faceCount : throw new ArgumentOutOfRangeException(nameof(faceCount));
+
+    public static void Cylinder (int faceCount, Span<Vector3> vertices) {
+        var triangleCount = CylinderTriangleCount(faceCount);
+        var vertexCount = 3 * triangleCount;
+        if (vertices.Length != vertexCount)
+            throw new ArgumentException($"expected exactly {vertexCount} length, not {vertices.Length}", nameof(vertices));
+        var topCenter = Vector3.UnitY;
+        var bottomCenter = -Vector3.UnitY;
+        for (var (face, i) = (0, 0); face < faceCount; ++face) {
+            var theta0 = (float)face / faceCount * Maths.fTau;
+            var theta1 = (face + 1 < faceCount ? face : 0f) / faceCount * Maths.fTau;
+            var (x0, z0) = Maths.SingleSinCos(theta0);
+            var (x1, z1) = Maths.SingleSinCos(theta1);
+            var (a, b, c, d) = (new Vector3(x0, 1, z0), new Vector3(x0, -1, z0), new Vector3(x1, -1, z1), new Vector3(x1, 1, z1));
+            vertices[i++] = topCenter;
+            vertices[i++] = a;
+            vertices[i++] = d;
+
+            vertices[i++] = a;
+            vertices[i++] = b;
+            vertices[i++] = c;
+
+            vertices[i++] = a;
+            vertices[i++] = c;
+            vertices[i++] = d;
+
+            vertices[i++] = bottomCenter;
+            vertices[i++] = c;
+            vertices[i++] = b;
+        }
     }
 }

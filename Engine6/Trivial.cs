@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using Common;
 using Gl;
 using static Gl.GlContext;
@@ -10,25 +10,23 @@ public class Trivial:GlWindow {
 
     private static readonly Vector4[] quad = Array.ConvertAll(PresentationQuad, v => new Vector4((v + Vector2.One) / 2, 0, 1));
 
+    public Trivial () : this(new(1280, 720)) { }
+
     public Trivial (in Vector2i size) {
         ClientSize = size;
         Reusables.Add(va = new());
-        Reusables.Add(flatColor = new());
+        Reusables.Add(program = new());
         Reusables.Add(vertices = new(quad));
-        va.Assign(vertices, flatColor.VertexPosition);
-        UseProgram(flatColor);
-        flatColor.Color(Vector4.One);
-        flatColor.Model(Matrix4x4.CreateTranslation(0, 0, -20));
-        flatColor.View(Matrix4x4.Identity);
+        va.Assign(vertices, program.VertexPosition);
+        UseProgram(program);
+        program.Color(Vector4.One);
+        program.Model(Matrix4x4.Identity);
+        program.View(Matrix4x4.CreateTranslation(0, 0, -10));
     }
 
-    private FlatColor flatColor;
+    private FlatColor program;
     private VertexArray va;
     private BufferObject<Vector4> vertices;
-
-    protected override void OnLoad () {
-        base.OnLoad();
-    }
 
     protected override void Render () {
         var size = ClientSize;
@@ -36,8 +34,8 @@ public class Trivial:GlWindow {
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
-        UseProgram(flatColor);
-        flatColor.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 1, 100));
+        UseProgram(program);
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 1, 100));
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 }

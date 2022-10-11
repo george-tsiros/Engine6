@@ -29,6 +29,14 @@ public class Raster:IDisposable {
         Stride = Width * Channels * BytesPerChannel;
     }
 
+    public void ClearU8 (byte b = 0) {
+        NotDisposed();
+        if (Channels != 1)
+            throw new InvalidOperationException($"{nameof(ClearU8)} only works with 1 channel, not {Channels}");
+        for (var i = 0; i < Pixels.Length; ++i)
+            Pixels[i] = b;
+    }
+
     public void ClearU32 (Color color) {
         NotDisposed();
         if (Channels != 4)
@@ -263,8 +271,40 @@ public class Raster:IDisposable {
             throw new ObjectDisposedException(nameof(Dib));
     }
 
+
+    public void DrawStringU8 (in Ascii str, PixelFont font, int x, int y, byte fore = 0xff, byte back = 0) {
+        NotDisposed();
+        var l = str.Length;
+        if (0 == l)
+            return;
+        var textWidth = l * font.Width;
+        if (x < 0 || Width <= x + textWidth)
+            return;
+        if (y < 0 || Height <= y + font.Height)
+            return;
+        for (var i = 0; i < l && x < Width; ++i, x += font.Width)
+            BlitU8(str[i], font, x, y, fore, back);
+    }
+
+    private void BlitU8 (byte ascii, PixelFont font, int x, int y, byte fore, byte back) {
+        var charStride = font.Width * font.Height;
+        var rowStart = (Height - y - 1) * Width;
+        var source = ascii * charStride;
+        var offset = rowStart + x;
+        for (var row = 0; row < font.Height; ++row, offset -= Width, source += font.Width) {
+            var xpos = x;
+            for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos) {
+
+                Pixels[offset + column] = font.Pixels[source + column] != 0 ? fore : back;
+
+            }
+        }
+    }
+
+
+
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
+    public void DrawStringU32 (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)

@@ -23,10 +23,10 @@ public static class Utilities {
 
     private static string TraceFormat (string message, int skip = 0) =>
         $"{Method(skip + 2)} {message}";
-    
+
     public static FieldInfo GetBackingField (Type type, PropertyInfo prop, BindingFlags flags = BindingFlags.Instance) =>
         type.GetField($"<{prop.Name}>k__BackingField", BindingFlags.NonPublic | flags);
-    
+
     private static readonly (byte major, byte minor, byte characters)[] ValidOpenglVersions = {
         (2, 0, 0x11),
         (2, 1, 0x12),
@@ -42,20 +42,19 @@ public static class Utilities {
         (4, 5, 0x45),
         (4, 6, 0x46),
     };
-    
+
     public unsafe static int ShaderFromString (ShaderType type, string source) {
-        var vs = CreateShader(type);
+        var shader = CreateShader(type);
         var (version, profile) = GetCurrentContextVersion();
         var characters = Array.Find(ValidOpenglVersions, x => x.major == version.Major && x.minor == version.Minor).characters;
         if (0 == characters)
             throw new InvalidOperationException($"{version} not a known opengl version");
         var core = ProfileMask.Core == profile ? " core" : string.Empty;
-        ShaderSource(vs, $"#version {characters:x}0{core}\n{source}");
-        CompileShader(vs);
-        var log = GetShaderInfoLog(vs);
-        return 0 == log.Length ? vs : throw new ApplicationException(log);
+        ShaderSource(shader, $"#version {characters:x}0{core}\n{source}");
+        CompileShader(shader);
+        return 0 != GetShader(shader, ShaderParameter.CompileStatus) ? shader : throw new ApplicationException(GetShaderInfoLog(shader));
     }
-    
+
     public unsafe static int ProgramFromStrings (string vertexSource, string fragmentSource) {
         var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
         var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
@@ -63,11 +62,8 @@ public static class Utilities {
         AttachShader(program, vertexShader);
         AttachShader(program, fragmentShader);
         LinkProgram(program);
-        var log = GetProgramInfoLog(program);
-        if (log.Length > 0)
-            throw new ApplicationException(log);
         DeleteShader(vertexShader);
         DeleteShader(fragmentShader);
-        return program;
+        return 0 != GetProgram(program, ProgramParameter.LinkStatus) ? program : throw new ApplicationException(GetProgramInfoLog(program));
     }
 }

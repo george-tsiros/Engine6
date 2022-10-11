@@ -128,9 +128,9 @@ public readonly struct Matrix4d {
 
         var negFarRange = double.IsPositiveInfinity(farPlaneDistance) ? -1.0 : farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
         return new Matrix4d(
-            xScale, 0, 0, 0, 
-            0, yScale, 0, 0, 
-            0, 0, negFarRange, -1, 
+            xScale, 0, 0, 0,
+            0, yScale, 0, 0,
+            0, 0, negFarRange, -1,
             0, 0, nearPlaneDistance * negFarRange, 0);
     }
 
@@ -140,8 +140,8 @@ public readonly struct Matrix4d {
         m.M13, m.M23, m.M33, m.M43,
         m.M14, m.M24, m.M34, m.M44);
 
-    public static Matrix4d Translate (Vector3d v) => Translate(v.X, v.Y, v.Z);
-    public static Matrix4d Translate (double dx, double dy, double dz) => new(
+    public static Matrix4d CreateTranslation (Vector3d v) => CreateTranslation(v.X, v.Y, v.Z);
+    public static Matrix4d CreateTranslation (double dx, double dy, double dz) => new(
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -176,5 +176,23 @@ public readonly struct Matrix4d {
            0, 0, 1, 0,
            0, 0, 0, 1
         );
+    }
+
+    public static Matrix4d CreateFromQuaternion (Quaterniond quaternion) {
+        var xx = quaternion.X * quaternion.X;
+        var yy = quaternion.Y * quaternion.Y;
+        var zz = quaternion.Z * quaternion.Z;
+        var xy = quaternion.X * quaternion.Y;
+        var wz = quaternion.Z * quaternion.W;
+        var xz = quaternion.Z * quaternion.X;
+        var wy = quaternion.Y * quaternion.W;
+        var yz = quaternion.Y * quaternion.Z;
+        var wx = quaternion.X * quaternion.W;
+
+        return new(
+            1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0.0, 
+            2 * (xy - wz), 1 - 2 * (zz + xx), 2 * (yz + wx), 0.0, 
+            2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (yy + xx), 0.0, 
+            0.0, 0.0, 0.0, 1.0);
     }
 }

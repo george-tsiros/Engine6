@@ -1,3 +1,3 @@
 using Engine6;
-using MatrixTests window = new();
+using Trivial window = new();
 window.Run();

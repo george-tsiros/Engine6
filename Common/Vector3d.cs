@@ -42,6 +42,28 @@ public readonly struct Vector3d {
     public double Magnitude () =>
         DoubleSqrt(MagnitudeSquared());
 
+    public static Vector3d Transform (in Vector3d value, in Quaterniond rotation) {
+        var x2 = rotation.X + rotation.X;
+        var y2 = rotation.Y + rotation.Y;
+        var z2 = rotation.Z + rotation.Z;
+        var wx2 = rotation.W * x2;
+        var wy2 = rotation.W * y2;
+        var wz2 = rotation.W * z2;
+        var xx2 = rotation.X * x2;
+        var xy2 = rotation.X * y2;
+        var xz2 = rotation.X * z2;
+        var yy2 = rotation.Y * y2;
+        var yz2 = rotation.Y * z2;
+        var zz2 = rotation.Z * z2;
+
+        return new(
+            value.X * (1 - yy2 - zz2) + value.Y * (xy2 - wz2) + value.Z * (xz2 + wy2),
+            value.X * (xy2 + wz2) + value.Y * (1 - xx2 - zz2) + value.Z * (yz2 - wx2),
+            value.X * (xz2 - wy2) + value.Y * (yz2 + wx2) + value.Z * (1 - xx2 - yy2)
+        );
+
+    }
+
     public static Vector3d Cross (in Vector3d a, in Vector3d b) =>
         new(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
 
