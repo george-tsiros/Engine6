@@ -73,7 +73,7 @@ public class MatrixTests:GlWindow {
         cursor = new(x, y);
     }
 
-    private static int ApplyDeadzone (int value, int deadzone) {
+    public static int ApplyDeadzone (int value, int deadzone) {
         if (deadzone < 0)
             throw new ArgumentOutOfRangeException(nameof(deadzone), "may not be negative");
         return value < 0 ? Maths.Int32Min(value + deadzone, 0) : Maths.Int32Max(value - deadzone, 0);
@@ -81,10 +81,10 @@ public class MatrixTests:GlWindow {
 
     protected override void Render () {
         var size = ClientSize;
-        var xActual = ApplyDeadzone(cursor.X, Deadzone);
-        var yActual = ApplyDeadzone(cursor.Y, Deadzone);
-        var roll = 2e-5 * xActual;
-        var pitch = -1e-5 * yActual;
+        var xActual = ApplyDeadzone(cursor.X, Deadzone) / (double)(CursorCap - Deadzone);
+        var yActual = ApplyDeadzone(cursor.Y, Deadzone) / (double)(CursorCap - Deadzone);
+        var roll = 2e-2 * xActual;
+        var pitch = -1e-2 * yActual;
         camera.Rotate(pitch, Axis(Key.C, Key.Z), roll);
         camera.Move(LastFramesInterval * Velocity * -Vector3d.UnitZ);
         var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 0.1f, 100f);

@@ -29,7 +29,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Pose player = new() { Orientation = Quaternion.Identity, Position = new(SolTerraDistance + TerraLunaDistance, 0, 10 * LunaRadius) };
+    private Camera player = new(new((float)(SolTerraDistance + TerraLunaDistance), 0, 10 * (float)LunaRadius));
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
     private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
@@ -125,11 +125,10 @@ public class Experiment:GlWindow {
         var pointSize = size.Y / 108f;
         Debug.Assert(minPointSize <= pointSize && pointSize <= maxPointSize);
         PointSize(pointSize);
-
-        CameraRotate(ref player.Orientation, new(-.001f * cumulativeCursorMovement.Y, .001f * cumulativeCursorMovement.X, (float)Axis(Key.Right, Key.Left)));
+        player.Rotate(-.001 * cumulativeCursorMovement.Y, .001 * cumulativeCursorMovement.X, Axis(Key.Right, Key.Left));
         cumulativeCursorMovement = Vector2i.Zero;
 
-        var viewRotation = Matrix4x4.CreateFromQuaternion(player.Orientation);
+        var viewRotation = Matrix4x4.CreateFromQuaternion((Quaternion)player.Orientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Viewport(in Vector2i.Zero, in size);
@@ -168,21 +167,14 @@ public class Experiment:GlWindow {
         DrawArrays(Primitive.Triangles, 0, 6);
     }
 
-    public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)
-        => Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(axis, q), amount));
+    //public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)
+    //    => Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(axis, q), amount));
 
     //public static void RotateQuaternion (ref Quaternion q, in Vector3 pitchYawRoll) {
     //    q = Append(in q, Vector3.UnitX, pitchYawRoll.X);
     //    q = Append(in q, Vector3.UnitY, pitchYawRoll.Y);
     //    q = Append(in q, Vector3.UnitZ, pitchYawRoll.Z);
     //}
-
-    public static void CameraRotate (ref Quaternion q, in Vector3 pitchYawRoll) {
-        var qPitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitchYawRoll.X);
-        q = Quaternion.Concatenate(q, qPitch);
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.UnitY, qPitch), pitchYawRoll.Y));
-        q = Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.UnitZ, qPitch), pitchYawRoll.Z));
-    }
 
     public static int SphereTriangleCount (in Vector2i n) =>
         2 * n.X * (n.Y - 1);
