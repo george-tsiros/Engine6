@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+
 public readonly struct ContextConfiguration {
     public int? ColorBits { get; init; }
     public int? DepthBits { get; init; }

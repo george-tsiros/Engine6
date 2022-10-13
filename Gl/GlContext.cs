@@ -32,6 +32,8 @@ public sealed unsafe class GlContext:IDisposable {
     private const string DeleteTemporaryContextFailed = "failed to delete temporary context";
     private const string WrongContextVersion = "requested {0} got {1}";
     private const string GetOpenglHandleFailed = $"failed to get handle for {opengl32}";
+    private const string NoElementArrayBound = "nothing bound to element array buffer binding";
+    private const string ZeroLength = "zero length?";
 
     //EXPERIMENT FOR CALLING THROUGH FUNCTIONS GENERATED AT RUNTIME
     private static Action drawArrays;
@@ -60,10 +62,10 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     // god have mercy on our souls
-    public static void Uniform (int uniform, Matrix4x4 m) => 
+    public static void Uniform (int uniform, Matrix4x4 m) =>
         glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
 
-    public static Ascii GetStringi (int name, int index) => 
+    public static Ascii GetStringi (int name, int index) =>
         new(glGetStringi(name, index));
 
     public static int GetInteger (int name) {
@@ -103,6 +105,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static void DepthFunc (DepthFunction function) => glDepthFunc((int)function);
     public static void Disable (Capability cap) => glDisable((int)cap);
     public static void DrawArrays (Primitive mode, int first, int count) => glDrawArrays((int)mode, first, count);
+    public static void DrawArraysInstanced (Primitive mode, int first, int count, int instanceCount) => glDrawArraysInstanced((int)mode, first, count, instanceCount);
     public static void Enable (Capability cap) => glEnable((int)cap);
     public static bool IsEnabled (Capability cap) => 0 != glIsEnabled((int)cap);
     public static void EnableVertexArrayAttrib (VertexArray vertexArray, int i) => glEnableVertexArrayAttrib(vertexArray, i);
@@ -159,7 +162,7 @@ public sealed unsafe class GlContext:IDisposable {
         var maxLength = 0;
         glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
         if (maxLength <= 0)
-            throw new GlException("zero length?");
+            throw new GlException(ZeroLength);
         Debug.Assert(maxLength < 1024);
         Span<byte> bytes = stackalloc byte[maxLength];
         var actualLength = 0;
@@ -174,7 +177,7 @@ public sealed unsafe class GlContext:IDisposable {
             glActiveTexture(Const.TEXTURE0 + i);
     }
 
-    public static void MultiDrawArrays (Primitive mode, int[] first, int[] count, int calls) {
+    public static void MultiDrawArrays (Primitive mode, ReadOnlySpan<int> first, ReadOnlySpan<int> count, int calls) {
         if (0 == calls)
             throw new InvalidOperationException();
         if (first.Length < calls)
@@ -184,6 +187,13 @@ public sealed unsafe class GlContext:IDisposable {
         fixed (int* p = first)
         fixed (int* q = count)
             glMultiDrawArrays((int)mode, p, q, calls);
+    }
+
+    public unsafe static void MultiDrawElementsIndirect (Primitive mode, ReadOnlySpan<DrawElementsIndirectCommand> indirect) {
+        if (0 == GetInteger(Const.ELEMENT_ARRAY_BUFFER_BINDING))
+            throw new InvalidOperationException(NoElementArrayBound);
+        fixed (DrawElementsIndirectCommand* p = indirect)
+            glMultiDrawElementsIndirect((int)mode, Const.UNSIGNED_INT, p, indirect.Length, 0);
     }
 
     public static int CreateTexture2D () {
@@ -242,7 +252,7 @@ public sealed unsafe class GlContext:IDisposable {
         return f;
     }
 
-    public static void PointSize (float f) => 
+    public static void PointSize (float f) =>
         glPointSize(f);
 
     public unsafe static (float xrange, float yrange) GetPointSizeRange () {
@@ -788,7 +798,7 @@ public sealed unsafe class GlContext:IDisposable {
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformBlockName;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformName;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, void> glGetActiveUniformBlockiv;
-    //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glDrawArraysInstanced;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glDrawArraysInstanced;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void*, int, void> glDrawElementsInstanced;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glTexBuffer;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glUniformBlockBinding;
@@ -991,7 +1001,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glShaderStorageBlockBinding;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, nint, int, void> glBindVertexBuffer;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, nint, nint, int, int, void*, void> glClearBufferSubData;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, void*, int, int, void> glMultiDrawElementsIndirect;
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, void*, int, int, void> glMultiDrawElementsIndirect;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, void> glInvalidateTexImage;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, void> glVertexAttribBinding;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, void> glVertexBindingDivisor;

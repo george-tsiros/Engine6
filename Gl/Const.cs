@@ -206,7 +206,6 @@ internal static class Const {
     //internal const int EDGE_FLAG_ARRAY = 0x8079;
     //internal const int EDGE_FLAG_ARRAY_BUFFER_BINDING = 0x889B;
     //internal const int EDGE_FLAG_ARRAY_COUNT_EXT = 0x808D;
-    //internal const int ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
     //internal const int FIXED = 0x140C;
     //internal const int FLOAT_32_UNSIGNED_INT_24_8_REV = 0x8DAD;
     //internal const int FOG = 0x0B60;
@@ -1002,6 +1001,7 @@ internal static class Const {
     internal const int DRAW_INDIRECT_BUFFER = 0x8F3F;
     internal const int DYNAMIC_STORAGE_BIT = 0x0100;
     internal const int ELEMENT_ARRAY_BUFFER = 0x8893;
+    internal const int ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
     internal const int EQUAL = 0x0202;
     internal const int EXTENSIONS = 0x1F03;
     internal const int FLOAT = 0x1406;
