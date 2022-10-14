@@ -53,18 +53,18 @@ public class MatrixTests:GlWindow {
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
     }
     protected override Key[] AxisKeys => _AxisKeys;
-    private BufferObject<Vector2> uiBuffer;
     private BufferObject<Vector3> normals;
     private BufferObject<Vector4> vertices;
     private Directional program;
     private int vertexCount;
+    private BufferObject<Vector2> uiBuffer;
     private SingleChannelTexture uiProgram;
-    private readonly Camera camera;
-    private Pose model = new();
     private Raster uiRaster;
     private Sampler2D uiSampler;
-    private Vector2i cursor;
     private VertexArray uiVA;
+    private readonly Camera camera;
+    private Pose model = new();
+    private Vector2i cursor;
     private VertexArray va;
 
     protected override void OnInput (int dx, int dy) {
@@ -73,20 +73,14 @@ public class MatrixTests:GlWindow {
         cursor = new(x, y);
     }
 
-    public static int ApplyDeadzone (int value, int deadzone) {
-        if (deadzone < 0)
-            throw new ArgumentOutOfRangeException(nameof(deadzone), "may not be negative");
-        return value < 0 ? Maths.Int32Min(value + deadzone, 0) : Maths.Int32Max(value - deadzone, 0);
-    }
-
     protected override void Render () {
         var size = ClientSize;
-        var xActual = ApplyDeadzone(cursor.X, Deadzone) / (double)(CursorCap - Deadzone);
-        var yActual = ApplyDeadzone(cursor.Y, Deadzone) / (double)(CursorCap - Deadzone);
+        var xActual = Functions.ApplyDeadzone(cursor.X, Deadzone) / (double)(CursorCap - Deadzone);
+        var yActual = Functions.ApplyDeadzone(cursor.Y, Deadzone) / (double)(CursorCap - Deadzone);
         var roll = 2e-2 * xActual;
         var pitch = -1e-2 * yActual;
         camera.Rotate(pitch, Axis(Key.C, Key.Z), roll);
-        camera.Move(LastFramesInterval * Velocity * -Vector3d.UnitZ);
+        camera.Move(LastFramesInterval * Velocity);
         var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 0.1f, 100f);
 
         Viewport(in Vector2i.Zero, in size);

@@ -59,14 +59,5 @@ public abstract class ExampleBase:GlWindow {
         new(1f, 0f, 0.29f, 1), new(0.59f, 0.62f, 0.64f, 1), new(1f, 0.74f, 0.82f, 1),
     };
 
-    protected const int CursorCap = 1000;
-    protected const int Deadzone = 10;
-
-    protected Vector2i cursor;
-    protected override void OnInput (int dx, int dy) {
-        var x = Maths.Int32Clamp(cursor.X + dx, -CursorCap, CursorCap);
-        var y = Maths.Int32Clamp(cursor.Y + dy, -CursorCap, CursorCap);
-        cursor = new(x, y);
-    }
 }
 

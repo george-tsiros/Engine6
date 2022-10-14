@@ -18,9 +18,9 @@ public sealed class Camera {
         Orientation = Quaterniond.Concatenate(q, Quaterniond.CreateFromAxisAngle(Vector3d.Transform(Vector3.UnitZ, qPitch), roll));
     }
 
-    public void Move (Vector3d movement) {
+    public void Move (double distance) {
         var forward = Vector3d.Transform(-Vector3d.UnitZ, Orientation);
-        Position += forward;
+        Position += distance * forward;
     }
     public Matrix4d CreateView () =>
         Matrix4d.CreateTranslation(-Position) * Matrix4d.CreateFromQuaternion(Orientation);

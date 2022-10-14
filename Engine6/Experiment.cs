@@ -29,7 +29,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Camera player = new(new((float)(SolTerraDistance + TerraLunaDistance), 0, 10 * (float)LunaRadius));
+    private Camera camera = new(new((float)(SolTerraDistance + TerraLunaDistance), 0, 10 * (float)LunaRadius));
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
     private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
@@ -103,15 +103,6 @@ public class Experiment:GlWindow {
         Disposables.Add(depthbuffer);
         Disposables.Add(renderTexture);
     }
-    protected override void OnKeyDown (Key key, bool repeat) {
-        if (!repeat)
-            switch (key) {
-                case Key.Escape:
-                    User32.PostQuitMessage(0);
-                    return;
-            }
-        base.OnKeyDown(key, repeat);
-    }
 
     Vector2i cumulativeCursorMovement;
 
@@ -125,10 +116,10 @@ public class Experiment:GlWindow {
         var pointSize = size.Y / 108f;
         Debug.Assert(minPointSize <= pointSize && pointSize <= maxPointSize);
         PointSize(pointSize);
-        player.Rotate(-.001 * cumulativeCursorMovement.Y, .001 * cumulativeCursorMovement.X, Axis(Key.Right, Key.Left));
+        camera.Rotate(-.001 * cumulativeCursorMovement.Y, .001 * cumulativeCursorMovement.X, Axis(Key.Right, Key.Left));
         cumulativeCursorMovement = Vector2i.Zero;
 
-        var viewRotation = Matrix4x4.CreateFromQuaternion((Quaternion)player.Orientation);
+        var viewRotation = Matrix4x4.CreateFromQuaternion((Quaternion)camera.Orientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.Draw);
         Viewport(in Vector2i.Zero, in size);
@@ -148,7 +139,7 @@ public class Experiment:GlWindow {
         Enable(Capability.CullFace);
         BindVertexArray(sphereVertexArray);
         UseProgram(sphereProgram);
-        sphereProgram.View(Matrix4x4.CreateTranslation(-(Vector3)player.Position) * viewRotation);
+        sphereProgram.View(Matrix4x4.CreateTranslation(-(Vector3)camera.Position) * viewRotation);
         sphereProgram.Projection(projection);
         foreach (var body in Solar) {
             sphereProgram.Color(body.Color);

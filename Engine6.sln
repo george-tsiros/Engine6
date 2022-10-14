@@ -14,6 +14,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shaders", "Shaders\Shaders.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen", "ShaderGen\ShaderGen.csproj", "{89E5EECE-F9EE-4C65-83CC-178792C4BE26}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{138FAA9E-95E6-4BE9-A56D-D874EFBB18C8}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -49,8 +54,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		    SolutionGuid = {7351B8D1-909B-40ED-B784-91822379A451}
-		  SolutionGuid = {69B9A089-7DFE-4C35-BB16-D76F8122DD09}
 		SolutionGuid = {37C51814-F566-407D-83E5-36D6B5621CCF}
+		  SolutionGuid = {69B9A089-7DFE-4C35-BB16-D76F8122DD09}
+		    SolutionGuid = {7351B8D1-909B-40ED-B784-91822379A451}
 	EndGlobalSection
 EndGlobal

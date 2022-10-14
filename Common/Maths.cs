@@ -11,6 +11,7 @@ public static class Maths {
     public static (double, double) DoubleSinCos (double angle) => double.SinCos(angle);
     public static (float, float) SingleSinCos (float angle) => float.SinCos(angle);
     public static (int quotient, int remainder) Int32DivRem (int a, int b) => int.DivRem(a, b);
+    public static (uint quotient, uint remainder) UInt32DivRem (uint a, uint b) => uint.DivRem(a, b);
     public static (long quotient, long remainder) Int64DivRem (long a, long b) => long.DivRem(a, b);
     public static (ulong quotient, ulong remainder) UInt64DivRem (ulong a, ulong b) => ulong.DivRem(a, b);
     public static double DoubleAbs (double a) => double.Abs(a);
@@ -24,7 +25,10 @@ public static class Maths {
     public static double DoubleSin (double angle) => double.Sin(angle);
     public static double DoubleSqrt (double a) => double.Sqrt(a);
     public static double DoubleTan (double angle) => double.Tan(angle);
+    public static double DoubleExp (double a) => double.Exp(a);
+    public static float SingleAbs (float a) => float.Abs(a);
     public static float SingleClamp (float value, float min, float max) => float.Clamp(value, min, max);
+    public static float SingleRound (float a, int digits) => float.Round(a, digits);
     public static float SingleRound (float a) => float.Round(a);
     public static float SingleCos (float angle) => float.Cos(angle);
     public static float SingleSin (float angle) => float.Sin(angle);
@@ -34,7 +38,6 @@ public static class Maths {
     public static int Int32Clamp (int value, int min, int max) => int.Clamp(value, min, max);
     public static int Int32Max (int a, int b) => int.Max(a, b);
     public static int Int32Min (int a, int b) => int.Min(a, b);
-    public static long Int64Max (long a, long b) => long.Max(a, b);
 #else
     public const double dPi = Math.PI;
     public const double dTau = Math.Tau;
@@ -57,6 +60,7 @@ public static class Maths {
     public static double DoubleSin (double angle) => Math.Sin(angle);
     public static double DoubleSqrt (double a) => Math.Sqrt(a);
     public static double DoubleTan (double angle) => Math.Tan(angle);
+    public static double DoubleExp (double a) => Math.Exp(a);
     public static float SingleAbs (float a) => Math.Abs(a);
     public static float SingleClamp (float value, float min, float max) => Math.Clamp(value, min, max);
     public static float SingleRound (float a, int digits) => (float)Math.Round(a, digits);

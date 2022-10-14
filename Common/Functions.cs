@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using static Common.Maths;
 
 [Flags]
 public enum EnumLinesOption {
@@ -15,6 +14,12 @@ public enum EnumLinesOption {
     SkipBlankOrWhitespace = 2,
 }
 public static class Functions {
+
+    public static int ApplyDeadzone (int value, int deadzone) {
+        if (deadzone < 0)
+            throw new ArgumentOutOfRangeException(nameof(deadzone), "may not be negative");
+        return value < 0 ? Maths.Int32Min(value + deadzone, 0) : Maths.Int32Max(value - deadzone, 0);
+    }
 
     public static float AreaInSomething (Vector3 v, Vector2i screen, float fieldOfView) {
         if (v.X < 0 || v.Y < 0)
@@ -250,7 +255,7 @@ public static class Functions {
     }
 
     private static void PushAscii (Span<byte> a, ref long int64, ref int offset) {
-        (int64, var d) = Int64DivRem(int64, 10);
+        (int64, var d) = Maths.Int64DivRem(int64, 10);
         a[--offset] = (byte)(d + '0');
     }
 
@@ -270,15 +275,15 @@ public static class Functions {
     public static float ModuloTwoPi (ref float angle, float delta) {
         angle += delta;
         while (angle < 0)
-            angle += fTau;
-        while (angle > fTau)
-            angle -= fTau;
+            angle += Maths.fTau;
+        while (angle > Maths.fTau)
+            angle -= Maths.fTau;
         return angle;
     }
 
     public static double ModuloTwoPi (double angle, double delta) {
-        var d = delta < 0 ? dTau - (-delta % dTau) : (delta % dTau);
-        return (angle + d) % dTau;
+        var d = delta < 0 ? Maths.dTau - (-delta % Maths.dTau) : (delta % Maths.dTau);
+        return (angle + d) % Maths.dTau;
     }
 
     public static (int min, float max) Extrema (int[] ints) {

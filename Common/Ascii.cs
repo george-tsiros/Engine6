@@ -66,7 +66,7 @@ public sealed unsafe class Ascii:IDisposable {
     public static implicit operator string (Ascii self) =>
         self.ToString();
 
-    public override string ToString() => 
+    public override string ToString () =>
         0 != bytes ? Encoding.ASCII.GetString((byte*)bytes, Length) : throw new ObjectDisposedException(nameof(Ascii));
 
     /// <summary>EXCLUDES TERMINATING NULL BYTE</summary>
@@ -80,14 +80,14 @@ public sealed unsafe class Ascii:IDisposable {
             bytes = 0;
         }
     }
-    
+
     public static bool operator != (Ascii left, Ascii right) {
         if (left.Handle == right.Handle)
             return false;
 
         if (left.Length != right.Length)
             return true;
-        
+
         for (var i = 0; i < left.Length; ++i)
             if (left[i] != right[i])
                 return true;
@@ -147,5 +147,14 @@ public sealed unsafe class Ascii:IDisposable {
         if (0 == value)
             throw new ArgumentOutOfRangeException("no.", nameof(value));
         return ((byte*)bytes)[i] = value;
+    }
+
+    public override bool Equals (object obj) =>
+        obj is Ascii ascii && ascii == this;
+
+    public override int GetHashCode () {
+        var x = new HashCode();
+        x.AddBytes(AsSpan());
+        return x.ToHashCode();
     }
 }
