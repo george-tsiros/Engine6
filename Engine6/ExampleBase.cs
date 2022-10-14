@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using Common;
 using System.Numerics;
 

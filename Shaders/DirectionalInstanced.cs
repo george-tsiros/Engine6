@@ -21,19 +21,19 @@ public class DirectionalInstanced:Program {
 
     public Attrib<Vector4> VertexPosition { get; }
 
-    private readonly int lightDirection;
-    public void LightDirection (in Vector4 v) => Uniform(lightDirection, v);
-
     private readonly int projection;
     public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
 
+    private readonly int lightDirection;
+    public void LightDirection (in Vector4 v) => Uniform(lightDirection, v);
+
     public DirectionalInstanced () {
+        lightDirection = GetUniformLocation(this, nameof(lightDirection));
         view = GetUniformLocation(this, nameof(view));
         projection = GetUniformLocation(this, nameof(projection));
-        lightDirection = GetUniformLocation(this, nameof(lightDirection));
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         VertexNormal = GetAttribLocation(this, "vertexNormal");
         Model = GetAttribLocation(this, "model");

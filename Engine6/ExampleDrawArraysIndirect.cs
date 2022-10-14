@@ -1,4 +1,4 @@
-﻿namespace Engine6;
+namespace Engine6;
 using Common;
 using Gl;
 using static Gl.GlContext;
@@ -13,10 +13,10 @@ public class ExampleDrawArraysIndirect:ExampleBase {
     private BufferObject<DrawArraysIndirectCommand> commandBuffer;
 
     private static readonly DrawArraysIndirectCommand[] Commands = {
-        new() { VertexCount = 6, InstanceCount = 1, First = 0, BaseInstance = 0,  },
-        new() { VertexCount = 12, InstanceCount = 1, First = 0, BaseInstance = 0,  },
-        new() { VertexCount = 15, InstanceCount = 1, First = 0, BaseInstance = 0,  },
-        new() { VertexCount = 18, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+        new() { VertexCount = 3, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+        new() { VertexCount = 3, InstanceCount = 1, First = 3, BaseInstance = 0,  },
+        new() { VertexCount = 3, InstanceCount = 1, First = 6, BaseInstance = 0,  },
+        new() { VertexCount = 3, InstanceCount = 1, First = 9, BaseInstance = 0,  },
     };
 
     public ExampleDrawArraysIndirect () {
@@ -48,6 +48,6 @@ public class ExampleDrawArraysIndirect:ExampleBase {
         program.Model(Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0));
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
         program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
-        DrawArraysIndirect(Primitive.Triangles, 3);
+        DrawArraysIndirect(Primitive.Triangles, 0);
     }
 }
