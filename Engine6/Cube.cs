@@ -74,7 +74,7 @@ static class Cube {
         12, 7, 6, 6, 11, 12,
         14, 9, 8, 8, 13, 14,
     };
-    internal static readonly IReadOnlyList<Vector4> Normals = new Vector4[] { Vector4.UnitX, -Vector4.UnitX, Vector4.UnitY, -Vector4.UnitY, Vector4.UnitZ, -Vector4.UnitZ, };
+    internal static readonly IReadOnlyList<Vector3> Normals = new Vector3[] { Vector3.UnitX, -Vector3.UnitX, Vector3.UnitY, -Vector3.UnitY, Vector3.UnitZ, -Vector3.UnitZ, };
     internal static readonly IReadOnlyList<int> NormalIndices = new int[] { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, };
 
 }

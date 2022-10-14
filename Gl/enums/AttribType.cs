@@ -12,4 +12,5 @@ public enum AttribType {
     Vector2 = Const.FLOAT_VEC2,
     Vector3 = Const.FLOAT_VEC3,
     Vector4 = Const.FLOAT_VEC4,
+    Matrix4x4 = Const.FLOAT_MAT4,
 }

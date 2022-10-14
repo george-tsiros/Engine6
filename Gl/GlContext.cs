@@ -33,6 +33,7 @@ public sealed unsafe class GlContext:IDisposable {
     private const string WrongContextVersion = "requested {0} got {1}";
     private const string GetOpenglHandleFailed = $"failed to get handle for {opengl32}";
     private const string NoElementArrayBound = "nothing bound to element array buffer binding";
+    private const string NoIndirectArrayBound = "nothing bound to indirect array buffer binding";
     private const string ZeroLength = "zero length?";
 
     //EXPERIMENT FOR CALLING THROUGH FUNCTIONS GENERATED AT RUNTIME
@@ -189,11 +190,23 @@ public sealed unsafe class GlContext:IDisposable {
             glMultiDrawArrays((int)mode, p, q, calls);
     }
 
-    public unsafe static void MultiDrawElementsIndirect (Primitive mode, ReadOnlySpan<DrawElementsIndirectCommand> indirect) {
+    public static void MultiDrawElementsIndirect (Primitive mode, ReadOnlySpan<DrawElementsIndirectCommand> indirect) {
         if (0 == GetInteger(Const.ELEMENT_ARRAY_BUFFER_BINDING))
             throw new InvalidOperationException(NoElementArrayBound);
         fixed (DrawElementsIndirectCommand* p = indirect)
             glMultiDrawElementsIndirect((int)mode, Const.UNSIGNED_INT, p, indirect.Length, 0);
+    }
+
+    public static void DrawElements (Primitive mode, int count) {
+        if (0 == GetInteger(Const.ELEMENT_ARRAY_BUFFER_BINDING))
+            throw new InvalidOperationException(NoElementArrayBound);
+        glDrawElements((int)mode, count, Const.UNSIGNED_INT, null);
+    }
+
+    public static void DrawArraysIndirect (Primitive mode, int firstElementIndex) {
+        if (0 == GetInteger(Const.DRAW_INDIRECT_BUFFER_BINDING))
+            throw new InvalidOperationException(NoIndirectArrayBound);
+        glDrawArraysIndirect((int)mode, 4 * sizeof(int) * firstElementIndex);
     }
 
     public static int CreateTexture2D () {
@@ -246,7 +259,7 @@ public sealed unsafe class GlContext:IDisposable {
         return f(program, (byte*)str.Handle);
     }
 
-    public unsafe static float GetFloatv (FloatParameter parameter) {
+    public static float GetFloatv (FloatParameter parameter) {
         float f = 0;
         glGetFloatv((int)parameter, &f);
         return f;
@@ -255,7 +268,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static void PointSize (float f) =>
         glPointSize(f);
 
-    public unsafe static (float xrange, float yrange) GetPointSizeRange () {
+    public static (float xrange, float yrange) GetPointSizeRange () {
         float* f = stackalloc float[2];
         glGetFloatv(Const.POINT_SIZE_RANGE, f);
         return (f[0], f[1]);
@@ -634,7 +647,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glStencilOpSeparate;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glUniform3i;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glViewport;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void*, void> glDrawElements;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void*, void> glDrawElements;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glDrawArrays;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glStencilFunc;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, void> glStencilOp;
@@ -876,7 +889,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glDrawTransformFeedback;
     //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glEndQueryIndexed;
     //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, int, void> glPatchParameteri;
-    //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, void*, void> glDrawArraysIndirect;
+    [GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<int, nint, void> glDrawArraysIndirect;
     //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<void> glPauseTransformFeedback;
     //[GlVersion(4, 0)] private static delegate* unmanaged[Stdcall]<void> glResumeTransformFeedback;
 

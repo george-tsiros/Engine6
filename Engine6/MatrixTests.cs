@@ -31,7 +31,7 @@ public class MatrixTests:GlWindow {
         vertexCount = VerticesPerTriangle * TrianglesPerFace * CubeFaceCount;
 
         Span<Vector4> modelVertices = new Vector4[vertexCount];
-        Span<Vector4> modelNormals = new Vector4[vertexCount];
+        Span<Vector3> modelNormals = new Vector3[vertexCount];
         Debug.Assert(Cube.Indices.Count == vertexCount);
         Debug.Assert(Cube.NormalIndices.Count == vertexCount);
         for (var i = 0; i < vertexCount; ++i) {
@@ -54,7 +54,7 @@ public class MatrixTests:GlWindow {
     }
     protected override Key[] AxisKeys => _AxisKeys;
     private BufferObject<Vector2> uiBuffer;
-    private BufferObject<Vector4> normals;
+    private BufferObject<Vector3> normals;
     private BufferObject<Vector4> vertices;
     private Directional program;
     private int vertexCount;

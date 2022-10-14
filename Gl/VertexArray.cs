@@ -13,7 +13,7 @@ public class VertexArray:OpenglObject {
         Id = CreateVertexArray();
     }
 
-    public void Assign<T> (BufferObject<T> buffer, int location, int divisor = 0) where T : unmanaged {
+    public void Assign<T> (BufferObject<T> buffer, Attrib<T> location, int divisor = 0) where T : unmanaged {
         Debug.Assert(BufferTarget.Array == buffer.Target);
         BindVertexArray(this);
         buffer.Bind();

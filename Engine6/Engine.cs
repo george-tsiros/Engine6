@@ -1,3 +1,3 @@
 using Engine6;
-using ExampleDrawArrays window = new();
+using ExampleDrawArraysIndirect window = new();
 window.Run();

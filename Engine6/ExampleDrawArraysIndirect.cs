@@ -1,39 +1,32 @@
-namespace Engine6;
+﻿namespace Engine6;
 using Common;
 using Gl;
 using static Gl.GlContext;
 using System.Numerics;
 using Shaders;
-using Win32;
 
-public class ExampleDrawArrays:ExampleBase {
+public class ExampleDrawArraysIndirect:ExampleBase {
 
-    private Directional program;
+    private FlatColor program;
     private VertexArray va;
     private BufferObject<Vector4> vertexBuffer;
-    private BufferObject<Vector3> normalBuffer;
+    private BufferObject<DrawArraysIndirectCommand> commandBuffer;
 
-    public ExampleDrawArrays () {
+    private static readonly DrawArraysIndirectCommand[] Commands = {
+        new() { VertexCount = 6, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+        new() { VertexCount = 12, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+        new() { VertexCount = 15, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+        new() { VertexCount = 18, InstanceCount = 1, First = 0, BaseInstance = 0,  },
+    };
+
+    public ExampleDrawArraysIndirect () {
         Reusables.Add(va = new());
         Reusables.Add(program = new());
         Reusables.Add(vertexBuffer = new(ThreeFaces));
-        Reusables.Add(normalBuffer = new(ThreeFacesNormals));
         va.Assign(vertexBuffer, program.VertexPosition);
-        va.Assign(normalBuffer, program.VertexNormal);
-        UseProgram(program);
-    }
 
-    int startAt = 0;
-
-    protected override void OnKeyUp (Key key) {
-        switch (key) {
-            case Key.D1:
-            case Key.D2:
-            case Key.D3:
-                startAt = (key - Key.D1) * 6;
-                return;
-        }
-        base.OnKeyUp(key);
+        Reusables.Add(commandBuffer = new(Commands, BufferTarget.DrawIndirect));
+        commandBuffer.Bind();
     }
 
     protected override void Render () {
@@ -43,7 +36,7 @@ public class ExampleDrawArrays:ExampleBase {
         var pitch = yActual * Maths.fPi / 3 / (CursorCap - Deadzone);
         var size = ClientSize;
         var aspectRatio = (float)size.X / size.Y;
-
+        var rotation = Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0);
         Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
@@ -51,12 +44,10 @@ public class ExampleDrawArrays:ExampleBase {
         UseProgram(program);
         Enable(Capability.DepthTest);
         Enable(Capability.CullFace);
-        program.View(Matrix4x4.CreateTranslation(0, 0, -15));
-        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
-        program.LightDirection(-Vector4.UnitZ);
         program.Color(Vector4.One);
         program.Model(Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0));
-        DrawArrays(Primitive.Triangles, startAt, 6);
+        program.View(Matrix4x4.CreateTranslation(0, 0, -15));
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
+        DrawArraysIndirect(Primitive.Triangles, 3);
     }
 }
-

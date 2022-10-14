@@ -183,7 +183,6 @@ internal static class Const {
     //internal const int DRAW_BUFFER7 = 0x882C;
     //internal const int DRAW_BUFFER8 = 0x882D;
     //internal const int DRAW_BUFFER9 = 0x882E;
-    //internal const int DRAW_INDIRECT_BUFFER_BINDING = 0x8F43;
     //internal const int DRIVER_UUID_EXT = 0x9598;
     //internal const int DUAL_ALPHA12_SGIS = 0x8112;
     //internal const int DUAL_ALPHA16_SGIS = 0x8113;
@@ -998,6 +997,7 @@ internal static class Const {
     internal const int DOUBLE_VEC3 = 0x8FFD;
     internal const int DOUBLE_VEC4 = 0x8FFE;
     internal const int DRAW_FRAMEBUFFER = 0x8CA9;
+    internal const int DRAW_INDIRECT_BUFFER_BINDING = 0x8F43;
     internal const int DRAW_INDIRECT_BUFFER = 0x8F3F;
     internal const int DYNAMIC_STORAGE_BIT = 0x0100;
     internal const int ELEMENT_ARRAY_BUFFER = 0x8893;

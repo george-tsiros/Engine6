@@ -17,6 +17,11 @@ public class Glow:Program {
 
     public Attrib<Vector4> VertexPosition { get; }
 
+    public Attrib<Vector2> VertexUV { get; }
+
+    private readonly int lightDirection;
+    public void LightDirection (in Vector4 v) => Uniform(lightDirection, v);
+
     private readonly int model;
     public void Model (in Matrix4x4 v) => Uniform(model, v);
 
@@ -26,14 +31,12 @@ public class Glow:Program {
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
 
-    private readonly int lightDirection;
-    public void LightDirection (in Vector4 v) => Uniform(lightDirection, v);
-
     public Glow () {
-        lightDirection = GetUniformLocation(this, nameof(lightDirection));
         view = GetUniformLocation(this, nameof(view));
         projection = GetUniformLocation(this, nameof(projection));
         model = GetUniformLocation(this, nameof(model));
+        lightDirection = GetUniformLocation(this, nameof(lightDirection));
+        VertexUV = GetAttribLocation(this, "vertexUV");
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         VertexNormal = GetAttribLocation(this, "vertexNormal");
         Color0 = GetFragDataLocation(this, "color0");
