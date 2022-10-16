@@ -1,6 +1,9 @@
 namespace Win32;
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System;
+using System.Text;
 using Common;
 
 public static class Kernel32 {
@@ -29,18 +32,19 @@ public static class Kernel32 {
         if (name is null)
             return GetModuleHandle_(0);
         using Ascii n = new(name);
-        return GetModuleHandle_(n.Handle);
+        return GetModuleHandle_(n);
     }
 
     public static void GetModuleHandleEx (uint flags, string moduleName, out nint module) {
-        using Ascii name = new(moduleName);
         module = 0;
-        if (!GetModuleHandleExA(flags, name.Handle, ref module))
+        using Ascii handle = new(moduleName);
+        if (!GetModuleHandleExA(flags, handle, ref module))
             throw new WinApiException(nameof(GetModuleHandleEx));
     }
 
-    public static nint GetProcAddress (nint module, string name) {
-        using Ascii n = new(name);
-        return GetProcAddress_(module, n.Handle);
+    //not performance critical
+    public unsafe static nint GetProcAddress (nint module, string name) {
+        using Ascii handle = new(name);
+        return GetProcAddress_(module, handle);
     }
 }

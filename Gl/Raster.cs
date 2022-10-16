@@ -272,7 +272,7 @@ public class Raster:IDisposable {
     }
 
 
-    public void DrawStringU8 (in Ascii str, PixelFont font, int x, int y, byte fore = 0xff, byte back = 0) {
+    public void DrawStringU8 (in string str, PixelFont font, int x, int y, byte fore = 0xff, byte back = 0) {
         NotDisposed();
         var l = str.Length;
         if (0 == l)
@@ -282,11 +282,15 @@ public class Raster:IDisposable {
             return;
         if (y < 0 || Height <= y + font.Height)
             return;
-        for (var i = 0; i < l && x < Width; ++i, x += font.Width)
-            BlitU8(str[i], font, x, y, fore, back);
+        for (var i = 0; i < l && x < Width; ++i, x += font.Width) {
+            var c = str[i];
+            if (255 < c)
+                throw new ArgumentOutOfRangeException(nameof(str), "not ascii-only");
+            BlitU8(c, font, x, y, fore, back);
+        }
     }
 
-    private void BlitU8 (byte ascii, PixelFont font, int x, int y, byte fore, byte back) {
+    private void BlitU8 (char ascii, PixelFont font, int x, int y, byte fore, byte back) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;
@@ -304,7 +308,7 @@ public class Raster:IDisposable {
 
 
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawStringU32 (in ReadOnlySpan<byte> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
+    public void DrawStringU32 (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
         NotDisposed();
         var (textWidth, textHeight) = font.SizeOf(str);
         if (textHeight != font.Height)
@@ -322,6 +326,8 @@ public class Raster:IDisposable {
         // Height - 1           | 0             | (Height - 1) * Width
         //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
         foreach (var b in str) {
+            if (255 < b)
+                throw new ArgumentOutOfRangeException(nameof(str), "not ascii");
             if (Width <= x)
                 return;
             Blit(b, font, x, y, fore, back);
@@ -329,7 +335,7 @@ public class Raster:IDisposable {
         }
     }
 
-    private unsafe void Blit (byte ascii, PixelFont font, int x, int y, uint fore, uint back) {
+    private unsafe void Blit (char ascii, PixelFont font, int x, int y, uint fore, uint back) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;

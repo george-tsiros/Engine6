@@ -9,30 +9,9 @@ using Win32;
 using System.Diagnostics;
 
 public class ExampleDrawArrays:ExampleBase {
-    static readonly double[] Heights = { 0.0e0, 1.1e3, 2.0e3, 3.2e3, 4.7e3, 5.1e3, 7.1e3, };
-    static readonly (double density, double temperature)[] DensitiesTemperatures = { 
-        (1.2250, 288.15),
-        (0.36391, 216.65),
-        (0.08803, 216.65),
-        (0.01322, 228.65),
-        (0.00143, 270.65),
-        (0.00086, 270.65),
-        (0.000064, 214.65),
-    };
 
-    private static double Density (double h) {
-        const double R = 8.3144598;
-        const double g0 = 9.80665;
-        const double M = 0.0289644;
-        Debug.Assert(0 <= h);
-        var b = 0;
-        while (b < Heights.Length && Heights[b] < h) 
-            ++b;
-        if (Heights.Length == b)
-            return 0;
-        var (d, t) = DensitiesTemperatures[b];
-        return d * Maths.DoubleExp(-g0 * M * (h - Heights[b]) / (R * t));
-    }
+    private static double Density (double h) => 
+        1.227726 - (1.23707613953) * (1 - Maths.DoubleExp(-0.001140971 * h));
 
     private static double GravAccel (double mass, double distance) {
         const double G = 6.6743e-11; // m^3 kg^-1 s^-2
@@ -55,7 +34,6 @@ public class ExampleDrawArrays:ExampleBase {
     private Vector2i cursor;
     private static readonly PixelFont UiFont = new(@"data\Spleen_8x16.txt");
     private static readonly Vector2i UiSize = new(40 * UiFont.Width, 10 * UiFont.Height);
-    private static readonly Ascii to = new(" => ");
 
     private const int CursorCap = 1000;
     private const int Deadzone = 50;
@@ -151,11 +129,11 @@ public class ExampleDrawArrays:ExampleBase {
         }
         uiRaster.ClearU8();
         var height = camera.Position.Magnitude() - PlanetRadius;
-        using var heightString = ((int)height).ToAscii();
+        var heightString = ((int)height).ToString();
         uiRaster.DrawStringU8(heightString, UiFont, 0, 0);
-        using var throttleString = ((int)(100 * throttle)).ToAscii();
+        var throttleString = ((int)(100 * throttle)).ToString();
         uiRaster.DrawStringU8(throttleString, UiFont, 0, UiFont.Height);
-        using var densityString = Density(height).ToAscii();
+        var densityString = Density(height).ToString();
         uiRaster.DrawStringU8(densityString, UiFont, 0, 2 * UiFont.Height);
         uiSampler.Upload(uiRaster);
         UseProgram(uiProgram);

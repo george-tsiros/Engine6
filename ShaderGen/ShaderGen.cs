@@ -151,13 +151,13 @@ public class {0}:Program {{
 
         var outCount = GetProgramInterfaceiv(program, ProgramInterface.ProgramOutput, InterfaceParameter.ActiveResources);
         for (var i = 0; i < outCount; ++i) {
-            using var name = GetProgramResourceName(program, i);
+            var name = GetProgramResourceName(program, i);
 
             // needs improvement
             if (2 < name.Length && 'g' == name[0] && 'l' == name[1] && '_' == name[2])
                 continue;
 
-            using var propertyName = UppercaseFirst(name);
+            var propertyName = UppercaseFirst(name);
             Debug.Assert(name != propertyName);
             f.Write("    public FragOut {0} {{ get; }}\n\n", propertyName);
             ctorStatements.Push(string.Format("{0} = GetFragDataLocation(this, \"{1}\");\n", propertyName, name));

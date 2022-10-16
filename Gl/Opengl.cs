@@ -19,7 +19,7 @@ internal static class Opengl {
 
     internal static nint GetProcAddress (string name) {
         using Ascii n = new(name);
-        return wglGetProcAddress(n.Handle);
+        return wglGetProcAddress(n);
     }
 
     [DllImport(opengl32)]

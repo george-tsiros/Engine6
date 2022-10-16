@@ -205,8 +205,8 @@ public class GlWindow:Window {
 
     private void RenderGui () {
         guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
-        using Ascii t = new(FramesRendered.ToString());
-        guiRaster.DrawStringU32(t.AsSpan(), PixelFont, 3, 3, ~0u, 0x8080807fu);
+        var t = FramesRendered.ToString();
+        guiRaster.DrawStringU32(t, PixelFont, 3, 3, ~0u, 0x8080807fu);
         guiSampler.Upload(guiRaster);
 
         BindDefaultFramebuffer(FramebufferTarget.Draw);

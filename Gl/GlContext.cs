@@ -57,7 +57,7 @@ public sealed unsafe class GlContext:IDisposable {
         drawArrays();
     }
 
-    public static IEnumerable<Ascii> GetExtensions () {
+    public static IEnumerable<string> GetExtensions () {
         for (var i = GetInteger(Const.NUM_EXTENSIONS); --i <= 0;)
             yield return GetStringi(Const.EXTENSIONS, i);
     }
@@ -66,8 +66,8 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Uniform (int uniform, Matrix4x4 m) =>
         glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
 
-    public static Ascii GetStringi (int name, int index) =>
-        new(glGetStringi(name, index));
+    public static string GetStringi (int name, int index) =>
+        Marshal.PtrToStringAnsi(glGetStringi(name, index));
 
     public static int GetInteger (int name) {
         var i = 0;
@@ -144,7 +144,7 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static int GetFragDataLocation (int program, string name) {
         using Ascii n = new(name);
-        return glGetFragDataLocation(program, (byte*)n.Handle);
+        return glGetFragDataLocation(program, n);
     }
 
     //public static int GetProgramResourceIndex (int program, ProgramInterface interfaceName, Ascii name) {
@@ -159,7 +159,7 @@ public sealed unsafe class GlContext:IDisposable {
     //    return glGetProgramResourceLocationIndex(program, (int)ProgramInterface.ProgramOutput, (byte*)name.Handle);
     //}
 
-    public static Ascii GetProgramResourceName (int program, int index) {
+    public static string GetProgramResourceName (int program, int index) {
         var maxLength = 0;
         glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
         if (maxLength <= 0)
@@ -170,7 +170,7 @@ public sealed unsafe class GlContext:IDisposable {
         fixed (byte* p = bytes)
             glGetProgramResourceName(program, (int)ProgramInterface.ProgramOutput, index, maxLength, &actualLength, p);
         Debug.Assert(0 < actualLength);
-        return new(bytes[..^1]);
+        return new(Encoding.ASCII.GetString(bytes[..^1]));
     }
 
     public static void ActiveTexture (int i) {
@@ -254,9 +254,9 @@ public sealed unsafe class GlContext:IDisposable {
         return Encoding.ASCII.GetString(bytes);
     }
 
-    private static int GetLocation (Program program, string name, delegate* unmanaged[Stdcall]<int, byte*, int> f) {
-        using Ascii str = new(name);
-        return f(program, (byte*)str.Handle);
+    private static int GetLocation (Program program, string name, delegate* unmanaged[Stdcall]<int, nint, int> f) {
+        using Ascii handle = new(name);
+        return f(program, handle);
     }
 
     public static float GetFloatv (FloatParameter parameter) {
@@ -347,8 +347,10 @@ public sealed unsafe class GlContext:IDisposable {
         }
     }
 
-    public static int GetuniformBlockIndex (int program, Ascii name) =>
-        glGetUniformBlockIndex(program, (byte*)name.Handle);
+    public static int GetuniformBlockIndex (int program, string name) {
+        using Ascii n = new(name);
+        return glGetUniformBlockIndex(program, n);
+    }
 
     public static int GetActiveUniformBlockiv (int program, int blockIndex, UniformBlockParameter name) {
         var i = 0;
@@ -356,7 +358,7 @@ public sealed unsafe class GlContext:IDisposable {
         return i;
     }
 
-    public static Ascii GetActiveUniformBlockName (int program, int blockIndex) {
+    public static string GetActiveUniformBlockName (int program, int blockIndex) {
         var reportedLength = GetActiveUniformBlockiv(program, blockIndex, UniformBlockParameter.NameLength);
         Span<byte> bytes = stackalloc byte[reportedLength];
 
@@ -364,7 +366,7 @@ public sealed unsafe class GlContext:IDisposable {
         fixed (byte* p = bytes)
             glGetActiveUniformBlockName(program, blockIndex, reportedLength, &actualLength, p);
         Debug.Assert(actualLength + 1 == reportedLength);
-        return new(bytes[..^1]);
+        return Encoding.ASCII.GetString(bytes[..^1]);
     }
 
     public static void UniformBlockBinding (int program, int index, int binding) =>
@@ -528,8 +530,8 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, float, void> glPolygonOffset;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, void> glLineWidth;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<float, void> glPointSize;
-    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetAttribLocation;
-    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformLocation;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, nint, int> glGetAttribLocation;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, nint, int> glGetUniformLocation;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glGetBooleanv;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glVertexAttrib4Nubv;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glVertexAttrib4ubv;
@@ -721,7 +723,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x2fv;
     //[GlVersion(2, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte, float*, void> glUniformMatrix4x3fv;
     ///<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetFragDataLocation.xhtml"/></summary>
-    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetFragDataLocation;
+    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, nint, int> glGetFragDataLocation;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte*, void> glVertexAttribI4ubv;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte, byte, byte, byte, void> glColorMaski;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, byte> glIsFramebuffer;
@@ -805,7 +807,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, void> glGenerateMipmap;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndConditionalRender;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<void> glEndTransformFeedback;
-    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, byte*, int> glGetUniformBlockIndex;
+    [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, nint, int> glGetUniformBlockIndex;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, byte**, int*, void> glGetUniformIndices;
     //[GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int*, int, int*, void> glGetActiveUniformsiv;
     [GlVersion(3, 1)] private static delegate* unmanaged[Stdcall]<int, int, int, int*, byte*, void> glGetActiveUniformBlockName;

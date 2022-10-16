@@ -165,29 +165,11 @@ public static class Functions {
         return new(chars);
     }
 
-    public static Ascii LowercaseFirst (Ascii str) {
-        Span<byte> bytes = stackalloc byte[str.Length];
-        str.AsSpan().CopyTo(bytes);
-        var c = bytes[0];
-        if ('A' <= c && c <= 'Z')
-            bytes[0] = (byte)(c | 32);
-        return new(bytes);
-    }
-
     public static string UppercaseFirst (string str) {
         Span<char> chars = stackalloc char[str.Length];
         str.AsSpan().CopyTo(chars);
         chars[0] = char.ToUpper(chars[0]);
         return new(chars);
-    }
-
-    public static Ascii UppercaseFirst (Ascii str) {
-        Span<byte> bytes = stackalloc byte[str.Length];
-        str.AsSpan().CopyTo(bytes);
-        var c = bytes[0];
-        if ('a' <= c && c <= 'z')
-            bytes[0] = (byte)(c & 0xdf);
-        return new(bytes);
     }
 
     public static IEnumerable<string> ToFlags<T> (T value) where T : Enum {
