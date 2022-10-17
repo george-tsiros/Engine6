@@ -6,7 +6,7 @@ using System;
 using System.Text;
 using Common;
 
-public static class Kernel32 {
+public static partial class Kernel32 {
     private const string dll = nameof(Kernel32) + ".dll";
 
     [DllImport(dll, EntryPoint = "GetProcAddress", ExactSpelling = true, SetLastError = true)]
@@ -18,9 +18,9 @@ public static class Kernel32 {
     [DllImport(dll, EntryPoint = "GetModuleHandleA", ExactSpelling = true, SetLastError = true)]
     private extern static nint GetModuleHandle_ (nint moduleName);
 
-    [DllImport(dll, SetLastError = true)]
+    [DllImport(dll, EntryPoint = "GetModuleHandleExA", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetModuleHandleExA (uint dwFlags, nint lpModuleName, ref nint module);
+    private static extern bool GetModuleHandleEx (uint dwFlags, nint lpModuleName, ref nint module);
 
     //[DllImport(dll)]
     //private unsafe extern static void OutputDebugStringA (byte* p);
@@ -38,7 +38,7 @@ public static class Kernel32 {
     public static void GetModuleHandleEx (uint flags, string moduleName, out nint module) {
         module = 0;
         using Ascii handle = new(moduleName);
-        if (!GetModuleHandleExA(flags, handle, ref module))
+        if (!GetModuleHandleEx(flags, handle, ref module))
             throw new WinApiException(nameof(GetModuleHandleEx));
     }
 

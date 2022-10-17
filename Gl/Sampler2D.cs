@@ -53,6 +53,7 @@ public class Sampler2D:OpenglObject {
         TextureMaxLevel(this, 0);
         Wrap = Wrap.ClampToEdge;
     }
+
     public unsafe static Sampler2D FromFile (string filepath) {
         using var raster = Raster.FromFile(filepath);
         if (raster.BytesPerChannel != 1)
@@ -61,6 +62,7 @@ public class Sampler2D:OpenglObject {
         texture.Upload(raster);
         return texture;
     }
+    
     public unsafe void Upload (Raster raster) {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
@@ -71,6 +73,7 @@ public class Sampler2D:OpenglObject {
         fixed (byte* ptr = raster.Pixels)
             TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormatWith(raster.Channels), Const.UNSIGNED_BYTE, ptr);
     }
+    
     private static readonly TextureFormat[] textureFormats = { TextureFormat.R8, TextureFormat.Rg8, TextureFormat.Rgb8, TextureFormat.Rgba8 };
     private static TextureFormat TextureFormatWith (int channels) => 1 <= channels && channels <= 4 ? textureFormats[channels - 1] : throw new ApplicationException();
     private static readonly PixelFormat[] pixelFormats = { PixelFormat.Red, PixelFormat.Rg, PixelFormat.Rgb, PixelFormat.Rgba };

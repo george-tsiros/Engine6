@@ -129,7 +129,10 @@ public sealed unsafe class GlContext:IDisposable {
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     public static void Viewport (in Vector2i location, in Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
     public static void NamedFramebufferDrawBuffer (Framebuffer framebuffer, Renderbuffer renderbuffer) => glNamedFramebufferDrawBuffer(framebuffer, renderbuffer);
-
+    public static void ReadBuffer (DrawBufferComponent mode) => glReadBuffer((int)mode);
+    public static void CopyTexImage2D (Vector2i size) {
+        glCopyTexImage2D(Const.TEXTURE_2D, 0, Const.DEPTH_COMPONENT, 0, 0, size.X, size.Y, 0);
+    }
     public static void BindDefaultFramebuffer (FramebufferTarget target) =>
         glBindFramebuffer((int)target, 0);
 
@@ -630,7 +633,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void*, void> glCompressedTexSubImage2D;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void*, void> glTexImage2D;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void*, void> glTexSubImage2D;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void> glCopyTexImage2D;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void> glCopyTexImage2D;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void> glCopyTexSubImage2D;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, void*, void> glCompressedTexImage2D;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, void*, void> glTexImage1D;
@@ -707,7 +710,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glFrontFace;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glLinkProgram;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glLogicOp;
-    //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glReadBuffer;
+    [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glReadBuffer;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glStencilMask;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glUseProgram;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, void> glValidateProgram;

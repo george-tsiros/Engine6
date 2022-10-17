@@ -23,7 +23,6 @@ internal static class Const {
     //internal const int AUX1 = 0x040A;
     //internal const int AUX2 = 0x040B;
     //internal const int AUX3 = 0x040C;
-    //internal const int BACK = 0x0405;
     //internal const int BACK_LEFT = 0x0402;
     //internal const int BACK_RIGHT = 0x0403;
     //internal const int BGR_INTEGER = 0x8D9A;
@@ -148,7 +147,6 @@ internal static class Const {
     //internal const int DEPTH = 0x1801;
     //internal const int DEPTH_CLAMP = 0x864F;
     //internal const int DEPTH_CLEAR_VALUE = 0x0B73;
-    //internal const int DEPTH_COMPONENT = 0x1902;
     //internal const int DEPTH_COMPONENT32F_NV = 0x8DAB;
     //internal const int DEPTH_RANGE = 0x0B70;
     //internal const int DEPTH_STENCIL = 0x84F9;
@@ -242,7 +240,6 @@ internal static class Const {
     //internal const int FRAMEBUFFER_SRGB = 0x8DB9;
     //internal const int FRAMEZOOM_FACTOR_SGIX = 0x818C;
     //internal const int FRAMEZOOM_SGIX = 0x818B;
-    //internal const int FRONT = 0x0404;
     //internal const int FRONT_AND_BACK = 0x0408;
     //internal const int FRONT_FACE = 0x0B46;
     //internal const int FRONT_LEFT = 0x0400;
@@ -919,6 +916,7 @@ internal static class Const {
     internal const int ARRAY_BUFFER_BINDING = 0x8894;
     internal const int ATOMIC_COUNTER_BUFFER = 0x92C0;
     internal const int ATTACHED_SHADERS = 0x8B85;
+    internal const int BACK = 0x0405;
     internal const int BGR = 0x80E0;
     internal const int BGRA = 0x80E1;
     internal const int BLEND = 0x0BE2;
@@ -971,6 +969,7 @@ internal static class Const {
     internal const int DELETE_STATUS = 0x8B80;
     internal const int DEPTH_ATTACHMENT = 0x8D00;
     internal const int DEPTH_BUFFER_BIT = 0x0100;
+    internal const int DEPTH_COMPONENT = 0x1902;
     internal const int DEPTH_COMPONENT16 = 0x81A5;
     internal const int DEPTH_COMPONENT24 = 0x81A6;
     internal const int DEPTH_COMPONENT32 = 0x81A7;
@@ -1034,6 +1033,7 @@ internal static class Const {
     internal const int FRAMEBUFFER_INCOMPLETE_READ_BUFFER = 0x8CDC;
     internal const int FRAMEBUFFER_UNDEFINED = 0x8219;
     internal const int FRAMEBUFFER_UNSUPPORTED = 0x8CDD;
+    internal const int FRONT = 0x0404;
     internal const int GEOMETRY_INPUT_TYPE = 0x8917;
     internal const int GEOMETRY_OUTPUT_TYPE = 0x8918;
     internal const int GEOMETRY_VERTICES_OUT = 0x8916;

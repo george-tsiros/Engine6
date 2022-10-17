@@ -1,6 +1,8 @@
 namespace Gl;
 
 public enum DrawBufferComponent {
+    Front = Const.FRONT,
+    Back = Const.BACK,
     Color0 = Const.COLOR_ATTACHMENT0,
     Color1 = Const.COLOR_ATTACHMENT1,
     Color2 = Const.COLOR_ATTACHMENT2,

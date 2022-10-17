@@ -22,6 +22,7 @@ public sealed class Camera {
         var forward = Vector3d.Transform(-Vector3d.UnitZ, Orientation);
         Position += distance * forward;
     }
+
     public Matrix4d CreateView () =>
         Matrix4d.CreateTranslation(-Position) * Matrix4d.CreateFromQuaternion(Orientation);
 }
