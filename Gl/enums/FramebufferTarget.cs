@@ -1,7 +1,8 @@
 namespace Gl;
 
 public enum FramebufferTarget {
-    Read = Const.READ_FRAMEBUFFER,
-    Draw = Const.DRAW_FRAMEBUFFER,
-    Framebuffer = Const.FRAMEBUFFER,
+    READ_FRAMEBUFFER = Const.GL_READ_FRAMEBUFFER,
+    DRAW_FRAMEBUFFER = Const.GL_DRAW_FRAMEBUFFER,
+    FRAMEBUFFER = Const.GL_FRAMEBUFFER,
+    //FRAMEBUFFER_OES = Const.GL_FRAMEBUFFER_OES,
 }

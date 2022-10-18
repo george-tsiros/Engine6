@@ -4,8 +4,9 @@ using System;
 
 [Flags]
 public enum BufferBit {
-    Color = Const.COLOR_BUFFER_BIT,
-    Depth = Const.DEPTH_BUFFER_BIT,
-    Stencil = Const.STENCIL_BUFFER_BIT,
-    ColorDepth = Color | Depth,
+    DEPTH_BUFFER_BIT = Const.GL_DEPTH_BUFFER_BIT,
+    ACCUM_BUFFER_BIT = Const.GL_ACCUM_BUFFER_BIT,
+    STENCIL_BUFFER_BIT = Const.GL_STENCIL_BUFFER_BIT,
+    COLOR_BUFFER_BIT = Const.GL_COLOR_BUFFER_BIT,
+    ColorDepth = COLOR_BUFFER_BIT  | DEPTH_BUFFER_BIT,
 }

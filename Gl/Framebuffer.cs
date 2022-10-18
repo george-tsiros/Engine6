@@ -11,7 +11,7 @@ public class Framebuffer:OpenglObject {
     protected override Action<int> Delete =>
         DeleteFramebuffer;
 
-    public FramebufferStatus CheckStatus (FramebufferTarget target = FramebufferTarget.Framebuffer) =>
+    public FramebufferStatus CheckStatus (FramebufferTarget target = FramebufferTarget.FRAMEBUFFER) =>
         CheckNamedFramebufferStatus(this, target);
 
     public void Attach (Sampler2D texture, FramebufferAttachment attachment) =>

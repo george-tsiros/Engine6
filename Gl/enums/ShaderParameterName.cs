@@ -1,0 +1,9 @@
+namespace Gl;
+
+public enum ShaderParameterName {
+    SHADER_TYPE = Const.GL_SHADER_TYPE,
+    DELETE_STATUS = Const.GL_DELETE_STATUS,
+    COMPILE_STATUS = Const.GL_COMPILE_STATUS,
+    INFO_LOG_LENGTH = Const.GL_INFO_LOG_LENGTH,
+    SHADER_SOURCE_LENGTH = Const.GL_SHADER_SOURCE_LENGTH,
+}

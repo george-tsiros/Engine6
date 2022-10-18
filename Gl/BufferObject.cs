@@ -14,10 +14,10 @@ public class BufferObject<T>:OpenglObject where T : unmanaged {
     private BufferObject (BufferTarget target) => 
         (Target, Id) = (target, CreateBuffer());
 
-    public BufferObject (int capacityInElements, BufferTarget target = BufferTarget.Array) : this(target) =>
-        NamedBufferStorage(this, ElementSize * (Capacity = capacityInElements), 0, Const.DYNAMIC_STORAGE_BIT);
+    public BufferObject (int capacityInElements, BufferTarget target = BufferTarget.ARRAY_BUFFER) : this(target) =>
+        NamedBufferStorage(this, ElementSize * (Capacity = capacityInElements), 0, BufferStorageMask.DYNAMIC_STORAGE_BIT);
 
-    public BufferObject (in ReadOnlySpan<T> data, BufferTarget target = BufferTarget.Array) : this(data.Length, target) =>
+    public BufferObject (in ReadOnlySpan<T> data, BufferTarget target = BufferTarget.ARRAY_BUFFER) : this(data.Length, target) =>
         BufferData(data, data.Length, 0, 0);
 
     public unsafe void BufferData (in ReadOnlySpan<T> data, int count, int sourceOffset, int targetOffset) {

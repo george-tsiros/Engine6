@@ -113,12 +113,12 @@ public class ExampleDrawArrays:ExampleBase {
         va.Assign(normalBuffer, program.VertexNormal);
 
         Reusables.Add(uiVA = new());
-        Reusables.Add(uiSampler = new(UiSize, TextureFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
+        Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
         Reusables.Add(uiRaster = new(UiSize, 1, 1));
         Reusables.Add(uiProgram = new());
         Reusables.Add(uiBuffer = new(PresentationQuad));
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
-        
+
         Reusables.Add(depthVA = new());
         Reusables.Add(depthProgram = new());
         depthVA.Assign(uiBuffer, depthProgram.VertexPosition);
@@ -127,7 +127,7 @@ public class ExampleDrawArrays:ExampleBase {
     protected override void OnLoad () {
         base.OnLoad();
         var size = ClientSize;
-        Disposables.Add(depthSampler = new(new(size.X / 2, size.Y / 2), TextureFormat.Depth24));
+        Disposables.Add(depthSampler = new(new(size.X / 2, size.Y / 2), SizedInternalFormat.DEPTH_COMPONENT24));
         depthSampler.Min = MinFilter.Nearest;
         depthSampler.Mag = MagFilter.Nearest;
     }
@@ -157,8 +157,8 @@ public class ExampleDrawArrays:ExampleBase {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(program);
-        Enable(Capability.DepthTest);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        Enable(Capability.CULL_FACE);
         var orientation = Matrix4d.CreateFromQuaternion(camera.Orientation);
         var translation = Matrix4d.CreateTranslation(-camera.Position);
         program.View((Matrix4x4)(translation * orientation));
@@ -167,7 +167,7 @@ public class ExampleDrawArrays:ExampleBase {
         program.Model(Matrix4x4.Identity);
         for (var i = 0; i < FacesPerCube; ++i) {
             program.Color(Colors[i]);
-            DrawArrays(Primitive.Triangles, i * VerticesPerFace, VerticesPerFace);
+            DrawArrays(PrimitiveType.TRIANGLES, i * VerticesPerFace, VerticesPerFace);
         }
         uiRaster.ClearU8();
         var height = camera.Position.Magnitude() - PlanetRadius;
@@ -182,17 +182,17 @@ public class ExampleDrawArrays:ExampleBase {
         BindVertexArray(uiVA);
         uiProgram.Tex0(0);
         uiSampler.BindTo(0);
-        Disable(Capability.DepthTest);
+        Disable(Capability.DEPTH_TEST);
         Viewport(Vector2i.Zero, UiSize);
-        DrawArrays(Primitive.Triangles, 0, 6);
-        Viewport(new(UiSize.X, 0), UiSize);
-        depthSampler.BindTo(0);
-        ReadBuffer(DrawBufferComponent.Back);
-        CopyTexImage2D(depthSampler.Size);
-        UseProgram(depthProgram);
-        BindVertexArray(depthVA);
-        depthProgram.Depth(0);
-        DrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
+        //Viewport(new(UiSize.X, 0), UiSize);
+        //depthSampler.BindTo(0);
+        //ReadBuffer(ReadBufferComponent.BACK);
+        //CopyTexImage2D(TextureTarget.TEXTURE_2D, 0, InternalFormat.DEPTH_COMPONENT, new(), depthSampler.Size);
+        //UseProgram(depthProgram);
+        //BindVertexArray(depthVA);
+        //depthProgram.Depth(0);
+        //DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
     }
 }
 

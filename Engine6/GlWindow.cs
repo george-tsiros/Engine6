@@ -63,7 +63,7 @@ public class GlWindow:Window {
 
     protected override void OnLoad () {
         quadArray.Assign(presentationVertices, presentation.VertexPosition);
-        guiSampler = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
+        guiSampler = new(ClientSize, SizedInternalFormat.RGBA8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
         guiRaster = new(guiSampler.Size, 4, 1);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(guiSampler);
@@ -209,9 +209,9 @@ public class GlWindow:Window {
         guiRaster.DrawStringU32(t, PixelFont, 3, 3, ~0u, 0x8080807fu);
         guiSampler.Upload(guiRaster);
 
-        BindDefaultFramebuffer(FramebufferTarget.Draw);
-        Disable(Capability.DepthTest);
-        Enable(Capability.Blend);
+        BindDefaultFramebuffer(FramebufferTarget.DRAW_FRAMEBUFFER);
+        Disable(Capability.DEPTH_TEST);
+        Enable(Capability.BLEND);
         Viewport(in Vector2i.Zero, ClientSize);
 
         BindVertexArray(quadArray);
@@ -220,9 +220,9 @@ public class GlWindow:Window {
         guiSampler.BindTo(10);
         presentation.Tex0(10);
 
-        DrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
 
-        Disable(Capability.Blend);
+        Disable(Capability.BLEND);
     }
 
     public override void Dispose () {

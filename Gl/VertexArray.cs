@@ -14,7 +14,7 @@ public class VertexArray:OpenglObject {
     }
 
     public void Assign<T> (BufferObject<T> buffer, Attrib<T> location, int divisor = 0) where T : unmanaged {
-        Debug.Assert(BufferTarget.Array == buffer.Target);
+        Debug.Assert(BufferTarget.ARRAY_BUFFER == buffer.Target);
         BindVertexArray(this);
         buffer.Bind();
         Attrib<T>(location, divisor);
@@ -24,37 +24,34 @@ public class VertexArray:OpenglObject {
         DeleteVertexArray;
 
     private void Attrib<T> (int location, int divisor) where T : unmanaged {
-        var (size, type, isInteger) = SizeAndTypeOf(typeof(T));
+        var (size, type) = SizeAndTypeOf(typeof(T));
         if (size > 4)
             for (var i = 0; i < 4; ++i)
-                Attrib(location + i, 4, type, 16 * sizeof(float), 4 * i * sizeof(float), divisor, isInteger);
+                Attrib(location + i, 4, type, 16 * sizeof(float), 4 * i * sizeof(float), divisor);
         else
-            Attrib(location, size, type, 0, 0, divisor, isInteger);
+            Attrib(location, size, type, 0, 0, divisor);
     }
 
-    private void Attrib (int location, int size, AttribType type, int stride, int offset, int divisor, bool isInteger) {
+    private void Attrib (int location, int size, VertexAttribPointerType type, int stride, int offset, int divisor) {
         EnableVertexArrayAttrib(this, location);
-        if (isInteger)
-            VertexAttribIPointer(location, size, type, stride, offset);
-        else
             VertexAttribPointer(location, size, type, false, stride, offset);
         VertexAttribDivisor(location, divisor);
     }
 
-    private static (int size, AttribType type, bool isInteger) SizeAndTypeOf (Type type) =>
+    private static (int size, VertexAttribPointerType type) SizeAndTypeOf (Type type) =>
         _TYPES.TryGetValue(type, out var i) ? i : throw new ArgumentException($"unsupported type {type.Name}", nameof(type));
 
-    private static readonly Dictionary<Type, (int, AttribType, bool)> _TYPES = new() {
-        { typeof(float), (1, AttribType.Float, false) },
-        { typeof(double), (1, AttribType.Double, false) },
-        { typeof(int), (1, AttribType.Int, true) },
-        { typeof(uint), (1, AttribType.UInt, true) },
-        { typeof(Vector2), (2, AttribType.Float, false) },
-        { typeof(Vector3), (3, AttribType.Float, false) },
-        { typeof(Vector4), (4, AttribType.Float, false) },
-        { typeof(Vector2i), (2, AttribType.Int, true) },
-        { typeof(Vector3i), (3, AttribType.Int, true) },
-        { typeof(Matrix4x4), (16, AttribType.Float, false) },
+    private static readonly Dictionary<Type, (int, VertexAttribPointerType)> _TYPES = new() {
+        { typeof(float), (1, VertexAttribPointerType.FLOAT) },
+        { typeof(double), (1, VertexAttribPointerType.DOUBLE) },
+        { typeof(int), (1, VertexAttribPointerType.INT) },
+        { typeof(uint), (1, VertexAttribPointerType.UNSIGNED_INT) },
+        { typeof(Vector2), (2, VertexAttribPointerType.FLOAT) },
+        { typeof(Vector3), (3, VertexAttribPointerType.FLOAT) },
+        { typeof(Vector4), (4, VertexAttribPointerType.FLOAT) },
+        { typeof(Vector2i), (2, VertexAttribPointerType.INT) },
+        { typeof(Vector3i), (3, VertexAttribPointerType.INT) },
+        { typeof(Matrix4x4), (16, VertexAttribPointerType.FLOAT) },
     };
 
 }

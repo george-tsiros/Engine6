@@ -39,7 +39,7 @@ public sealed unsafe class GlContext:IDisposable {
     //EXPERIMENT FOR CALLING THROUGH FUNCTIONS GENERATED AT RUNTIME
     private static Action drawArrays;
     private static readonly Type[] Int32_Int32_Int32 = { typeof(int), typeof(int), typeof(int), };
-    public static void Foo_DrawArrays (Primitive primitive, int start, int count) {
+    public static void Foo_DrawArrays (PrimitiveType primitive, int start, int count) {
         if (drawArrays is null) {
             Debug.Assert(0 < (nint)glDrawArrays);
             Debug.Assert(8 == IntPtr.Size);
@@ -58,20 +58,20 @@ public sealed unsafe class GlContext:IDisposable {
     }
 
     public static IEnumerable<string> GetExtensions () {
-        for (var i = GetInteger(Const.NUM_EXTENSIONS); --i <= 0;)
-            yield return GetStringi(Const.EXTENSIONS, i);
+        for (var i = GetInteger(IntParameter.NumExtensions); --i <= 0;)
+            yield return GetStringi(StringName.EXTENSIONS, i);
     }
 
     // god have mercy on our souls
     public static void Uniform (int uniform, Matrix4x4 m) =>
         glUniformMatrix4fv(uniform, 1, 0, (float*)&m);
 
-    public static string GetStringi (int name, int index) =>
-        Marshal.PtrToStringAnsi(glGetStringi(name, index));
+    public static string GetStringi (StringName name, int index) =>
+        Marshal.PtrToStringAnsi(glGetStringi((int)name, index));
 
-    public static int GetInteger (int name) {
+    public static int GetInteger (IntParameter name) {
         var i = 0;
-        glGetIntegerv(name, &i);
+        glGetIntegerv((int)name, &i);
         return i;
     }
 
@@ -105,41 +105,42 @@ public sealed unsafe class GlContext:IDisposable {
     public static void ClearColor (float r, float g, float b, float a) => glClearColor(r, g, b, a);
     public static void DepthFunc (DepthFunction function) => glDepthFunc((int)function);
     public static void Disable (Capability cap) => glDisable((int)cap);
-    public static void DrawArrays (Primitive mode, int first, int count) => glDrawArrays((int)mode, first, count);
-    public static void DrawArraysInstanced (Primitive mode, int first, int count, int instanceCount) => glDrawArraysInstanced((int)mode, first, count, instanceCount);
+    public static void DrawArrays (PrimitiveType mode, int first, int count) => glDrawArrays((int)mode, first, count);
+    public static void DrawArraysInstanced (PrimitiveType mode, int first, int count, int instanceCount) => glDrawArraysInstanced((int)mode, first, count, instanceCount);
     public static void Enable (Capability cap) => glEnable((int)cap);
     public static bool IsEnabled (Capability cap) => 0 != glIsEnabled((int)cap);
     public static void EnableVertexArrayAttrib (VertexArray vertexArray, int i) => glEnableVertexArrayAttrib(vertexArray, i);
-    public static void NamedRenderbufferStorage (Renderbuffer renderbuffer, RenderbufferFormat format, int width, int height) => glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
-    public static void TextureBaseLevel (Sampler2D texture, int level) => glTextureParameteri(texture, Const.TEXTURE_BASE_LEVEL, level);
-    public static void TextureFilter (Sampler2D texture, MagFilter filter) => glTextureParameteri(texture, Const.TEXTURE_MAG_FILTER, (int)filter);
-    public static void TextureFilter (Sampler2D texture, MinFilter filter) => glTextureParameteri(texture, Const.TEXTURE_MIN_FILTER, (int)filter);
-    public static void TextureMaxLevel (Sampler2D texture, int level) => glTextureParameteri(texture, Const.TEXTURE_MAX_LEVEL, level);
-    public static void TextureStorage2D (Sampler2D texture, int levels, TextureFormat sizedFormat, int width, int height) => glTextureStorage2D(texture, levels, (int)sizedFormat, width, height);
-    public static void TextureSubImage2D (Sampler2D texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, int type, void* pixels) => glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, type, pixels);
+    public static void NamedRenderbufferStorage (Renderbuffer renderbuffer, InternalFormat format, int width, int height) => glNamedRenderbufferStorage(renderbuffer, (int)format, width, height);
+    public static void TextureBaseLevel (Sampler2D texture, int level) => glTextureParameteri(texture, (int)TextureParameterName.TEXTURE_BASE_LEVEL, level);
+    public static void TextureFilter (Sampler2D texture, MagFilter filter) => glTextureParameteri(texture, (int)TextureParameterName.TEXTURE_MAG_FILTER, (int)filter);
+    public static void TextureFilter (Sampler2D texture, MinFilter filter) => glTextureParameteri(texture, (int)TextureParameterName.TEXTURE_MIN_FILTER, (int)filter);
+    public static void TextureMaxLevel (Sampler2D texture, int level) => glTextureParameteri(texture, (int)TextureParameterName.TEXTURE_MAX_LEVEL, level);
+    public static void TextureStorage2D (Sampler2D texture, int levels, SizedInternalFormat sizedFormat, int width, int height) => glTextureStorage2D(texture, levels, (int)sizedFormat, width, height);
+    public static void TextureSubImage2D (Sampler2D texture, int level, int xOffset, int yOffset, int width, int height, PixelFormat format, PixelType type, void* pixels) => glTextureSubImage2D(texture, level, xOffset, yOffset, width, height, (int)format, (int)type, pixels);
     public static void TextureWrap (Sampler2D texture, WrapCoordinate c, Wrap w) => glTextureParameteri(texture, (int)c, (int)w);
-    public static void BindTexture (int type, Sampler2D sampler) => glBindTexture(type, sampler);
+    public static void BindTexture (TextureTarget type, Sampler2D sampler) => glBindTexture((int)type, sampler);
     public static void Uniform (int uniform, float f) => glUniform1f(uniform, f);
     public static void Uniform (int uniform, int i) => glUniform1i(uniform, i);
     public static void Uniform (int uniform, in Vector2 v) => glUniform2f(uniform, v.X, v.Y);
     public static void Uniform (int uniform, in Vector2i v) => glUniform2i(uniform, v.X, v.Y);
     public static void Uniform (int uniform, in Vector4 v) => glUniform4f(uniform, v.X, v.Y, v.Z, v.W);
     public static void VertexAttribDivisor (int index, int divisor) => glVertexAttribDivisor(index, divisor);
-    public static void VertexAttribPointer (int index, int size, AttribType type, bool normalized, int stride, long ptr) => glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, (void*)ptr);
+    public static void VertexAttribPointer (int index, int size, VertexAttribPointerType type, bool normalized, int stride, long ptr) => glVertexAttribPointer(index, size, (int)type, normalized ? (byte)1 : (byte)0, stride, (void*)ptr);
     public static void Viewport (int x, int y, int w, int h) => glViewport(x, y, w, h);
     public static void Viewport (in Vector2i location, in Vector2i size) => glViewport(location.X, location.Y, size.X, size.Y);
-    public static void NamedFramebufferDrawBuffer (Framebuffer framebuffer, Renderbuffer renderbuffer) => glNamedFramebufferDrawBuffer(framebuffer, renderbuffer);
-    public static void ReadBuffer (DrawBufferComponent mode) => glReadBuffer((int)mode);
-    public static void CopyTexImage2D (Vector2i size) {
-        glCopyTexImage2D(Const.TEXTURE_2D, 0, Const.DEPTH_COMPONENT, 0, 0, size.X, size.Y, 0);
+    public static void NamedFramebufferDrawBuffer (Framebuffer framebuffer, ColorBuffer colorbuffer) => glNamedFramebufferDrawBuffer(framebuffer, (int)colorbuffer);
+    public static void ReadBuffer (ReadBufferComponent mode) => glReadBuffer((int)mode);
+    public static void CopyTexImage2D (TextureTarget target, int level, InternalFormat internalFormat, Vector2i lowerLeft, Vector2i size) {
+        glCopyTexImage2D((int)target, level, (int)internalFormat, lowerLeft.X, lowerLeft.Y, size.X, size.Y, 0);
     }
+
     public static void BindDefaultFramebuffer (FramebufferTarget target) =>
         glBindFramebuffer((int)target, 0);
 
     public static void BindFramebuffer (Framebuffer framebuffer, FramebufferTarget target) =>
         glBindFramebuffer((int)target, framebuffer);
 
-    public static int GetProgramInterfaceiv (int program, ProgramInterface name, InterfaceParameter parameter) {
+    public static int GetProgramInterfaceiv (int program, ProgramInterface name, ProgramInterfaceParameter parameter) {
         var i = 0;
         glGetProgramInterfaceiv(program, (int)name, (int)parameter, &i);
         return i;
@@ -164,24 +165,24 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static string GetProgramResourceName (int program, int index) {
         var maxLength = 0;
-        glGetProgramInterfaceiv(program, (int)ProgramInterface.ProgramOutput, (int)InterfaceParameter.MaxNameLength, &maxLength);
+        glGetProgramInterfaceiv(program, (int)ProgramInterface.PROGRAM_OUTPUT, (int)ProgramInterfaceParameter.MAX_NAME_LENGTH, &maxLength);
         if (maxLength <= 0)
             throw new GlException(ZeroLength);
         Debug.Assert(maxLength < 1024);
         Span<byte> bytes = stackalloc byte[maxLength];
         var actualLength = 0;
         fixed (byte* p = bytes)
-            glGetProgramResourceName(program, (int)ProgramInterface.ProgramOutput, index, maxLength, &actualLength, p);
+            glGetProgramResourceName(program, (int)ProgramInterface.PROGRAM_OUTPUT, index, maxLength, &actualLength, p);
         Debug.Assert(0 < actualLength);
         return new(Encoding.ASCII.GetString(bytes[..^1]));
     }
 
     public static void ActiveTexture (int i) {
-        if (i != GetIntegerv(IntParameter.ActiveTexture) - Const.TEXTURE0)
-            glActiveTexture(Const.TEXTURE0 + i);
+        if (i != GetIntegerv(IntParameter.ActiveTexture) - Const.GL_TEXTURE0)
+            glActiveTexture(Const.GL_TEXTURE0 + i);
     }
 
-    public static void MultiDrawArrays (Primitive mode, ReadOnlySpan<int> first, ReadOnlySpan<int> count, int calls) {
+    public static void MultiDrawArrays (PrimitiveType mode, ReadOnlySpan<int> first, ReadOnlySpan<int> count, int calls) {
         if (0 == calls)
             throw new InvalidOperationException();
         if (first.Length < calls)
@@ -193,38 +194,38 @@ public sealed unsafe class GlContext:IDisposable {
             glMultiDrawArrays((int)mode, p, q, calls);
     }
 
-    public static void MultiDrawElementsIndirect (Primitive mode, ReadOnlySpan<DrawElementsIndirectCommand> indirect) {
-        if (0 == GetInteger(Const.ELEMENT_ARRAY_BUFFER_BINDING))
+    public static void MultiDrawElementsIndirect (PrimitiveType mode, ReadOnlySpan<DrawElementsIndirectCommand> indirect) {
+        if (0 == GetInteger(IntParameter.ArrayBufferBinding))
             throw new InvalidOperationException(NoElementArrayBound);
         fixed (DrawElementsIndirectCommand* p = indirect)
-            glMultiDrawElementsIndirect((int)mode, Const.UNSIGNED_INT, p, indirect.Length, 0);
+            glMultiDrawElementsIndirect((int)mode, (int)DrawElementsType.UNSIGNED_INT, p, indirect.Length, 0);
     }
 
-    public static void DrawElements (Primitive mode, int count) {
-        if (0 == GetInteger(Const.ELEMENT_ARRAY_BUFFER_BINDING))
+    public static void DrawElements (PrimitiveType mode, int count) {
+        if (0 == GetInteger(IntParameter.ArrayBufferBinding))
             throw new InvalidOperationException(NoElementArrayBound);
-        glDrawElements((int)mode, count, Const.UNSIGNED_INT, null);
+        glDrawElements((int)mode, count, (int)DrawElementsType.UNSIGNED_INT, null);
     }
 
-    public static void DrawArraysIndirect (Primitive mode, int firstElementIndex) {
-        if (0 == GetInteger(Const.DRAW_INDIRECT_BUFFER_BINDING))
+    public static void DrawArraysIndirect (PrimitiveType mode, int firstElementIndex) {
+        if (0 == GetInteger(IntParameter.VertexArrayBinding))
             throw new InvalidOperationException(NoIndirectArrayBound);
         glDrawArraysIndirect((int)mode, 4 * sizeof(int) * firstElementIndex);
     }
 
     public static int CreateTexture2D () {
         int i;
-        glCreateTextures(Const.TEXTURE_2D, 1, &i);
+        glCreateTextures(Const.GL_TEXTURE_2D, 1, &i);
         return i;
     }
     //public static void Scissor (int x, int y, int width, int height) => Extensions.glScissor(x, y, width, height);
 
-    public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => glVertexAttribIPointer(index, size, (int)type, stride, (void*)ptr);
+    //public static void VertexAttribIPointer (int index, int size, AttribType type, int stride, long ptr) => glVertexAttribIPointer(index, size, (int)type, stride, (void*)ptr);
     public static FramebufferStatus CheckNamedFramebufferStatus (Framebuffer framebuffer, FramebufferTarget target) => (FramebufferStatus)glCheckNamedFramebufferStatus(framebuffer, (int)target);
     public static void NamedFramebufferTexture (Framebuffer framebuffer, FramebufferAttachment attachment, Sampler2D texture) => glNamedFramebufferTexture(framebuffer, (int)attachment, (int)texture, 0);
-    public static void NamedFramebufferRenderbuffer (Framebuffer framebuffer, FramebufferAttachment attachment, Renderbuffer renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.RENDERBUFFER, renderbuffer);
+    public static void NamedFramebufferRenderbuffer (Framebuffer framebuffer, FramebufferAttachment attachment, Renderbuffer renderbuffer) => glNamedFramebufferRenderbuffer(framebuffer, (int)attachment, Const.GL_RENDERBUFFER, renderbuffer);
     public static GlErrorCode GetError () => (GlErrorCode)glGetError();
-    public static void NamedBufferStorage<T> (BufferObject<T> buffer, int size, nint data, int flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, flags);
+    public static void NamedBufferStorage<T> (BufferObject<T> buffer, int size, nint data, BufferStorageMask flags) where T : unmanaged => glNamedBufferStorage(buffer, size, (void*)data, (int)flags);
     public static void NamedBufferSubData<T> (BufferObject<T> buffer, int offset, int size, void* data) where T : unmanaged => glNamedBufferSubData(buffer, offset, size, data);
 
     public static void ShaderSource (int id, string source) {
@@ -239,7 +240,7 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static string GetShaderInfoLog (int id) {
         int actualLogLength = 0;
-        glGetShaderiv(id, (int)ShaderParameter.InfoLogLength, &actualLogLength);
+        glGetShaderiv(id, (int)ShaderParameterName.INFO_LOG_LENGTH, &actualLogLength);
         var bufferLength = Maths.Int32Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
@@ -249,7 +250,7 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static string GetProgramInfoLog (int id) {
         int actualLogLength = 0;
-        glGetProgramiv(id, (int)ProgramParameter.InfoLogLength, &actualLogLength);
+        glGetProgramiv(id, (int)ProgramProperty.INFO_LOG_LENGTH, &actualLogLength);
         var bufferLength = Maths.Int32Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
@@ -273,22 +274,22 @@ public sealed unsafe class GlContext:IDisposable {
 
     public static (float xrange, float yrange) GetPointSizeRange () {
         float* f = stackalloc float[2];
-        glGetFloatv(Const.POINT_SIZE_RANGE, f);
+        glGetFloatv(Const.GL_POINT_SIZE_RANGE, f);
         return (f[0], f[1]);
     }
 
-    public static (int size, AttribType type, string name) GetActiveAttrib (int id, int index) {
-        var maxLength = GetProgram(id, ProgramParameter.ActiveAttributeMaxLength);
+    public static (int size, AttributeType type, string name) GetActiveAttrib (int id, int index) {
+        var maxLength = GetProgram(id, ProgramProperty.ACTIVE_ATTRIBUTE_MAX_LENGTH);
         int length, size, type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
             glGetActiveAttrib(id, index, maxLength, &length, &size, &type, p);
         var n = length > 0 ? Encoding.ASCII.GetString(bytes.Slice(0, length)) : string.Empty;
-        return (size, (AttribType)type, n);
+        return (size, (AttributeType)type, n);
     }
 
     public static (int size, UniformType type, string name) GetActiveUniform (int id, int index) {
-        var maxLength = GetProgram(id, ProgramParameter.ActiveUniformMaxLength);
+        var maxLength = GetProgram(id, ProgramProperty.ACTIVE_UNIFORM_MAX_LENGTH);
         int length, size, type;
         Span<byte> bytes = stackalloc byte[maxLength];
         fixed (byte* p = bytes)
@@ -297,13 +298,13 @@ public sealed unsafe class GlContext:IDisposable {
         return (size, (UniformType)type, n);
     }
 
-    public static int GetProgram (int id, ProgramParameter p) {
+    public static int GetProgram (int id, ProgramProperty p) {
         int i;
         glGetProgramiv(id, (int)p, &i);
         return i;
     }
 
-    public static int GetShader (int id, ShaderParameter p) {
+    public static int GetShader (int id, ShaderParameterName p) {
         int i;
         glGetShaderiv(id, (int)p, &i);
         return i;
@@ -355,14 +356,14 @@ public sealed unsafe class GlContext:IDisposable {
         return glGetUniformBlockIndex(program, n);
     }
 
-    public static int GetActiveUniformBlockiv (int program, int blockIndex, UniformBlockParameter name) {
+    public static int GetActiveUniformBlockiv (int program, int blockIndex, UniformBlockPName name) {
         var i = 0;
         glGetActiveUniformBlockiv(program, blockIndex, (int)name, &i);
         return i;
     }
 
     public static string GetActiveUniformBlockName (int program, int blockIndex) {
-        var reportedLength = GetActiveUniformBlockiv(program, blockIndex, UniformBlockParameter.NameLength);
+        var reportedLength = GetActiveUniformBlockiv(program, blockIndex, UniformBlockPName.UNIFORM_BLOCK_NAME_LENGTH);
         Span<byte> bytes = stackalloc byte[reportedLength];
 
         var actualLength = 0;
@@ -778,7 +779,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, void> glUniform4ui;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, void> glVertexAttribI4i;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, void> glVertexAttribI4ui;
-    [GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void*, void> glVertexAttribIPointer;
+    //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void*, void> glVertexAttribIPointer;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glFramebufferRenderbuffer;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glRenderbufferStorage;
     //[GlVersion(3, 0)] private static delegate* unmanaged[Stdcall]<int, int, int, int, void> glUniform3ui;

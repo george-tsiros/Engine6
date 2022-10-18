@@ -52,18 +52,18 @@ public static class Utilities {
         var core = ProfileMask.Core == profile ? " core" : string.Empty;
         ShaderSource(shader, $"#version {characters:x}0{core}\n{source}");
         CompileShader(shader);
-        return 0 != GetShader(shader, ShaderParameter.CompileStatus) ? shader : throw new ApplicationException(GetShaderInfoLog(shader));
+        return 0 != GetShader(shader, ShaderParameterName.COMPILE_STATUS) ? shader : throw new ApplicationException(GetShaderInfoLog(shader));
     }
 
     public unsafe static int ProgramFromStrings (string vertexSource, string fragmentSource) {
-        var vertexShader = ShaderFromString(ShaderType.Vertex, vertexSource);
-        var fragmentShader = ShaderFromString(ShaderType.Fragment, fragmentSource);
+        var vertexShader = ShaderFromString(ShaderType.VERTEX_SHADER, vertexSource);
+        var fragmentShader = ShaderFromString(ShaderType.FRAGMENT_SHADER, fragmentSource);
         var program = CreateProgram();
         AttachShader(program, vertexShader);
         AttachShader(program, fragmentShader);
         LinkProgram(program);
         DeleteShader(vertexShader);
         DeleteShader(fragmentShader);
-        return 0 != GetProgram(program, ProgramParameter.LinkStatus) ? program : throw new ApplicationException(GetProgramInfoLog(program));
+        return 0 != GetProgram(program, ProgramProperty.LINK_STATUS) ? program : throw new ApplicationException(GetProgramInfoLog(program));
     }
 }

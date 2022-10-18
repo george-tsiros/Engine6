@@ -16,10 +16,10 @@ public class ShowDepth:Program {
     public Attrib<Vector2> VertexPosition { get; }
 
     private readonly int far;
-    public void Far (float v) => Uniform(far, v);
+    public void Far (in float v) => Uniform(far, v);
 
     private readonly int near;
-    public void Near (float v) => Uniform(near, v);
+    public void Near (in float v) => Uniform(near, v);
 
     private readonly int depth;
     public void Depth (int v) => Uniform(depth, v);

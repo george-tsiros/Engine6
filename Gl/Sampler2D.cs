@@ -9,12 +9,12 @@ public class Sampler2D:OpenglObject {
     public Vector2i Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
-    public TextureFormat SizedFormat { get; }
+    public SizedInternalFormat SizedFormat { get; }
     public void BindTo (int t) {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
         ActiveTexture(t);
-        BindTexture(Const.TEXTURE_2D, this);
+        BindTexture(TextureTarget.TEXTURE_2D, this);
     }
     private Wrap wrap;
     public Wrap Wrap {
@@ -45,7 +45,7 @@ public class Sampler2D:OpenglObject {
         }
     }
 
-    public Sampler2D (Vector2i size, TextureFormat sizedFormat) {
+    public Sampler2D (Vector2i size, SizedInternalFormat sizedFormat) {
         Id = CreateTexture2D();
         (Size, SizedFormat) = (size, sizedFormat);
         TextureStorage2D(this, 1, SizedFormat, Width, Height);
@@ -71,11 +71,11 @@ public class Sampler2D:OpenglObject {
         if (raster.BytesPerChannel != 1)
             throw new ArgumentException($"expected 1 byte per channel, not {raster.BytesPerChannel}", nameof(raster));
         fixed (byte* ptr = raster.Pixels)
-            TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormatWith(raster.Channels), Const.UNSIGNED_BYTE, ptr);
+            TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormatWith(raster.Channels), PixelType.UNSIGNED_BYTE, ptr);
     }
     
-    private static readonly TextureFormat[] textureFormats = { TextureFormat.R8, TextureFormat.Rg8, TextureFormat.Rgb8, TextureFormat.Rgba8 };
-    private static TextureFormat TextureFormatWith (int channels) => 1 <= channels && channels <= 4 ? textureFormats[channels - 1] : throw new ApplicationException();
-    private static readonly PixelFormat[] pixelFormats = { PixelFormat.Red, PixelFormat.Rg, PixelFormat.Rgb, PixelFormat.Rgba };
+    private static readonly SizedInternalFormat[] textureFormats = { SizedInternalFormat.R8, SizedInternalFormat.RG8, SizedInternalFormat.RGB8, SizedInternalFormat.RGBA8 };
+    private static SizedInternalFormat TextureFormatWith (int channels) => 1 <= channels && channels <= 4 ? textureFormats[channels - 1] : throw new ApplicationException();
+    private static readonly PixelFormat[] pixelFormats = { PixelFormat.RED, PixelFormat.RG, PixelFormat.RGB, PixelFormat.RGBA };
     private static PixelFormat PixelFormatWith (int channels) => 1 <= channels && channels <= 4 ? pixelFormats[channels - 1] : throw new ApplicationException();
 }

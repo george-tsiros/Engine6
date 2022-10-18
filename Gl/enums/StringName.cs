@@ -1,0 +1,9 @@
+﻿namespace Gl;
+
+public enum StringName {
+    VENDOR = Const.GL_VENDOR,
+    RENDERER = Const.GL_RENDERER,
+    VERSION = Const.GL_VERSION,
+    EXTENSIONS = Const.GL_EXTENSIONS,
+    SHADING_LANGUAGE_VERSION = Const.GL_SHADING_LANGUAGE_VERSION,
+}

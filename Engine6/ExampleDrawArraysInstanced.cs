@@ -68,11 +68,11 @@ public class ExampleDrawArraysInstanced:ExampleBase {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(program);
-        Enable(Capability.DepthTest);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        Enable(Capability.CULL_FACE);
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
         program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
         program.LightDirection(-Vector4.UnitZ);
-        DrawArraysInstanced(Primitive.Triangles, 0, ThreeFaces.Length, Translations.Length);
+        DrawArraysInstanced(PrimitiveType.TRIANGLES, 0, ThreeFaces.Length, Translations.Length);
     }
 }

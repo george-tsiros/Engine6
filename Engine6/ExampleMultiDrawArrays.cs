@@ -45,12 +45,12 @@ public class ExampleMultiDrawArrays:ExampleBase {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(program);
-        Enable(Capability.DepthTest);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        Enable(Capability.CULL_FACE);
         program.Color(Vector4.One);
         program.Model(Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0));
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
         program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
-        MultiDrawArrays(Primitive.Triangles, First, Count, 3);
+        MultiDrawArrays(PrimitiveType.TRIANGLES, First, Count, 3);
     }
 }

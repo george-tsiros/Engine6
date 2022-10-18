@@ -1,12 +1,12 @@
 namespace Gl;
 
 public enum DepthFunction {
-    Never = Const.NEVER,
-    Less = Const.LESS,
-    Equal = Const.EQUAL,
-    LessEqual = Const.LEQUAL,
-    Greater = Const.GREATER,
-    NotEqual = Const.NOTEQUAL,
-    GreaterEqual = Const.GEQUAL,
-    Always = Const.ALWAYS,
+    NEVER = Const.GL_NEVER,
+    LESS = Const.GL_LESS,
+    EQUAL = Const.GL_EQUAL,
+    LEQUAL = Const.GL_LEQUAL,
+    GREATER = Const.GL_GREATER,
+    NOTEQUAL = Const.GL_NOTEQUAL,
+    GEQUAL = Const.GL_GEQUAL,
+    ALWAYS = Const.GL_ALWAYS,
 }

@@ -94,11 +94,11 @@ public class Experiment:GlWindow {
 
     protected override void OnLoad () {
         base.OnLoad();
-        renderTexture = new(ClientSize, TextureFormat.Rgba8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
-        depthbuffer = new(ClientSize, RenderbufferFormat.Depth24Stencil8);
-        framebuffer.Attach(renderTexture, FramebufferAttachment.Color0);
-        framebuffer.Attach(depthbuffer, FramebufferAttachment.DepthStencil);
-        Debug.Assert(FramebufferStatus.Complete == framebuffer.CheckStatus());
+        renderTexture = new(ClientSize, SizedInternalFormat.RGBA8) { Mag = MagFilter.Nearest, Min = MinFilter.Linear };
+        depthbuffer = new(ClientSize, InternalFormat.DEPTH24_STENCIL8);
+        framebuffer.Attach(renderTexture, FramebufferAttachment.COLOR_ATTACHMENT0);
+        framebuffer.Attach(depthbuffer, FramebufferAttachment.DEPTH_STENCIL_ATTACHMENT);
+        Debug.Assert(FramebufferStatus.FRAMEBUFFER_COMPLETE == framebuffer.CheckStatus());
 
         Disposables.Add(depthbuffer);
         Disposables.Add(renderTexture);
@@ -121,22 +121,22 @@ public class Experiment:GlWindow {
 
         var viewRotation = Matrix4x4.CreateFromQuaternion((Quaternion)camera.Orientation);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
-        BindFramebuffer(framebuffer, FramebufferTarget.Draw);
+        BindFramebuffer(framebuffer, FramebufferTarget.DRAW_FRAMEBUFFER);
         Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
 
-        Disable(Capability.DepthTest);
-        Disable(Capability.CullFace);
+        Disable(Capability.DEPTH_TEST);
+        Disable(Capability.CULL_FACE);
         BindVertexArray(starVertexArray);
         UseProgram(starProgram);
         starProgram.View(viewRotation);
         starProgram.Projection(projection);
-        DrawArrays(Primitive.Points, 0, 1000);
+        DrawArrays(PrimitiveType.POINTS, 0, 1000);
 
-        Enable(Capability.DepthTest);
-        DepthFunc(DepthFunction.LessEqual);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        DepthFunc(DepthFunction.LEQUAL);
+        Enable(Capability.CULL_FACE);
         BindVertexArray(sphereVertexArray);
         UseProgram(sphereProgram);
         sphereProgram.View(Matrix4x4.CreateTranslation(-(Vector3)camera.Position) * viewRotation);
@@ -144,10 +144,10 @@ public class Experiment:GlWindow {
         foreach (var body in Solar) {
             sphereProgram.Color(body.Color);
             sphereProgram.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
-            DrawArrays(Primitive.Triangles, loPolySphereVertexCount, highPolySphereVertexCount);
+            DrawArrays(PrimitiveType.TRIANGLES, loPolySphereVertexCount, highPolySphereVertexCount);
         }
-        BindDefaultFramebuffer(FramebufferTarget.Draw);
-        Disable(Capability.DepthTest);
+        BindDefaultFramebuffer(FramebufferTarget.DRAW_FRAMEBUFFER);
+        Disable(Capability.DEPTH_TEST);
         Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
         Clear(BufferBit.ColorDepth);
@@ -155,7 +155,7 @@ public class Experiment:GlWindow {
         UseProgram(presentationProgram);
         presentationProgram.Tex0(0);
         renderTexture.BindTo(0);
-        DrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
     }
 
     //public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)

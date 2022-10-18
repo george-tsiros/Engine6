@@ -1,6 +1,8 @@
 namespace ShaderGen;
 
 using System;
+using System.ComponentModel;
+using System.Reflection;
 using System.IO;
 using System.Runtime.InteropServices;
 using Gl;
@@ -78,26 +80,26 @@ class ShaderGen {
         return true;
     }
 
-    private static readonly UniformType[] PrimitiveUniformTypes = { UniformType.Double, UniformType.Float, UniformType.Int, UniformType.UInt, };
-    private static readonly AttribType[] PrimitiveAttribTypes = { AttribType.SByte, AttribType.Byte, AttribType.Short, AttribType.UShort, AttribType.Int, AttribType.UInt, AttribType.Float, AttribType.Double, };
+    private static readonly UniformType[] PrimitiveUniformTypes = { UniformType.DOUBLE, UniformType.FLOAT, UniformType.INT, UniformType.UNSIGNED_INT, };
+    private static readonly AttributeType[] PrimitiveAttribTypes = { AttributeType.FLOAT, AttributeType.DOUBLE, AttributeType.INT, AttributeType.UNSIGNED_INT, };
 
-    private static bool IsPrimitive (AttribType type) =>
+    private static bool IsPrimitive (AttributeType type) =>
         0 <= Array.IndexOf(PrimitiveAttribTypes, type);
 
     private static bool IsPrimitive (UniformType type) =>
         0 <= Array.IndexOf(PrimitiveUniformTypes, type);
 
-    private static string AttribTypeToTypeName (AttribType type) {
+    private static string AttribTypeToTypeName (AttributeType type) {
         var str = type.ToString();
-        return IsPrimitive(type) ? str.ToLower() : str;
+        var attr = typeof(AttributeType).GetField(str).GetCustomAttribute<DescriptionAttribute>() ?? throw new ApplicationException($"no DescriptionAttribute for {type}");
+        return attr.Description;
     }
 
     private static string UniformTypeToTypeName (UniformType type) {
-        if (IsPrimitive(type))
-            return type.ToString().ToLower();
-        if (type == UniformType.Sampler2D)
+        if (type == UniformType.SAMPLER_2D)
             return "int";
-        return $"in {type}";
+        var attr = typeof(UniformType).GetField(type.ToString()).GetCustomAttribute<DescriptionAttribute>() ?? throw new ApplicationException($"no DescriptionAttribute for {type}");
+        return $"in {attr.Description}";
     }
 
     private static readonly char[] SplitChars = { ' ', '\r', '\n' };
@@ -149,7 +151,7 @@ public class {0}:Program {{
         Stack<string> ctorStatements = new();
 
 
-        var outCount = GetProgramInterfaceiv(program, ProgramInterface.ProgramOutput, InterfaceParameter.ActiveResources);
+        var outCount = GetProgramInterfaceiv(program, ProgramInterface.PROGRAM_OUTPUT, ProgramInterfaceParameter.ACTIVE_RESOURCES);
         for (var i = 0; i < outCount; ++i) {
             var name = GetProgramResourceName(program, i);
 
@@ -163,7 +165,7 @@ public class {0}:Program {{
             ctorStatements.Push(string.Format("{0} = GetFragDataLocation(this, \"{1}\");\n", propertyName, name));
         }
 
-        int attrCount = GetProgram(program, ProgramParameter.ActiveAttributes);
+        int attrCount = GetProgram(program, ProgramProperty.ACTIVE_ATTRIBUTES);
         for (var i = 0; i < attrCount; ++i) {
             var (size, type, name) = GetActiveAttrib(program, i);
             if (name.StartsWith("gl_"))
@@ -175,7 +177,7 @@ public class {0}:Program {{
             ctorStatements.Push(string.Format("{0} = GetAttribLocation(this, \"{1}\");\n", propertyName, name));
         }
 
-        int uniformCount = GetProgram(program, ProgramParameter.ActiveUniforms);
+        int uniformCount = GetProgram(program, ProgramProperty.ACTIVE_UNIFORMS);
         for (var i = 0; i < uniformCount; ++i) {
             var (size, type, name) = GetActiveUniform(program, i);
             if (name.StartsWith("gl_"))

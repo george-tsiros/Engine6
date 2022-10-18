@@ -59,7 +59,7 @@ public class MeasureBuffering:GlWindow {
         BindVertexArray(va);
         UseProgram(flatColor);
         flatColor.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 10, 1000));
-        DrawArrays(Primitive.Triangles, 0, vertexCount);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, vertexCount);
     }
 }
 

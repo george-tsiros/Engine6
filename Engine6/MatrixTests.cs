@@ -44,7 +44,7 @@ public class MatrixTests:GlWindow {
         va.Assign(vertices, program.VertexPosition);
         va.Assign(normals, program.VertexNormal);
         Reusables.Add(uiVA = new());
-        Reusables.Add(uiSampler = new(UiSize, TextureFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
+        Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
         Reusables.Add(uiRaster = new(UiSize, 1, 1));
         Reusables.Add(uiProgram = new());
         Reusables.Add(uiBuffer = new(PresentationQuad));
@@ -87,14 +87,14 @@ public class MatrixTests:GlWindow {
 
         UseProgram(program);
         BindVertexArray(va);
-        Enable(Capability.DepthTest);
+        Enable(Capability.DEPTH_TEST);
 
         program.Model(model.CreateModelMatrix());
         program.View((Matrix4x4)camera.CreateView());
         program.Projection(projectionMatrix);
         program.Color(Vector4.One);
         program.LightDirection(LightDirection);
-        DrawArrays(Primitive.Triangles, 0, vertexCount);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, vertexCount);
 
         uiRaster.ClearU8();
         var cx = cursor.X.ToString();
@@ -112,8 +112,8 @@ public class MatrixTests:GlWindow {
         BindVertexArray(uiVA);
         uiProgram.Tex0(0);
         uiSampler.BindTo(0);
-        Disable(Capability.DepthTest);
+        Disable(Capability.DEPTH_TEST);
         Viewport(Vector2i.Zero, UiSize);
-        DrawArrays(Primitive.Triangles, 0, 6);
+        DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
     }
 }

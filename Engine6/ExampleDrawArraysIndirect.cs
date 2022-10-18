@@ -25,7 +25,7 @@ public class ExampleDrawArraysIndirect:ExampleBase {
         Reusables.Add(vertexBuffer = new(ThreeFaces));
         va.Assign(vertexBuffer, program.VertexPosition);
 
-        Reusables.Add(commandBuffer = new(Commands, BufferTarget.DrawIndirect));
+        Reusables.Add(commandBuffer = new(Commands, BufferTarget.DRAW_INDIRECT_BUFFER));
         commandBuffer.Bind();
     }
     private const int CursorCap = 1000;
@@ -51,12 +51,12 @@ public class ExampleDrawArraysIndirect:ExampleBase {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(program);
-        Enable(Capability.DepthTest);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        Enable(Capability.CULL_FACE);
         program.Color(Vector4.One);
         program.Model(Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0));
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
         program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
-        DrawArraysIndirect(Primitive.Triangles, 0);
+        DrawArraysIndirect(PrimitiveType.TRIANGLES, 0);
     }
 }

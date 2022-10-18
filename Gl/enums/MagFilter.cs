@@ -1,6 +1,6 @@
 namespace Gl;
 
 public enum MagFilter {
-    Nearest = Const.NEAREST,
-    Linear = Const.LINEAR,
+    Nearest = Const.GL_NEAREST,
+    Linear = Const.GL_LINEAR,
 }

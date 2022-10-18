@@ -13,7 +13,7 @@ public class GlException:Exception {
         List<GlErrorCode> errors = new();
         for (; ; ) {
             var e = GetError();
-            if (GlErrorCode.NoError == e)
+            if (GlErrorCode.NO_ERROR == e)
                 break;
             errors.Add(e);
         }

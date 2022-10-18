@@ -31,7 +31,7 @@ public class ExampleDrawElements:ExampleBase {
         Reusables.Add(vertexBuffer = new(CubeVertices));
         va.Assign(vertexBuffer, program.VertexPosition);
 
-        Reusables.Add(elementBuffer = new(Elements, BufferTarget.ElementArray));
+        Reusables.Add(elementBuffer = new(Elements, BufferTarget.ELEMENT_ARRAY_BUFFER));
         elementBuffer.BufferData(Elements, Elements.Length, 0, 0);
         elementBuffer.Bind();
     }
@@ -59,12 +59,12 @@ public class ExampleDrawElements:ExampleBase {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(program);
-        Enable(Capability.DepthTest);
-        Enable(Capability.CullFace);
+        Enable(Capability.DEPTH_TEST);
+        Enable(Capability.CULL_FACE);
         program.Color(Vector4.One);
         program.Model(Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0));
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
         program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
-        DrawElements(Primitive.Triangles, 18);
+        DrawElements(PrimitiveType.TRIANGLES, 18);
     }
 }
