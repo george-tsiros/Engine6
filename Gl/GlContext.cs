@@ -578,7 +578,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDeleteQueries;
     [GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDeleteTextures;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glDrawBuffers;
-    ///<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenBuffers.xhtml"/></summary>
+    ////<summary><see href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenBuffers.xhtml"/></summary>
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenBuffers;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenQueries;
     //[GlVersion(2, 0)] private static delegate* unmanaged[Stdcall]<int, int*, void> glGenTextures;
@@ -1007,7 +1007,7 @@ public sealed unsafe class GlContext:IDisposable {
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, byte*, void> glDebugMessageInsert;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, byte, void> glTexStorage2DMultisample;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, byte, void> glTexStorage3DMultisample;
-    //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, void> glCopyImageSubData;
+    [GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, void> glCopyImageSubData;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void> glInvalidateTexSubImage;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, int, int, int, int, void> glTextureView;
     //[GlVersion(4, 3)] private static delegate* unmanaged[Stdcall]<int, int, int, int, long*, void> glGetInternalformati64v;

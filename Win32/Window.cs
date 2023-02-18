@@ -67,10 +67,8 @@ public class Window:IDisposable {
             }
         }
         OnClosed();
-        foreach (var disposable in Disposables)
-            disposable.Dispose();
-        foreach (var recyclable in Reusables)
-            recyclable.Dispose();
+        Disposables.ForEach(x => x.Dispose());
+        Reusables.ForEach(x => x.Dispose());
     }
 
     private const string ClassName = nameof(Window);

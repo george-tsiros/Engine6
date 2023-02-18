@@ -104,7 +104,17 @@ public class Experiment:GlWindow {
         Disposables.Add(renderTexture);
     }
 
-    Vector2i cumulativeCursorMovement;
+    private bool outputFrame;
+
+    protected override void OnKeyUp (Key key) {
+        if (Key.F1 == key) {
+            outputFrame = true;
+            return;
+        }
+        base.OnKeyUp(key);
+    }
+
+    private Vector2i cumulativeCursorMovement;
 
     protected override void OnInput (int dx, int dy) {
         cumulativeCursorMovement += new Vector2i(dx, dy);
@@ -156,6 +166,11 @@ public class Experiment:GlWindow {
         presentationProgram.Tex0(0);
         renderTexture.BindTo(0);
         DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
+
+        if (outputFrame) {
+
+            outputFrame = false;
+        }
     }
 
     //public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)

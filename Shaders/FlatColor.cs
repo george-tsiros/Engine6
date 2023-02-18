@@ -15,23 +15,23 @@ public class FlatColor:Program {
 
     public Attrib<Vector4> VertexPosition { get; }
 
-    private readonly int color;
-    public void Color (in Vector4 v) => Uniform(color, v);
-
-    private readonly int model;
-    public void Model (in Matrix4x4 v) => Uniform(model, v);
-
     private readonly int projection;
     public void Projection (in Matrix4x4 v) => Uniform(projection, v);
 
     private readonly int view;
     public void View (in Matrix4x4 v) => Uniform(view, v);
 
+    private readonly int model;
+    public void Model (in Matrix4x4 v) => Uniform(model, v);
+
+    private readonly int color;
+    public void Color (in Vector4 v) => Uniform(color, v);
+
     public FlatColor () {
+        color = GetUniformLocation(this, nameof(color));
+        model = GetUniformLocation(this, nameof(model));
         view = GetUniformLocation(this, nameof(view));
         projection = GetUniformLocation(this, nameof(projection));
-        model = GetUniformLocation(this, nameof(model));
-        color = GetUniformLocation(this, nameof(color));
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         Color0 = GetFragDataLocation(this, "color0");
     }

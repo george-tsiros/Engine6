@@ -25,7 +25,9 @@ public class ExampleDrawElements:ExampleBase {
 
     private static readonly uint[] Elements = { 0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 3, 2, 6, 3, 6, 7, };
 
-    public ExampleDrawElements () {
+    public ExampleDrawElements () : this(new(1280, 720)) { }
+    public ExampleDrawElements (Vector2i size) {
+        ClientSize = size;
         Reusables.Add(va = new());
         Reusables.Add(program = new());
         Reusables.Add(vertexBuffer = new(CubeVertices));

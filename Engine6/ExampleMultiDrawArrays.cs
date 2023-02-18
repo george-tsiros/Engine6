@@ -14,7 +14,9 @@ public class ExampleMultiDrawArrays:ExampleBase {
     private static readonly int[] First = { 0, 6, 12 };
     private static readonly int[] Count = { 6, 6, 6 };
 
-    public ExampleMultiDrawArrays () {
+    public ExampleMultiDrawArrays () : this(new(1280, 720)) { }
+    public ExampleMultiDrawArrays (Vector2i size) {
+        ClientSize = size;
         Reusables.Add(va = new());
         Reusables.Add(program = new());
         Reusables.Add(vertexBuffer = new(ThreeFaces));

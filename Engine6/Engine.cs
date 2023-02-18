@@ -1,3 +1,11 @@
-using Engine6;
-using ExampleDrawArrays window = new(new(1600,1200));
-window.Run();
+namespace Engine6;
+
+using System;
+using System.Reflection;
+
+public class Engine {
+    public static void Main() {
+        using ExampleDrawArrays e = new();
+        e.Run();
+    }
+}

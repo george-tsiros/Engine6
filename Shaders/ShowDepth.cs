@@ -15,19 +15,19 @@ public class ShowDepth:Program {
 
     public Attrib<Vector2> VertexPosition { get; }
 
-    private readonly int far;
-    public void Far (in float v) => Uniform(far, v);
-
     private readonly int near;
     public void Near (in float v) => Uniform(near, v);
+
+    private readonly int far;
+    public void Far (in float v) => Uniform(far, v);
 
     private readonly int depth;
     public void Depth (int v) => Uniform(depth, v);
 
     public ShowDepth () {
         depth = GetUniformLocation(this, nameof(depth));
-        near = GetUniformLocation(this, nameof(near));
         far = GetUniformLocation(this, nameof(far));
+        near = GetUniformLocation(this, nameof(near));
         VertexPosition = GetAttribLocation(this, "vertexPosition");
         Color0 = GetFragDataLocation(this, "color0");
     }

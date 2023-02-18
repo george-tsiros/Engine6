@@ -1,9 +1,6 @@
 namespace Win32;
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System;
-using System.Text;
 using Common;
 
 public static partial class Kernel32 {

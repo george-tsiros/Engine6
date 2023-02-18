@@ -11,7 +11,7 @@ using System.Diagnostics;
 public class ExampleDrawArrays:ExampleBase {
 
     private static double Density (double h) =>
-        Maths.DoubleMax(0, 1.227726 - 1.23707613953 * (1 - Maths.DoubleExp(-0.001140971 * h)));
+        Maths.DoubleMax(0, 1.227726 - 1.23707613953 * (1 - Maths.DoubleExp(-1.140971e-3 * h)));
 
     private static double GravAccel (double mass, double distance) {
         const double G = 6.6743e-11; // m^3 kg^-1 s^-2
@@ -33,7 +33,7 @@ public class ExampleDrawArrays:ExampleBase {
     private Raster uiRaster;
     private Sampler2D uiSampler;
     private VertexArray uiVA;
-    private Camera camera = new(new(0, 0, PlanetRadius + CameraHeight));
+    private Camera camera = new(new(0, 0, 10 * PlanetRadius));
     private Vector2i cursor;
     private static readonly PixelFont UiFont = new(@"data\Spleen_8x16.txt");
     private static readonly Vector2i UiSize = new(40 * UiFont.Width, 10 * UiFont.Height);
@@ -160,9 +160,11 @@ public class ExampleDrawArrays:ExampleBase {
         Enable(Capability.DEPTH_TEST);
         Enable(Capability.CULL_FACE);
         var orientation = Matrix4d.CreateFromQuaternion(camera.Orientation);
+        if (IsKeyDown(Key.R))
+            orientation = Matrix4d.RotationY(Maths.dPi) * orientation;
         var translation = Matrix4d.CreateTranslation(-camera.Position);
         program.View((Matrix4x4)(translation * orientation));
-        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, CameraHeight / 10f, 10f * CameraHeight));
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 100f, 10f * CameraHeight));
         program.LightDirection(-Vector4.UnitZ);
         program.Model(Matrix4x4.Identity);
         for (var i = 0; i < FacesPerCube; ++i) {

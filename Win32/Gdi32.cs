@@ -1,7 +1,7 @@
 namespace Win32;
-using Common;
-using System.Diagnostics;
+
 using System.Runtime.InteropServices;
+
 public static class Gdi32 {
     private const string dll = nameof(Gdi32) + ".dll";
     [DllImport(dll, EntryPoint = "DeleteDC", ExactSpelling = true)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool DeleteDC_ (nint dc);

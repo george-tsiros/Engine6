@@ -20,8 +20,10 @@ public class MatrixTests:GlWindow {
     private const float Velocity = 1f; // m/s
     private static readonly Vector4 LightDirection = new(-Vector3.Normalize(Vector3.One), 0);
 
-    public MatrixTests () {
-        ClientSize = new(1280, 720);
+    public MatrixTests () : this(new(1280, 720)) { }
+
+    public MatrixTests (Vector2i size) {
+        ClientSize = size;
         camera = new(10 * Vector3.UnitZ);
         const int CubeFaceCount = 6;
         const int VerticesPerTriangle = 3;

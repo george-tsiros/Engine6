@@ -27,7 +27,10 @@ public class ExampleDrawArraysInstanced:ExampleBase {
     private BufferObject<Vector3> normalBuffer;
     private BufferObject<Matrix4x4> modelBuffer;
 
-    public ExampleDrawArraysInstanced () {
+    public ExampleDrawArraysInstanced () : this(new(1280, 720)) { }
+
+    public ExampleDrawArraysInstanced (Vector2i size) {
+        ClientSize = size;
         Reusables.Add(va = new());
         Reusables.Add(program = new());
         Reusables.Add(vertexBuffer = new(ThreeFaces));

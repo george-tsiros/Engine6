@@ -9,6 +9,7 @@ using System.Numerics;
 using Shaders;
 using System.Text;
 using Common;
+
 public class GlWindow:Window {
 
     public GlWindow (ContextConfiguration? configuration = null, WindowStyle style = WindowStyle.Popup, WindowStyleEx styleEx = WindowStyleEx.None) : base(style, styleEx) {
@@ -39,6 +40,7 @@ public class GlWindow:Window {
     protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
     protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
     protected double LastFramesInterval { get; private set; }
+    protected bool Fullscreen { get; private set; }
     protected readonly Stopwatch WallTime;
     protected readonly Stopwatch SimulationTime;
     private double FramesPerSecond = 60;
@@ -57,7 +59,6 @@ public class GlWindow:Window {
     private Sampler2D guiSampler;
     private Raster guiRaster;
     private static readonly Vector2i DefaultWindowedSize = new(800, 600);
-    private bool fullscreen = false;
     private readonly WindowStyleEx backupWindowStyleEx;
     private Rectangle windowedRectangle;
 
@@ -124,16 +125,15 @@ public class GlWindow:Window {
     }
 
     private void ToggleFullscreen () {
-        foreach (var x in Disposables)
-            x.Dispose();
+        Disposables.ForEach(x => x.Dispose());
         Disposables.Clear();
 
-        if (fullscreen) {
+        if (Fullscreen) {
             _ = User32.SetWindowStyleEx(this, backupWindowStyleEx);
             User32.SetWindowPos(this, WindowPosFlags.None);
             User32.MoveWindow(this, windowedRectangle);
             FramesPerSecond = 60;
-            fullscreen = false;
+            Fullscreen = false;
             title = Encoding.ASCII.GetBytes("windowed, 60 Hz");
         } else {
             windowedRectangle = GetWindowRectangle();
@@ -152,7 +152,7 @@ public class GlWindow:Window {
                 User32.MoveWindow(this, monitor.entireDisplay);
                 FramesPerSecond = monitorInfo.dmDisplayFrequency;
                 title = Encoding.ASCII.GetBytes($"fullscreen, {monitorInfo.dmDisplayFrequency} Hz");
-                fullscreen = true;
+                Fullscreen = true;
             } else {
                 title = toggleFailedText;
                 SetGuiActive(true);

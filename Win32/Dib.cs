@@ -1,7 +1,9 @@
 namespace Win32;
+
 using Common;
 using System;
 using System.Runtime.InteropServices;
+
 unsafe sealed public class Dib:IDisposable {
     public Dib (DeviceContext dc, in Vector2i size) {
         var (w, h) = size;

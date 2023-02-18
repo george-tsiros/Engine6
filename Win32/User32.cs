@@ -47,6 +47,10 @@ public static class User32 {
     [DllImport(dll)]
     private static unsafe extern int GetRawInputData (nint rawInput, uint command, void* data, uint* size, uint headerSize);
 
+    [DllImport(dll, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool UnregisterClassW (string className, nint instance);
+
     [DllImport(dll, EntryPoint = "RegisterClassW", ExactSpelling = true, CharSet = CharSet.Unicode)]
     private static extern ushort RegisterClassW_ (ref WindowClassW windowClass);
 
@@ -55,7 +59,7 @@ public static class User32 {
     private static extern bool DestroyWindow_ (nint windowHandle);
 
     [DllImport(dll, EntryPoint = "CreateWindowExW", ExactSpelling = true, SetLastError = true)]
-    private static extern nint CreateWindowEx (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
+    private static extern nint CreateWindowExW_ (WindowStyleEx exStyle, nint classNameOrAtom, nint title, WindowStyle style, int x, int y, int width, int height, nint parentHandle, nint menu, nint instance, nint param);
 
     [DllImport(dll, EntryPoint = "DefWindowProcW", ExactSpelling = true, CharSet = CharSet.Unicode)]
     internal static extern nint DefWindowProc (nint hWnd, WinMessage msg, nuint wparam, nint lparam);
@@ -305,8 +309,8 @@ public static class User32 {
 
     public static nint CreateWindow (ushort atom, WindowStyle style = WindowStyle.ClipPopup, WindowStyleEx styleEx = WindowStyleEx.None, Vector2i? size = null, nint? moduleHandle = null) {
         var (w, h) = size is Vector2i s ? (s.X, s.Y) : (640, 480);
-        var p = CreateWindowEx(styleEx, (nint)atom, 0, style, 10, 10, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
-        return 0 != p ? p : throw new WinApiException(nameof(CreateWindowEx));
+        var p = CreateWindowExW_(styleEx, (nint)atom, 0, style, 10, 10, w, h, 0, 0, moduleHandle ?? Kernel32.GetModuleHandle(null), 0);
+        return 0 != p ? p : throw new WinApiException(nameof(CreateWindowExW_));
     }
 
     public static int GetMessage (ref Message m) =>
