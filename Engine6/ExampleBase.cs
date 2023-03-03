@@ -53,7 +53,12 @@ public abstract class ExampleBase:GlWindow {
         Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ,
     };
 
-    protected static readonly Vector4[] Colors = {
+    protected static readonly Vector4[] PrimaryColors = { 
+        new(1,0,0,1), new(0,1,0,1), new(0,0,1,1),
+        new(.5f,0,0,1), new(0,.5f,0,1), new(0,0,.5f,1),
+    };
+
+    protected static readonly Vector4[] CyberpunkColors = {
         new(0.19f, 0.02f, 0.68f, 1), new(0.25f, 0.02f, 0.99f, 1), new(0.44f, 0f, 0.98f, 1),
         new(0.62f, 0f, 0.99f, 1), new(0.76f, 0.87f, 0.98f, 1), new(0.8f, 0f, 0.93f, 1),
         new(1f, 0f, 0.29f, 1), new(0.59f, 0.62f, 0.64f, 1), new(1f, 0.74f, 0.82f, 1),

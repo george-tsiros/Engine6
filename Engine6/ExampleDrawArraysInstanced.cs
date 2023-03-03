@@ -36,7 +36,7 @@ public class ExampleDrawArraysInstanced:ExampleBase {
         Reusables.Add(vertexBuffer = new(ThreeFaces));
         Reusables.Add(normalBuffer = new(ThreeFacesNormals));
         Reusables.Add(modelBuffer = new BufferObject<Matrix4x4>(Translations.Length));
-        Reusables.Add(colorBuffer = new(Colors));
+        Reusables.Add(colorBuffer = new(CyberpunkColors));
         va.Assign(vertexBuffer, program.VertexPosition);
         va.Assign(normalBuffer, program.VertexNormal);
         va.Assign(modelBuffer, program.Model, 1);

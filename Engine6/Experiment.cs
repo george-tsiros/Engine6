@@ -29,7 +29,7 @@ public class Experiment:GlWindow {
     private Renderbuffer depthbuffer;
     private Sampler2D renderTexture;
 
-    private Camera camera = new(new((float)(SolTerraDistance + TerraLunaDistance), 0, 10 * (float)LunaRadius));
+    private Camera camera = new(new((float)(SolTerraDistance + TerraLunaDistance + 2 * LunaRadius), 0, 5 * (float)LunaRadius));
 
     private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
     private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);

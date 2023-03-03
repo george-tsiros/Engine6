@@ -8,9 +8,9 @@
         <NoWarn>1701;1702;CS0078</NoWarn>
         <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
-        <OutputType>WinExe</OutputType>
+        <OutputType>winexe</OutputType>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
-        <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
         <!--<StartupObject></StartupObject>-->
         <TargetFramework>net7.0-windows</TargetFramework>
         <Platforms>x64</Platforms>

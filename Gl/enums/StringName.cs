@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum StringName {
     VENDOR = Const.GL_VENDOR,

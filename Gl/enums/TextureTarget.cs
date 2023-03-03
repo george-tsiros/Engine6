@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum TextureTarget {
     TEXTURE_1D = Const.GL_TEXTURE_1D,

@@ -1,4 +1,4 @@
-﻿namespace Gl;
+namespace Gl;
 
 public enum InternalFormat {
     STENCIL_INDEX = Const.GL_STENCIL_INDEX,

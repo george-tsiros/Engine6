@@ -2,12 +2,12 @@
     "rdocCaptureSettings": 1,
     "settings": {
         "autoStart": true,
-        "commandLine": "",
+        "commandLine": "ExampleDrawArrays",
         "environment": [
         ],
         "executable": "C:\\dev\\src\\Engine6\\Engine6\\bin\\Engine6.exe",
         "inject": false,
-        "numQueuedFrames": 0,
+        "numQueuedFrames": 1,
         "options": {
             "allowFullscreen": true,
             "allowVSync": true,
@@ -21,7 +21,7 @@
             "refAllResources": false,
             "verifyBufferAccess": false
         },
-        "queuedFrameCap": 0,
+        "queuedFrameCap": 1,
         "workingDir": ""
     }
 }
