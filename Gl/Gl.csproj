@@ -21,8 +21,8 @@
         <Optimize>false</Optimize>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <DefineConstants>TRACE;</DefineConstants>
         <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
