@@ -3,7 +3,6 @@ namespace Win32;
 using System;
 using System.IO;
 using Common;
-using static Common.Maths;
 
 public class PixelFont {
     public int Height { get; private init; }
@@ -60,7 +59,7 @@ public class PixelFont {
 
 
         for (var (i, ascii) = (0, 0); ascii < 256; ++ascii) {
-            var (row, column) = Int32DivRem(ascii, 16);
+            var (row, column) = int.DivRem(ascii, 16);
             for (var (cy, y) = (Height * row, 0); y < Height; ++y, ++cy)
                 for (var (cx, x) = (Width * column, 0); x < Width; ++x, ++cx, ++i)
                     if (' ' != lines[cy][cx])

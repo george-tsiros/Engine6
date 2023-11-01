@@ -6,6 +6,8 @@ using System.Numerics;
 using Shaders;
 using System;
 using System.Diagnostics;
+using System.Security.Principal;
+using Win32;
 
 public class MeasureBuffering:GlWindow {
     const int triangleCount = 100 * 1000;
@@ -46,7 +48,10 @@ public class MeasureBuffering:GlWindow {
                 var t0 = Stopwatch.GetTimestamp();
                 vertices.BufferData(vectors, vertexCount, offset, 0);
                 var t1 = Stopwatch.GetTimestamp();
-                Debug.WriteLine(new TimeSpan(t1 - t0).TotalMilliseconds);
+                var size = vertexCount * 4 * sizeof(float);
+                var seconds = TimeSpan.FromTicks(t1 - t0).TotalSeconds;
+                //User32.SetWindowText(this, "?");
+                Debug.WriteLine($"{size} B, {seconds} s, {size/seconds} B/s");
             }
         }
     }
@@ -58,7 +63,7 @@ public class MeasureBuffering:GlWindow {
         Clear(BufferBit.ColorDepth);
         BindVertexArray(va);
         UseProgram(flatColor);
-        flatColor.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 10, 1000));
+        flatColor.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)size.X / size.Y, 10, 1000));
         DrawArrays(PrimitiveType.TRIANGLES, 0, vertexCount);
     }
 }

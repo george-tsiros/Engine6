@@ -43,27 +43,25 @@ class ShaderGen {
                 if (File.Exists(fragmentShaderFilepath)) {
 
                     var shaderNameUppercased = UppercaseFirst(shaderName);
-                    using (MemoryStream mem = new()) {
-                        using (StreamWriter f = new(mem, Encoding.ASCII, -1, true))
-                            DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderNameUppercased, f);
+                    using MemoryStream mem = new();
+                    using (StreamWriter f = new(mem, Encoding.ASCII, -1, true))
+                        DoProgram(vertexShaderFilepath, fragmentShaderFilepath, shaderNameUppercased, f);
 
-
-                        var outputFilepath = Path.Combine(targetDir, shaderNameUppercased + ".cs");
-                        if (File.Exists(outputFilepath) && 0 != new FileInfo(outputFilepath).Length) {
-                            var existing = File.ReadAllText(outputFilepath).Trim();
-                            var newlyCreated = Encoding.ASCII.GetString(mem.ToArray()).Trim();
-                            if (existing == newlyCreated) {
-                                Console.Write($"{outputFilepath} already exists and is the same\n");
-                                continue;
-                            }
+                    var outputFilepath = Path.Combine(targetDir, shaderNameUppercased + ".cs");
+                    if (File.Exists(outputFilepath) && 0 != new FileInfo(outputFilepath).Length) {
+                        var existing = File.ReadAllText(outputFilepath).Trim();
+                        var newlyCreated = Encoding.ASCII.GetString(mem.ToArray()).Trim();
+                        if (existing == newlyCreated) {
+                            Console.Write($"{outputFilepath} already exists and is the same\n");
+                            continue;
                         }
-
-                        Console.Write($"{sourceDir}\\{shaderName}(.vert,.frag) => ");
-                        mem.Position = 0;
-                        using (var f = File.Create(outputFilepath))
-                            mem.CopyTo(f);
-                        Console.Write($"{outputFilepath}\n");
                     }
+
+                    Console.Write($"{sourceDir}\\{shaderName}(.vert,.frag) => ");
+                    mem.Position = 0;
+                    using (var f = File.Create(outputFilepath))
+                        mem.CopyTo(f);
+                    Console.Write($"{outputFilepath}\n");
                 } else {
                     Trace($"no fragment shader file (\"{fragmentShaderFilepath}\") for vertex shader file \"{vertexShaderFilename}\"");
                 }

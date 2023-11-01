@@ -20,7 +20,7 @@ public class VertexArray:OpenglObject {
         Attrib<T>(location, divisor);
     }
 
-    protected override Action<int> Delete { get; } = 
+    protected override Action<int> Delete { get; } =
         DeleteVertexArray;
 
     private void Attrib<T> (int location, int divisor) where T : unmanaged {
@@ -34,7 +34,7 @@ public class VertexArray:OpenglObject {
 
     private void Attrib (int location, int size, VertexAttribPointerType type, int stride, int offset, int divisor) {
         EnableVertexArrayAttrib(this, location);
-            VertexAttribPointer(location, size, type, false, stride, offset);
+        VertexAttribPointer(location, size, type, false, stride, offset);
         VertexAttribDivisor(location, divisor);
     }
 

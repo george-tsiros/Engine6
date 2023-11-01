@@ -3,7 +3,6 @@ namespace Common;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static Common.Maths;
 
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Matrix4d {
@@ -111,7 +110,7 @@ public readonly struct Matrix4d {
 
 */
     public static Matrix4d CreatePerspectiveFieldOfView (double fieldOfView, double aspectRatio, double nearPlaneDistance, double farPlaneDistance) {
-        if (fieldOfView <= 0.0 || fieldOfView >= Maths.dPi)
+        if (fieldOfView <= 0.0 || fieldOfView >= double.Pi)
             throw new ArgumentOutOfRangeException(nameof(fieldOfView));
 
         if (nearPlaneDistance <= 0.0)
@@ -123,7 +122,7 @@ public readonly struct Matrix4d {
         if (nearPlaneDistance >= farPlaneDistance)
             throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
 
-        var yScale = 1.0f / Maths.DoubleTan(fieldOfView * 0.5);
+        var yScale = 1.0f / double.Tan(fieldOfView * 0.5);
         var xScale = yScale / aspectRatio;
 
         var negFarRange = double.IsPositiveInfinity(farPlaneDistance) ? -1.0 : farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
@@ -149,7 +148,7 @@ public readonly struct Matrix4d {
     );
 
     public static Matrix4d RotationX (double a) {
-        var (s, c) = DoubleSinCos(a);
+        var (s, c) = double.SinCos(a);
         return new Matrix4d(
             1, 0, 0, 0,
             0, c, s, 0,
@@ -159,7 +158,7 @@ public readonly struct Matrix4d {
     }
 
     public static Matrix4d RotationY (double a) {
-        var (s, c) = DoubleSinCos(a);
+        var (s, c) = double.SinCos(a);
         return new Matrix4d(
             c, 0, -s, 0,
             0, 1, 0, 0,
@@ -169,7 +168,7 @@ public readonly struct Matrix4d {
     }
 
     public static Matrix4d RotationZ (double a) {
-        var (s, c) = DoubleSinCos(a);
+        var (s, c) = double.SinCos(a);
         return new Matrix4d(
            c, s, 0, 0,
            -s, c, 0, 0,

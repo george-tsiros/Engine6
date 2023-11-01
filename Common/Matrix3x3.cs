@@ -2,7 +2,6 @@ namespace Common;
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static Common.Maths;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Matrix3x3 {
@@ -36,7 +35,7 @@ public readonly struct Matrix3x3 {
     public bool TrySolve (Vector3 p, out Vector3 x) {
         Vector3d V = new((double)M22 * M33 - (double)M32 * M23, (double)M32 * M13 - (double)M12 * M33, (double)M12 * M23 - (double)M22 * M13);
         var ddet = M11 * V.X + M21 * V.Y + M31 * V.Z;
-        if (DoubleAbs(ddet) < float.Epsilon) {
+        if (double.Abs(ddet) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }
@@ -56,7 +55,7 @@ public readonly struct Matrix3x3 {
         var B = (double)M32 * M13 - (double)M12 * M33;
         var C = (double)M12 * M23 - (double)M22 * M13;
         var det = M11 * A + M21 * B + M31 * C;
-        if (DoubleAbs(det) < float.Epsilon) {
+        if (double.Abs(det) < float.Epsilon) {
             x = Vector3.Zero;
             return false;
         }

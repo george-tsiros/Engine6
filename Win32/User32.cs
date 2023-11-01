@@ -11,6 +11,10 @@ unsafe public delegate int MonitorEnumProc (nint monitorHandle, nint dc, Rectang
 public static class User32 {
     private const string dll = nameof(User32) + ".dll";
 
+    [DllImport(dll,ExactSpelling=true, SetLastError =true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowTextA (nint windowHandle, [MarshalAs(UnmanagedType.LPStr)] string text);
+
     [DllImport(dll, EntryPoint = "GetSystemMetrics", ExactSpelling = true, SetLastError = true)]
     internal static extern int GetSystemMetrics_ (int metric);
 
@@ -150,6 +154,11 @@ public static class User32 {
                 throw new WinApiException(nameof(SetWindowLongPtrA), possibleError);
         }
         return previousValue;
+    }
+
+    public static void SetWindowText (Window window, string text) {
+        if (!SetWindowTextA(window.Handle, text))
+            throw new WinApiException(nameof(SetWindowTextA));
     }
 
     public static WindowStyleEx SetWindowStyleEx (Window window, WindowStyleEx style) =>

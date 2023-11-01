@@ -9,6 +9,8 @@ using System.Numerics;
 using Shaders;
 using System.Text;
 using Common;
+using System.IO;
+using System.Collections.Generic;
 
 public class GlWindow:Window {
 
@@ -21,12 +23,13 @@ public class GlWindow:Window {
 
         TotalTicksSinceLastRead = new long[AxisKeys.Length];
         LastPressTimestamp = new long[AxisKeys.Length];
-
+        SetSwapInterval(1);
         Reusables.Add(presentation = new());
         Reusables.Add(presentationVertices = new(PresentationQuad));
         Reusables.Add(quadArray = new());
+        Reusables.Add(log = new("log.txt", false, Encoding.ASCII));
     }
-
+    StreamWriter log;
     protected virtual void Render () {
         ClearColor(0.5f, 0.5f, 0.5f, 1f);
         Clear(BufferBit.ColorDepth);
@@ -35,6 +38,7 @@ public class GlWindow:Window {
     protected GlContext Ctx;
     protected long FramesRendered { get; private set; } = 0l;
     protected long LastSync { get; private set; }
+    private long NextSyncEstimate;
     protected double TicksPerFrame () => TicksPerSecond * SecondsPerFrame();
     protected bool GuiActive { get; private set; } = true;
     protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
@@ -48,7 +52,8 @@ public class GlWindow:Window {
     private static readonly long TicksPerSecond = Stopwatch.Frequency;
     private readonly long[] TotalTicksSinceLastRead;
     private readonly long[] LastPressTimestamp;
-
+    private const int MessageQueueCapacity = 5;
+    private readonly Queue<string> messageQueue = new(MessageQueueCapacity);
     private byte[] title = helpText;
     private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
     private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
@@ -72,13 +77,27 @@ public class GlWindow:Window {
         SetGuiActive(false);
     }
 
+    private const int FrameCount = 128;
+    private const int BucketCount = 256;
+    private readonly int[] frameDeviations = new int[FrameCount];
+
+    private readonly int[] buckets = new int[BucketCount];
     protected override void OnIdle () {
-        if (0 == LastSync || LastSync + (long)(0.99 * TicksPerFrame()) < WallTime.ElapsedTicks) {
+        if (0 == LastSync || NextSyncEstimate < WallTime.ElapsedTicks) {
             if (0 < FramesRendered) {
                 Gdi32.SwapBuffers(Dc);
                 var now = WallTime.ElapsedTicks;
-                LastFramesInterval = (now - LastSync) / (double)TicksPerSecond;
+                var deltaTicks = now - LastSync;
+                frameDeviations[(FramesRendered - 1) % FrameCount] = int.Max(0, int.Min(BucketCount - 1, (int)double.Round(BucketCount / 2 + BucketCount / 2 * (deltaTicks - TicksPerFrame()) / TicksPerFrame())));
+                // 
+                //var ratio = deltaTicks / TicksPerFrame() - 1;
+                //if (0.01 < double.Abs(ratio))
+                //    ShoveFrame(ratio);
+                //LastFramesInterval = deltaTicks / (double)TicksPerSecond;
+                //if (1000 < FramesRendered)
+                //    log.WriteLine(LastFramesInterval);
                 LastSync = now;
+                NextSyncEstimate = now + (long)(0.9 * TicksPerFrame());
             }
             Render();
             if (GuiActive)
@@ -99,6 +118,9 @@ public class GlWindow:Window {
                     break;
                 case Key.Tab:
                     SetGuiActive(!GuiActive);
+                    return;
+                case Key.D1:
+                    SetSwapInterval(1 - GetSwapInterval());
                     return;
                 case Key.Escape:
                     User32.PostQuitMessage(0);
@@ -206,7 +228,29 @@ public class GlWindow:Window {
     private void RenderGui () {
         guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
         var t = FramesRendered.ToString();
-        guiRaster.DrawStringU32(t, PixelFont, 3, 3, ~0u, 0x8080807fu);
+        var y = 3;
+        guiRaster.DrawStringU32(t, PixelFont, 3, y, ~0u, 0x8080807fu);
+        y += PixelFont.Height;
+        guiRaster.DrawStringU32(GetSwapInterval().ToString(), PixelFont, 3, y, ~0u, 0x8080807fu);
+        y += PixelFont.Height;
+        foreach (var str in messageQueue) {
+            guiRaster.DrawStringU32(str, PixelFont, 3, y, ~0u, 0x8080807fu);
+            y += PixelFont.Height;
+        }
+
+        if (0 < FramesRendered) {
+            guiRaster.LineU32(new(0, 3 * PixelFont.Height - 1), new(FrameCount, 3 * PixelFont.Height - 1), Color.Cyan);
+            guiRaster.LineU32(new(0, 3 * PixelFont.Height + BucketCount), new(FrameCount, 3 * PixelFont.Height + BucketCount), Color.Cyan);
+            Array.Clear(buckets);
+            var end = (int)long.Min(FramesRendered - 1, FrameCount);
+            for (var i = 0; i < end; ++i)
+                ++buckets[frameDeviations[i]];
+            for (var i = 0; i < BucketCount; ++i) {
+                if (0 != buckets[i])
+                    guiRaster.LineU32(new(0, 3 * PixelFont.Height + i), new(buckets[i], 3 * PixelFont.Height + i), Color.White);
+            }
+        }
+
         guiSampler.Upload(guiRaster);
 
         BindDefaultFramebuffer(FramebufferTarget.DRAW_FRAMEBUFFER);

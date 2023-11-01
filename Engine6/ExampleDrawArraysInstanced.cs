@@ -50,16 +50,16 @@ public class ExampleDrawArraysInstanced:ExampleBase {
 
     private Vector2i cursor;
     protected override void OnInput (int dx, int dy) {
-        var x = Maths.Int32Clamp(cursor.X + dx, -CursorCap, CursorCap);
-        var y = Maths.Int32Clamp(cursor.Y + dy, -CursorCap, CursorCap);
+        var x = int.Clamp(cursor.X + dx, -CursorCap, CursorCap);
+        var y = int.Clamp(cursor.Y + dy, -CursorCap, CursorCap);
         cursor = new(x, y);
     }
 
     protected override void Render () {
         var xActual = Functions.ApplyDeadzone(cursor.X, Deadzone);
         var yActual = Functions.ApplyDeadzone(cursor.Y, Deadzone);
-        var yaw = xActual * Maths.fPi / 3 / (CursorCap - Deadzone);
-        var pitch = yActual * Maths.fPi / 3 / (CursorCap - Deadzone);
+        var yaw = xActual * float.Pi / 3 / (CursorCap - Deadzone);
+        var pitch = yActual * float.Pi / 3 / (CursorCap - Deadzone);
         var size = ClientSize;
         var aspectRatio = (float)size.X / size.Y;
         var rotation = Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, 0);
@@ -74,7 +74,7 @@ public class ExampleDrawArraysInstanced:ExampleBase {
         Enable(Capability.DEPTH_TEST);
         Enable(Capability.CULL_FACE);
         program.View(Matrix4x4.CreateTranslation(0, 0, -15));
-        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 1, 100));
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, aspectRatio, 1, 100));
         program.LightDirection(-Vector4.UnitZ);
         DrawArraysInstanced(PrimitiveType.TRIANGLES, 0, ThreeFaces.Length, Translations.Length);
     }

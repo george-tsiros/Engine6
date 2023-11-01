@@ -10,22 +10,8 @@ using System.Diagnostics;
 
 public class ExampleDrawArrays:ExampleBase {
 
-    //private static double Density (double h) =>
-    //    Maths.DoubleMax(0, 1.227726 - 1.23707613953 * (1 - Maths.DoubleExp(-1.140971e-3 * h)));
-
-    //private static double GravAccel (double mass, double distance) {
-    //    const double G = 6.6743e-11; // m^3 kg^-1 s^-2
-    //    var r2 = distance * distance;
-    //    if (r2 < 1e-6)
-    //        throw new ArgumentOutOfRangeException(nameof(distance), "too small");
-    //    return G * mass / r2;
-    //}
-
-    private ShowDepth depthProgram;
-    private Sampler2D depthSampler;
     private Directional program;
     private VertexArray va;
-    private VertexArray depthVA;
     private BufferObject<Vector4> vertexBuffer;
     private BufferObject<Vector3> normalBuffer;
     private BufferObject<Vector2> uiBuffer;
@@ -45,7 +31,7 @@ public class ExampleDrawArrays:ExampleBase {
     //private const float PlanetRadius = 6.371e6f; // m
     //private const float PlanetMass = 1.989e30f; // kg
     //private const float Velocity = -3000f; // m/s
-    private const int Subdivisions = 8;
+    private const int Subdivisions = 16;
 
     private const int VerticesPerTriangle = 3;
     private const int TrianglesPerQuad = 2;
@@ -60,11 +46,11 @@ public class ExampleDrawArrays:ExampleBase {
 
     private static readonly Matrix4x4[] FaceRotation = {
         Matrix4x4.Identity,
-        Matrix4x4.CreateRotationY(Maths.fPi/2),
-        Matrix4x4.CreateRotationY(Maths.fPi),
-        Matrix4x4.CreateRotationY(-Maths.fPi/2),
-        Matrix4x4.CreateRotationX(Maths.fPi/2),
-        Matrix4x4.CreateRotationX(-Maths.fPi/2),
+        Matrix4x4.CreateRotationY(float.Pi/2),
+        Matrix4x4.CreateRotationY(float.Pi),
+        Matrix4x4.CreateRotationY(-float.Pi/2),
+        Matrix4x4.CreateRotationX(float.Pi/2),
+        Matrix4x4.CreateRotationX(-float.Pi/2),
     };
 
     public static void CreateCubeSphere (int subdivisions, float radius, Span<Vector4> vertices, Span<Vector3> normals) {
@@ -83,17 +69,17 @@ public class ExampleDrawArrays:ExampleBase {
         if (normals.Length != expected)
             throw new ArgumentException($"expected length of {expected}, not {normals.Length}", nameof(normals));
 
-        var dtheta = Maths.dPi / 2 / subdivisions;
+        var dtheta = double.Pi / 2 / subdivisions;
         var k = 0;
         foreach (var rotator in FaceRotation)
 
             for (var i = 0; i < subdivisions; ++i)
                 for (var j = 0; j < subdivisions; ++j)
                     foreach (var offset in quad) {
-                        var u = -Maths.dPi / 4 + (i + offset.X) * dtheta;
-                        var v = -Maths.dPi / 4 + (j + offset.Y) * dtheta;
-                        var (su, cu) = Maths.DoubleSinCos(u);
-                        var (sv, cv) = Maths.DoubleSinCos(v);
+                        var u = -double.Pi / 4 + (i + offset.X) * dtheta;
+                        var v = -double.Pi / 4 + (j + offset.Y) * dtheta;
+                        var (su, cu) = double.SinCos(u);
+                        var (sv, cv) = double.SinCos(v);
                         var x = (float)(cv * su);
                         var y = (float)(sv * cu);
                         var z = (float)(cv * cu);
@@ -130,25 +116,14 @@ public class ExampleDrawArrays:ExampleBase {
         Reusables.Add(uiBuffer = new(PresentationQuad));
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
 
-        Reusables.Add(depthVA = new());
-        Reusables.Add(depthProgram = new());
-        depthVA.Assign(uiBuffer, depthProgram.VertexPosition);
         Enable(Capability.CULL_FACE);
-    }
-
-    protected override void OnLoad () {
-        base.OnLoad();
-        var size = ClientSize;
-        Disposables.Add(depthSampler = new(new(size.X / 2, size.Y / 2), SizedInternalFormat.DEPTH_COMPONENT24));
-        depthSampler.Min = MinFilter.Nearest;
-        depthSampler.Mag = MagFilter.Nearest;
     }
 
     protected override Key[] AxisKeys { get; } = { Key.C, Key.Z, Key.Q, Key.A };
 
     protected override void OnInput (int dx, int dy) {
-        var x = Maths.Int32Clamp(cursor.X + dx, -CursorCap, CursorCap);
-        var y = Maths.Int32Clamp(cursor.Y + dy, -CursorCap, CursorCap);
+        var x = int.Clamp(cursor.X + dx, -CursorCap, CursorCap);
+        var y = int.Clamp(cursor.Y + dy, -CursorCap, CursorCap);
         cursor = new(x, y);
     }
 
@@ -165,12 +140,12 @@ public class ExampleDrawArrays:ExampleBase {
     }
 
     protected override void Render () {
-        planetAngle += 0.3 * LastFramesInterval;
-        if (Maths.dTau <= planetAngle)
-            planetAngle -= Maths.dTau;
+        planetAngle += .5 * LastFramesInterval;
+        if (double.Tau <= planetAngle)
+            planetAngle -= double.Tau;
         var xActual = Functions.ApplyDeadzone(cursor.X, Deadzone) / (double)(CursorCap - Deadzone);
         var yActual = Functions.ApplyDeadzone(cursor.Y, Deadzone) / (double)(CursorCap - Deadzone);
-        throttle = Maths.DoubleClamp(throttle + Axis(Key.Q, Key.A), 0, 1);
+        throttle = double.Clamp(throttle + Axis(Key.Q, Key.A), 0, 1);
         var roll = 2e-2 * xActual;
         var pitch = -1e-2 * yActual;
         camera.Rotate(pitch, Axis(Key.C, Key.Z), roll);
@@ -186,10 +161,10 @@ public class ExampleDrawArrays:ExampleBase {
         Enable(Capability.CULL_FACE);
         var orientation = Matrix4d.CreateFromQuaternion(camera.Orientation);
         if (IsKeyDown(Key.R))
-            orientation = Matrix4d.RotationY(Maths.dPi) * orientation;
+            orientation = Matrix4d.RotationY(double.Pi) * orientation;
         var translation = Matrix4d.CreateTranslation(-camera.Position);
         program.View((Matrix4x4)(translation * orientation));
-        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, aspectRatio, 10f, 1000f));
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, aspectRatio, 10f, 1000f));
         program.LightDirection(-Vector4.UnitZ);
         program.Model(Matrix4x4.CreateRotationY((float)planetAngle));
         for (var i = 0; i < FacesPerCube; ++i) {
@@ -212,14 +187,6 @@ public class ExampleDrawArrays:ExampleBase {
         Viewport(Vector2i.Zero, UiSize);
         if (showStatus)
             DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
-        //Viewport(new(UiSize.X, 0), UiSize);
-        //depthSampler.BindTo(0);
-        //ReadBuffer(ReadBufferComponent.BACK);
-        //CopyTexImage2D(TextureTarget.TEXTURE_2D, 0, InternalFormat.DEPTH_COMPONENT, new(), depthSampler.Size);
-        //UseProgram(depthProgram);
-        //BindVertexArray(depthVA);
-        //depthProgram.Depth(0);
-        //DrawArrays(PrimitiveType.TRIANGLES, 0, 6);
     }
 }
 

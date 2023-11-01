@@ -18,10 +18,10 @@ public readonly struct Vector2i {
     public static readonly Vector2i UnitY = new(0, 1);
 
     public static Vector2i Min (in Vector2i a, in Vector2i b) =>
-        new(Maths.Int32Min(a.X, b.X), Maths.Int32Min(a.Y, b.Y));
+        new(int.Min(a.X, b.X), int.Min(a.Y, b.Y));
 
     public static Vector2i Max (in Vector2i a, in Vector2i b) =>
-        new(Maths.Int32Max(a.X, b.X), Maths.Int32Max(a.Y, b.Y));
+        new(int.Max(a.X, b.X), int.Max(a.Y, b.Y));
 
     public static Vector2i operator + (in Vector2i a, in Vector2i b) =>
         new(a.X + b.X, a.Y + b.Y);
@@ -50,7 +50,7 @@ public readonly struct Vector2i {
     public void Deconstruct (out int x, out int y) =>
         (x, y) = (X, Y);
 
-    public override bool Equals ([NotNullWhen(true)] object obj) =>
+    public override bool Equals (object obj) =>
         obj is Vector2i other && other == this;
 
     public override int GetHashCode () =>

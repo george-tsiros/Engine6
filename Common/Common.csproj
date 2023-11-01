@@ -24,4 +24,13 @@
         <Optimize>true</Optimize>
         <DebugType>none</DebugType>
     </PropertyGroup>
+    <ItemGroup>
+      <Compile Remove="Maths.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="build.bat" />
+      <None Remove="build.log" />
+      <None Remove="debug.rsp" />
+      <None Remove="release.rsp" />
+    </ItemGroup>
 </Project>

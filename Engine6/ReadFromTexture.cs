@@ -51,7 +51,7 @@ public class ReadFromTexture:GlWindow {
         program.Color(Vector4.One);
         program.Model(Matrix4x4.CreateTranslation(0, -1, -2));
         program.View(Matrix4x4.Identity);
-        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 2, aspectRatio, 1f, 10f));
+        program.Projection(Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 2, aspectRatio, 1f, 10f));
         DrawArrays(PrimitiveType.TRIANGLES, 0, 3);
     }
 }

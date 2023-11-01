@@ -191,7 +191,6 @@ public class Raster:IDisposable {
     }
 
     public unsafe void LineU32 (Vector2i a, Vector2i b, Color color) {
-        throw new NotImplementedException();
         NotDisposed();
         if (Channels != 4)
             throw new InvalidOperationException($"{nameof(LineU32)} only works with 4 channels, not {Channels}");
@@ -199,7 +198,7 @@ public class Raster:IDisposable {
             PixelU32Internal(a, color.Argb);
         } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
             var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
-            var (x0, x1) = (Maths.Int32Clamp(x0unbounded, 0, Width - 1), Maths.Int32Clamp(x1unbounded, 0, Width - 1));
+            var (x0, x1) = (int.Clamp(x0unbounded, 0, Width - 1), int.Clamp(x1unbounded, 0, Width - 1));
             fixed (byte* bytes = Pixels) {
                 uint* p = (uint*)bytes;
                 var line = a.Y * Width; // NOT stride
@@ -210,22 +209,23 @@ public class Raster:IDisposable {
             }
         } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
             var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
-            var (y0, y1) = (Maths.Int32Clamp(y0unbound, 0, Height - 1), Maths.Int32Clamp(y1unbound, 0, Height - 1));
+            var (y0, y1) = (int.Clamp(y0unbound, 0, Height - 1), int.Clamp(y1unbound, 0, Height - 1));
             fixed (byte* bp = Pixels) {
                 var p = (uint*)bp;
                 for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
                     p[i] = color.Argb;
             }
         } else {
+            throw new NotImplementedException();
 
-            var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
-            var dp = p1 - p0;
+            //var (p0, p1) = a.Y < b.Y ? (b, a) : (a, b);
+            //var dp = p1 - p0;
 
-            if (Maths.Int32Abs(dp.X) < Maths.Int32Abs(dp.Y)) {
+            //if (int.Abs(dp.X) < int.Abs(dp.Y)) {
 
-            } else {
+            //} else {
 
-            }
+            //}
         }
     }
 

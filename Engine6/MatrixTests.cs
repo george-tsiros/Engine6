@@ -68,8 +68,8 @@ public class MatrixTests:GlWindow {
     private VertexArray va;
 
     protected override void OnInput (int dx, int dy) {
-        var x = Maths.Int32Clamp(cursor.X + dx, -CursorCap, CursorCap);
-        var y = Maths.Int32Clamp(cursor.Y + dy, -CursorCap, CursorCap);
+        var x = int.Clamp(cursor.X + dx, -CursorCap, CursorCap);
+        var y = int.Clamp(cursor.Y + dy, -CursorCap, CursorCap);
         cursor = new(x, y);
     }
 
@@ -81,7 +81,7 @@ public class MatrixTests:GlWindow {
         var pitch = -1e-2 * yActual;
         camera.Rotate(pitch, Axis(Key.C, Key.Z), roll);
         camera.Move(LastFramesInterval * Velocity);
-        var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, 0.1f, 100f);
+        var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)size.X / size.Y, 0.1f, 100f);
 
         Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);

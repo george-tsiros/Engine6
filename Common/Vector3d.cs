@@ -3,7 +3,6 @@ namespace Common;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static Common.Maths;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Vector3d {
@@ -40,7 +39,7 @@ public readonly struct Vector3d {
         X * X + Y * Y + Z * Z;
 
     public double Magnitude () =>
-        DoubleSqrt(MagnitudeSquared());
+        double.Sqrt(MagnitudeSquared());
 
     public static Vector3d Transform (in Vector3d value, in Quaterniond rotation) {
         var x2 = rotation.X + rotation.X;
@@ -73,10 +72,10 @@ public readonly struct Vector3d {
     }
 
     public static Vector3d Min (in Vector3d a, in Vector3d b) =>
-        new(DoubleMin(a.X, b.X), DoubleMin(a.Y, b.Y), DoubleMin(a.Z, b.Z));
+        new(double.Min(a.X, b.X), double.Min(a.Y, b.Y), double.Min(a.Z, b.Z));
 
     public static Vector3d Max (in Vector3d a, in Vector3d b) =>
-        new(DoubleMax(a.X, b.X), DoubleMax(a.Y, b.Y), DoubleMax(a.Z, b.Z));
+        new(double.Max(a.X, b.X), double.Max(a.Y, b.Y), double.Max(a.Z, b.Z));
 
     public static bool operator == (in Vector3d a, in Vector3d b) =>
         a.X == b.X && a.Y == b.Y && a.Z == b.Z;

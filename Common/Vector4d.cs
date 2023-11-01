@@ -3,7 +3,6 @@ namespace Common;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static Common.Maths;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Vector4d {
@@ -27,7 +26,7 @@ public readonly struct Vector4d {
     public Vector3d Xyz () => new(X, Y, Z);
 
     public static double Dot (in Vector4d a, in Vector4d b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
-    public double Magnitude () => DoubleSqrt(X * X + Y * Y + Z * Z + W * W);
+    public double Magnitude () => double.Sqrt(X * X + Y * Y + Z * Z + W * W);
     public static Vector4d Normalize (in Vector4d v) {
         var magnitude = v.Magnitude();
         return 1e-6 < magnitude ? 1 / magnitude * v : throw new ArgumentOutOfRangeException(nameof(v));

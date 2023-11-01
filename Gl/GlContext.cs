@@ -41,7 +41,7 @@ public sealed unsafe class GlContext:IDisposable {
     private static readonly Type[] Int32_Int32_Int32 = { typeof(int), typeof(int), typeof(int), };
     public static void Foo_DrawArrays (PrimitiveType primitive, int start, int count) {
         if (drawArrays is null) {
-            Debug.Assert(0 < (nint)glDrawArrays);
+            Debug.Assert(0 != (nint)glDrawArrays);
             Debug.Assert(8 == IntPtr.Size);
             DynamicMethod function = new(string.Empty, typeof(void), null);
             var ilgen = function.GetILGenerator();
@@ -241,7 +241,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static string GetShaderInfoLog (int id) {
         int actualLogLength = 0;
         glGetShaderiv(id, (int)ShaderParameterName.INFO_LOG_LENGTH, &actualLogLength);
-        var bufferLength = Maths.Int32Min(1024, actualLogLength);
+        var bufferLength = int.Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             glGetShaderInfoLog(id, bufferLength, null, p);
@@ -251,7 +251,7 @@ public sealed unsafe class GlContext:IDisposable {
     public static string GetProgramInfoLog (int id) {
         int actualLogLength = 0;
         glGetProgramiv(id, (int)ProgramProperty.INFO_LOG_LENGTH, &actualLogLength);
-        var bufferLength = Maths.Int32Min(1024, actualLogLength);
+        var bufferLength = int.Min(1024, actualLogLength);
         Span<byte> bytes = stackalloc byte[bufferLength];
         fixed (byte* p = bytes)
             glGetProgramInfoLog(id, bufferLength, null, p);
@@ -436,9 +436,6 @@ public sealed unsafe class GlContext:IDisposable {
             throw new ApplicationException(GetOpenglHandleFailed);
 
         foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
-            //if (f.Name == nameof(glDrawArrays))
-            //    Debugger.Break();
-
             if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
                 if (attr.MinimumVersion.Major <= actualVersion.Major && attr.MinimumVersion.Minor <= actualVersion.Minor) {
                     var extPtr = Opengl.GetProcAddress(f.Name);

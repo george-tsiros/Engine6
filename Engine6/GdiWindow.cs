@@ -34,6 +34,6 @@ public class GdiWindow:Window {
 
     protected static void Blit (DeviceContext dc, in Vector2i targetSize, Dib dib) {
         Debug.Assert(targetSize == dib.Size);
-        _ = Gdi32.StretchDIBits(dc, new(in Vector2i.Zero, targetSize), new(in Vector2i.Zero, dib.Size), dib, RasterOperation.SrcCopy);
+        _ = Gdi32.StretchDIBits(dc, new(new(), targetSize), new(new(), dib.Size), dib, RasterOperation.SrcCopy);
     }
 }

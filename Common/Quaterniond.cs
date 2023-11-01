@@ -16,7 +16,7 @@ public readonly struct Quaterniond {
     public static explicit operator Quaternion (Quaterniond q) => new((float)q.X, (float)q.Y, (float)q.Z, (float)q.W);
 
     public static Quaterniond CreateFromAxisAngle (Vector3d axis, double angle) {
-        var (s, c) = Maths.DoubleSinCos(angle / 2);
+        var (s, c) = double.SinCos(angle / 2);
         return new(axis.X * s, axis.Y * s, axis.Z * s, c);
     }
 

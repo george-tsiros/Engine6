@@ -1,9 +1,9 @@
 {
   "profiles": {
     "Engine6": {
-      "commandName": "Project",
-      "commandLineArgs": "ExampleDrawArrays",
-      "hotReloadEnabled": false
+        "commandName": "Project",
+        "commandLineArgs": "ExampleDrawArraysInstanced",
+        "hotReloadEnabled": false
     }
   }
 }

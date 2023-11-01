@@ -130,7 +130,7 @@ public class Experiment:GlWindow {
         cumulativeCursorMovement = Vector2i.Zero;
 
         var viewRotation = Matrix4x4.CreateFromQuaternion((Quaternion)camera.Orientation);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(Maths.fPi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)size.X / size.Y, NearPlane, FarPlane);
         BindFramebuffer(framebuffer, FramebufferTarget.DRAW_FRAMEBUFFER);
         Viewport(in Vector2i.Zero, in size);
         ClearColor(0, 0, 0, 1);
@@ -195,18 +195,18 @@ public class Experiment:GlWindow {
         var vertexCount = 3 * triangleCount;
         if (vertices.Length != vertexCount)
             throw new ArgumentException($"expected size {vertexCount} exactly, got {vertices.Length} instead", nameof(vertices));
-        var dTheta = 2 * Maths.dPi / nTheta;
-        var dPhi = Maths.dPi / nPhi;
+        var dTheta = 2 * double.Pi / nTheta;
+        var dPhi = double.Pi / nPhi;
         var vectors = new Vector4[spherePointCount];
         vectors[0] = new(radius * Vector3.UnitY, 1f);
         vectors[spherePointCount - 1] = new(-radius * Vector3.UnitY, 1);
 
         var phi = dPhi;
         for (int vi = 1, i = 1; vi < nPhi; ++vi, phi += dPhi) {
-            var (sp, cp) = Maths.DoubleSinCos(phi);
+            var (sp, cp) = double.SinCos(phi);
             var theta = 0.0;
             for (var hi = 0; hi < nTheta; ++hi, ++i, theta += dTheta) {
-                var (st, ct) = Maths.DoubleSinCos(theta);
+                var (st, ct) = double.SinCos(theta);
                 vectors[i] = new((float)(radius * sp * ct), (float)(radius * cp), (float)(radius * sp * st), 1);
             }
         }
@@ -273,10 +273,10 @@ public class Experiment:GlWindow {
         var topCenter = Vector3.UnitY;
         var bottomCenter = -Vector3.UnitY;
         for (var (face, i) = (0, 0); face < faceCount; ++face) {
-            var theta0 = (float)face / faceCount * Maths.fTau;
-            var theta1 = (face + 1 < faceCount ? face : 0f) / faceCount * Maths.fTau;
-            var (x0, z0) = Maths.SingleSinCos(theta0);
-            var (x1, z1) = Maths.SingleSinCos(theta1);
+            var theta0 = (float)face / faceCount * float.Tau;
+            var theta1 = (face + 1 < faceCount ? face : 0f) / faceCount * float.Tau;
+            var (x0, z0) = float.SinCos(theta0);
+            var (x1, z1) = float.SinCos(theta1);
             var (a, b, c, d) = (new Vector3(x0, 1, z0), new Vector3(x0, -1, z0), new Vector3(x1, -1, z1), new Vector3(x1, 1, z1));
             vertices[i++] = topCenter;
             vertices[i++] = a;

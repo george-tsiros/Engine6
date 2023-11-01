@@ -18,7 +18,7 @@ public static class Functions {
     public static int ApplyDeadzone (int value, int deadzone) {
         if (deadzone < 0)
             throw new ArgumentOutOfRangeException(nameof(deadzone), "may not be negative");
-        return value < 0 ? Maths.Int32Min(value + deadzone, 0) : Maths.Int32Max(value - deadzone, 0);
+        return value < 0 ? int.Min(value + deadzone, 0) : int.Max(value - deadzone, 0);
     }
 
     public static float AreaInSomething (Vector3 v, Vector2i screen, float fieldOfView) {
@@ -27,7 +27,7 @@ public static class Functions {
         if (0 <= v.Z)
             throw new ArgumentOutOfRangeException(nameof(v), $"z component must be negative");
         var ar = (float)screen.X / screen.Y;
-        var factor = -1 / (v.Z * Maths.SingleTan(fieldOfView / 2));
+        var factor = -1 / (v.Z * float.Tan(fieldOfView / 2));
         return v.X * v.Y * factor * factor * screen.Y * screen.Y / 4;
     }
 
@@ -237,7 +237,7 @@ public static class Functions {
     }
 
     private static void PushAscii (Span<byte> a, ref long int64, ref int offset) {
-        (int64, var d) = Maths.Int64DivRem(int64, 10);
+        (int64, var d) = long.DivRem(int64, 10);
         a[--offset] = (byte)(d + '0');
     }
 
@@ -257,15 +257,15 @@ public static class Functions {
     public static float ModuloTwoPi (ref float angle, float delta) {
         angle += delta;
         while (angle < 0)
-            angle += Maths.fTau;
-        while (angle > Maths.fTau)
-            angle -= Maths.fTau;
+            angle += float.Tau;
+        while (angle > float.Tau)
+            angle -= float.Tau;
         return angle;
     }
 
     public static double ModuloTwoPi (double angle, double delta) {
-        var d = delta < 0 ? Maths.dTau - (-delta % Maths.dTau) : (delta % Maths.dTau);
-        return (angle + d) % Maths.dTau;
+        var d = delta < 0 ? double.Tau - (-delta % double.Tau) : (delta % double.Tau);
+        return (angle + d) % double.Tau;
     }
 
     public static (int min, float max) Extrema (int[] ints) {
