@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 using Win32;
 using Common;
 
-internal static class Opengl {
-    private const string opengl32 = nameof(opengl32) + ".dll";
-    [DllImport(opengl32, SetLastError = true)]
+internal static class Opengl32 {
+    private const string dll = nameof(Opengl32) + ".dll";
+    [DllImport(dll, SetLastError = true)]
     private static extern nint wglCreateContext (nint dc);
 
     internal static nint CreateContext (DeviceContext dc) {
@@ -14,7 +14,7 @@ internal static class Opengl {
         return 0 != ctx ? ctx : throw new WinApiException(nameof(wglCreateContext));
     }
 
-    [DllImport(opengl32, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     private static extern nint wglGetProcAddress (nint name);
 
     internal static nint GetProcAddress (string name) {
@@ -22,19 +22,19 @@ internal static class Opengl {
         return wglGetProcAddress(n);
     }
 
-    [DllImport(opengl32)]
+    [DllImport(dll)]
     private static extern nint glGetString (int name);
 
     internal static string GetString (OpenglString name) => 
         Marshal.PtrToStringAnsi(glGetString((int)name));
 
-    [DllImport(opengl32)]
+    [DllImport(dll)]
     internal static extern nint wglGetCurrentDC ();
 
-    [DllImport(opengl32, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     internal static extern nint wglGetCurrentContext ();
 
-    [DllImport(opengl32, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool wglMakeCurrent (nint dc, nint hglrc);
 
@@ -43,7 +43,7 @@ internal static class Opengl {
             throw new WinApiException(nameof(wglMakeCurrent));
     }
 
-    [DllImport(opengl32, SetLastError = true)]
+    [DllImport(dll, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal extern static bool wglDeleteContext (nint hglrc);
 }

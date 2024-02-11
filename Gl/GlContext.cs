@@ -389,11 +389,11 @@ public sealed unsafe class GlContext:IDisposable {
     public GlContext (DeviceContext dc) : this(dc, ContextConfiguration.Default) { }
 
     public GlContext (DeviceContext dc, ContextConfiguration configuration) {
-        if (0 != Opengl.wglGetCurrentContext())
+        if (0 != Opengl32.wglGetCurrentContext())
             throw new InvalidOperationException(ContextAlreadyExists);
         SetPixelFormat(dc, configuration);
-        var rc = Opengl.CreateContext(dc);
-        Opengl.MakeCurrent((nint)dc, rc);
+        var rc = Opengl32.CreateContext(dc);
+        Opengl32.MakeCurrent((nint)dc, rc);
         var requestedVersion = configuration.Version ?? GetCurrentContextVersion().Version;
         List<int> attributes = new() {
             (int)ContextAttrib.MajorVersion,
@@ -415,13 +415,13 @@ public sealed unsafe class GlContext:IDisposable {
         try {
             if (0 == handle)
                 throw new Exception(nameof(wglCreateContextAttribsARB));
-            Opengl.MakeCurrent((nint)dc, handle);
+            Opengl32.MakeCurrent((nint)dc, handle);
         } catch (WinApiException) {
-            if (!Opengl.wglDeleteContext(handle))
+            if (!Opengl32.wglDeleteContext(handle))
                 Debug.WriteLine(ContextSetFailed);
             throw;
         } finally {
-            if (!Opengl.wglDeleteContext(rc))
+            if (!Opengl32.wglDeleteContext(rc))
                 Debug.WriteLine(DeleteTemporaryContextFailed);
         }
 
@@ -438,7 +438,7 @@ public sealed unsafe class GlContext:IDisposable {
         foreach (var f in typeof(GlContext).GetFields(NonPublicStatic)) {
             if (f.GetCustomAttribute<GlVersionAttribute>() is GlVersionAttribute attr) {
                 if (attr.MinimumVersion.Major <= actualVersion.Major && attr.MinimumVersion.Minor <= actualVersion.Minor) {
-                    var extPtr = Opengl.GetProcAddress(f.Name);
+                    var extPtr = Opengl32.GetProcAddress(f.Name);
                     if (0 != extPtr) {
                         f.SetValue(null, extPtr);
                     } else {
@@ -454,7 +454,7 @@ public sealed unsafe class GlContext:IDisposable {
         glDebugMessageCallback(debugProc, null);
     }
     private static nint CreateContextAttribs (DeviceContext dc, List<int> attributes) {
-        var createContext = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB>(Opengl.GetProcAddress(nameof(wglCreateContextAttribsARB)));
+        var createContext = Marshal.GetDelegateForFunctionPointer<wglCreateContextAttribsARB>(Opengl32.GetProcAddress(nameof(wglCreateContextAttribsARB)));
         var asArray = attributes.ToArray();
         fixed (int* p = asArray)
             return createContext((nint)dc, 0, p);
@@ -463,7 +463,7 @@ public sealed unsafe class GlContext:IDisposable {
     private delegate nint wglCreateContextAttribsARB (nint a, nint b, int* c);
 
     public static (Version Version, ProfileMask Profile) GetCurrentContextVersion () {
-        var str = Opengl.GetString(OpenglString.Version);
+        var str = Opengl32.GetString(OpenglString.Version);
         var m = Regex.Match(str, OpenglVersionPattern);
         if (!m.Success)
             throw new ApplicationException(string.Format(InvalidVersionString, str));
@@ -507,11 +507,11 @@ public sealed unsafe class GlContext:IDisposable {
         if (disposed)
             return;
         disposed = true;
-        var ctx = Opengl.wglGetCurrentContext();
+        var ctx = Opengl32.wglGetCurrentContext();
         if (0 == ctx)
             throw new InvalidOperationException();
-        if (!Opengl.wglDeleteContext(ctx))
-            throw new WinApiException(nameof(Opengl.wglDeleteContext));
+        if (!Opengl32.wglDeleteContext(ctx))
+            throw new WinApiException(nameof(Opengl32.wglDeleteContext));
     }
 
 #pragma warning disable IDE0044 // Make fields readonly
