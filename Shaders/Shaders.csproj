@@ -8,11 +8,11 @@
         <NoWarn>1701;1702;CS0078</NoWarn>
         <Nullable>disable</Nullable>
         <OutputPath>bin</OutputPath>
-        <OutputType>Library</OutputType>
+        <OutputType>library</OutputType>
         <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
-        <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
         <!--<StartupObject></StartupObject>-->
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <Platforms>x64</Platforms>
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
@@ -26,10 +26,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Gl\Gl.csproj" />
-        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <Private>False</Private>
-        </ProjectReference>
+        <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <Exec Command="..\ShaderGen\bin\ShaderGen.exe shadersources ." />

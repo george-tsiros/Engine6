@@ -70,7 +70,7 @@ public class GlWindow:Window {
     protected override void OnLoad () {
         quadArray.Assign(presentationVertices, presentation.VertexPosition);
         guiSampler = new(ClientSize, SizedInternalFormat.RGBA8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest, Wrap = Wrap.ClampToEdge };
-        guiRaster = new(guiSampler.Size, 4, 1);
+        guiRaster = new(guiSampler.Size);
         BlendFunc(BlendSourceFactor.One, BlendDestinationFactor.SrcColor);
         Disposables.Add(guiSampler);
         Disposables.Add(guiRaster);
@@ -226,28 +226,28 @@ public class GlWindow:Window {
     }
 
     private void RenderGui () {
-        guiRaster.ClearU32(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
+        guiRaster.Clear(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
         var t = FramesRendered.ToString();
         var y = 3;
-        guiRaster.DrawStringU32(t, PixelFont, 3, y, ~0u, 0x8080807fu);
+        guiRaster.DrawString(t, PixelFont, 3, y, ~0u, 0x8080807fu);
         y += PixelFont.Height;
-        guiRaster.DrawStringU32(GetSwapInterval().ToString(), PixelFont, 3, y, ~0u, 0x8080807fu);
+        guiRaster.DrawString(GetSwapInterval().ToString(), PixelFont, 3, y, ~0u, 0x8080807fu);
         y += PixelFont.Height;
         foreach (var str in messageQueue) {
-            guiRaster.DrawStringU32(str, PixelFont, 3, y, ~0u, 0x8080807fu);
+            guiRaster.DrawString(str, PixelFont, 3, y, ~0u, 0x8080807fu);
             y += PixelFont.Height;
         }
 
         if (0 < FramesRendered) {
-            guiRaster.LineU32(new(0, 3 * PixelFont.Height - 1), new(FrameCount, 3 * PixelFont.Height - 1), Color.Cyan);
-            guiRaster.LineU32(new(0, 3 * PixelFont.Height + BucketCount), new(FrameCount, 3 * PixelFont.Height + BucketCount), Color.Cyan);
+            guiRaster.Line(new(0, 3 * PixelFont.Height - 1), new(FrameCount, 3 * PixelFont.Height - 1), Color.Cyan);
+            guiRaster.Line(new(0, 3 * PixelFont.Height + BucketCount), new(FrameCount, 3 * PixelFont.Height + BucketCount), Color.Cyan);
             Array.Clear(buckets);
             var end = (int)long.Min(FramesRendered - 1, FrameCount);
             for (var i = 0; i < end; ++i)
                 ++buckets[frameDeviations[i]];
             for (var i = 0; i < BucketCount; ++i) {
                 if (0 != buckets[i])
-                    guiRaster.LineU32(new(0, 3 * PixelFont.Height + i), new(buckets[i], 3 * PixelFont.Height + i), Color.White);
+                    guiRaster.Line(new(0, 3 * PixelFont.Height + i), new(buckets[i], 3 * PixelFont.Height + i), Color.White);
             }
         }
 

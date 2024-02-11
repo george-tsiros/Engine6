@@ -56,24 +56,20 @@ public class Sampler2D:OpenglObject {
 
     public unsafe static Sampler2D FromFile (string filepath) {
         using var raster = Raster.FromFile(filepath);
-        if (raster.BytesPerChannel != 1)
-            throw new ArgumentException("only 1 byte per pixel bitmaps are supported");
-        Sampler2D texture = new(raster.Size, TextureFormatWith(raster.Channels));
+        Sampler2D texture = new(raster.Size, SizedInternalFormat.RGBA8);
         texture.Upload(raster);
         return texture;
     }
-    
+
     public unsafe void Upload (Raster raster) {
         if (Disposed)
             throw new ObjectDisposedException(nameof(Sampler2D));
         if (raster.Size != Size)
             throw new ArgumentException($"expected size {Size}, not {raster.Size}", nameof(raster));
-        if (raster.BytesPerChannel != 1)
-            throw new ArgumentException($"expected 1 byte per channel, not {raster.BytesPerChannel}", nameof(raster));
-        fixed (byte* ptr = raster.Pixels)
-            TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormatWith(raster.Channels), PixelType.UNSIGNED_BYTE, ptr);
+        fixed (uint* ptr = raster.Pixels)
+            TextureSubImage2D(this, 0, 0, 0, Width, Height, PixelFormat.RGBA, PixelType.UNSIGNED_BYTE, ptr);
     }
-    
+
     private static readonly SizedInternalFormat[] textureFormats = { SizedInternalFormat.R8, SizedInternalFormat.RG8, SizedInternalFormat.RGB8, SizedInternalFormat.RGBA8 };
     private static SizedInternalFormat TextureFormatWith (int channels) => 1 <= channels && channels <= 4 ? textureFormats[channels - 1] : throw new ApplicationException();
     private static readonly PixelFormat[] pixelFormats = { PixelFormat.RED, PixelFormat.RG, PixelFormat.RGB, PixelFormat.RGBA };

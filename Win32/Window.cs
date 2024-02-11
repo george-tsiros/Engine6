@@ -76,7 +76,7 @@ public class Window:IDisposable {
     static Window () {
         WindowClassW wc = new() {
             style = ClassStyle.None,
-            wndProc = staticWndProc,
+            wndProc = StaticWndProc,
             hCursor = User32.LoadCursor(SystemCursor.Arrow),
             classname = nameof(Window),
         };
@@ -84,8 +84,6 @@ public class Window:IDisposable {
     }
 
     private static readonly ushort Atom;
-    private static readonly WndProc staticWndProc = StaticWndProc;
-    //private static Window creating;
     private readonly long[] KeyState = { 0, 0, 0, 0 };
     private bool disposed;
 

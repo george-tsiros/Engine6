@@ -6,42 +6,33 @@ using Common;
 public static partial class Kernel32 {
     private const string dll = nameof(Kernel32) + ".dll";
 
-    [DllImport(dll, EntryPoint = "GetProcAddress", ExactSpelling = true, SetLastError = true)]
-    private extern static nint GetProcAddress_ (nint module, nint name);
+    [DllImport(dll, EntryPoint = "GetProcAddress", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
+    private extern static nint GetProcAddress_ (nint module, string name);
 
     [DllImport(dll)]
     public extern static uint GetLastError ();
 
-    [DllImport(dll, EntryPoint = "GetModuleHandleA", ExactSpelling = true, SetLastError = true)]
-    private extern static nint GetModuleHandle_ (nint moduleName);
+    [DllImport(dll, EntryPoint = "GetModuleHandleA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
+    private extern static nint GetModuleHandle_ (string moduleName);
 
-    [DllImport(dll, EntryPoint = "GetModuleHandleExA", SetLastError = true)]
+    [DllImport(dll, EntryPoint = "GetModuleHandleExA", CharSet = CharSet.Ansi, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetModuleHandleEx (uint dwFlags, nint lpModuleName, ref nint module);
+    private static extern bool GetModuleHandleEx_ (uint dwFlags, string lpModuleName, ref nint module);
 
-    //[DllImport(dll)]
-    //private unsafe extern static void OutputDebugStringA (byte* p);
-
-    //public unsafe static void OutputDebugString (Ascii ascii) =>
-    //    OutputDebugStringA((byte*)ascii.Handle);
-
-    public static nint GetModuleHandle (string name = null) {
-        if (name is null)
-            return GetModuleHandle_(0);
-        using Ascii n = new(name);
-        return GetModuleHandle_(n);
+    public static nint GetModuleHandle (string name) {
+        return GetModuleHandle_(name);
     }
+
+    public static nint GetModuleHandle () => GetModuleHandle_(null);
 
     public static void GetModuleHandleEx (uint flags, string moduleName, out nint module) {
         module = 0;
-        using Ascii handle = new(moduleName);
-        if (!GetModuleHandleEx(flags, handle, ref module))
+        if (!GetModuleHandleEx_(flags, moduleName, ref module))
             throw new WinApiException(nameof(GetModuleHandleEx));
     }
 
     //not performance critical
     public unsafe static nint GetProcAddress (nint module, string name) {
-        using Ascii handle = new(name);
-        return GetProcAddress_(module, handle);
+        return GetProcAddress_(module, name);
     }
 }

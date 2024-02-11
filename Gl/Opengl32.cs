@@ -14,12 +14,11 @@ internal static class Opengl32 {
         return 0 != ctx ? ctx : throw new WinApiException(nameof(wglCreateContext));
     }
 
-    [DllImport(dll, SetLastError = true)]
-    private static extern nint wglGetProcAddress (nint name);
+    [DllImport(dll, CharSet = CharSet.Ansi, SetLastError = true)]
+    private static extern nint wglGetProcAddress (string name);
 
     internal static nint GetProcAddress (string name) {
-        using Ascii n = new(name);
-        return wglGetProcAddress(n);
+        return wglGetProcAddress(name);
     }
 
     [DllImport(dll)]

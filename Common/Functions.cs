@@ -159,15 +159,13 @@ public static class Functions {
     };
 
     public static string LowercaseFirst (string str) {
-        Span<char> chars = stackalloc char[str.Length];
-        str.AsSpan().CopyTo(chars);
+        var chars = str.ToCharArray();
         chars[0] = char.ToLower(chars[0]);
         return new(chars);
     }
 
     public static string UppercaseFirst (string str) {
-        Span<char> chars = stackalloc char[str.Length];
-        str.AsSpan().CopyTo(chars);
+        var chars = str.ToCharArray();
         chars[0] = char.ToUpper(chars[0]);
         return new(chars);
     }

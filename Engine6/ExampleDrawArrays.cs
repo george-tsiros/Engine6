@@ -15,7 +15,7 @@ public class ExampleDrawArrays:ExampleBase {
     private BufferObject<Vector4> vertexBuffer;
     private BufferObject<Vector3> normalBuffer;
     private BufferObject<Vector2> uiBuffer;
-    private SingleChannelTexture uiProgram;
+    private UiTexture uiProgram;
     private Raster uiRaster;
     private Sampler2D uiSampler;
     private VertexArray uiVA;
@@ -110,8 +110,8 @@ public class ExampleDrawArrays:ExampleBase {
         va.Assign(normalBuffer, program.VertexNormal);
 
         Reusables.Add(uiVA = new());
-        Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
-        Reusables.Add(uiRaster = new(UiSize, 1, 1));
+        Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.RGBA8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
+        Reusables.Add(uiRaster = new(UiSize));
         Reusables.Add(uiProgram = new());
         Reusables.Add(uiBuffer = new(PresentationQuad));
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
@@ -171,13 +171,13 @@ public class ExampleDrawArrays:ExampleBase {
             program.Color(PrimaryColors[i]);
             DrawArrays(PrimitiveType.TRIANGLES, i * VerticesPerFace, VerticesPerFace);
         }
-        uiRaster.ClearU8();
+        uiRaster.Clear(Color.Black);
         var distanceFromOrigin = camera.Position.Magnitude();
         var heightString = ((int)distanceFromOrigin).ToString();
-        uiRaster.DrawStringU8(heightString, UiFont, 0, 0);
+        uiRaster.DrawString(heightString, UiFont, 0, 0);
         var throttleString = ((int)(100 * throttle)).ToString();
-        uiRaster.DrawStringU8(throttleString, UiFont, 0, UiFont.Height);
-        uiRaster.DrawStringU8(IsKeyDown(Key.R) ? "rear" : "forward", UiFont, 0, 2 * UiFont.Height);
+        uiRaster.DrawString(throttleString, UiFont, 0, UiFont.Height);
+        uiRaster.DrawString(IsKeyDown(Key.R) ? "rear" : "forward", UiFont, 0, 2 * UiFont.Height);
         uiSampler.Upload(uiRaster);
         UseProgram(uiProgram);
         BindVertexArray(uiVA);

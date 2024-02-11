@@ -47,7 +47,7 @@ public class MatrixTests:GlWindow {
         va.Assign(normals, program.VertexNormal);
         Reusables.Add(uiVA = new());
         Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.R8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
-        Reusables.Add(uiRaster = new(UiSize, 1, 1));
+        Reusables.Add(uiRaster = new(UiSize));
         Reusables.Add(uiProgram = new());
         Reusables.Add(uiBuffer = new(PresentationQuad));
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
@@ -58,7 +58,7 @@ public class MatrixTests:GlWindow {
     private Directional program;
     private int vertexCount;
     private BufferObject<Vector2> uiBuffer;
-    private SingleChannelTexture uiProgram;
+    private UiTexture uiProgram;
     private Raster uiRaster;
     private Sampler2D uiSampler;
     private VertexArray uiVA;
@@ -98,17 +98,17 @@ public class MatrixTests:GlWindow {
         program.LightDirection(LightDirection);
         DrawArrays(PrimitiveType.TRIANGLES, 0, vertexCount);
 
-        uiRaster.ClearU8();
+        uiRaster.Clear(Color.Black);
         var cx = cursor.X.ToString();
         var cy = cursor.Y.ToString();
         var xp = xActual.ToString();
         var yp = yActual.ToString();
-        uiRaster.DrawStringU8(cx, UiFont, 0, 0);
-        uiRaster.DrawStringU8(" => ", UiFont, UiFont.Width * cx.Length, 0);
-        uiRaster.DrawStringU8(xp, UiFont, UiFont.Width * (cx.Length + 4), 0);
-        uiRaster.DrawStringU8(cy, UiFont, 0, UiFont.Height);
-        uiRaster.DrawStringU8(" => ", UiFont, UiFont.Width * cy.Length, UiFont.Height);
-        uiRaster.DrawStringU8(yp, UiFont, UiFont.Width * (cy.Length + 4), UiFont.Height);
+        uiRaster.DrawString(cx, UiFont, 0, 0);
+        uiRaster.DrawString(" => ", UiFont, UiFont.Width * cx.Length, 0);
+        uiRaster.DrawString(xp, UiFont, UiFont.Width * (cx.Length + 4), 0);
+        uiRaster.DrawString(cy, UiFont, 0, UiFont.Height);
+        uiRaster.DrawString(" => ", UiFont, UiFont.Width * cy.Length, UiFont.Height);
+        uiRaster.DrawString(yp, UiFont, UiFont.Width * (cy.Length + 4), UiFont.Height);
         uiSampler.Upload(uiRaster);
         UseProgram(uiProgram);
         BindVertexArray(uiVA);

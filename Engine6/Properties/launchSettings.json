@@ -2,7 +2,7 @@
   "profiles": {
     "Engine6": {
         "commandName": "Project",
-        "commandLineArgs": "ExampleDrawArraysInstanced",
+        "commandLineArgs": "GlWindow",
         "hotReloadEnabled": false
     }
   }
