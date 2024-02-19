@@ -12,8 +12,7 @@ public class MatrixTests:GlWindow {
 
     private static readonly (int, int)[] C3_lines = { (0, 1), (0, 4), (1, 3), (3, 8), (4, 7), (6, 7), (6, 9), (5, 9), (5, 8), (2, 5), (2, 6), (3, 5), (4, 6), (1, 2), (0, 2), (8, 10), (10, 11), (7, 11), (1, 10), (0, 11), (1, 5), (0, 6), (20, 21), (12, 13), (18, 19), (14, 15), (16, 17), (15, 16), (14, 17), (13, 18), (12, 19), (2, 9), (22, 24), (23, 24), (22, 23), (25, 26), (26, 27), (25, 27), };
     private static readonly Vector3[] C3_vertices = { new(32, 0, -76), new(-32, 0, -76), new(0, 26, -24), new(-120, -3, 8), new(120, -3, 8), new(-88, 16, 40), new(88, 16, 40), new(128, -8, 40), new(-128, -8, 40), new(0, 26, 40), new(-32, -24, 40), new(32, -24, 40), new(-36, 8, 40), new(-8, 12, 40), new(8, 12, 40), new(36, 8, 40), new(36, -12, 40), new(8, -16, 40), new(-8, -16, 40), new(-36, -12, 40), new(0, 0, -76), new(0, 0, -90), new(-80, -6, 40), new(-80, 6, 40), new(-88, 0, 40), new(80, 6, 40), new(88, 0, 40), new(80, -6, 40), };
-    private static readonly PixelFont UiFont = new(@"data\Spleen_8x16.txt");
-    private static readonly Vector2i UiSize = new(40 * UiFont.Width, 10 * UiFont.Height);
+    private Vector2i UiSize;
     private const int CursorCap = 1000;
     private const int Deadzone = 50;
     private static readonly Key[] _AxisKeys = { Key.Z, Key.C, Key.X, Key.D };
@@ -23,6 +22,7 @@ public class MatrixTests:GlWindow {
     public MatrixTests () : this(new(1280, 720)) { }
 
     public MatrixTests (Vector2i size) {
+        UiSize = new(40 * PixelFont.Width, 10 * PixelFont.Height);
         ClientSize = size;
         camera = new(10 * Vector3.UnitZ);
         const int CubeFaceCount = 6;
@@ -103,12 +103,12 @@ public class MatrixTests:GlWindow {
         var cy = cursor.Y.ToString();
         var xp = xActual.ToString();
         var yp = yActual.ToString();
-        uiRaster.DrawString(cx, UiFont, 0, 0);
-        uiRaster.DrawString(" => ", UiFont, UiFont.Width * cx.Length, 0);
-        uiRaster.DrawString(xp, UiFont, UiFont.Width * (cx.Length + 4), 0);
-        uiRaster.DrawString(cy, UiFont, 0, UiFont.Height);
-        uiRaster.DrawString(" => ", UiFont, UiFont.Width * cy.Length, UiFont.Height);
-        uiRaster.DrawString(yp, UiFont, UiFont.Width * (cy.Length + 4), UiFont.Height);
+        uiRaster.DrawString(cx, PixelFont, 0, 0);
+        uiRaster.DrawString(" => ", PixelFont, PixelFont.Width * cx.Length, 0);
+        uiRaster.DrawString(xp, PixelFont, PixelFont.Width * (cx.Length + 4), 0);
+        uiRaster.DrawString(cy, PixelFont, 0, PixelFont.Height);
+        uiRaster.DrawString(" => ", PixelFont, PixelFont.Width * cy.Length, PixelFont.Height);
+        uiRaster.DrawString(yp, PixelFont, PixelFont.Width * (cy.Length + 4), PixelFont.Height);
         uiSampler.Upload(uiRaster);
         UseProgram(uiProgram);
         BindVertexArray(uiVA);

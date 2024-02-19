@@ -21,8 +21,7 @@ public class ExampleDrawArrays:ExampleBase {
     private VertexArray uiVA;
     private Camera camera = new(new(0, 0, 10));
     private Vector2i cursor;
-    private static readonly PixelFont UiFont = new(@"data\Spleen_8x16.txt");
-    private static readonly Vector2i UiSize = new(40 * UiFont.Width, 10 * UiFont.Height);
+    private Vector2i UiSize;
     private readonly int VerticesPerFace, VerticesPerCube;
 
     private const int CursorCap = 1000;
@@ -93,6 +92,7 @@ public class ExampleDrawArrays:ExampleBase {
     public ExampleDrawArrays () : this(new(1280, 720)) { }
 
     public ExampleDrawArrays (Vector2i size) {
+        UiSize = new(40 * PixelFont.Width, 10 * PixelFont.Height);
         ClientSize = size;
         VerticesPerFace = VertexCountPerFace(Subdivisions);
         VerticesPerCube = VerticesPerFace * FacesPerCube;
@@ -110,9 +110,9 @@ public class ExampleDrawArrays:ExampleBase {
         va.Assign(normalBuffer, program.VertexNormal);
 
         Reusables.Add(uiVA = new());
+        Reusables.Add(uiProgram = new());
         Reusables.Add(uiSampler = new(UiSize, SizedInternalFormat.RGBA8) { Mag = MagFilter.Nearest, Min = MinFilter.Nearest });
         Reusables.Add(uiRaster = new(UiSize));
-        Reusables.Add(uiProgram = new());
         Reusables.Add(uiBuffer = new(PresentationQuad));
         uiVA.Assign(uiBuffer, uiProgram.VertexPosition);
 
@@ -174,10 +174,10 @@ public class ExampleDrawArrays:ExampleBase {
         uiRaster.Clear(Color.Black);
         var distanceFromOrigin = camera.Position.Magnitude();
         var heightString = ((int)distanceFromOrigin).ToString();
-        uiRaster.DrawString(heightString, UiFont, 0, 0);
+        uiRaster.DrawString(heightString, PixelFont, 0, 0);
         var throttleString = ((int)(100 * throttle)).ToString();
-        uiRaster.DrawString(throttleString, UiFont, 0, UiFont.Height);
-        uiRaster.DrawString(IsKeyDown(Key.R) ? "rear" : "forward", UiFont, 0, 2 * UiFont.Height);
+        uiRaster.DrawString(throttleString, PixelFont, 0, PixelFont.Height);
+        uiRaster.DrawString(IsKeyDown(Key.R) ? "rear" : "forward", PixelFont, 0, 2 * PixelFont.Height);
         uiSampler.Upload(uiRaster);
         UseProgram(uiProgram);
         BindVertexArray(uiVA);

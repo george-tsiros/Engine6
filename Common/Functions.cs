@@ -21,6 +21,7 @@ public static class Functions {
         return value < 0 ? int.Min(value + deadzone, 0) : int.Max(value - deadzone, 0);
     }
 
+    /*
     public static float AreaInSomething (Vector3 v, Vector2i screen, float fieldOfView) {
         if (v.X < 0 || v.Y < 0)
             throw new ArgumentOutOfRangeException(nameof(v), "x, y components must be positive as they represent width and height respectively");
@@ -30,6 +31,7 @@ public static class Functions {
         var factor = -1 / (v.Z * float.Tan(fieldOfView / 2));
         return v.X * v.Y * factor * factor * screen.Y * screen.Y / 4;
     }
+    */
 
     public static bool IsKeyword (string term) =>
        0 <= Array.IndexOf(CSharpKeywords, term);

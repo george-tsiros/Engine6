@@ -49,38 +49,9 @@ unsafe sealed public class Dib:IDisposable {
         !disposed ? raw : throw new ObjectDisposedException(nameof(Dib));
     public void ClearU32 (in Color color) {
         NotDisposed();
-        ClearU32Internal(color.Argb);
+        ClearU32Internal(color.Abgr);
     }
-    public void DrawString (in ReadOnlySpan<byte> chars, PixelFont font, int x, int y, in Color fore, in Color back) {
-        NotDisposed();
 
-        if (Width <= x || Height <= y)
-            return;
-
-        var rightMostPixelColumn = x + chars.Length * font.Width;
-        var bottomPixelRow = y + font.Height;
-
-        if (rightMostPixelColumn < 0 || bottomPixelRow < 0)
-            return;
-
-        var charStride = font.Width * font.Height;
-        var rowStart = (Height - y - 1) * Width;
-
-        for (var i = 0; i < chars.Length && x < Width; ++i, x += font.Width) {
-            var source = chars[i] * charStride;
-            var offset = rowStart + x;
-
-            if (0 <= x)
-                for (var row = 0; row < font.Height && y < Height; ++row, offset -= Width, source += font.Width, ++y) {
-                    var xpos = x;
-                    if (0 <= y)
-                        for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos)
-                            if (0 <= xpos)
-                                raw[offset + column] = font.Pixels[source + column] != 0 ? fore : back;
-
-                }
-        }
-    }
 
     private const int MaxBitmapDimension = 8192;
     private BitmapInfo info;

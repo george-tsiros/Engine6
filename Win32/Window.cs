@@ -7,7 +7,6 @@ using System.Diagnostics;
 
 public class Window:IDisposable {
 
-    private const string DefaultFontFilepath = "data/ibm3270.txt";
     private static Window Instance;
     public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
         Debug.Assert(Instance is null);
@@ -21,9 +20,9 @@ public class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
-    private PixelFont pixelFont;
-    public PixelFont PixelFont {
-        get => pixelFont ??= new(DefaultFontFilepath);
+    private RasterFont pixelFont;
+    public RasterFont PixelFont {
+        get => pixelFont ??= RasterFont.Default;
         set => pixelFont = value;
     }
 

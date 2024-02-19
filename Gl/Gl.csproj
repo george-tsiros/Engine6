@@ -22,10 +22,15 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <Optimize>true</Optimize>
+        <DebugSymbols>false</DebugSymbols>
         <DebugType>none</DebugType>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj" />
-        <ProjectReference Include="..\Win32\Win32.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj">
+            <Private>false</Private>
+        </ProjectReference>
+        <ProjectReference Include="..\Win32\Win32.csproj">
+            <Private>false</Private>
+        </ProjectReference>
     </ItemGroup>
 </Project>

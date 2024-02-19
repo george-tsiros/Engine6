@@ -1,6 +1,7 @@
 namespace Gl;
 
 using System;
+using System.Numerics;
 using System.IO;
 using System.IO.Compression;
 using Win32;
@@ -24,8 +25,8 @@ public class Raster:IDisposable {
     }
 
     public void Clear (Color color) {
-        NotDisposed();
-        ClearInternal(color.Argb);
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
+        ClearInternal(color.Abgr);
     }
 
     private unsafe void ClearInternal (uint value) {
@@ -34,7 +35,7 @@ public class Raster:IDisposable {
     }
 
     public void FillRect (Rectangle r, uint color) {
-        NotDisposed();
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
         var clipped = r.Clip(new(Vector2i.Zero, Size));
         if (clipped.Width <= 0 || clipped.Height <= 0)
             return;
@@ -56,8 +57,8 @@ public class Raster:IDisposable {
     private static int Orient2D (in Vector2i a, in Vector2i b, in Vector2i c) => (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
 
     public unsafe void Triangle (Vector2i v0, Vector2i v1, Vector2i v2, Color color) {
-        NotDisposed();
-        var c = color.Argb;
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
+        var c = color.Abgr;
         var min = Vector2i.Max(Vector2i.Min(Vector2i.Min(v0, v1), v2), Vector2i.Zero);
         var max = Vector2i.Min(Vector2i.Max(Vector2i.Max(v0, v1), v2), Size - Vector2i.One);
 
@@ -97,8 +98,8 @@ public class Raster:IDisposable {
 
 
     public void SetPixel (Vector2i p, Color color) {
-        NotDisposed();
-        SetPixelInternal(p, color.Argb);
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
+        SetPixelInternal(p, color.Abgr);
     }
 
     private void SetPixelInternal (Vector2i p, uint c) {
@@ -108,9 +109,9 @@ public class Raster:IDisposable {
     }
 
     public unsafe void Line (Vector2i a, Vector2i b, Color color) {
-        NotDisposed();
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
         if (a == b) {
-            SetPixelInternal(a, color.Argb);
+            SetPixelInternal(a, color.Abgr);
         } else if (a.Y == b.Y && 0 <= a.Y && a.Y < Height) {
             var (x0unbounded, x1unbounded) = a.X < b.X ? (a.X, b.X) : (b.X, a.X);
             var (x0, x1) = (int.Clamp(x0unbounded, 0, Width - 1), int.Clamp(x1unbounded, 0, Width - 1));
@@ -118,12 +119,12 @@ public class Raster:IDisposable {
             var start = line + x0;
             var end = line + x1;
             while (start <= end)
-                Pixels[start++] = color.Argb;
+                Pixels[start++] = color.Abgr;
         } else if (a.X == b.X && 0 <= a.X && a.X < Width) {
             var (y0unbound, y1unbound) = a.Y < b.Y ? (a.Y, b.Y) : (b.Y, a.Y);
             var (y0, y1) = (int.Clamp(y0unbound, 0, Height - 1), int.Clamp(y1unbound, 0, Height - 1));
             for (var i = y1 * Width + a.X; y0 <= y1; i -= Width, --y1)
-                Pixels[i] = color.Argb;
+                Pixels[i] = color.Abgr;
         } else {
             throw new NotImplementedException();
             // i am incompetent. 
@@ -163,19 +164,10 @@ public class Raster:IDisposable {
         }
     }
 
-    private void NotDisposed () {
-        if (disposed)
-            throw new ObjectDisposedException(nameof(Dib));
-    }
-
-
-
     /// <summary><paramref name="y"/> y=0 is top of screen</summary>
-    public void DrawString (in ReadOnlySpan<char> str, PixelFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
-        NotDisposed();
-        var (textWidth, textHeight) = font.SizeOf(str);
-        if (textHeight != font.Height)
-            throw new ArgumentException("does not support multiple lines yet", nameof(str));
+    public void DrawString (in ReadOnlySpan<char> str, RasterFont font, int x, int y, uint fore = ~0u, uint back = 0u) {
+        ObjectDisposedException.ThrowIf(disposed, typeof(Raster));
+        var (textWidth, textHeight) = (str.Length * font.Width, font.Height);
         if (x < 0 || Width <= x + textWidth)
             return;
         if (y < 0 || Height <= y + font.Height)
@@ -188,29 +180,36 @@ public class Raster:IDisposable {
         // 1                    | Height - 2    | Width
         // Height - 1           | 0             | (Height - 1) * Width
         //                      | y             | (Height - 1) * Width - y * Width = (Height - y - 1) * Width
+
         foreach (var b in str) {
-            if (255 < b)
-                throw new ArgumentOutOfRangeException(nameof(str), "not ascii");
-            if (Width <= x)
+            if ('~' < b || b < ' ')
+                throw new ArgumentOutOfRangeException(nameof(str), "not printable");
+            if (Width <= x + font.Width)
                 return;
             Blit(b, font, x, y, fore, back);
             x += font.Width;
         }
     }
-
-    private unsafe void Blit (char ascii, PixelFont font, int x, int y, uint fore, uint back) {
+    static readonly int[] maskValues = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80];
+    static readonly Vector<int> Mask = new(maskValues);
+    static readonly Vector<int> On = new(unchecked((int)0xffd0d0d0));
+    static readonly Vector<int> Off = new(unchecked((int)0xff000000));
+    /*
+    
+    */
+    private unsafe void Blit (char ascii, RasterFont font, int x, int y, uint fore, uint back) {
         var charStride = font.Width * font.Height;
         var rowStart = (Height - y - 1) * Width;
         var source = ascii * charStride;
         var offset = rowStart + x;
 
+        var glyph = font[ascii];
+
         for (var row = 0; row < font.Height; ++row, offset -= Width, source += font.Width) {
-            var xpos = x;
-            for (var column = 0; xpos < Width && column < font.Width; ++column, ++xpos) {
-
-                Pixels[offset + column] = font.Pixels[source + column] != 0 ? fore : back;
-
-            }
+            Vector<int> r = new(glyph[row]);
+            //vi32 const pixels = vi32_or(vi32_and(vi32_eq(vi32_and(row, Mask), Mask), On), vi32_and(vi32_eq(vi32_andnot(row, Mask), Mask), Off));
+            var pp = Vector.BitwiseOr(Vector.BitwiseAnd(Vector.Equals(Vector.BitwiseAnd(r, Mask), Mask), On), Vector.BitwiseAnd(Vector.Equals(Vector.AndNot(r, Mask), Mask), Off));
+            pp.As<int, uint>().CopyTo(Pixels, offset);
         }
     }
 

@@ -3,6 +3,7 @@ namespace Common;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Common;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Vector4d {
