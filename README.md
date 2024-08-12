@@ -1,3 +1,5 @@
+This is not an engine, a library or framework with which to write programs. It is meant to be exploratory code for OpenGL on windows using dotnet.
+
 **Engine6**: sixth iteration of the toy engine. `GlWindow` is the main class, so to speak. (Also, `FastNoiseLite` [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) was used earlier.)
 
 **Gl**: anything directly or indirectly related to opengl.
