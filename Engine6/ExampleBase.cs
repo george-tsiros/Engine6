@@ -1,5 +1,5 @@
 namespace Engine6;
-using Common;
+
 using System.Numerics;
 
 public abstract class ExampleBase:GlWindow {

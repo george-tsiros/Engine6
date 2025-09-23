@@ -13,52 +13,52 @@ public class Experiment:GlWindow {
 
     protected override Key[] AxisKeys { get; } = { Key.C, Key.X, Key.Z, Key.D, Key.Q, Key.A, Key.PageUp, Key.PageDown, Key.Home, Key.End, Key.Insert, Key.Delete, Key.Left, Key.Right, Key.Up, Key.Down };
 
-    private BufferObject<Vector2> presentationBuffer;
-    private VertexArray presentationVertexArray;
-    private Presentation presentationProgram;
+    BufferObject<Vector2> presentationBuffer;
+    VertexArray presentationVertexArray;
+    Presentation presentationProgram;
 
-    private BufferObject<Vector4> sphereBuffer;
-    private VertexArray sphereVertexArray;
-    private FlatColor sphereProgram;
+    BufferObject<Vector4> sphereBuffer;
+    VertexArray sphereVertexArray;
+    FlatColor sphereProgram;
 
-    private BufferObject<Vector4> starBuffer;
-    private VertexArray starVertexArray;
-    private PointStar starProgram;
+    BufferObject<Vector4> starBuffer;
+    VertexArray starVertexArray;
+    PointStar starProgram;
 
-    private Framebuffer framebuffer;
-    private Renderbuffer depthbuffer;
-    private Sampler2D renderTexture;
+    Framebuffer framebuffer;
+    Renderbuffer depthbuffer;
+    Sampler2D renderTexture;
 
-    private Camera camera = new(new((float)(SolTerraDistance + TerraLunaDistance + 2 * LunaRadius), 0, 5 * (float)LunaRadius));
+    Camera camera = new(new((float)(SolTerraDistance + TerraLunaDistance + 2 * LunaRadius), 0, 5 * (float)LunaRadius));
 
-    private static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
-    private static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
-    private static readonly int loPolySphereVertexCount = 3 * SphereTriangleCount(loPolySphereSubdivisions);
-    private static readonly int highPolySphereVertexCount = 3 * SphereTriangleCount(highPolySphereSubdivisions);
+    static readonly Vector2i loPolySphereSubdivisions = new(10, 5);
+    static readonly Vector2i highPolySphereSubdivisions = new(50, 25);
+    static readonly int loPolySphereVertexCount = 3 * SphereTriangleCount(loPolySphereSubdivisions);
+    static readonly int highPolySphereVertexCount = 3 * SphereTriangleCount(highPolySphereSubdivisions);
 
-    private readonly struct Body {
+    readonly struct Body {
         public Vector3d Position { get; init; }
         public double Radius { get; init; }
         public Vector4 Color { get; init; }
         public float Mass { get; init; }
     };
 
-    private static readonly Body Sol = new() { Position = Vector3d.Zero, Radius = SolRadius, Color = new(1, 1, .5f, 1), Mass = SolMass };
-    private static readonly Body Terra = new() { Position = new(SolTerraDistance, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
-    private static readonly Body Luna = new() { Position = new(SolTerraDistance + TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
-    private static readonly Body[] Solar = { Sol, Terra, Luna };
+    static readonly Body Sol = new() { Position = Vector3d.Zero, Radius = SolRadius, Color = new(1, 1, .5f, 1), Mass = SolMass };
+    static readonly Body Terra = new() { Position = new(SolTerraDistance, 0, 0), Radius = TerraRadius, Color = new(0, .6f, .7f, 1), Mass = TerraMass, };
+    static readonly Body Luna = new() { Position = new(SolTerraDistance + TerraLunaDistance, 0, 0), Radius = LunaRadius, Color = new(.7f, .7f, .7f, 1), Mass = LunaMass };
+    static readonly Body[] Solar = { Sol, Terra, Luna };
 
-    private const double SolTerraDistance = 150e9;
-    private const double TerraLunaDistance = 384.4e6;
-    private const double SolRadius = 695.7e6;
-    private const double TerraRadius = 6.371e6;
-    private const double LunaRadius = 1.737e6;
+    const double SolTerraDistance = 150e9;
+    const double TerraLunaDistance = 384.4e6;
+    const double SolRadius = 695.7e6;
+    const double TerraRadius = 6.371e6;
+    const double LunaRadius = 1.737e6;
 
-    private const float SolMass = 1.989e30f;
-    private const float TerraMass = 5.972e24f;
-    private const float LunaMass = 7.342e22f;
-    private const float NearPlane = 1.0e3f;
-    private const float FarPlane = 1000e9f;
+    const float SolMass = 1.989e30f;
+    const float TerraMass = 5.972e24f;
+    const float LunaMass = 7.342e22f;
+    const float NearPlane = 1.0e3f;
+    const float FarPlane = 1000e9f;
 
     public Experiment () {
         ClientSize = new(1280, 720);
@@ -104,17 +104,22 @@ public class Experiment:GlWindow {
         Disposables.Add(renderTexture);
     }
 
-    private bool outputFrame;
+    bool outputFrame;
+    bool useHighPolyModels;
 
     protected override void OnKeyUp (Key key) {
         if (Key.F1 == key) {
             outputFrame = true;
             return;
         }
+        if (Key.D2 == key) {
+            useHighPolyModels = !useHighPolyModels;
+            return;
+        }
         base.OnKeyUp(key);
     }
 
-    private Vector2i cumulativeCursorMovement;
+    Vector2i cumulativeCursorMovement;
 
     protected override void OnInput (int dx, int dy) {
         cumulativeCursorMovement += new Vector2i(dx, dy);
@@ -154,7 +159,10 @@ public class Experiment:GlWindow {
         foreach (var body in Solar) {
             sphereProgram.Color(body.Color);
             sphereProgram.Model(Matrix4x4.CreateScale((float)body.Radius) * Matrix4x4.CreateTranslation((Vector3)body.Position));
-            DrawArrays(PrimitiveType.TRIANGLES, loPolySphereVertexCount, highPolySphereVertexCount);
+            if (useHighPolyModels)
+                DrawArrays(PrimitiveType.TRIANGLES, loPolySphereVertexCount, highPolySphereVertexCount);
+            else
+                DrawArrays(PrimitiveType.TRIANGLES, 0, loPolySphereVertexCount);
         }
         BindDefaultFramebuffer(FramebufferTarget.DRAW_FRAMEBUFFER);
         Disable(Capability.DEPTH_TEST);
@@ -172,15 +180,6 @@ public class Experiment:GlWindow {
             outputFrame = false;
         }
     }
-
-    //public static Quaternion Append (in Quaternion q, in Vector3 axis, float amount)
-    //    => Quaternion.Concatenate(q, Quaternion.CreateFromAxisAngle(Vector3.Transform(axis, q), amount));
-
-    //public static void RotateQuaternion (ref Quaternion q, in Vector3 pitchYawRoll) {
-    //    q = Append(in q, Vector3.UnitX, pitchYawRoll.X);
-    //    q = Append(in q, Vector3.UnitY, pitchYawRoll.Y);
-    //    q = Append(in q, Vector3.UnitZ, pitchYawRoll.Z);
-    //}
 
     public static int SphereTriangleCount (in Vector2i n) =>
         2 * n.X * (n.Y - 1);

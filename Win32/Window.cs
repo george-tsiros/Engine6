@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 public class Window:IDisposable {
 
-    private static Window Instance;
+    static Window Instance;
     public Window (WindowStyle style = WindowStyle.OverlappedWindow, WindowStyleEx styleEx = WindowStyleEx.None) {
         Debug.Assert(Instance is null);
         Instance = this;
@@ -20,7 +20,7 @@ public class Window:IDisposable {
     public DeviceContext Dc { get; private set; }
     public bool IsFocused { get; private set; }
     public MouseButton Buttons { get; private set; }
-    private RasterFont pixelFont;
+    RasterFont pixelFont;
     public RasterFont PixelFont {
         get => pixelFont ??= RasterFont.Default;
         set => pixelFont = value;
@@ -70,28 +70,33 @@ public class Window:IDisposable {
         Reusables.ForEach(x => x.Dispose());
     }
 
-    private const string ClassName = nameof(Window);
-
     static Window () {
         WindowClassW wc = new() {
             style = ClassStyle.None,
-            wndProc = StaticWndProc,
+            wndProc = _staticWndProc,
             hCursor = User32.LoadCursor(SystemCursor.Arrow),
             classname = nameof(Window),
         };
         Atom = User32.RegisterClass(ref wc);
     }
 
-    private static readonly ushort Atom;
-    private readonly long[] KeyState = { 0, 0, 0, 0 };
-    private bool disposed;
-
-    private static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
+    static readonly ushort Atom;
+    readonly long[] KeyState = { 0, 0, 0, 0 };
+    bool disposed;
+    static readonly WndProc _staticWndProc = (h, m, w, l) => {
         if (WinMessage.Create == m) {
             return h;
         }
-        return Instance.WndProc(h/*wat*/, m, w, l);
+        return Instance.MyWndProc(h/*wat*/, m, w, l);
+    };
+    /*
+    static nint StaticWndProc (nint h, WinMessage m, nuint w, nint l) {
+        if (WinMessage.Create == m) {
+            return h;
+        }
+        return Instance.MyWndProc(h, m, w, l);
     }
+    */
 
     protected virtual void OnLoad () { }
     protected virtual void OnIdle () { }
@@ -107,79 +112,79 @@ public class Window:IDisposable {
     protected virtual void OnInput (int dx, int dy) { }
     protected virtual void OnPaint (nint dc, in PaintStruct ps) { }
 
-    protected unsafe nint WndProc (nint h, WinMessage m, nuint w, nint l) {
+    protected unsafe nint MyWndProc (nint h, WinMessage m, nuint w, nint l) {
         switch (m) {
-            case WinMessage.Close:
-                User32.PostQuitMessage(0);
-                return 0;
-            case WinMessage.Size:
-                OnSize((SizeType)(int)(w & int.MaxValue), Split(l));
-                return 0;
-            case WinMessage.Move:
-                OnMove(Split(l));
-                return 0;
-            case WinMessage.ShowWindow:
-                OnShowWindow(0 != w, (ShowWindowReason)(int)(l & int.MaxValue));
-                return 0;
-            case WinMessage.EraseBkgnd:
-                return 1;
-            case WinMessage.LButtonDown:
-            case WinMessage.RButtonDown:
-            case WinMessage.MButtonDown:
-            case WinMessage.XButtonDown: {
-                    var wAsShort = (MouseButton)(ushort.MaxValue & w);
-                    var change = wAsShort ^ Buttons;
-                    Buttons = wAsShort;
-                    OnButtonDown(change, new(l));
-                }
-                break;
-            case WinMessage.LButtonUp:
-            case WinMessage.RButtonUp:
-            case WinMessage.MButtonUp:
-            case WinMessage.XButtonUp: {
-                    var wAsShort = (MouseButton)(ushort.MaxValue & w);
-                    var change = wAsShort ^ Buttons;
-                    Buttons = wAsShort;
-                    OnButtonUp(change, new(l));
-                }
-                break;
-            case WinMessage.SetFocus:
-                IsFocused = true;
-                OnFocusChanged();
-                return 0;
-            case WinMessage.KillFocus:
-                IsFocused = false;
-                OnFocusChanged();
-                return 0;
-            case WinMessage.SysKeyDown:
-            case WinMessage.KeyDown: {
-                    var key = (Key)(w & byte.MaxValue);
-                    var (hi, lo) = FindIndex(key);
-                    KeyState[hi] |= lo;
-                    OnKeyDown(key, 0 != (l & 0x40000000));
-                }
-                return 0;
-            case WinMessage.SysKeyUp:
-            case WinMessage.KeyUp: {
-                    var key = (Key)(w & byte.MaxValue);
-                    var (hi, lo) = FindIndex(key);
-                    KeyState[hi] &= ~lo;
-                    OnKeyUp(key);
-                }
-                return 0;
-            case WinMessage.Paint:
-                PaintStruct ps = new();
-                var dc = User32.BeginPaint(Handle, ref ps);
-                OnPaint(dc, in ps);
-                User32.EndPaint(Handle, ref ps);
-                return 0;
-            case WinMessage.Input:
-                RawMouse data = new();
-                if (User32.GetRawInputData(l, ref data) && (0 != data.lastX || 0 != data.lastY)) {
-                    User32.SetCursorPos(GetWindowRectangle().Center);
-                    OnInput(data.lastX, data.lastY);
-                }
-                break;
+        case WinMessage.Close:
+            User32.PostQuitMessage(0);
+            return 0;
+        case WinMessage.Size:
+            OnSize((SizeType)(int)(w & int.MaxValue), Split(l));
+            return 0;
+        case WinMessage.Move:
+            OnMove(Split(l));
+            return 0;
+        case WinMessage.ShowWindow:
+            OnShowWindow(0 != w, (ShowWindowReason)(int)(l & int.MaxValue));
+            return 0;
+        case WinMessage.EraseBkgnd:
+            return 1;
+        case WinMessage.LButtonDown:
+        case WinMessage.RButtonDown:
+        case WinMessage.MButtonDown:
+        case WinMessage.XButtonDown: {
+                var wAsShort = (MouseButton)(ushort.MaxValue & w);
+                var change = wAsShort ^ Buttons;
+                Buttons = wAsShort;
+                OnButtonDown(change, new(l));
+            }
+            break;
+        case WinMessage.LButtonUp:
+        case WinMessage.RButtonUp:
+        case WinMessage.MButtonUp:
+        case WinMessage.XButtonUp: {
+                var wAsShort = (MouseButton)(ushort.MaxValue & w);
+                var change = wAsShort ^ Buttons;
+                Buttons = wAsShort;
+                OnButtonUp(change, new(l));
+            }
+            break;
+        case WinMessage.SetFocus:
+            IsFocused = true;
+            OnFocusChanged();
+            return 0;
+        case WinMessage.KillFocus:
+            IsFocused = false;
+            OnFocusChanged();
+            return 0;
+        case WinMessage.SysKeyDown:
+        case WinMessage.KeyDown: {
+                var key = (Key)(w & byte.MaxValue);
+                var (hi, lo) = FindIndex(key);
+                KeyState[hi] |= lo;
+                OnKeyDown(key, 0 != (l & 0x40000000));
+            }
+            return 0;
+        case WinMessage.SysKeyUp:
+        case WinMessage.KeyUp: {
+                var key = (Key)(w & byte.MaxValue);
+                var (hi, lo) = FindIndex(key);
+                KeyState[hi] &= ~lo;
+                OnKeyUp(key);
+            }
+            return 0;
+        case WinMessage.Paint:
+            PaintStruct ps = new();
+            var dc = User32.BeginPaint(Handle, ref ps);
+            OnPaint(dc, in ps);
+            User32.EndPaint(Handle, ref ps);
+            return 0;
+        case WinMessage.Input:
+            RawMouse data = new();
+            if (User32.GetRawInputData(l, ref data) && (0 != data.lastX || 0 != data.lastY)) {
+                User32.SetCursorPos(GetWindowRectangle().Center);
+                OnInput(data.lastX, data.lastY);
+            }
+            break;
         }
         return User32.DefWindowProc(h, m, w, l);
     }
@@ -194,10 +199,10 @@ public class Window:IDisposable {
         }
     }
 
-    private static (int h, long l) FindIndex (Key k) =>
+    static (int h, long l) FindIndex (Key k) =>
         ((int)k >> 6, 1l << ((int)k & 63));
 
-    private static Vector2i Split (nint l) {
+    static Vector2i Split (nint l) {
         var i = (int)(l & int.MaxValue);
         return new(i & ushort.MaxValue, (i >> 16) & ushort.MaxValue);
     }

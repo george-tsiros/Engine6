@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Common/Common.csproj" />
+  <Project Path="Engine6/Engine6.csproj" />
+  <Project Path="Gl/Gl.csproj" />
+  <Project Path="ShaderGen/ShaderGen.csproj" />
+  <Project Path="Shaders/Shaders.csproj" />
+  <Project Path="Win32/Win32.csproj" />
+</Solution>

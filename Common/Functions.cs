@@ -13,6 +13,7 @@ public enum EnumLinesOption {
     Trim = 1,
     SkipBlankOrWhitespace = 2,
 }
+
 public static class Functions {
 
     public static int ApplyDeadzone (int value, int deadzone) {
@@ -20,18 +21,6 @@ public static class Functions {
             throw new ArgumentOutOfRangeException(nameof(deadzone), "may not be negative");
         return value < 0 ? int.Min(value + deadzone, 0) : int.Max(value - deadzone, 0);
     }
-
-    /*
-    public static float AreaInSomething (Vector3 v, Vector2i screen, float fieldOfView) {
-        if (v.X < 0 || v.Y < 0)
-            throw new ArgumentOutOfRangeException(nameof(v), "x, y components must be positive as they represent width and height respectively");
-        if (0 <= v.Z)
-            throw new ArgumentOutOfRangeException(nameof(v), $"z component must be negative");
-        var ar = (float)screen.X / screen.Y;
-        var factor = -1 / (v.Z * float.Tan(fieldOfView / 2));
-        return v.X * v.Y * factor * factor * screen.Y * screen.Y / 4;
-    }
-    */
 
     public static bool IsKeyword (string term) =>
        0 <= Array.IndexOf(CSharpKeywords, term);

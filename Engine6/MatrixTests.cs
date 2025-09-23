@@ -77,10 +77,10 @@ public class MatrixTests:GlWindow {
         var size = ClientSize;
         var xActual = Functions.ApplyDeadzone(cursor.X, Deadzone) / (double)(CursorCap - Deadzone);
         var yActual = Functions.ApplyDeadzone(cursor.Y, Deadzone) / (double)(CursorCap - Deadzone);
-        var roll = 2e-2 * xActual;
+        var roll = 1e-2 * xActual;
         var pitch = -1e-2 * yActual;
         camera.Rotate(pitch, Axis(Key.C, Key.Z), roll);
-        camera.Move(LastFramesInterval * Velocity);
+        //camera.Move(LastFramesInterval * Velocity);
         var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(float.Pi / 4, (float)size.X / size.Y, 0.1f, 100f);
 
         Viewport(in Vector2i.Zero, in size);

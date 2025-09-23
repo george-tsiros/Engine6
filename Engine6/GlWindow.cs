@@ -36,36 +36,36 @@ public class GlWindow:Window {
     }
 
     protected GlContext Ctx;
-    protected long FramesRendered { get; private set; } = 0l;
-    protected long LastSync { get; private set; }
-    private long NextSyncEstimate;
+    protected long FramesRendered { get; set; } = 0l;
+    protected long LastSync { get; set; }
+    long NextSyncEstimate;
     protected double TicksPerFrame () => TicksPerSecond * SecondsPerFrame();
-    protected bool GuiActive { get; private set; } = true;
+    protected bool GuiActive { get; set; } = true;
     protected static readonly Vector2[] PresentationQuad = { new(-1, -1), new(1, -1), new(1, 1), new(-1, -1), new(1, 1), new(-1, 1), };
     protected virtual Key[] AxisKeys { get; } = Array.Empty<Key>();
-    protected double LastFramesInterval { get; private set; }
-    protected bool Fullscreen { get; private set; }
+    protected double LastFramesInterval { get; set; }
+    protected bool Fullscreen { get; set; }
     protected readonly Stopwatch WallTime;
     protected readonly Stopwatch SimulationTime;
-    private double FramesPerSecond = 60;
-    private double SecondsPerFrame () => 1 / FramesPerSecond;
-    private static readonly long TicksPerSecond = Stopwatch.Frequency;
-    private readonly long[] TotalTicksSinceLastRead;
-    private readonly long[] LastPressTimestamp;
-    private const int MessageQueueCapacity = 5;
-    private readonly Queue<string> messageQueue = new(MessageQueueCapacity);
-    private byte[] title = helpText;
-    private static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
-    private static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
-    private bool disposed = false;
-    private readonly Presentation presentation;
-    private readonly VertexArray quadArray;
-    private readonly BufferObject<Vector2> presentationVertices;
-    private Sampler2D guiSampler;
-    private Raster guiRaster;
-    private static readonly Vector2i DefaultWindowedSize = new(800, 600);
-    private readonly WindowStyleEx backupWindowStyleEx;
-    private Rectangle windowedRectangle;
+    double FramesPerSecond = 165;
+    double SecondsPerFrame () => 1 / FramesPerSecond;
+    static readonly long TicksPerSecond = Stopwatch.Frequency;
+    readonly long[] TotalTicksSinceLastRead;
+    readonly long[] LastPressTimestamp;
+    const int MessageQueueCapacity = 5;
+    readonly Queue<string> messageQueue = new(MessageQueueCapacity);
+    byte[] title = helpText;
+    static readonly byte[] helpText = Encoding.ASCII.GetBytes("tab grabs/releases cursor alt-enter toggles fullscreen, esc quits");
+    static readonly byte[] toggleFailedText = Encoding.ASCII.GetBytes("failed to switch to fullscreen");
+    bool disposed = false;
+    readonly Presentation presentation;
+    readonly VertexArray quadArray;
+    readonly BufferObject<Vector2> presentationVertices;
+    Sampler2D guiSampler;
+    Raster guiRaster;
+    static readonly Vector2i DefaultWindowedSize = new(800, 600);
+    readonly WindowStyleEx backupWindowStyleEx;
+    Rectangle windowedRectangle;
 
     protected override void OnLoad () {
         quadArray.Assign(presentationVertices, presentation.VertexPosition);
@@ -77,11 +77,11 @@ public class GlWindow:Window {
         SetGuiActive(false);
     }
 
-    private const int FrameCount = 128;
-    private const int BucketCount = 256;
-    private readonly int[] frameDeviations = new int[FrameCount];
+    const int FrameCount = 128;
+    const int BucketCount = 256;
+    readonly int[] frameDeviations = new int[FrameCount];
 
-    private readonly int[] buckets = new int[BucketCount];
+    readonly int[] buckets = new int[BucketCount];
     protected override void OnIdle () {
         if (0 == LastSync || NextSyncEstimate < WallTime.ElapsedTicks) {
             if (0 < FramesRendered) {
@@ -93,15 +93,18 @@ public class GlWindow:Window {
                 //var ratio = deltaTicks / TicksPerFrame() - 1;
                 //if (0.01 < double.Abs(ratio))
                 //    ShoveFrame(ratio);
-                //LastFramesInterval = deltaTicks / (double)TicksPerSecond;
+                LastFramesInterval = deltaTicks / (double)TicksPerSecond;
                 //if (1000 < FramesRendered)
                 //    log.WriteLine(LastFramesInterval);
                 LastSync = now;
                 NextSyncEstimate = now + (long)(0.9 * TicksPerFrame());
             }
+            var t0 = WallTime.ElapsedTicks;
             Render();
+            messageQueue.Enqueue($"{(double)(WallTime.ElapsedTicks - t0) / TicksPerSecond}");
             if (GuiActive)
                 RenderGui();
+            messageQueue.Clear();
             ++FramesRendered;
         }
     }
@@ -146,7 +149,7 @@ public class GlWindow:Window {
         }
     }
 
-    private void ToggleFullscreen () {
+    void ToggleFullscreen () {
         Disposables.ForEach(x => x.Dispose());
         Disposables.Clear();
 
@@ -183,7 +186,7 @@ public class GlWindow:Window {
         OnLoad();
     }
 
-    private bool IsAxis (Key key, long now, bool depressed) {
+    bool IsAxis (Key key, long now, bool depressed) {
         var i = Array.IndexOf(AxisKeys, key);
         if (i < 0)
             return false;
@@ -197,7 +200,7 @@ public class GlWindow:Window {
         return true;
     }
 
-    private long Pop (Key key) {
+    long Pop (Key key) {
         var ticks = SimulationTime.ElapsedTicks;
         var i = Array.IndexOf(AxisKeys, key);
         Debug.Assert(0 <= i);
@@ -215,7 +218,7 @@ public class GlWindow:Window {
     protected float Axis (Key positive, Key negative) =>
         (float)((Pop(positive) - Pop(negative)) / (double)TicksPerSecond);
 
-    private void SetGuiActive (bool active) {
+    void SetGuiActive (bool active) {
         if (GuiActive != active) {
             GuiActive = active;
             _ = User32.ShowCursor(GuiActive);
@@ -225,7 +228,7 @@ public class GlWindow:Window {
         }
     }
 
-    private void RenderGui () {
+    void RenderGui () {
         guiRaster.Clear(Color.FromArgb(0x7f, 0x40, 0x40, 0x40));
         var t = FramesRendered.ToString();
         var y = 3;

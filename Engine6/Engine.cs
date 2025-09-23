@@ -1,13 +1,8 @@
 namespace Engine6;
 
-using System;
-using System.Reflection;
-using System.Diagnostics;
-
 public class Engine {
-    public static int Main (string[] arguments) {
-        using Foo w = new();
+    public static void Main () {
+        using ExampleDrawArrays w = new();
         w.Run();
-        return 0;
     }
 }
